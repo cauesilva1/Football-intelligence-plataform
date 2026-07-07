@@ -21,11 +21,11 @@ export async function ScoutingDatabaseView({
       <EmptyState
         title={
           route === "scouting"
-            ? "Nenhum jogador atende aos critérios"
-            : "Nenhum jogador encontrado"
+            ? "No players match your criteria."
+            : "No players found."
         }
-        description="Nenhuma combinação de filtros retornou resultados. Amplie os critérios ou limpe os filtros ativos."
-        action={{ label: "Limpar todos os filtros", href: basePath }}
+        description="No filter combination returned results. Broaden your criteria or clear active filters."
+        action={{ label: "Clear all filters", href: basePath }}
       />
     );
   }

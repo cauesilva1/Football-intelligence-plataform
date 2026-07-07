@@ -35,7 +35,7 @@ export function ScoutingTable({
         <TableRow>
           <TableHead sticky>
             <SortableTableHead
-              label="Jogador"
+              label="Player"
               sortKey="name"
               filters={filters}
               basePath={basePath}
@@ -44,7 +44,7 @@ export function ScoutingTable({
           </TableHead>
           <TableHead sticky>
             <SortableTableHead
-              label="Idade"
+              label="Age"
               sortKey="age"
               filters={filters}
               basePath={basePath}
@@ -53,7 +53,7 @@ export function ScoutingTable({
           </TableHead>
           <TableHead sticky>
             <SortableTableHead
-              label="Clube"
+              label="Club"
               sortKey="club"
               filters={filters}
               basePath={basePath}
@@ -86,7 +86,7 @@ export function ScoutingTable({
           </TableHead>
           <TableHead sticky>
             <SortableTableHead
-              label="Gols/90"
+              label="Goals/90"
               sortKey="goalsPer90"
               filters={filters}
               basePath={basePath}
@@ -109,7 +109,7 @@ export function ScoutingTable({
             />
           </TableHead>
           <TableHead sticky className="text-right">
-            Ações
+            Actions
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -157,7 +157,7 @@ export function ScoutingTable({
               <TableCell className="font-mono tabular-nums">{xg90.toFixed(2)}</TableCell>
               <TableCell className="text-right">
                 <Link href={`/players/${p.id}`} className={buttonVariants({ variant: "ghost", size: "xs" })}>
-                  <Eye className="h-3.5 w-3.5" /> Perfil
+                  <Eye className="h-3.5 w-3.5" /> Profile
                 </Link>
               </TableCell>
             </TableRow>

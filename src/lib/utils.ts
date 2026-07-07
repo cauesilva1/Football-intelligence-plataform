@@ -18,10 +18,10 @@ export function formatPhysicalMetric(value: number, unit: string): string | null
 }
 
 export function formatPreferredFoot(foot: string): string {
-  if (foot === "LEFT") return "Esquerdo";
-  if (foot === "RIGHT") return "Direito";
-  if (foot === "BOTH") return "Ambidestro";
-  return "Sob consulta";
+  if (foot === "LEFT") return "Left";
+  if (foot === "RIGHT") return "Right";
+  if (foot === "BOTH") return "Two-footed";
+  return "Unknown";
 }
 
 export function formatMinutes(minutes: number): string {

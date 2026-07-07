@@ -9,7 +9,7 @@ import { toRadarProfile } from "@/lib/normalize";
 import { getTeamTheme } from "@/lib/team-theme";
 import type { Player } from "@/types";
 
-const RADAR_METRICS = ["Finalização", "Criação", "Passe", "Drible", "Defesa", "Físico"] as const;
+const RADAR_METRICS = ["Finishing", "Creation", "Passing", "Dribbling", "Defense", "Physical"] as const;
 
 export function PlayerPerformanceSection({ player }: { player: Player }) {
   const s = player.currentSeasonStats;
@@ -20,14 +20,14 @@ export function PlayerPerformanceSection({ player }: { player: Player }) {
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
-          label="Minutos"
-          value={s.minutesPlayed.toLocaleString("pt-BR")}
+          label="Minutes"
+          value={s.minutesPlayed.toLocaleString("en-US")}
           icon={Activity}
           accent="info"
           borderColor={theme.primaryColor}
         />
         <MetricCard
-          label="Gols / 90"
+          label="Goals / 90"
           value={s.per90.goals.toFixed(2)}
           icon={Target}
           accent="primary"
@@ -41,7 +41,7 @@ export function PlayerPerformanceSection({ player }: { player: Player }) {
           borderColor={theme.primaryColor}
         />
         <MetricCard
-          label={<GlossaryTooltip label="Assist. / 90" description={METRIC_GLOSSARY.xA} />}
+          label={<GlossaryTooltip label="Assists / 90" description={METRIC_GLOSSARY.xA} />}
           value={s.per90.assists.toFixed(2)}
           icon={TrendingUp}
           accent="info"
@@ -51,8 +51,8 @@ export function PlayerPerformanceSection({ player }: { player: Player }) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <DataPanel
-          title="Evolução por temporada"
-          description="Rating, gols/90 e xG/90 agregados por season."
+          title="Season Evolution"
+          description="Rating, goals/90, and xG/90 aggregated by season."
           density="dense"
           className="border"
           style={{ borderColor: `${theme.primaryColor}33` }}
@@ -61,8 +61,8 @@ export function PlayerPerformanceSection({ player }: { player: Player }) {
         </DataPanel>
 
         <DataPanel
-          title="Perfil de desempenho"
-          description="Dimensões normalizadas per 90 — temporada atual."
+          title="Performance Profile"
+          description="Normalized per-90 dimensions — current season."
           density="dense"
           className="border"
           style={{ borderColor: `${theme.primaryColor}33` }}
@@ -75,24 +75,25 @@ export function PlayerPerformanceSection({ player }: { player: Player }) {
       </div>
 
       <DataPanel
-        title="Métricas detalhadas"
-        description="Totais e rates per 90 da temporada atual."
+        title="Detailed Metrics"
+        description="Season totals and per-90 rates for the current campaign."
         density="dense"
         className="border"
         style={{ borderColor: `${theme.primaryColor}33` }}
       >
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {[
-            { label: "Jogos", value: String(s.appearances) },
-            { label: "Gols", value: String(s.goals) },
-            { label: "Assistências", value: String(s.assists) },
-            { label: "Finalizações / 90", value: s.per90.shots.toFixed(2) },
-            { label: "Passes chave / 90", value: s.per90.keyPasses.toFixed(2) },
+            { label: "Appearances", value: String(s.appearances) },
+            { label: "Goals", value: String(s.goals) },
+            { label: "Assists", value: String(s.assists) },
+            { label: "Shots / 90", value: s.per90.shots.toFixed(2) },
+            { label: "Key Passes / 90", value: s.per90.keyPasses.toFixed(2) },
             { label: "xG total", value: s.xG.toFixed(2), glossary: METRIC_GLOSSARY.xG },
             { label: "xA total", value: s.xA.toFixed(2), glossary: METRIC_GLOSSARY.xA },
-            { label: "Precisão passe", value: `${s.passAccuracy.toFixed(0)}%` },
-            { label: "Duelos ganhos", value: `${s.duelsWonPct.toFixed(0)}%` },
-            { label: "Desarmes / 90", value: s.per90.tackles.toFixed(2) },
+            { label: "Pass Accuracy", value: `${s.passAccuracy.toFixed(0)}%` },
+            { label: "Duels Won", value: `${s.duelsWonPct.toFixed(0)}%` },
+            { label: "Tackles Won / 90", value: s.per90.tackles.toFixed(2) },
+            { label: "Interceptions / 90", value: s.per90.interceptions.toFixed(2) },
           ].map((item) => (
             <div
               key={item.label}

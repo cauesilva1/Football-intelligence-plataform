@@ -28,29 +28,29 @@ export function ScoutingPagination({
   return (
     <div className="flex items-center justify-between px-1 py-2">
       <p className="text-xs text-muted-foreground">
-        Mostrando <span className="text-foreground">{total === 0 ? 0 : start}-{end}</span> de{" "}
-        <span className="text-foreground">{total}</span> jogadores
+        Showing <span className="text-foreground">{total === 0 ? 0 : start}-{end}</span> of{" "}
+        <span className="text-foreground">{total}</span> players found
       </p>
       <div className="flex items-center gap-2">
         {page > 1 ? (
           <Link href={prevUrl} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-            <ChevronLeft className="h-3.5 w-3.5" /> Anterior
+            <ChevronLeft className="h-3.5 w-3.5" /> Previous
           </Link>
         ) : (
           <span className={cn(buttonVariants({ variant: "outline", size: "sm" }), "pointer-events-none opacity-50")}>
-            <ChevronLeft className="h-3.5 w-3.5" /> Anterior
+            <ChevronLeft className="h-3.5 w-3.5" /> Previous
           </span>
         )}
         <span className="text-xs text-muted-foreground">
-          Página {page} de {totalPages}
+          Page {page} of {totalPages}
         </span>
         {page < totalPages ? (
           <Link href={nextUrl} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-            Próxima <ChevronRight className="h-3.5 w-3.5" />
+            Next <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         ) : (
           <span className={cn(buttonVariants({ variant: "outline", size: "sm" }), "pointer-events-none opacity-50")}>
-            Próxima <ChevronRight className="h-3.5 w-3.5" />
+            Next <ChevronRight className="h-3.5 w-3.5" />
           </span>
         )}
       </div>

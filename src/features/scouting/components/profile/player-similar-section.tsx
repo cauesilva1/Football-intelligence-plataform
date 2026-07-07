@@ -10,12 +10,12 @@ export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
 
   return (
     <DataPanel
-      title="Jogadores similares"
-      description="Comparação por perfil estatístico ponderado (mesma posição)."
+      title="Similar Players"
+      description="Weighted statistical profile comparison (same position)."
       density="dense"
     >
       {similar.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nenhum jogador similar encontrado na base atual.</p>
+        <p className="text-sm text-muted-foreground">No similar players found in the current database.</p>
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
           {similar.map(({ player, score }) => (
@@ -31,7 +31,7 @@ export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
                   <Badge variant="neutral">{player.position}</Badge>
                 </div>
                 <p className="mt-1 truncate text-2xs text-muted-foreground">
-                  {player.teamShortName ?? "—"} · {player.age} anos · {formatMarketValue(player.marketValue)}
+                  {player.teamShortName ?? "—"} · {player.age} years old · {formatMarketValue(player.marketValue)}
                 </p>
               </div>
               <div className="shrink-0 text-right">

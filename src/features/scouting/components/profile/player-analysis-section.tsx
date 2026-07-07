@@ -10,8 +10,8 @@ export function PlayerAnalysisSection({ player }: { player: Player }) {
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <DataPanel
-        title="Pontos fortes"
-        description="Atributos destacados para scouting."
+        title="Key Strengths"
+        description="Highlighted attributes for scouting."
         density="dense"
         className="lg:col-span-1"
       >
@@ -29,8 +29,8 @@ export function PlayerAnalysisSection({ player }: { player: Player }) {
       </DataPanel>
 
       <DataPanel
-        title="Pontos de atenção"
-        description="Riscos ou limitações observadas."
+        title="Areas to Watch"
+        description="Observed risks or limitations."
         density="dense"
         className="lg:col-span-1"
       >
@@ -48,8 +48,8 @@ export function PlayerAnalysisSection({ player }: { player: Player }) {
       </DataPanel>
 
       <DataPanel
-        title="Estilo de jogo"
-        description="Perfil tático inferido das métricas."
+        title="Playing Style"
+        description="Tactical profile inferred from metrics."
         density="dense"
         className="lg:col-span-1"
       >

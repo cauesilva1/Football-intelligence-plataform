@@ -108,15 +108,15 @@ export function deriveStrengthsWeaknesses(
   const strengths: string[] = [];
   const weaknesses: string[] = [];
 
-  if (stat.goals >= 5) strengths.push("Finalização Precisa");
-  if (stat.assists >= 4) strengths.push("Visão de Jogo");
+  if (stat.goals >= 5) strengths.push("Clinical Finishing");
+  if (stat.assists >= 4) strengths.push("Vision");
   if (stat.tacklesWon >= 15) {
-    strengths.push(DEFENSIVE_BONUS_POSITIONS.has(position) ? "Desarmes Precisos" : "Combate Físico");
+    strengths.push(DEFENSIVE_BONUS_POSITIONS.has(position) ? "Precise Tackling" : "Physical Duels");
   }
-  if (stat.interceptions >= 12) strengths.push("Antecipação Defensiva");
-  if (stat.minutesPlayed >= 2_000) strengths.push("Regularidade Titular");
-  if (per90(stat.goals, stat.minutesPlayed) >= 0.45) strengths.push("Ameaça Constante no Ataque");
-  if (per90(stat.assists, stat.minutesPlayed) >= 0.2) strengths.push("Criação de Chances");
+  if (stat.interceptions >= 12) strengths.push("Defensive Anticipation");
+  if (stat.minutesPlayed >= 2_000) strengths.push("Starter Consistency");
+  if (per90(stat.goals, stat.minutesPlayed) >= 0.45) strengths.push("Constant Attacking Threat");
+  if (per90(stat.assists, stat.minutesPlayed) >= 0.2) strengths.push("Chance Creation");
 
   if (
     FORWARD_POSITIONS.has(position) &&
@@ -124,20 +124,20 @@ export function deriveStrengthsWeaknesses(
     stat.goals === 0 &&
     stat.assists === 0
   ) {
-    weaknesses.push("Produtividade Ofensiva");
+    weaknesses.push("Offensive Output");
   }
   if (stat.minutesPlayed >= 900 && stat.goals + stat.assists < 2 && !FORWARD_POSITIONS.has(position)) {
-    weaknesses.push("Contribuição Ofensiva Limitada");
+    weaknesses.push("Limited Offensive Contribution");
   }
-  if (stat.redCards >= 1) weaknesses.push("Disciplina em Campo");
-  if (stat.minutesPlayed < 450) weaknesses.push("Amostra Reduzida na Temporada");
-  if (stat.yellowCards >= 8) weaknesses.push("Risco de Suspensão");
+  if (stat.redCards >= 1) weaknesses.push("On-Pitch Discipline");
+  if (stat.minutesPlayed < 450) weaknesses.push("Small Sample Size This Season");
+  if (stat.yellowCards >= 8) weaknesses.push("Suspension Risk");
 
   if (strengths.length === 0 && stat.minutesPlayed >= 600) {
-    strengths.push("Participação Consistente");
+    strengths.push("Consistent Involvement");
   }
   if (weaknesses.length === 0 && stat.minutesPlayed < 900) {
-    weaknesses.push("Minutos Limitados");
+    weaknesses.push("Limited Minutes Played");
   }
 
   return {

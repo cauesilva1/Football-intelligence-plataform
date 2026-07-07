@@ -12,28 +12,28 @@ export function derivePlayerStatus(stats: PlayerStatistic): PlayerStatus {
 
   if (minutesPlayed >= 1_200 && appearances >= 14) {
     return {
-      label: "Titular",
-      description: "Minutos consistentes na temporada",
+      label: "Starter",
+      description: "Consistent minutes this season",
       variant: "default",
     };
   }
   if (minutesPlayed >= 600 && appearances >= 8) {
     return {
-      label: "Rotação",
-      description: "Participação regular em rodadas",
+      label: "Rotation",
+      description: "Regular matchday involvement",
       variant: "azure",
     };
   }
   if (rating >= 7.2 && minutesPlayed < 600) {
     return {
       label: "Prospect",
-      description: "Alto impacto em minutos limitados",
+      description: "High impact in limited minutes",
       variant: "amber",
     };
   }
   return {
-    label: "Elenco",
-    description: "Minutos reduzidos na temporada",
+    label: "Squad Player",
+    description: "Reduced minutes this season",
     variant: "neutral",
   };
 }

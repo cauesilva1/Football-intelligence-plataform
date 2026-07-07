@@ -28,24 +28,24 @@ export function GlossaryTooltip({
 }
 
 export const POSITION_GLOSSARY: Record<string, string> = {
-  GK: "Goleiro",
-  CB: "Zagueiro",
-  LB: "Lateral esquerdo",
-  RB: "Lateral direito",
-  CDM: "Volante",
-  CM: "Meio-campista",
-  CAM: "Meia atacante",
-  LW: "Atacante — ponta esquerda",
-  RW: "Atacante — ponta direita",
-  ST: "Atacante — centroavante",
-  FW: "Atacante",
-  MF: "Meio-campista",
-  DF: "Defensor",
+  GK: "Goalkeeper",
+  CB: "Centre-back",
+  LB: "Left-back",
+  RB: "Right-back",
+  CDM: "Defensive midfielder",
+  CM: "Central midfielder",
+  CAM: "Attacking midfielder",
+  LW: "Left winger",
+  RW: "Right winger",
+  ST: "Striker",
+  FW: "Forward",
+  MF: "Midfielder",
+  DF: "Defender",
 };
 
 export const METRIC_GLOSSARY = {
-  xG: "Gols Esperados (Expected Goals): mede a probabilidade de uma finalização resultar em gol com base no histórico da jogada.",
-  xA: "Assistências Esperadas (Expected Assists): mede a probabilidade de um passe se tornar uma assistência direta para gol.",
+  xG: "Expected Goals (xG): measures the probability of a shot becoming a goal based on shot quality and historical conversion.",
+  xA: "Expected Assists (xA): measures the probability of a pass becoming a direct goal assist.",
   rating:
-    "Nota sintética derivada de produtividade, volume de jogo e contribuição defensiva na temporada.",
+    "Composite rating derived from productivity, playing volume, and defensive contribution this season.",
 } as const;

@@ -7,7 +7,7 @@ import { ScoutingDatabaseView } from "@/features/scouting/components/scouting-da
 import { ScoutingTableSkeleton } from "@/features/scouting/components/scouting-table-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const metadata = { title: "Jogadores · Football Intelligence Platform" };
+export const metadata = { title: "Players · Football Intelligence Platform" };
 
 function FiltersSkeleton() {
   return <Skeleton className="h-28 w-full rounded-xl" />;
@@ -23,7 +23,7 @@ export default async function PlayersPage({
   const suspenseKey = JSON.stringify(filters);
 
   return (
-    <DashboardShell subtitle="Jogadores" userName={session?.name}>
+    <DashboardShell subtitle="Players" userName={session?.name}>
       <div className="space-y-4">
         <Suspense fallback={<FiltersSkeleton />}>
           <ScoutingFiltersPanelLoader basePath="/players" route="players" />

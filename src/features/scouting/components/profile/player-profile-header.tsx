@@ -88,14 +88,14 @@ export function PlayerProfileHeader({
               )}
               <span className="inline-flex items-center gap-1.5 text-xs text-white/70">
                 <NationalTeamCrest name={player.nationality} size="sm" className="h-5 w-5 text-[9px]" />
-                {player.nationality} · {player.age} anos
+                {player.nationality} · {player.age} years old
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/70">
               <span className="inline-flex items-center gap-1">
                 <ShieldHalf className="h-3.5 w-3.5" style={{ color: theme.accent }} />
                 <span className="font-medium text-white/90">
-                  {player.teamName ?? "Sem clube"}
+                  {player.teamName ?? "No club"}
                   {player.teamShortName ? ` (${player.teamShortName})` : ""}
                 </span>
               </span>
@@ -126,7 +126,7 @@ export function PlayerProfileHeader({
               </div>
             </div>
             <div>
-              <div className="text-2xs font-medium uppercase tracking-wider text-white/60">Valor</div>
+              <div className="text-2xs font-medium uppercase tracking-wider text-white/60">Market Value</div>
               <div className="font-display text-2xl font-bold tabular-nums text-white">
                 {formatMarketValue(player.marketValue)}
               </div>
@@ -135,7 +135,7 @@ export function PlayerProfileHeader({
           <div className="flex flex-wrap gap-2">
             <ShortlistButton playerId={player.id} initialSaved={isShortlisted} />
             <Link href={`/compare?playerA=${player.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
-              <GitCompareArrows className="h-3.5 w-3.5" /> Comparar
+              <GitCompareArrows className="h-3.5 w-3.5" /> Compare
             </Link>
             <Link href={`/reports?playerId=${player.id}`} className={buttonVariants({ variant: "secondary", size: "sm" })}>
               <FileText className="h-3.5 w-3.5" /> Scout Report

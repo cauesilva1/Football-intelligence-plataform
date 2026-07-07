@@ -8,29 +8,29 @@ export interface PlayingStyle {
 }
 
 const STYLE_BY_DIMENSION: Record<string, { label: string; description: string }> = {
-  Finalização: {
-    label: "Finalizador",
-    description: "Volume de finalização e conversão de chances acima da média para a posição.",
+  Finishing: {
+    label: "Finisher",
+    description: "Shot volume and chance conversion above the positional average.",
   },
-  Criação: {
-    label: "Criador",
-    description: "Participação ativa na última fase ofensiva e geração de oportunidades.",
+  Creation: {
+    label: "Creator",
+    description: "Active in the final third and chance generation.",
   },
-  Passe: {
-    label: "Construtor",
-    description: "Distribuição segura e progressão de posse com passes verticais.",
+  Passing: {
+    label: "Builder",
+    description: "Safe distribution and possession progression with vertical passes.",
   },
-  Drible: {
-    label: "Desequilibrador",
-    description: "Condução em 1x1 e capacidade de quebrar linhas defensivas.",
+  Dribbling: {
+    label: "Ball Carrier",
+    description: "One-on-one dribbling and ability to break defensive lines.",
   },
-  Defesa: {
-    label: "Recuperador",
-    description: "Antecipação, desarmes e cobertura defensiva consistentes.",
+  Defense: {
+    label: "Ball Winner",
+    description: "Anticipation, tackles, and consistent defensive cover.",
   },
-  Físico: {
-    label: "Dominante",
-    description: "Vantagem em duelos físicos e disputas de segunda bola.",
+  Physical: {
+    label: "Physical Dominator",
+    description: "Advantage in physical duels and second-ball contests.",
   },
 };
 
@@ -47,20 +47,20 @@ export function derivePlayingStyle(player: Player): PlayingStyle {
   const traits = [
     `${topKey} (${Math.round(topValue)}/100)`,
     `${secondKey} (${Math.round(profile[secondKey])}/100)`,
-    player.preferredFoot === "BOTH" ? "Ambidestro" : `Pé ${player.preferredFoot === "LEFT" ? "esquerdo" : "direito"}`,
+    player.preferredFoot === "BOTH" ? "Two-footed" : `${player.preferredFoot === "LEFT" ? "Left" : "Right"} foot`,
   ];
 
   if (player.position === "GK") {
     return {
-      label: "Guardião",
-      description: "Perfil orientado a reflexos, leitura de jogo e organização defensiva.",
-      traits: ["Jogo aéreo", "Saída de gol", "Distribuição"],
+      label: "Shot Stopper",
+      description: "Profile oriented to reflexes, game reading, and defensive organization.",
+      traits: ["Aerial play", "Shot stopping", "Distribution"],
     };
   }
 
   return {
-    label: primary?.label ?? "Perfil híbrido",
-    description: `${primary?.description ?? ""} Complementado por tendência de ${secondary?.label.toLowerCase() ?? "jogo equilibrado"}.`,
+    label: primary?.label ?? "Hybrid Profile",
+    description: `${primary?.description ?? ""} Complemented by a ${secondary?.label.toLowerCase() ?? "balanced"} tendency.`,
     traits,
   };
 }

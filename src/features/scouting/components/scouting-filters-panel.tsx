@@ -78,73 +78,73 @@ export function ScoutingFiltersPanel({
 
   const advancedFields = (
     <>
-      <FilterField label="Idade mín.">
+      <FilterField label="Min Age">
         <Select
           value={String(filters.minAge ?? "")}
           onChange={(e) => pushFilters({ minAge: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
         >
-          <option value="">Sem limite</option>
+          <option value="">No limit</option>
           {MIN_AGE_OPTIONS.map((a) => (
-            <option key={a} value={a}>{a}+ anos</option>
+            <option key={a} value={a}>{a}+ years</option>
           ))}
         </Select>
       </FilterField>
-      <FilterField label="Idade máx.">
+      <FilterField label="Max Age">
         <Select
           value={String(filters.maxAge ?? "")}
           onChange={(e) => pushFilters({ maxAge: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
         >
-          <option value="">Sem limite</option>
+          <option value="">No limit</option>
           {MAX_AGE_OPTIONS.map((a) => (
-            <option key={a} value={a}>Até {a} anos</option>
+            <option key={a} value={a}>Max Age: {a}</option>
           ))}
         </Select>
       </FilterField>
-      <FilterField label="Rating mín.">
+      <FilterField label="Min Rating">
         <Select
           value={String(filters.minRating ?? "")}
           onChange={(e) => pushFilters({ minRating: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
         >
-          <option value="">Sem limite</option>
+          <option value="">No limit</option>
           {MIN_RATING_OPTIONS.map((r) => (
             <option key={r} value={r}>{r.toFixed(1)}+</option>
           ))}
         </Select>
       </FilterField>
-      <FilterField label="Minutos mín.">
+      <FilterField label="Min Minutes">
         <Select
           value={String(filters.minMinutes ?? "")}
           onChange={(e) =>
             pushFilters({ minMinutes: e.target.value ? Number(e.target.value) : undefined, page: 1 })
           }
         >
-          <option value="">Sem limite</option>
+          <option value="">No limit</option>
           {MIN_MINUTES_OPTIONS.filter((m) => m > 0).map((m) => (
             <option key={m} value={m}>{m}+ min</option>
           ))}
         </Select>
       </FilterField>
-      <FilterField label="Gols/90 mín.">
+      <FilterField label="Min Goals/90">
         <Select
           value={String(filters.minGoalsPer90 ?? "")}
           onChange={(e) =>
             pushFilters({ minGoalsPer90: e.target.value ? Number(e.target.value) : undefined, page: 1 })
           }
         >
-          <option value="">Sem limite</option>
+          <option value="">No limit</option>
           {MIN_GOALS_PER90_OPTIONS.filter((v) => v > 0).map((v) => (
             <option key={v} value={v}>{v.toFixed(2)}+</option>
           ))}
         </Select>
       </FilterField>
-      <FilterField label="xG/90 mín.">
+      <FilterField label="Min xG/90">
         <Select
           value={String(filters.minXGPer90 ?? "")}
           onChange={(e) =>
             pushFilters({ minXGPer90: e.target.value ? Number(e.target.value) : undefined, page: 1 })
           }
         >
-          <option value="">Sem limite</option>
+          <option value="">No limit</option>
           {MIN_XG_PER90_OPTIONS.filter((v) => v > 0).map((v) => (
             <option key={v} value={v}>{v.toFixed(2)}+</option>
           ))}
@@ -153,7 +153,7 @@ export function ScoutingFiltersPanel({
       {hasActiveFilters(filters) && (
         <div className="flex items-end">
           <Button type="button" variant="outline" size="sm" onClick={clearFilters}>
-            <X className="h-3.5 w-3.5" /> Limpar filtros
+            <X className="h-3.5 w-3.5" /> Clear Filters
           </Button>
         </div>
       )}
@@ -165,47 +165,47 @@ export function ScoutingFiltersPanel({
       pending={isPending}
       footer={route === "players" ? advancedFields : undefined}
     >
-      <FilterField label="Busca" className="min-w-[220px] flex-[2]">
+      <FilterField label="Search" className="min-w-[220px] flex-[2]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Nome do jogador..."
+            placeholder="Search player by name..."
             className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
       </FilterField>
-      <FilterField label="Posição">
+      <FilterField label="Position">
         <Select
           value={filters.position ?? ""}
           onChange={(e) => pushFilters({ position: e.target.value || undefined, page: 1 })}
         >
-          <option value="">Todas</option>
+          <option value="">All</option>
           {POSITIONS.map((p) => (
             <option key={p} value={p}>{p}</option>
           ))}
         </Select>
       </FilterField>
-      <FilterField label="Liga">
+      <FilterField label="League">
         <Select
           value={filters.league ?? ""}
           onChange={(e) =>
             pushFilters({ league: e.target.value || undefined, teamId: undefined, page: 1 })
           }
         >
-          <option value="">Todas</option>
+          <option value="">All</option>
           {leagues.map((l) => (
             <option key={l.id} value={l.id}>{l.name}</option>
           ))}
         </Select>
       </FilterField>
-      <FilterField label="Clube">
+      <FilterField label="Club">
         <Select
           value={filters.teamId ?? ""}
           onChange={(e) => pushFilters({ teamId: e.target.value || undefined, page: 1 })}
         >
-          <option value="">Todos</option>
+          <option value="">All</option>
           {teamOptions.map((t) => (
             <option key={t.id} value={t.id}>{t.name}</option>
           ))}

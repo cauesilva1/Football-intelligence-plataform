@@ -9,39 +9,39 @@ export interface SimilarPlayerResult {
 type WeightMap = Record<string, number>;
 
 const ATTACK_WEIGHTS: WeightMap = {
-  Finalização: 0.3,
-  Criação: 0.15,
+  Finishing: 0.3,
+  Creation: 0.15,
   xG: 0.25,
   shots: 0.15,
-  Passe: 0.05,
-  Físico: 0.1,
+  Passing: 0.05,
+  Physical: 0.1,
 };
 
 const MID_WEIGHTS: WeightMap = {
-  Criação: 0.25,
-  Passe: 0.25,
-  Finalização: 0.1,
-  Defesa: 0.15,
-  Drible: 0.1,
-  Físico: 0.15,
+  Creation: 0.25,
+  Passing: 0.25,
+  Finishing: 0.1,
+  Defense: 0.15,
+  Dribbling: 0.1,
+  Physical: 0.15,
 };
 
 const DEF_WEIGHTS: WeightMap = {
-  Defesa: 0.35,
-  Físico: 0.25,
-  Passe: 0.2,
-  Finalização: 0.05,
-  Criação: 0.05,
-  Drible: 0.1,
+  Defense: 0.35,
+  Physical: 0.25,
+  Passing: 0.2,
+  Finishing: 0.05,
+  Creation: 0.05,
+  Dribbling: 0.1,
 };
 
 const GK_WEIGHTS: WeightMap = {
-  Defesa: 0.4,
-  Passe: 0.25,
-  Físico: 0.2,
-  Finalização: 0.05,
-  Criação: 0.05,
-  Drible: 0.05,
+  Defense: 0.4,
+  Passing: 0.25,
+  Physical: 0.2,
+  Finishing: 0.05,
+  Creation: 0.05,
+  Dribbling: 0.05,
 };
 
 function weightsForPosition(position: string): WeightMap {
@@ -57,12 +57,12 @@ function featureVector(player: Player): Record<string, number> {
   const minutes = Math.max(s.minutesPlayed, 1);
 
   return {
-    Finalização: radar.Finalização,
-    Criação: radar.Criação,
-    Passe: radar.Passe,
-    Drible: radar.Drible,
-    Defesa: radar.Defesa,
-    Físico: radar.Físico,
+    Finishing: radar.Finishing,
+    Creation: radar.Creation,
+    Passing: radar.Passing,
+    Dribbling: radar.Dribbling,
+    Defense: radar.Defense,
+    Physical: radar.Physical,
     xG: Math.min(100, (s.xG / minutes) * 90 * 40),
     shots: Math.min(100, (s.shots / minutes) * 90 * 8),
     age: Math.max(0, 100 - Math.abs(player.age - 24) * 6),

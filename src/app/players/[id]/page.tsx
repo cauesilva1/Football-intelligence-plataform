@@ -9,7 +9,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const player = await queryPlayerById(id);
   return {
-    title: player ? `${player.knownAs} · Football Intelligence Platform` : "Perfil do jogador · Football Intelligence Platform",
+    title: player ? `${player.knownAs} · Football Intelligence Platform` : "Player Profile · Football Intelligence Platform",
   };
 }
 
@@ -18,7 +18,7 @@ export default async function PlayerDetailPage({ params }: { params: Promise<{ i
   const player = await queryPlayerById(id);
 
   return (
-    <DashboardShell subtitle={player?.knownAs ?? "Perfil do jogador"} userName={session?.name}>
+    <DashboardShell subtitle={player?.knownAs ?? "Player Profile"} userName={session?.name}>
       <Suspense fallback={<PlayerProfileSkeleton />}>
         <PlayerProfileView playerId={id} />
       </Suspense>

@@ -50,28 +50,28 @@ const NATIONALITIES = [
 const POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"] as const;
 
 const STRENGTHS_BY_POS: Record<string, string[]> = {
-  GK: ["Reflexos de elite", "Excelente saída de gols", "Leitura de jogo aérea", "Precisão em lançamentos longos"],
-  CB: ["Domínio no jogo aéreo", "Antecipação nos duelos", "Saída de bola limpa", "Liderança defensiva"],
-  LB: ["Intensidade nas subidas", "Cruzamentos precisos", "Recuperação defensiva rápida", "Um contra um sólido"],
-  RB: ["Overlap constante", "Cruzamentos precisos", "Resistência física", "Cobertura defensiva"],
-  CDM: ["Interceptações consistentes", "Distribuição de bola inteligente", "Cobertura de espaço", "Disciplina tática"],
-  CM: ["Visão de jogo", "Passe entre linhas", "Box-to-box", "Chegada ao ataque"],
-  CAM: ["Último passe", "Criatividade em espaços curtos", "Finalização de fora da área", "Facilidade entre linhas"],
-  LW: ["Drible em velocidade", "Finalização com pé direito", "Desequilíbrio no 1x1", "Inversão de jogo"],
-  RW: ["Explosão em profundidade", "Cruzamentos de fundo", "Drible curto", "Corte para o meio"],
-  ST: ["Finalização precisa", "Movimentação nas costas da defesa", "Jogo de costas para o gol", "Instinto de área"],
+  GK: ["Elite Reflexes", "Excellent Shot Stopping", "Aerial Command", "Excellent Long Passing"],
+  CB: ["Aerial Dominance", "Anticipation in Duels", "Clean Ball Progression", "Defensive Leadership"],
+  LB: ["Overlapping Intensity", "Accurate Crosses", "Quick Defensive Recovery", "Solid One-on-One Defending"],
+  RB: ["Constant Overlaps", "Accurate Crosses", "Physical Endurance", "Defensive Cover"],
+  CDM: ["Consistent Interceptions", "Intelligent Distribution", "Space Coverage", "Tactical Discipline"],
+  CM: ["Vision", "Line-Breaking Passes", "Box-to-Box Engine", "Late Runs into the Box"],
+  CAM: ["Final Ball", "Creativity in Tight Spaces", "Shooting from Distance", "Finding Pockets Between Lines"],
+  LW: ["Pace Dribbling", "Finishing with Right Foot", "One-on-One Threat", "Inverting Play"],
+  RW: ["Explosive Runs in Behind", "Low Crosses", "Close Control Dribbling", "Cutting Inside"],
+  ST: ["Clinical Finishing", "Runs in Behind", "Link-Up Play", "Box Instinct"],
 };
 const WEAKNESSES_BY_POS: Record<string, string[]> = {
-  GK: ["Jogo com os pés limitado", "Insegurança em cruzamentos", "Reação lenta em rebotes"],
-  CB: ["Velocidade em recuperação", "Exposição em espaços largos", "Passe longo impreciso"],
-  LB: ["Marcação em duelos aéreos", "Consistência defensiva", "Excesso de risco na saída"],
-  RB: ["Fôlego em jogos de alta intensidade", "Posicionamento defensivo", "Finalização"],
-  CDM: ["Mobilidade reduzida", "Passe em profundidade", "Contribuição ofensiva limitada"],
-  CM: ["Consistência defensiva", "Duelos físicos", "Finalização"],
-  CAM: ["Contribuição defensiva", "Inconsistência de forma", "Duelos físicos"],
-  LW: ["Consistência defensiva", "Decisão final no 1x1", "Jogo aéreo"],
-  RW: ["Regularidade de desempenho", "Contribuição defensiva", "Duelo físico"],
-  ST: ["Jogo aéreo limitado", "Contribuição na construção", "Pressão defensiva"],
+  GK: ["Limited Footwork", "Cross Claiming", "Slow Reactions on Rebounds"],
+  CB: ["Recovery Pace", "Exposure in Wide Areas", "Imprecise Long Passing"],
+  LB: ["Aerial Marking", "Defensive Consistency", "Risky Ball Progression"],
+  RB: ["Stamina in High-Intensity Games", "Defensive Positioning", "Finishing"],
+  CDM: ["Reduced Mobility", "Through Balls", "Limited Offensive Contribution"],
+  CM: ["Defensive Consistency", "Physical Duels", "Finishing"],
+  CAM: ["Defensive Contribution", "Form Inconsistency", "Physical Duels"],
+  LW: ["Defensive Consistency", "Final Decision in 1v1", "Aerial Play"],
+  RW: ["Performance Consistency", "Defensive Contribution", "Physical Duels"],
+  ST: ["Limited Aerial Play", "Build-Up Contribution", "Defensive Pressing"],
 };
 
 function shuffleTake<T>(rand: () => number, arr: T[], n: number): T[] {
