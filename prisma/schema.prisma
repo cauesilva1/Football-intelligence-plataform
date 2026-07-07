@@ -1,0 +1,210 @@
+// ==========================================================
+// Football Intelligence Platform - Prisma Schema (Supabase/Postgres)
+// ==========================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  SCOUT
+  ANALYST
+  VIEWER
+}
+
+enum Foot {
+  LEFT
+  RIGHT
+  BOTH
+}
+
+model User {
+  id           String           @id @default(uuid())
+  email        String           @unique
+  name         String
+  role         Role             @default(SCOUT)
+  avatarUrl    String?
+  passwordHash String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  reports      ScoutingReport[]
+
+  @@map("users")
+}
+
+model Competition {
+  id        String   @id @default(uuid())
+  name      String
+  country   String
+  tier      Int      @default(1)
+  logoUrl   String?
+  teams     Team[]
+  matches   Match[]
+  createdAt DateTime @default(now())
+
+  @@map("competitions")
+}
+
+model Team {
+  id            String          @id @default(uuid())
+  name          String
+  shortName     String
+  country       String
+  crestUrl      String?
+  foundedYear   Int?
+  stadium       String?
+  apiSportsId   Int?
+  competitionId String?
+  competition   Competition?    @relation(fields: [competitionId], references: [id])
+  players       Player[]
+  homeMatches   Match[]         @relation("HomeTeam")
+  awayMatches   Match[]         @relation("AwayTeam")
+  statistics    TeamStatistic[]
+  playerStats   PlayerStatistic[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([apiSportsId])
+  @@map("teams")
+}
+
+model Player {
+  id                String            @id @default(uuid())
+  fullName          String
+  knownAs           String
+  dateOfBirth       DateTime
+  nationality       String
+  position          String
+  secondaryPosition String?
+  height            Int
+  weight            Int
+  preferredFoot     Foot              @default(RIGHT)
+  marketValue       Int               @default(0)
+  photoUrl          String?
+  apiSportsId       Int?
+  teamId            String?
+  team              Team?             @relation(fields: [teamId], references: [id])
+  statistics        PlayerStatistic[]
+  reports           ScoutingReport[]
+  strengths         String[]
+  weaknesses        String[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([teamId])
+  @@index([position])
+  @@index([apiSportsId])
+  @@map("players")
+}
+
+model Match {
+  id            String       @id @default(uuid())
+  competitionId String?
+  competition   Competition? @relation(fields: [competitionId], references: [id])
+  homeTeamId    String
+  awayTeamId    String
+  homeTeam      Team         @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam      Team         @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  homeScore     Int          @default(0)
+  awayScore     Int          @default(0)
+  matchDate     DateTime
+  round         String?
+  createdAt     DateTime     @default(now())
+
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+  @@map("matches")
+}
+
+model PlayerStatistic {
+  id                String   @id @default(uuid())
+  externalKey       String   @unique
+  playerId          String
+  player            Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  teamId            String
+  team              Team     @relation(fields: [teamId], references: [id])
+  season            String
+  appearances       Int      @default(0)
+  minutesPlayed     Int      @default(0)
+  goals             Int      @default(0)
+  assists           Int      @default(0)
+  xG                Float    @default(0)
+  xA                Float    @default(0)
+  shots             Int      @default(0)
+  shotsOnTarget     Int      @default(0)
+  passes            Int      @default(0)
+  passAccuracy      Float    @default(0)
+  keyPasses         Float    @default(0)
+  dribblesCompleted Float    @default(0)
+  tacklesWon        Float    @default(0)
+  interceptions     Float    @default(0)
+  duelsWonPct       Float    @default(0)
+  yellowCards       Int      @default(0)
+  redCards          Int      @default(0)
+  rating            Float    @default(0)
+  createdAt         DateTime @default(now())
+
+  @@unique([playerId, teamId, season])
+  @@index([playerId])
+  @@index([teamId])
+  @@index([season])
+  @@map("player_statistics")
+}
+
+model TeamStatistic {
+  id              String   @id @default(uuid())
+  teamId          String
+  team            Team     @relation(fields: [teamId], references: [id])
+  season          String
+  matchesPlayed   Int      @default(0)
+  wins            Int      @default(0)
+  draws           Int      @default(0)
+  losses          Int      @default(0)
+  goalsFor        Int      @default(0)
+  goalsAgainst    Int      @default(0)
+  xG              Float    @default(0)
+  xGA             Float    @default(0)
+  possessionPct   Float    @default(0)
+  passAccuracyPct Float    @default(0)
+  pressuresPer90  Float    @default(0)
+  attackRating    Float    @default(0)
+  defenseRating   Float    @default(0)
+  createdAt       DateTime @default(now())
+
+  @@unique([teamId, season])
+  @@index([teamId])
+  @@map("team_statistics")
+}
+
+model ScoutingReport {
+  id             String   @id @default(uuid())
+  playerId       String
+  player         Player   @relation(fields: [playerId], references: [id])
+  authorId       String?
+  author         User?    @relation(fields: [authorId], references: [id])
+  summary        String
+  strengths      String[]
+  weaknesses     String[]
+  recommendation String
+  overallRating  Float
+  generatedBy    String   @default("mock-ai")
+  createdAt      DateTime @default(now())
+
+  @@index([playerId])
+  @@map("scouting_reports")
+}
+
+model SystemCache {
+  key       String   @id
+  json      Json
+  updatedAt DateTime @updatedAt
+
+  @@map("system_cache")
+}
