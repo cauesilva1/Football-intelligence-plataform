@@ -1,0 +1,138 @@
+import { prisma } from "@/lib/prisma";
+import { CURRENT_SEASON } from "@/lib/data/generators";
+import type { TeamRepository } from "./types";
+import { prismaPlayerRepository } from "./player.repository.prisma";
+
+export const prismaTeamRepository: TeamRepository = {
+  async findAll(competitionId?: string) {
+    const teams = await prisma.team.findMany({
+      where: competitionId ? { competitionId } : undefined,
+      include: {
+        competition: true,
+        statistics: { where: { season: CURRENT_SEASON } },
+        _count: { select: { players: true } },
+      },
+    });
+
+    return teams.map((team) => ({
+      id: team.id,
+      name: team.name,
+      shortName: team.shortName,
+      country: team.country,
+      crestUrl: team.crestUrl ?? undefined,
+      apiSportsId: team.apiSportsId ?? undefined,
+      foundedYear: team.foundedYear ?? 0,
+      stadium: team.stadium ?? "",
+      competitionId: team.competitionId ?? "",
+      competition: team.competition
+        ? {
+            id: team.competition.id,
+            name: team.competition.name,
+            country: team.competition.country,
+            tier: team.competition.tier,
+            logoUrl: team.competition.logoUrl ?? undefined,
+          }
+        : undefined,
+      stats: team.statistics[0]
+        ? {
+            id: team.statistics[0].id,
+            teamId: team.statistics[0].teamId,
+            season: team.statistics[0].season,
+            matchesPlayed: team.statistics[0].matchesPlayed,
+            wins: team.statistics[0].wins,
+            draws: team.statistics[0].draws,
+            losses: team.statistics[0].losses,
+            goalsFor: team.statistics[0].goalsFor,
+            goalsAgainst: team.statistics[0].goalsAgainst,
+            xG: team.statistics[0].xG,
+            xGA: team.statistics[0].xGA,
+            possessionPct: team.statistics[0].possessionPct,
+            passAccuracyPct: team.statistics[0].passAccuracyPct,
+            pressuresPer90: team.statistics[0].pressuresPer90,
+            attackRating: team.statistics[0].attackRating,
+            defenseRating: team.statistics[0].defenseRating,
+          }
+        : undefined,
+      squadSize: team._count.players,
+    }));
+  },
+
+  async findById(id) {
+    const team = await prisma.team.findUnique({
+      where: { id },
+      include: {
+        competition: true,
+        statistics: { where: { season: CURRENT_SEASON } },
+      },
+    });
+    if (!team) return null;
+
+    const squadRecords = await prisma.player.findMany({
+      where: { teamId: id },
+      include: {
+        team: true,
+        statistics: { include: { team: true }, orderBy: [{ season: "asc" }, { createdAt: "asc" }] },
+      },
+    });
+
+    const squad = await Promise.all(
+      squadRecords.map(async (p) => {
+        const mapped = await prismaPlayerRepository.findById(p.id);
+        return mapped!;
+      })
+    );
+
+    return {
+      id: team.id,
+      name: team.name,
+      shortName: team.shortName,
+      country: team.country,
+      crestUrl: team.crestUrl ?? undefined,
+      apiSportsId: team.apiSportsId ?? undefined,
+      foundedYear: team.foundedYear ?? 0,
+      stadium: team.stadium ?? "",
+      competitionId: team.competitionId ?? "",
+      competition: team.competition
+        ? {
+            id: team.competition.id,
+            name: team.competition.name,
+            country: team.competition.country,
+            tier: team.competition.tier,
+            logoUrl: team.competition.logoUrl ?? undefined,
+          }
+        : undefined,
+      stats: team.statistics[0]
+        ? {
+            id: team.statistics[0].id,
+            teamId: team.statistics[0].teamId,
+            season: team.statistics[0].season,
+            matchesPlayed: team.statistics[0].matchesPlayed,
+            wins: team.statistics[0].wins,
+            draws: team.statistics[0].draws,
+            losses: team.statistics[0].losses,
+            goalsFor: team.statistics[0].goalsFor,
+            goalsAgainst: team.statistics[0].goalsAgainst,
+            xG: team.statistics[0].xG,
+            xGA: team.statistics[0].xGA,
+            possessionPct: team.statistics[0].possessionPct,
+            passAccuracyPct: team.statistics[0].passAccuracyPct,
+            pressuresPer90: team.statistics[0].pressuresPer90,
+            attackRating: team.statistics[0].attackRating,
+            defenseRating: team.statistics[0].defenseRating,
+          }
+        : undefined,
+      squad,
+    };
+  },
+
+  async getCompetitions() {
+    const records = await prisma.competition.findMany({ orderBy: { name: "asc" } });
+    return records.map((c) => ({
+      id: c.id,
+      name: c.name,
+      country: c.country,
+      tier: c.tier,
+      logoUrl: c.logoUrl ?? undefined,
+    }));
+  },
+};
