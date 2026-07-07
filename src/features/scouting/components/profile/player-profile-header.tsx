@@ -20,10 +20,8 @@ import type { Player } from "@/types";
 
 export function PlayerProfileHeader({
   player,
-  isShortlisted,
 }: {
   player: Player;
-  isShortlisted: boolean;
 }) {
   const stats = player.currentSeasonStats;
   const status = derivePlayerStatus(stats);
@@ -133,7 +131,7 @@ export function PlayerProfileHeader({
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <ShortlistButton playerId={player.id} initialSaved={isShortlisted} />
+            <ShortlistButton playerId={player.id} />
             <Link href={`/compare?playerA=${player.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
               <GitCompareArrows className="h-3.5 w-3.5" /> Compare
             </Link>

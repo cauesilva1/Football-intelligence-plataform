@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { getSession } from "@/lib/auth/session";
 import { parsePlayerFilters } from "@/features/scouting/lib/parse-filters";
 import { ScoutingFiltersPanelLoader } from "@/features/scouting/components/scouting-filters-panel-loader";
 import { ScoutingDatabaseView } from "@/features/scouting/components/scouting-database-view";
@@ -18,11 +17,11 @@ export default async function ScoutingPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [session, params] = await Promise.all([getSession(), searchParams]);
+  const params = await searchParams;
   const filters = parsePlayerFilters(params, "scouting");
 
   return (
-    <DashboardShell subtitle="Scouting" userName={session?.name}>
+    <DashboardShell subtitle="Scouting">
       <div className="space-y-4">
         <Suspense fallback={<FiltersSkeleton />}>
           <ScoutingFiltersPanelLoader basePath="/scouting" route="scouting" />

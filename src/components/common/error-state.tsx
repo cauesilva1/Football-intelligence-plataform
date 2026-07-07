@@ -2,8 +2,8 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function ErrorState({
-  title = "Não foi possível carregar os dados",
-  description = "Ocorreu um problema ao buscar as informações. Tente novamente em instantes.",
+  title = "Unable to load data",
+  description = "Something went wrong while fetching information. Please try again shortly.",
   onRetry,
 }: {
   title?: string;
@@ -17,7 +17,7 @@ export function ErrorState({
       <p className="max-w-sm text-xs text-muted-foreground">{description}</p>
       {onRetry && (
         <Button variant="outline" size="sm" onClick={onRetry} className="mt-1">
-          <RefreshCw className="h-3.5 w-3.5" /> Tentar novamente
+          <RefreshCw className="h-3.5 w-3.5" /> Try again
         </Button>
       )}
     </div>

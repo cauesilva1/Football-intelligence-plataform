@@ -78,25 +78,25 @@ export function ReportGenerator({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Relatórios com AI"
-        description="Gere análises estruturadas de scouting a partir dos dados do jogador — resumo, estilo, encaixe tático e recomendação."
+        title="AI Scout Reports"
+        description="Generate structured scouting analysis from player data — summary, style, tactical fit, and recommendation."
         badge={
           <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface-muted/40 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            <Sparkles className="h-3 w-3 text-accent-warning" /> mock-ai-v2
+            <Sparkles className="h-3 w-3 text-accent-warning" /> OpenRouter · Llama 3.3
           </span>
         }
       />
 
       <DataPanel
-        title="Gerar relatório"
-        description="Selecione um jogador e inicie a análise."
+        title="Generate report"
+        description="Select a player and start the analysis."
         density="dense"
       >
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[260px] flex-1">
-            <label className="mb-1 block text-xs text-muted-foreground">Jogador</label>
+            <label className="mb-1 block text-xs text-muted-foreground">Player</label>
             <Select value={playerId} onChange={(e) => setPlayerId(e.target.value)}>
-              <option value="">Selecione um jogador</option>
+              <option value="">Select a player</option>
               {players.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.fullName} · {p.position}
@@ -105,7 +105,7 @@ export function ReportGenerator({
             </Select>
           </div>
           <Button onClick={generate} disabled={!playerId || status === "generating"}>
-            {status === "generating" ? "Gerando relatório..." : "Gerar relatório"}
+            {status === "generating" ? "Generating report..." : "Generate report"}
           </Button>
         </div>
       </DataPanel>
@@ -114,16 +114,16 @@ export function ReportGenerator({
 
       {status === "idle" && !report && (
         <EmptyState
-          title="Nenhum relatório gerado"
-          description="Selecione um jogador e clique em 'Gerar relatório' para criar uma análise estruturada de scouting."
+          title="No report generated yet"
+          description="Select a player and click Generate report to create a structured scouting analysis."
         />
       )}
 
       {status === "generating" && (
-        <DataPanel title="Analisando dados" density="dense">
+        <DataPanel title="Analyzing data" density="dense">
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-muted border-t-primary" />
-            Interpretando desempenho de {selectedPlayer?.knownAs}...
+            Interpreting performance for {selectedPlayer?.knownAs}...
           </div>
         </DataPanel>
       )}

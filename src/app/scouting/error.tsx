@@ -6,8 +6,8 @@ export default function ScoutingError({ reset }: { error: Error; reset: () => vo
   return (
     <div className="p-6">
       <ErrorState
-        title="Erro ao carregar scouting"
-        description="Não foi possível aplicar os filtros de scouting. Tente novamente."
+        title="Failed to load scouting database"
+        description="Could not fetch players with the current filters."
         onRetry={reset}
       />
     </div>

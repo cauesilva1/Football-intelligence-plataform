@@ -1,10 +1,17 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { ScoutingTable } from "@/features/scouting/components/scouting-table";
 import { RemoveFromShortlistButton } from "@/features/shortlist/components/remove-from-shortlist-button";
-import { queryShortlistPlayers } from "@/features/shortlist/queries/shortlist";
-import type { PlayerFilters } from "@/types";
+import { getPlayersByIds } from "@/lib/actions/players-by-ids";
+import {
+  getShortlistIds,
+  SHORTLIST_CHANGED_EVENT,
+} from "@/lib/client/browser-storage";
+import type { Player, PlayerFilters } from "@/types";
 
 const TABLE_FILTERS: PlayerFilters = {
   sortBy: "rating",
@@ -13,20 +20,52 @@ const TABLE_FILTERS: PlayerFilters = {
   pageSize: 50,
 };
 
-export async function ShortlistView() {
-  const players = await queryShortlistPlayers();
+export function ShortlistView() {
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadShortlist = useCallback(async () => {
+    const ids = getShortlistIds();
+    if (ids.length === 0) {
+      setPlayers([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await getPlayersByIds(ids);
+      const order = new Map(ids.map((id, index) => [id, index]));
+      result.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+      setPlayers(result);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadShortlist();
+
+    const onChange = () => void loadShortlist();
+    window.addEventListener(SHORTLIST_CHANGED_EVENT, onChange);
+    return () => window.removeEventListener(SHORTLIST_CHANGED_EVENT, onChange);
+  }, [loadShortlist]);
+
+  if (loading) {
+    return <p className="text-sm text-muted-foreground">Loading your shortlist...</p>;
+  }
 
   if (players.length === 0) {
     return (
       <>
         <PageHeader
           title="My Players"
-          description="Sua shortlist pessoal de jogadores monitorados."
+          description="Your personal shortlist of monitored players."
         />
         <EmptyState
-          title="Shortlist vazia"
-          description="Salve jogadores a partir do perfil para acompanhar prospects e alvos de scouting."
-          action={{ label: "Explorar jogadores", href: "/players" }}
+          title="Empty shortlist"
+          description="Save players from their profile to track prospects and scouting targets."
+          action={{ label: "Browse Players", href: "/players" }}
         />
       </>
     );
@@ -36,7 +75,7 @@ export async function ShortlistView() {
     <>
       <PageHeader
         title="My Players"
-        description={`${players.length} jogador(es) na sua shortlist pessoal.`}
+        description={`${players.length} player(s) in your personal shortlist.`}
       />
       <div className="space-y-3">
         <ScoutingTable
@@ -46,7 +85,7 @@ export async function ShortlistView() {
           route="players"
         />
         <p className="text-2xs text-muted-foreground">
-          Dica: use &quot;Remover&quot; no perfil do jogador ou os botões abaixo em cada linha.
+          Tip: use &quot;Remove&quot; on the player profile or the buttons below on each row.
         </p>
         <div className="flex flex-wrap gap-2">
           {players.map((p) => (
@@ -57,7 +96,7 @@ export async function ShortlistView() {
               <Link href={`/players/${p.id}`} className="text-foreground hover:text-primary">
                 {p.knownAs}
               </Link>
-              <RemoveFromShortlistButton playerId={p.id} />
+              <RemoveFromShortlistButton playerId={p.id} onRemoved={loadShortlist} />
             </div>
           ))}
         </div>

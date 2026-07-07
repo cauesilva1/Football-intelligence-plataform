@@ -36,7 +36,7 @@ export function Sidebar() {
       </nav>
 
       <div className="rounded-xl border border-border bg-card p-3">
-        <p className="text-[11px] font-medium text-muted-foreground">Temporada ativa</p>
+        <p className="text-[11px] font-medium text-muted-foreground">Active season</p>
         <p className="font-display text-sm font-semibold text-primary">{appConfig.season}</p>
       </div>
     </aside>

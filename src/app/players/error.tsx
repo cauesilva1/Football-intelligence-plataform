@@ -6,8 +6,8 @@ export default function PlayersError({ reset }: { error: Error; reset: () => voi
   return (
     <div className="p-6">
       <ErrorState
-        title="Erro ao carregar jogadores"
-        description="Não foi possível buscar a lista de jogadores com os filtros aplicados."
+        title="Failed to load players"
+        description="Could not fetch the player list with the applied filters."
         onRetry={reset}
       />
     </div>

@@ -1,7 +1,5 @@
 import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { PageHeader } from "@/components/layout/page-header";
-import { getSession } from "@/lib/auth/session";
 import { ShortlistView } from "@/features/shortlist/components/shortlist-view";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -12,10 +10,8 @@ function ShortlistSkeleton() {
 }
 
 export default async function ShortlistPage() {
-  const session = await getSession();
-
   return (
-    <DashboardShell subtitle="My Players" userName={session?.name}>
+    <DashboardShell subtitle="My Players">
       <Suspense fallback={<ShortlistSkeleton />}>
         <ShortlistView />
       </Suspense>

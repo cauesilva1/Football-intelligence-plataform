@@ -25,12 +25,13 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Football Intelligence Platform",
-  description: "Plataforma profissional de análise de jogadores, scouting e performance.",
+  description:
+    "Professional football analytics platform for player scouting, performance intelligence, and data-driven recruitment.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className="dark">
+    <html lang="en" className="dark">
       <body
         className={`${interDisplay.variable} ${interBody.variable} ${jetbrainsMono.variable} bg-background font-body text-sm text-foreground antialiased`}
       >

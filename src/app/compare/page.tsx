@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/common/empty-state";
-import { getSession } from "@/lib/auth/session";
 import { queryAllPlayersLite } from "@/features/scouting/queries/players";
 import { parseCompareParams } from "@/features/comparison/lib/parse-compare-params";
 import { CompareSelectorForm } from "@/features/comparison/components/compare-selector-form";
@@ -16,17 +15,13 @@ export default async function ComparePage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [session, params, playersLite] = await Promise.all([
-    getSession(),
-    searchParams,
-    queryAllPlayersLite(),
-  ]);
+  const [params, playersLite] = await Promise.all([searchParams, queryAllPlayersLite()]);
 
   const { playerA, playerB } = parseCompareParams(params);
   const bothSelected = Boolean(playerA && playerB);
 
   return (
-    <DashboardShell subtitle="Player comparison" userName={session?.name}>
+    <DashboardShell subtitle="Player comparison">
       <div className="space-y-6">
         <PageHeader
           title="Compare players"

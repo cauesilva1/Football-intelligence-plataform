@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/layout/page-header";
-import { getSession } from "@/lib/auth/session";
 import { appConfig } from "@/lib/config";
 import { DashboardStatsSection } from "@/features/analytics/components/dashboard-stats-section";
 import { DashboardInsightsSection } from "@/features/analytics/components/dashboard-insights-section";
@@ -17,10 +16,8 @@ import {
 export const metadata = { title: "Overview · Football Intelligence Platform" };
 
 export default async function DashboardPage() {
-  const session = await getSession();
-
   return (
-    <DashboardShell subtitle="Overview" userName={session?.name}>
+    <DashboardShell subtitle="Overview">
       <div className="space-y-6">
         <PageHeader
           title="Executive Dashboard"

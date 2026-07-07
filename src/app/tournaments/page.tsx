@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { getSession } from "@/lib/auth/session";
 import { TournamentView } from "@/features/tournaments/components/tournament-view";
 import { fetchStatsBombMatches } from "@/lib/statsbomb/fetch-matches";
 import { TOURNAMENTS } from "@/lib/statsbomb/constants";
@@ -61,10 +60,8 @@ function TournamentSkeleton() {
 }
 
 export default async function TournamentsPage() {
-  const session = await getSession();
-
   return (
-    <DashboardShell subtitle="Tournaments" userName={session?.name}>
+    <DashboardShell subtitle="Tournaments">
       <Suspense fallback={<TournamentSkeleton />}>
         <TournamentData />
       </Suspense>

@@ -2,7 +2,7 @@ import { HeaderNav } from "./header-nav";
 import { Badge } from "@/components/ui/badge";
 import { appConfig } from "@/lib/config";
 
-export function Header({ subtitle }: { userName?: string; subtitle?: string }) {
+export function Header({ subtitle }: { subtitle?: string }) {
   return (
     <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 py-4 backdrop-blur-md md:px-6">
       <div className="min-w-0">
@@ -16,7 +16,7 @@ export function Header({ subtitle }: { userName?: string; subtitle?: string }) {
           )}
         </div>
         <p className="truncate text-xs text-muted-foreground">
-          {appConfig.name} · Temporada {appConfig.season}
+          {appConfig.name} · Season {appConfig.season}
         </p>
       </div>
 

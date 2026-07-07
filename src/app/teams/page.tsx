@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { getSession } from "@/lib/auth/session";
 import { TeamsGrid } from "@/features/scouting/components/teams-grid";
 import { TeamsGridSkeleton } from "@/features/scouting/components/teams-grid-skeleton";
 import { TeamsLeagueFilter } from "@/features/scouting/components/teams-league-filter";
@@ -46,13 +45,13 @@ export default async function TeamsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [session, params] = await Promise.all([getSession(), searchParams]);
+  const params = await searchParams;
 
   const leagueParam = typeof params.league === "string" ? params.league : undefined;
   const competitionId = await queryCompetitionIdForLeague(leagueParam);
 
   return (
-    <DashboardShell subtitle="Clubs" userName={session?.name}>
+    <DashboardShell subtitle="Clubs">
       <div className="space-y-6">
         <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-6 shadow-panel md:p-8">
           <h1 className="mt-2 font-display text-2xl font-bold text-foreground md:text-3xl">

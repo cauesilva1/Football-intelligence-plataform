@@ -6,8 +6,8 @@ export default function CompareError({ reset }: { error: Error; reset: () => voi
   return (
     <div className="p-6">
       <ErrorState
-        title="Erro na comparação"
-        description="Não foi possível carregar os dados dos jogadores selecionados."
+        title="Comparison failed"
+        description="Could not load data for the selected players."
         onRetry={reset}
       />
     </div>
