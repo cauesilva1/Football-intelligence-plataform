@@ -1,5 +1,5 @@
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { CURRENT_SEASON } from "@/lib/data/generators";
 import { toPlayerStatistic } from "@/lib/metrics/map-statistic";
 import { calcAge } from "@/lib/utils";
@@ -251,8 +251,8 @@ export const prismaPlayerRepository: PlayerRepository = {
     const skip = (page - 1) * pageSize;
 
     const [total, statistics] = await Promise.all([
-      prisma.playerStatistic.count({ where }),
-      prisma.playerStatistic.findMany({
+      getPrisma().playerStatistic.count({ where }),
+      getPrisma().playerStatistic.findMany({
         where,
         orderBy,
         skip,
@@ -282,12 +282,12 @@ export const prismaPlayerRepository: PlayerRepository = {
   },
 
   async findById(id) {
-    const record = await prisma.player.findUnique({ where: { id }, include: playerInclude });
+    const record = await getPrisma().player.findUnique({ where: { id }, include: playerInclude });
     return record ? mapPlayer(record) : null;
   },
 
   async findLite() {
-    const records = await prisma.player.findMany({
+    const records = await getPrisma().player.findMany({
       select: {
         id: true,
         fullName: true,
@@ -315,7 +315,7 @@ export const prismaPlayerRepository: PlayerRepository = {
   },
 
   async getAll() {
-    const records = await prisma.player.findMany({ include: playerInclude });
+    const records = await getPrisma().player.findMany({ include: playerInclude });
     return records.map(mapPlayer);
   },
 };

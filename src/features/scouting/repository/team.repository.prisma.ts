@@ -1,11 +1,11 @@
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { CURRENT_SEASON } from "@/lib/data/generators";
 import type { TeamRepository } from "./types";
 import { prismaPlayerRepository } from "./player.repository.prisma";
 
 export const prismaTeamRepository: TeamRepository = {
   async findAll(competitionId?: string) {
-    const teams = await prisma.team.findMany({
+    const teams = await getPrisma().team.findMany({
       where: competitionId ? { competitionId } : undefined,
       include: {
         competition: true,
@@ -58,7 +58,7 @@ export const prismaTeamRepository: TeamRepository = {
   },
 
   async findById(id) {
-    const team = await prisma.team.findUnique({
+    const team = await getPrisma().team.findUnique({
       where: { id },
       include: {
         competition: true,
@@ -67,7 +67,7 @@ export const prismaTeamRepository: TeamRepository = {
     });
     if (!team) return null;
 
-    const squadRecords = await prisma.player.findMany({
+    const squadRecords = await getPrisma().player.findMany({
       where: { teamId: id },
       include: {
         team: true,
@@ -126,7 +126,7 @@ export const prismaTeamRepository: TeamRepository = {
   },
 
   async getCompetitions() {
-    const records = await prisma.competition.findMany({ orderBy: { name: "asc" } });
+    const records = await getPrisma().competition.findMany({ orderBy: { name: "asc" } });
     return records.map((c) => ({
       id: c.id,
       name: c.name,

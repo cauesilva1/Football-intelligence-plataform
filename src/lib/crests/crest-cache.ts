@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { readSystemCache, writeSystemCache } from "@/lib/system-cache";
 
 interface CrestCachePayload {
   url: string;
@@ -24,8 +24,7 @@ export async function readCachedCrest(
   name: string
 ): Promise<string | null> {
   const key = crestCacheKey(kind, slugify(name));
-  const row = await prisma.systemCache.findUnique({ where: { key } });
-  const payload = row?.json as CrestCachePayload | undefined;
+  const payload = await readSystemCache<CrestCachePayload>(key);
   return payload?.url ?? null;
 }
 
@@ -42,9 +41,5 @@ export async function writeCachedCrest(
     cachedAt: new Date().toISOString(),
   };
 
-  await prisma.systemCache.upsert({
-    where: { key },
-    create: { key, json: payload as object },
-    update: { json: payload as object },
-  });
+  await writeSystemCache(key, payload as object);
 }

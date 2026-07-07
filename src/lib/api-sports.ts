@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
+import { canUseDatabase, readSystemCache, writeSystemCache } from "@/lib/system-cache";
 import { CURRENT_SEASON } from "@/lib/data/generators";
 import { sanitizeApiSportsSearch } from "@/lib/crests/sanitize-search";
 import { apiSportsTeamLogoUrl, resolveClubCrestUrlSync } from "@/lib/crests/club-crests";
@@ -62,8 +63,7 @@ function todayKey(): string {
 
 async function getQuotaCount(): Promise<number> {
   const key = `api-sports:quota:${todayKey()}`;
-  const row = await prisma.systemCache.findUnique({ where: { key } });
-  const payload = row?.json as { count?: number } | undefined;
+  const payload = await readSystemCache<{ count?: number }>(key);
   return payload?.count ?? 0;
 }
 
@@ -73,11 +73,7 @@ async function incrementQuota(): Promise<boolean> {
   const current = await getQuotaCount();
   if (current >= DAILY_LIMIT) return false;
 
-  await prisma.systemCache.upsert({
-    where: { key },
-    create: { key, json: { date, count: current + 1 } },
-    update: { json: { date, count: current + 1 } },
-  });
+  await writeSystemCache(key, { date, count: current + 1 });
   return true;
 }
 
@@ -198,8 +194,8 @@ async function resolveApiTeamId(
   if (cachedApiId) return cachedApiId;
 
   const cacheKey = `api-sports:team:${teamId}`;
-  const cached = await prisma.systemCache.findUnique({ where: { key: cacheKey } });
-  const cachedId = (cached?.json as JsonRecord | undefined)?.apiSportsId;
+  const cached = await readSystemCache<JsonRecord>(cacheKey);
+  const cachedId = cached?.apiSportsId;
   if (typeof cachedId === "number") return cachedId;
 
   const results = await fetchApiSports<ApiTeamSearchItem[]>("/teams", {
@@ -209,6 +205,7 @@ async function resolveApiTeamId(
   if (!match?.id) return null;
 
   const logoUrl = match.logo ?? resolveClubCrestUrlSync(teamName, null, match.id);
+  const prisma = getPrisma();
 
   await prisma.$transaction([
     prisma.team.update({
@@ -218,20 +215,18 @@ async function resolveApiTeamId(
         crestUrl: logoUrl ?? undefined,
       },
     }),
-    prisma.systemCache.upsert({
-      where: { key: cacheKey },
-      create: { key: cacheKey, json: { apiSportsId: match.id, leagueId, logoUrl } },
-      update: { json: { apiSportsId: match.id, leagueId, logoUrl } },
-    }),
   ]);
+
+  await writeSystemCache(cacheKey, { apiSportsId: match.id, leagueId, logoUrl });
 
   return match.id;
 }
 
 /** Lazy-load team statistics and crest from API-Football when DB stats are empty. */
 export async function enrichTeamIfNeeded(teamId: string): Promise<void> {
-  if (!getApiKey()) return;
+  if (!canUseDatabase() || !getApiKey()) return;
 
+  const prisma = getPrisma();
   const team = await prisma.team.findUnique({
     where: { id: teamId },
     include: {
@@ -310,8 +305,9 @@ export async function enrichTeamIfNeeded(teamId: string): Promise<void> {
 
 /** Lazy-load player height, weight and photo from API-Football when missing. */
 export async function enrichPlayerIfNeeded(playerId: string): Promise<void> {
-  if (!getApiKey()) return;
+  if (!canUseDatabase() || !getApiKey()) return;
 
+  const prisma = getPrisma();
   const player = await prisma.player.findUnique({
     where: { id: playerId },
     include: { team: { include: { competition: true } } },
@@ -408,12 +404,9 @@ interface FixturesCachePayload {
 }
 
 export async function fetchWorldCup2026FixturesRaw(): Promise<ApiSportsFixtureItem[]> {
-  const cached = await prisma.systemCache.findUnique({ where: { key: FIXTURES_CACHE_KEY } });
-  if (cached?.json) {
-    const payload = cached.json as unknown as FixturesCachePayload;
-    if (payload.expiresAt && new Date(payload.expiresAt) > new Date() && Array.isArray(payload.fixtures)) {
-      return payload.fixtures;
-    }
+  const cached = await readSystemCache<FixturesCachePayload>(FIXTURES_CACHE_KEY);
+  if (cached?.expiresAt && new Date(cached.expiresAt) > new Date() && Array.isArray(cached.fixtures)) {
+    return cached.fixtures;
   }
 
   const response = await fetchApiSports<ApiSportsFixtureItem[]>("/fixtures", {
@@ -429,11 +422,7 @@ export async function fetchWorldCup2026FixturesRaw(): Promise<ApiSportsFixtureIt
     fixtures,
   };
 
-  await prisma.systemCache.upsert({
-    where: { key: FIXTURES_CACHE_KEY },
-    create: { key: FIXTURES_CACHE_KEY, json: payload as object },
-    update: { json: payload as object },
-  });
+  await writeSystemCache(FIXTURES_CACHE_KEY, payload as object);
 
   return fixtures;
 }

@@ -1,12 +1,12 @@
 import { CURRENT_SEASON } from "@/lib/data/generators";
 import { enrichPlayerRecord } from "@/lib/metrics/player-enrichment";
 import { calcAge } from "@/lib/utils";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 
 const PROGRESS_INTERVAL = 100;
 
 export async function enrichAllPlayers(): Promise<{ updated: number }> {
-  const statistics = await prisma.playerStatistic.findMany({
+  const statistics = await getPrisma().playerStatistic.findMany({
     where: { season: CURRENT_SEASON },
     include: {
       player: {
@@ -39,8 +39,8 @@ export async function enrichAllPlayers(): Promise<{ updated: number }> {
       }
     );
 
-    await prisma.$transaction([
-      prisma.playerStatistic.update({
+    await getPrisma().$transaction([
+      getPrisma().playerStatistic.update({
         where: { id: stat.id },
         data: {
           rating: enriched.rating,
@@ -52,7 +52,7 @@ export async function enrichAllPlayers(): Promise<{ updated: number }> {
           duelsWonPct: enriched.duelsWonPct,
         },
       }),
-      prisma.player.update({
+      getPrisma().player.update({
         where: { id: stat.player.id },
         data: {
           strengths: enriched.strengths,
@@ -81,7 +81,7 @@ async function main(): Promise<void> {
 
   const { updated } = await enrichAllPlayers();
 
-  const sample = await prisma.player.findFirst({
+  const sample = await getPrisma().player.findFirst({
     where: { fullName: { contains: "Aaronson", mode: "insensitive" } },
     include: { statistics: { where: { season: CURRENT_SEASON } } },
   });
@@ -115,5 +115,5 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await getPrisma().$disconnect();
   });

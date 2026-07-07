@@ -1,6 +1,6 @@
 import fs from "fs";
 import csv from "csv-parser";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import type { CsvPlayerRow } from "@/etl/data-dictionary";
 import { resolveCsvPath } from "@/etl/paths";
 import { buildPlayerTeamKey, transformCsvRow } from "@/etl/transform/transformer";
@@ -54,7 +54,7 @@ async function getOrCreateCompetition(name: string, country: string, cache: Enti
   const cached = cache.competitionIdByName.get(cacheKey);
   if (cached) return cached;
 
-  const existing = await prisma.competition.findFirst({
+  const existing = await getPrisma().competition.findFirst({
     where: { name, country },
     select: { id: true },
   });
@@ -64,7 +64,7 @@ async function getOrCreateCompetition(name: string, country: string, cache: Enti
     return existing.id;
   }
 
-  const created = await prisma.competition.create({
+  const created = await getPrisma().competition.create({
     data: { name, country },
     select: { id: true },
   });
@@ -81,7 +81,7 @@ async function getOrCreateTeam(
   const cached = cache.teamIdByName.get(teamName);
   if (cached) return cached;
 
-  const existing = await prisma.team.findFirst({
+  const existing = await getPrisma().team.findFirst({
     where: { name: teamName },
     select: { id: true },
   });
@@ -94,7 +94,7 @@ async function getOrCreateTeam(
   const { country, name: compName } = parseCompetition(competitionName);
   const competitionId = await getOrCreateCompetition(compName, country, cache);
 
-  const created = await prisma.team.create({
+  const created = await getPrisma().team.create({
     data: {
       name: teamName,
       shortName: teamShortName(teamName),
@@ -117,7 +117,7 @@ async function getOrCreatePlayer(
   const cached = cache.playerIdByKey.get(key);
   if (cached) return cached;
 
-  const existing = await prisma.player.findFirst({
+  const existing = await getPrisma().player.findFirst({
     where: {
       fullName: record.player.fullName,
       teamId,
@@ -130,7 +130,7 @@ async function getOrCreatePlayer(
     return existing.id;
   }
 
-  const created = await prisma.player.create({
+  const created = await getPrisma().player.create({
     data: {
       fullName: record.player.fullName,
       knownAs: record.player.knownAs,
@@ -160,7 +160,7 @@ async function upsertStatisticForRecord(
   const teamId = await getOrCreateTeam(record.player.teamName, record.player.competitionName, cache);
   const playerId = await getOrCreatePlayer(record, teamId, cache);
 
-  await prisma.playerStatistic.upsert({
+  await getPrisma().playerStatistic.upsert({
     where: { externalKey: record.externalKey },
     create: {
       externalKey: record.externalKey,
@@ -253,5 +253,5 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await getPrisma().$disconnect();
   });

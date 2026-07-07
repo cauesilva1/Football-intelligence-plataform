@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { readSystemCache, writeSystemCache, canUseDatabase } from "@/lib/system-cache";
 import { CURRENT_SEASON } from "@/lib/data/generators";
 import {
   findStatsBombStatsForTeam,
@@ -149,8 +149,13 @@ function defaultCacheKey(slug: string, seasonYear: number): string {
 }
 
 async function persistEspnCrests(crests: Record<string, string>): Promise<void> {
+  if (!canUseDatabase()) return;
+
   const entries = Object.entries(crests);
   if (!entries.length) return;
+
+  const { getPrisma } = await import("@/lib/prisma");
+  const prisma = getPrisma();
 
   await Promise.all(
     entries.map(async ([teamName, crestUrl]) => {
@@ -181,8 +186,7 @@ async function loadEspnLeagueTable(
     seen.add(season.year);
 
     const key = config.cacheKey ?? defaultCacheKey(config.slug, season.year);
-    const cached = await prisma.systemCache.findUnique({ where: { key } });
-    const payload = cached?.json as EspnStandingsPayload | undefined;
+    const payload = await readSystemCache<EspnStandingsPayload>(key);
 
     if (payload?.teams?.length) {
       const hasPlayed = payload.teams.some((t) => t.matchesPlayed > 0);
@@ -209,11 +213,7 @@ async function loadEspnLeagueTable(
         crests,
       };
 
-      await prisma.systemCache.upsert({
-        where: { key },
-        create: { key, json: toStore as object },
-        update: { json: toStore as object },
-      });
+      await writeSystemCache(key, toStore as object);
 
       await persistEspnCrests(crests);
 
@@ -265,8 +265,7 @@ export async function preloadEspnLeague(competitionName?: string | null): Promis
 
 export async function getEspnCrestForTeam(teamName: string): Promise<string | null> {
   const key = "espn:standings:brasileirao:2026";
-  const cached = await prisma.systemCache.findUnique({ where: { key } });
-  const payload = cached?.json as EspnStandingsPayload | undefined;
+  const payload = await readSystemCache<EspnStandingsPayload>(key);
   if (!payload?.crests) return null;
 
   const normalized = teamName.toLowerCase();
