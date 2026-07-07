@@ -1,14 +1,12 @@
 import { getPrisma } from "@/lib/prisma";
 import { canUseDatabase, readSystemCache, writeSystemCache } from "@/lib/system-cache";
 import { isUsablePlayerPhotoUrl, resolvePlayerPhotoUrl } from "@/lib/player-media";
-import { CURRENT_SEASON } from "@/lib/data/generators";
+import { CURRENT_SEASON, API_FOOTBALL_PLAYER_MEDIA_SEASON, resolveApiFootballSeasonYear } from "@/lib/seasons";
 import { sanitizeApiSportsSearch } from "@/lib/crests/sanitize-search";
 import { apiSportsTeamLogoUrl, resolveClubCrestUrlSync } from "@/lib/crests/club-crests";
 
 const API_BASE = "https://v3.football.api-sports.io";
 const DAILY_LIMIT = 100;
-const API_TEAM_SEASON = 2025;
-const API_PLAYER_SEASON = 2024;
 
 type JsonRecord = Record<string, unknown>;
 
@@ -46,15 +44,22 @@ interface ApiPlayerSearchItem {
 }
 
 const LEAGUE_IDS: Array<{ match: (name: string) => boolean; id: number }> = [
+  { match: (n) => n.includes("brasileir"), id: 71 },
   { match: (n) => n.includes("premier"), id: 39 },
-  { match: (n) => n.includes("la liga") || (n.includes("liga") && !n.includes("bundesliga")), id: 140 },
-  { match: (n) => n.includes("serie a"), id: 135 },
+  {
+    match: (n) => n.includes("la liga") || (n.includes("liga") && !n.includes("bundesliga") && !n.includes("brasileir")),
+    id: 140,
+  },
+  { match: (n) => n.includes("serie a") && !n.includes("brasileir"), id: 135 },
   { match: (n) => n.includes("bundesliga"), id: 78 },
-  { match: (n) => n.includes("ligue 1") || n.includes("ligue"), id: 61 },
+  { match: (n) => (n.includes("ligue 1") || n.includes("ligue")) && !n.includes("brasileir"), id: 61 },
 ];
 
 function getApiKey(): string | null {
   const key = process.env.APISPORTS_KEY?.trim();
+  if (!key) {
+    console.warn("[api-sports] APISPORTS_KEY is missing — player/team enrichment disabled.");
+  }
   return key || null;
 }
 
@@ -108,13 +113,24 @@ async function fetchApiSports<T>(endpoint: string, params: Record<string, string
   });
 
   if (!response.ok) {
-    console.warn(`[api-sports] HTTP ${response.status} em ${endpoint}`);
+    if (response.status === 401 || response.status === 403) {
+      console.error(
+        `[api-sports] Authentication failed (HTTP ${response.status}) — verify APISPORTS_KEY in environment variables.`
+      );
+    } else {
+      console.warn(`[api-sports] HTTP ${response.status} on ${endpoint}`);
+    }
     return null;
   }
 
   const data = (await response.json()) as ApiEnvelope<T>;
   if (data.errors && Object.keys(data.errors).length > 0) {
-    console.warn("[api-sports] Erro da API:", data.errors);
+    const tokenError = data.errors.token ?? data.errors.access;
+    if (tokenError) {
+      console.error(`[api-sports] Invalid APISPORTS_KEY: ${tokenError}`);
+    } else {
+      console.warn("[api-sports] API error:", data.errors);
+    }
     return null;
   }
 
@@ -171,7 +187,7 @@ function playerNeedsEnrichment(player: {
   photoUrl: string | null;
   apiSportsId: number | null;
 }): boolean {
-  if (hasValidPersistedPhoto(player.photoUrl)) return false;
+  if (hasValidPersistedPhoto(player.photoUrl) && player.apiSportsId != null) return false;
 
   return (
     player.height <= 0 ||
@@ -179,6 +195,22 @@ function playerNeedsEnrichment(player: {
     !player.photoUrl ||
     player.apiSportsId == null
   );
+}
+
+/** `/players` lookups — free tier only allows season ≤ 2024 for squad/media data. */
+async function searchApiPlayer(
+  searchName: string,
+  apiTeamId: number
+): Promise<ApiPlayerSearchItem["player"] | undefined> {
+  const results = await fetchApiSports<ApiPlayerSearchItem[]>("/players", {
+    search: searchName,
+    season: API_FOOTBALL_PLAYER_MEDIA_SEASON,
+    team: apiTeamId,
+  });
+
+  return results?.find((item) =>
+    item.player.name.toLowerCase().includes(searchName.toLowerCase())
+  )?.player;
 }
 
 async function resolveApiTeamId(
@@ -241,8 +273,10 @@ export async function enrichTeamIfNeeded(teamId: string): Promise<void> {
   const apiTeamId = await resolveApiTeamId(team.id, team.name, leagueId, team.apiSportsId);
   if (!apiTeamId) return;
 
+  const seasonYear = resolveApiFootballSeasonYear(team.competition?.name);
+
   const payload = await fetchApiSports<ApiTeamStatisticsItem[]>("/teams/statistics", {
-    season: API_TEAM_SEASON,
+    season: seasonYear,
     team: apiTeamId,
   });
   const stats = payload?.[0];
@@ -310,8 +344,6 @@ export async function enrichPlayerIfNeeded(playerId: string): Promise<void> {
   });
   if (!player) return;
 
-  if (hasValidPersistedPhoto(player.photoUrl)) return;
-
   if (!playerNeedsEnrichment(player)) return;
 
   const leagueId = resolveLeagueId(player.team?.competition?.name);
@@ -328,29 +360,21 @@ export async function enrichPlayerIfNeeded(playerId: string): Promise<void> {
   );
   if (searchName.length < 2) return;
 
-  const results = await fetchApiSports<ApiPlayerSearchItem[]>("/players", {
-    search: searchName,
-    season: API_PLAYER_SEASON,
-    team: apiTeamId,
-  });
-
-  let match = results?.find((item) =>
-    item.player.name.toLowerCase().includes(searchName.toLowerCase())
-  )?.player;
+  let match = await searchApiPlayer(searchName, apiTeamId);
 
   if (!match && searchName !== sanitizeApiSportsSearch(player.fullName)) {
     const fallbackSearch = sanitizeApiSportsSearch(player.fullName);
     if (fallbackSearch.length >= 2) {
-      const fallback = await fetchApiSports<ApiPlayerSearchItem[]>("/players", {
-        search: fallbackSearch,
-        season: API_PLAYER_SEASON,
-        team: apiTeamId,
-      });
-      match = fallback?.[0]?.player;
+      match = await searchApiPlayer(fallbackSearch, apiTeamId);
     }
   }
 
-  if (!match?.id) return;
+  if (!match?.id) {
+    console.warn(
+      `[api-sports] No player match for "${player.fullName}" (team ${apiTeamId}, media season ${API_FOOTBALL_PLAYER_MEDIA_SEASON}).`
+    );
+    return;
+  }
 
   const height = parseHeightCm(match.height) || player.height;
   const weight = parseWeightKg(match.weight) || player.weight;

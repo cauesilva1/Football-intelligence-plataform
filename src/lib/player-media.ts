@@ -1,5 +1,7 @@
 import { apiSportsPlayerPhotoUrl, parseApiSportsPlayerId } from "@/lib/api-sports";
 
+/** Player photo CDN URLs — API `/players` media lookups use season 2024 (free tier). See `API_FOOTBALL_PLAYER_MEDIA_SEASON`. */
+
 /** True when the URL is a known player image endpoint (API-Sports CDN or common image ext). */
 export function isUsablePlayerPhotoUrl(url?: string | null): boolean {
   const value = url?.trim();

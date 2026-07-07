@@ -23,7 +23,8 @@ const TAB_DEFINITIONS = [
   {
     key: "serie-a",
     label: "Serie A",
-    match: (name: string) => name.includes("serie a") || name.includes("serie adriatica"),
+    match: (name: string) =>
+      (name.includes("serie a") || name.includes("serie adriatica")) && !name.includes("brasileir"),
   },
   {
     key: "bundesliga",

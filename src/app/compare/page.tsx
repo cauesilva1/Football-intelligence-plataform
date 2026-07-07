@@ -10,6 +10,9 @@ import { ComparisonResultSkeleton } from "@/features/comparison/components/compa
 
 export const metadata = { title: "Compare · Football Intelligence Platform" };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function ComparePage({
   searchParams,
 }: {

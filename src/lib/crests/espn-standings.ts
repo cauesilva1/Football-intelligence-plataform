@@ -1,5 +1,9 @@
 import { readSystemCache, writeSystemCache, canUseDatabase } from "@/lib/system-cache";
-import { CURRENT_SEASON } from "@/lib/data/generators";
+import {
+  CURRENT_SEASON,
+  ESPN_BRAZIL_SEASON_YEAR,
+  ESPN_EUROPEAN_SEASON_YEAR,
+} from "@/lib/seasons";
 import {
   findStatsBombStatsForTeam,
   type AggregatedTeamStats,
@@ -43,14 +47,19 @@ const ESPN_LEAGUES: EspnLeagueConfig[] = [
     match: (n) => n.includes("brasileir"),
     slug: "bra.1",
     competitionLabel: "Brasileirão Série A",
-    cacheKey: "espn:standings:brasileirao:2026",
-    preferredSeason: 2026,
+    cacheKey: `espn:standings:brasileirao:${ESPN_BRAZIL_SEASON_YEAR}`,
+    preferredSeason: ESPN_BRAZIL_SEASON_YEAR,
   },
 ];
 
-const SEASON_CANDIDATES = [
-  { year: 2026, label: CURRENT_SEASON },
-  { year: 2025, label: "2024/25" },
+const EUROPEAN_SEASON_CANDIDATES = [
+  { year: ESPN_EUROPEAN_SEASON_YEAR, label: CURRENT_SEASON },
+  { year: ESPN_EUROPEAN_SEASON_YEAR - 1, label: "2024/25" },
+] as const;
+
+const BRAZIL_SEASON_CANDIDATES = [
+  { year: ESPN_BRAZIL_SEASON_YEAR, label: CURRENT_SEASON },
+  { year: ESPN_BRAZIL_SEASON_YEAR - 1, label: "2025" },
 ] as const;
 
 interface EspnStandingsEntry {
@@ -132,7 +141,7 @@ async function fetchEspnStandingsRaw(
   const url = `${ESPN_BASE}/${slug}/standings?season=${seasonYear}`;
   const response = await fetch(url, {
     headers: { "User-Agent": "football-intelligence-platform/1.0 (espn-standings)" },
-    next: { revalidate: 60 * 60 * 6 },
+    next: { revalidate: 0 },
   });
 
   if (!response.ok) return [];
@@ -176,8 +185,8 @@ async function loadEspnLeagueTable(
   config: EspnLeagueConfig
 ): Promise<Map<string, AggregatedTeamStats>> {
   const seasons = config.preferredSeason
-    ? [{ year: config.preferredSeason, label: CURRENT_SEASON }, ...SEASON_CANDIDATES]
-    : [...SEASON_CANDIDATES];
+    ? BRAZIL_SEASON_CANDIDATES
+    : EUROPEAN_SEASON_CANDIDATES;
 
   const seen = new Set<number>();
 
@@ -264,7 +273,7 @@ export async function preloadEspnLeague(competitionName?: string | null): Promis
 }
 
 export async function getEspnCrestForTeam(teamName: string): Promise<string | null> {
-  const key = "espn:standings:brasileirao:2026";
+  const key = `espn:standings:brasileirao:${ESPN_BRAZIL_SEASON_YEAR}`;
   const payload = await readSystemCache<EspnStandingsPayload>(key);
   if (!payload?.crests) return null;
 

@@ -1,13 +1,14 @@
-import { getDataSource, isDbSource } from "@/lib/data-source";
+import { getDataSource } from "@/lib/data-source";
+import { CURRENT_SEASON } from "@/lib/seasons";
 
 /** App-wide config for demo / deploy modes */
 export const appConfig = {
   name: "Football Intelligence Platform",
-  season: "2025/26",
+  season: CURRENT_SEASON,
   get dataSource() {
     return getDataSource();
   },
   isVercel: process.env.VERCEL === "1",
 } as const;
 
-export { isDbSource };
+export { isDbSource } from "@/lib/data-source";

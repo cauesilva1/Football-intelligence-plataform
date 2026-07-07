@@ -3,8 +3,9 @@ import type { Competition, Player, Team, TeamStatistic } from "@/types";
 import { toPlayerStatistic, type StatisticInput } from "@/lib/metrics/map-statistic";
 import { calcAge } from "@/lib/utils";
 
-export const CURRENT_SEASON = "2025/26";
-export const SEASONS = ["2023/24", "2024/25", CURRENT_SEASON] as const;
+export { CURRENT_SEASON, SEASONS } from "@/lib/seasons";
+import { CURRENT_SEASON, SEASONS } from "@/lib/seasons";
+
 export const PLAYER_COUNT = 100;
 
 const COMPETITIONS_DATA = [

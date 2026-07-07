@@ -8,6 +8,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const metadata = { title: "Scouting · Football Intelligence Platform" };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function FiltersSkeleton() {
   return <Skeleton className="h-40 w-full rounded-xl" />;
 }

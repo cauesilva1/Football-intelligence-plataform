@@ -36,7 +36,7 @@ const LEAGUE_SOURCES: Array<{ match: (name: string) => boolean; source: StatsBom
     },
   },
   {
-    match: (n) => n.includes("serie a"),
+    match: (n) => n.includes("serie a") && !n.includes("brasileir"),
     source: {
       competitionId: 12,
       seasonId: 27,

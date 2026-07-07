@@ -14,6 +14,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const metadata = { title: "Tournaments · Football Intelligence Platform" };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 async function TournamentData() {
   const roundsByTournament: Record<string, TournamentRound[]> = {};
 
