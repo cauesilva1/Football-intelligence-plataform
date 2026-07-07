@@ -1,0 +1,4832 @@
+[
+  {
+    "match_id": 2026001,
+    "match_date": "2026-06-11",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 203,
+      "home_team_name": "Mexico",
+      "home_team_group": "A"
+    },
+    "away_team": {
+      "away_team_id": 467,
+      "away_team_name": "South Africa",
+      "away_team_group": "A"
+    },
+    "home_score": 2,
+    "away_score": 0,
+    "home_score_regular": 2,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 1672,
+      "name": "Estadio Banorte",
+      "country": {
+        "id": 0,
+        "name": "Mexico"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760415",
+      "fetched_at": "2026-07-07T14:38:55.846Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026002,
+    "match_date": "2026-06-12",
+    "kick_off": "02:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 451,
+      "home_team_name": "South Korea",
+      "home_team_group": "A"
+    },
+    "away_team": {
+      "away_team_id": 450,
+      "away_team_name": "Czechia",
+      "away_team_group": "A"
+    },
+    "home_score": 2,
+    "away_score": 1,
+    "home_score_regular": 2,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 5009,
+      "name": "Estadio Akron",
+      "country": {
+        "id": 0,
+        "name": "Mexico"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760414",
+      "fetched_at": "2026-07-07T14:38:55.849Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026003,
+    "match_date": "2026-06-12",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 206,
+      "home_team_name": "Canada",
+      "home_team_group": "B"
+    },
+    "away_team": {
+      "away_team_id": 452,
+      "away_team_name": "Bosnia-Herzegovina",
+      "away_team_group": "B"
+    },
+    "home_score": 1,
+    "away_score": 1,
+    "home_score_regular": 1,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 10143,
+      "name": "BMO Field",
+      "country": {
+        "id": 0,
+        "name": "Canada"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760416",
+      "fetched_at": "2026-07-07T14:38:55.849Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026004,
+    "match_date": "2026-06-13",
+    "kick_off": "01:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 660,
+      "home_team_name": "United States",
+      "home_team_group": "D"
+    },
+    "away_team": {
+      "away_team_id": 210,
+      "away_team_name": "Paraguay",
+      "away_team_group": "D"
+    },
+    "home_score": 4,
+    "away_score": 1,
+    "home_score_regular": 4,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 9115,
+      "name": "SoFi Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760417",
+      "fetched_at": "2026-07-07T14:38:55.849Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026005,
+    "match_date": "2026-06-13",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 4398,
+      "home_team_name": "Qatar",
+      "home_team_group": "B"
+    },
+    "away_team": {
+      "away_team_id": 475,
+      "away_team_name": "Switzerland",
+      "away_team_group": "B"
+    },
+    "home_score": 1,
+    "away_score": 1,
+    "home_score_regular": 1,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 5960,
+      "name": "Levi's Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760420",
+      "fetched_at": "2026-07-07T14:38:55.849Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026006,
+    "match_date": "2026-06-13",
+    "kick_off": "22:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 205,
+      "home_team_name": "Brazil",
+      "home_team_group": "C"
+    },
+    "away_team": {
+      "away_team_id": 2869,
+      "away_team_name": "Morocco",
+      "away_team_group": "C"
+    },
+    "home_score": 1,
+    "away_score": 1,
+    "home_score_regular": 1,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4727,
+      "name": "MetLife Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760419",
+      "fetched_at": "2026-07-07T14:38:55.849Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026007,
+    "match_date": "2026-06-14",
+    "kick_off": "01:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 2654,
+      "home_team_name": "Haiti",
+      "home_team_group": "C"
+    },
+    "away_team": {
+      "away_team_id": 580,
+      "away_team_name": "Scotland",
+      "away_team_group": "C"
+    },
+    "home_score": 0,
+    "away_score": 1,
+    "home_score_regular": 0,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 10660,
+      "name": "Gillette Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760418",
+      "fetched_at": "2026-07-07T14:38:55.849Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026008,
+    "match_date": "2026-06-14",
+    "kick_off": "04:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 628,
+      "home_team_name": "Australia",
+      "home_team_group": "D"
+    },
+    "away_team": {
+      "away_team_id": 465,
+      "away_team_name": "Türkiye",
+      "away_team_group": "D"
+    },
+    "home_score": 2,
+    "away_score": 0,
+    "home_score_regular": 2,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4370,
+      "name": "BC Place",
+      "country": {
+        "id": 0,
+        "name": "Canada"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760421",
+      "fetched_at": "2026-07-07T14:38:55.849Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026009,
+    "match_date": "2026-06-14",
+    "kick_off": "17:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 481,
+      "home_team_name": "Germany",
+      "home_team_group": "E"
+    },
+    "away_team": {
+      "away_team_id": 11678,
+      "away_team_name": "Curaçao",
+      "away_team_group": "E"
+    },
+    "home_score": 7,
+    "away_score": 1,
+    "home_score_regular": 7,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 6262,
+      "name": "NRG Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760422",
+      "fetched_at": "2026-07-07T14:38:55.849Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026010,
+    "match_date": "2026-06-14",
+    "kick_off": "20:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 449,
+      "home_team_name": "Netherlands",
+      "home_team_group": "F"
+    },
+    "away_team": {
+      "away_team_id": 627,
+      "away_team_name": "Japan",
+      "away_team_group": "F"
+    },
+    "home_score": 2,
+    "away_score": 2,
+    "home_score_regular": 2,
+    "away_score_regular": 2,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 3871,
+      "name": "AT&T Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760425",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026011,
+    "match_date": "2026-06-14",
+    "kick_off": "23:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 4789,
+      "home_team_name": "Ivory Coast",
+      "home_team_group": "E"
+    },
+    "away_team": {
+      "away_team_id": 209,
+      "away_team_name": "Ecuador",
+      "away_team_group": "E"
+    },
+    "home_score": 1,
+    "away_score": 0,
+    "home_score_regular": 1,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 1421,
+      "name": "Lincoln Financial Field",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760423",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026012,
+    "match_date": "2026-06-15",
+    "kick_off": "02:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 466,
+      "home_team_name": "Sweden",
+      "home_team_group": "F"
+    },
+    "away_team": {
+      "away_team_id": 659,
+      "away_team_name": "Tunisia",
+      "away_team_group": "F"
+    },
+    "home_score": 5,
+    "away_score": 1,
+    "home_score_regular": 5,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 6351,
+      "name": "Estadio BBVA",
+      "country": {
+        "id": 0,
+        "name": "Mexico"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760424",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026013,
+    "match_date": "2026-06-15",
+    "kick_off": "16:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 164,
+      "home_team_name": "Spain",
+      "home_team_group": "H"
+    },
+    "away_team": {
+      "away_team_id": 2597,
+      "away_team_name": "Cape Verde",
+      "away_team_group": "H"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 7485,
+      "name": "Mercedes-Benz Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760428",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026014,
+    "match_date": "2026-06-15",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 459,
+      "home_team_name": "Belgium",
+      "home_team_group": "G"
+    },
+    "away_team": {
+      "away_team_id": 2620,
+      "away_team_name": "Egypt",
+      "away_team_group": "G"
+    },
+    "home_score": 1,
+    "away_score": 1,
+    "home_score_regular": 1,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4485,
+      "name": "Lumen Field",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760426",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026015,
+    "match_date": "2026-06-15",
+    "kick_off": "22:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 655,
+      "home_team_name": "Saudi Arabia",
+      "home_team_group": "H"
+    },
+    "away_team": {
+      "away_team_id": 212,
+      "away_team_name": "Uruguay",
+      "away_team_group": "H"
+    },
+    "home_score": 1,
+    "away_score": 1,
+    "home_score_regular": 1,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4643,
+      "name": "Hard Rock Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760429",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026016,
+    "match_date": "2026-06-16",
+    "kick_off": "01:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 469,
+      "home_team_name": "Iran",
+      "home_team_group": "G"
+    },
+    "away_team": {
+      "away_team_id": 2666,
+      "away_team_name": "New Zealand",
+      "away_team_group": "G"
+    },
+    "home_score": 2,
+    "away_score": 2,
+    "home_score_regular": 2,
+    "away_score_regular": 2,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 9115,
+      "name": "SoFi Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760427",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026017,
+    "match_date": "2026-06-16",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 478,
+      "home_team_name": "France",
+      "home_team_group": "I"
+    },
+    "away_team": {
+      "away_team_id": 654,
+      "away_team_name": "Senegal",
+      "away_team_group": "I"
+    },
+    "home_score": 3,
+    "away_score": 1,
+    "home_score_regular": 3,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4727,
+      "name": "MetLife Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760432",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026018,
+    "match_date": "2026-06-16",
+    "kick_off": "22:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 4375,
+      "home_team_name": "Iraq",
+      "home_team_group": "I"
+    },
+    "away_team": {
+      "away_team_id": 464,
+      "away_team_name": "Norway",
+      "away_team_group": "I"
+    },
+    "home_score": 1,
+    "away_score": 4,
+    "home_score_regular": 1,
+    "away_score_regular": 4,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 10660,
+      "name": "Gillette Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760430",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026019,
+    "match_date": "2026-06-17",
+    "kick_off": "01:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 202,
+      "home_team_name": "Argentina",
+      "home_team_group": "J"
+    },
+    "away_team": {
+      "away_team_id": 624,
+      "away_team_name": "Algeria",
+      "away_team_group": "J"
+    },
+    "home_score": 3,
+    "away_score": 0,
+    "home_score_regular": 3,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 10897,
+      "name": "GEHA Field at Arrowhead Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760433",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026020,
+    "match_date": "2026-06-17",
+    "kick_off": "04:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 474,
+      "home_team_name": "Austria",
+      "home_team_group": "J"
+    },
+    "away_team": {
+      "away_team_id": 2917,
+      "away_team_name": "Jordan",
+      "away_team_group": "J"
+    },
+    "home_score": 3,
+    "away_score": 1,
+    "home_score_regular": 3,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 5960,
+      "name": "Levi's Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760431",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026021,
+    "match_date": "2026-06-17",
+    "kick_off": "17:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 482,
+      "home_team_name": "Portugal",
+      "home_team_group": "K"
+    },
+    "away_team": {
+      "away_team_id": 2850,
+      "away_team_name": "Congo DR",
+      "away_team_group": "K"
+    },
+    "home_score": 1,
+    "away_score": 1,
+    "home_score_regular": 1,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 6262,
+      "name": "NRG Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760435",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026022,
+    "match_date": "2026-06-17",
+    "kick_off": "20:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 448,
+      "home_team_name": "England",
+      "home_team_group": "L"
+    },
+    "away_team": {
+      "away_team_id": 477,
+      "away_team_name": "Croatia",
+      "away_team_group": "L"
+    },
+    "home_score": 4,
+    "away_score": 2,
+    "home_score_regular": 4,
+    "away_score_regular": 2,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 3871,
+      "name": "AT&T Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760437",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026023,
+    "match_date": "2026-06-17",
+    "kick_off": "23:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 4469,
+      "home_team_name": "Ghana",
+      "home_team_group": "L"
+    },
+    "away_team": {
+      "away_team_id": 2659,
+      "away_team_name": "Panama",
+      "away_team_group": "L"
+    },
+    "home_score": 1,
+    "away_score": 0,
+    "home_score_regular": 1,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 10143,
+      "name": "BMO Field",
+      "country": {
+        "id": 0,
+        "name": "Canada"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760434",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026024,
+    "match_date": "2026-06-18",
+    "kick_off": "02:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 2570,
+      "home_team_name": "Uzbekistan",
+      "home_team_group": "K"
+    },
+    "away_team": {
+      "away_team_id": 208,
+      "away_team_name": "Colombia",
+      "away_team_group": "K"
+    },
+    "home_score": 1,
+    "away_score": 3,
+    "home_score_regular": 1,
+    "away_score_regular": 3,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 1672,
+      "name": "Estadio Banorte",
+      "country": {
+        "id": 0,
+        "name": "Mexico"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760436",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026025,
+    "match_date": "2026-06-18",
+    "kick_off": "16:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 450,
+      "home_team_name": "Czechia",
+      "home_team_group": "A"
+    },
+    "away_team": {
+      "away_team_id": 467,
+      "away_team_name": "South Africa",
+      "away_team_group": "A"
+    },
+    "home_score": 1,
+    "away_score": 1,
+    "home_score_regular": 1,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 7485,
+      "name": "Mercedes-Benz Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760438",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026026,
+    "match_date": "2026-06-18",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 475,
+      "home_team_name": "Switzerland",
+      "home_team_group": "B"
+    },
+    "away_team": {
+      "away_team_id": 452,
+      "away_team_name": "Bosnia-Herzegovina",
+      "away_team_group": "B"
+    },
+    "home_score": 4,
+    "away_score": 1,
+    "home_score_regular": 4,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 9115,
+      "name": "SoFi Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760439",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026027,
+    "match_date": "2026-06-18",
+    "kick_off": "22:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 206,
+      "home_team_name": "Canada",
+      "home_team_group": "B"
+    },
+    "away_team": {
+      "away_team_id": 4398,
+      "away_team_name": "Qatar",
+      "away_team_group": "B"
+    },
+    "home_score": 6,
+    "away_score": 0,
+    "home_score_regular": 6,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4370,
+      "name": "BC Place",
+      "country": {
+        "id": 0,
+        "name": "Canada"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760440",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026028,
+    "match_date": "2026-06-19",
+    "kick_off": "01:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 203,
+      "home_team_name": "Mexico",
+      "home_team_group": "A"
+    },
+    "away_team": {
+      "away_team_id": 451,
+      "away_team_name": "South Korea",
+      "away_team_group": "A"
+    },
+    "home_score": 1,
+    "away_score": 0,
+    "home_score_regular": 1,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 5009,
+      "name": "Estadio Akron",
+      "country": {
+        "id": 0,
+        "name": "Mexico"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760441",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026029,
+    "match_date": "2026-06-19",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 660,
+      "home_team_name": "United States",
+      "home_team_group": "D"
+    },
+    "away_team": {
+      "away_team_id": 628,
+      "away_team_name": "Australia",
+      "away_team_group": "D"
+    },
+    "home_score": 2,
+    "away_score": 0,
+    "home_score_regular": 2,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4485,
+      "name": "Lumen Field",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760442",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026030,
+    "match_date": "2026-06-19",
+    "kick_off": "22:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 580,
+      "home_team_name": "Scotland",
+      "home_team_group": "C"
+    },
+    "away_team": {
+      "away_team_id": 2869,
+      "away_team_name": "Morocco",
+      "away_team_group": "C"
+    },
+    "home_score": 0,
+    "away_score": 1,
+    "home_score_regular": 0,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 10660,
+      "name": "Gillette Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760445",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026031,
+    "match_date": "2026-06-20",
+    "kick_off": "00:30:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 205,
+      "home_team_name": "Brazil",
+      "home_team_group": "C"
+    },
+    "away_team": {
+      "away_team_id": 2654,
+      "away_team_name": "Haiti",
+      "away_team_group": "C"
+    },
+    "home_score": 3,
+    "away_score": 0,
+    "home_score_regular": 3,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 1421,
+      "name": "Lincoln Financial Field",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760444",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026032,
+    "match_date": "2026-06-20",
+    "kick_off": "03:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 465,
+      "home_team_name": "Türkiye",
+      "home_team_group": "D"
+    },
+    "away_team": {
+      "away_team_id": 210,
+      "away_team_name": "Paraguay",
+      "away_team_group": "D"
+    },
+    "home_score": 0,
+    "away_score": 1,
+    "home_score_regular": 0,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 5960,
+      "name": "Levi's Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760443",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026033,
+    "match_date": "2026-06-20",
+    "kick_off": "17:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 449,
+      "home_team_name": "Netherlands",
+      "home_team_group": "F"
+    },
+    "away_team": {
+      "away_team_id": 466,
+      "away_team_name": "Sweden",
+      "away_team_group": "F"
+    },
+    "home_score": 5,
+    "away_score": 1,
+    "home_score_regular": 5,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 6262,
+      "name": "NRG Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760447",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026034,
+    "match_date": "2026-06-20",
+    "kick_off": "20:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 481,
+      "home_team_name": "Germany",
+      "home_team_group": "E"
+    },
+    "away_team": {
+      "away_team_id": 4789,
+      "away_team_name": "Ivory Coast",
+      "away_team_group": "E"
+    },
+    "home_score": 2,
+    "away_score": 1,
+    "home_score_regular": 2,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 10143,
+      "name": "BMO Field",
+      "country": {
+        "id": 0,
+        "name": "Canada"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760448",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026035,
+    "match_date": "2026-06-21",
+    "kick_off": "00:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 209,
+      "home_team_name": "Ecuador",
+      "home_team_group": "E"
+    },
+    "away_team": {
+      "away_team_id": 11678,
+      "away_team_name": "Curaçao",
+      "away_team_group": "E"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 10897,
+      "name": "GEHA Field at Arrowhead Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760446",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026036,
+    "match_date": "2026-06-21",
+    "kick_off": "04:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 659,
+      "home_team_name": "Tunisia",
+      "home_team_group": "F"
+    },
+    "away_team": {
+      "away_team_id": 627,
+      "away_team_name": "Japan",
+      "away_team_group": "F"
+    },
+    "home_score": 0,
+    "away_score": 4,
+    "home_score_regular": 0,
+    "away_score_regular": 4,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 6351,
+      "name": "Estadio BBVA",
+      "country": {
+        "id": 0,
+        "name": "Mexico"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760449",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026037,
+    "match_date": "2026-06-21",
+    "kick_off": "16:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 164,
+      "home_team_name": "Spain",
+      "home_team_group": "H"
+    },
+    "away_team": {
+      "away_team_id": 655,
+      "away_team_name": "Saudi Arabia",
+      "away_team_group": "H"
+    },
+    "home_score": 4,
+    "away_score": 0,
+    "home_score_regular": 4,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 7485,
+      "name": "Mercedes-Benz Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760453",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026038,
+    "match_date": "2026-06-21",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 459,
+      "home_team_name": "Belgium",
+      "home_team_group": "G"
+    },
+    "away_team": {
+      "away_team_id": 469,
+      "away_team_name": "Iran",
+      "away_team_group": "G"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 9115,
+      "name": "SoFi Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760451",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026039,
+    "match_date": "2026-06-21",
+    "kick_off": "22:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 212,
+      "home_team_name": "Uruguay",
+      "home_team_group": "H"
+    },
+    "away_team": {
+      "away_team_id": 2597,
+      "away_team_name": "Cape Verde",
+      "away_team_group": "H"
+    },
+    "home_score": 2,
+    "away_score": 2,
+    "home_score_regular": 2,
+    "away_score_regular": 2,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4643,
+      "name": "Hard Rock Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760450",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026040,
+    "match_date": "2026-06-22",
+    "kick_off": "01:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 2666,
+      "home_team_name": "New Zealand",
+      "home_team_group": "G"
+    },
+    "away_team": {
+      "away_team_id": 2620,
+      "away_team_name": "Egypt",
+      "away_team_group": "G"
+    },
+    "home_score": 1,
+    "away_score": 3,
+    "home_score_regular": 1,
+    "away_score_regular": 3,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4370,
+      "name": "BC Place",
+      "country": {
+        "id": 0,
+        "name": "Canada"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760452",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026041,
+    "match_date": "2026-06-22",
+    "kick_off": "17:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 202,
+      "home_team_name": "Argentina",
+      "home_team_group": "J"
+    },
+    "away_team": {
+      "away_team_id": 474,
+      "away_team_name": "Austria",
+      "away_team_group": "J"
+    },
+    "home_score": 2,
+    "away_score": 0,
+    "home_score_regular": 2,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 3871,
+      "name": "AT&T Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760456",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026042,
+    "match_date": "2026-06-22",
+    "kick_off": "21:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 478,
+      "home_team_name": "France",
+      "home_team_group": "I"
+    },
+    "away_team": {
+      "away_team_id": 4375,
+      "away_team_name": "Iraq",
+      "away_team_group": "I"
+    },
+    "home_score": 3,
+    "away_score": 0,
+    "home_score_regular": 3,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 1421,
+      "name": "Lincoln Financial Field",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760457",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026043,
+    "match_date": "2026-06-23",
+    "kick_off": "00:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 464,
+      "home_team_name": "Norway",
+      "home_team_group": "I"
+    },
+    "away_team": {
+      "away_team_id": 654,
+      "away_team_name": "Senegal",
+      "away_team_group": "I"
+    },
+    "home_score": 3,
+    "away_score": 2,
+    "home_score_regular": 3,
+    "away_score_regular": 2,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4727,
+      "name": "MetLife Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760454",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026044,
+    "match_date": "2026-06-23",
+    "kick_off": "03:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 2917,
+      "home_team_name": "Jordan",
+      "home_team_group": "J"
+    },
+    "away_team": {
+      "away_team_id": 624,
+      "away_team_name": "Algeria",
+      "away_team_group": "J"
+    },
+    "home_score": 1,
+    "away_score": 2,
+    "home_score_regular": 1,
+    "away_score_regular": 2,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 5960,
+      "name": "Levi's Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760455",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026045,
+    "match_date": "2026-06-23",
+    "kick_off": "17:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 482,
+      "home_team_name": "Portugal",
+      "home_team_group": "K"
+    },
+    "away_team": {
+      "away_team_id": 2570,
+      "away_team_name": "Uzbekistan",
+      "away_team_group": "K"
+    },
+    "home_score": 5,
+    "away_score": 0,
+    "home_score_regular": 5,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 6262,
+      "name": "NRG Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760461",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026046,
+    "match_date": "2026-06-23",
+    "kick_off": "20:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 448,
+      "home_team_name": "England",
+      "home_team_group": "L"
+    },
+    "away_team": {
+      "away_team_id": 4469,
+      "away_team_name": "Ghana",
+      "away_team_group": "L"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 10660,
+      "name": "Gillette Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760458",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026047,
+    "match_date": "2026-06-23",
+    "kick_off": "23:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 2659,
+      "home_team_name": "Panama",
+      "home_team_group": "L"
+    },
+    "away_team": {
+      "away_team_id": 477,
+      "away_team_name": "Croatia",
+      "away_team_group": "L"
+    },
+    "home_score": 0,
+    "away_score": 1,
+    "home_score_regular": 0,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 10143,
+      "name": "BMO Field",
+      "country": {
+        "id": 0,
+        "name": "Canada"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760460",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026048,
+    "match_date": "2026-06-24",
+    "kick_off": "02:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 208,
+      "home_team_name": "Colombia",
+      "home_team_group": "K"
+    },
+    "away_team": {
+      "away_team_id": 2850,
+      "away_team_name": "Congo DR",
+      "away_team_group": "K"
+    },
+    "home_score": 1,
+    "away_score": 0,
+    "home_score_regular": 1,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 5009,
+      "name": "Estadio Akron",
+      "country": {
+        "id": 0,
+        "name": "Mexico"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760459",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026049,
+    "match_date": "2026-06-24",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 452,
+      "home_team_name": "Bosnia-Herzegovina",
+      "home_team_group": "B"
+    },
+    "away_team": {
+      "away_team_id": 4398,
+      "away_team_name": "Qatar",
+      "away_team_group": "B"
+    },
+    "home_score": 3,
+    "away_score": 1,
+    "home_score_regular": 3,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4485,
+      "name": "Lumen Field",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760462",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026050,
+    "match_date": "2026-06-24",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 475,
+      "home_team_name": "Switzerland",
+      "home_team_group": "B"
+    },
+    "away_team": {
+      "away_team_id": 206,
+      "away_team_name": "Canada",
+      "away_team_group": "B"
+    },
+    "home_score": 2,
+    "away_score": 1,
+    "home_score_regular": 2,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4370,
+      "name": "BC Place",
+      "country": {
+        "id": 0,
+        "name": "Canada"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760463",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026051,
+    "match_date": "2026-06-24",
+    "kick_off": "22:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 2869,
+      "home_team_name": "Morocco",
+      "home_team_group": "C"
+    },
+    "away_team": {
+      "away_team_id": 2654,
+      "away_team_name": "Haiti",
+      "away_team_group": "C"
+    },
+    "home_score": 4,
+    "away_score": 2,
+    "home_score_regular": 4,
+    "away_score_regular": 2,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 7485,
+      "name": "Mercedes-Benz Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760464",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026052,
+    "match_date": "2026-06-24",
+    "kick_off": "22:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 580,
+      "home_team_name": "Scotland",
+      "home_team_group": "C"
+    },
+    "away_team": {
+      "away_team_id": 205,
+      "away_team_name": "Brazil",
+      "away_team_group": "C"
+    },
+    "home_score": 0,
+    "away_score": 3,
+    "home_score_regular": 0,
+    "away_score_regular": 3,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4643,
+      "name": "Hard Rock Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760465",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026053,
+    "match_date": "2026-06-25",
+    "kick_off": "01:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 450,
+      "home_team_name": "Czechia",
+      "home_team_group": "A"
+    },
+    "away_team": {
+      "away_team_id": 203,
+      "away_team_name": "Mexico",
+      "away_team_group": "A"
+    },
+    "home_score": 0,
+    "away_score": 3,
+    "home_score_regular": 0,
+    "away_score_regular": 3,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 1672,
+      "name": "Estadio Banorte",
+      "country": {
+        "id": 0,
+        "name": "Mexico"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760467",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026054,
+    "match_date": "2026-06-25",
+    "kick_off": "01:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 467,
+      "home_team_name": "South Africa",
+      "home_team_group": "A"
+    },
+    "away_team": {
+      "away_team_id": 451,
+      "away_team_name": "South Korea",
+      "away_team_group": "A"
+    },
+    "home_score": 1,
+    "away_score": 0,
+    "home_score_regular": 1,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 6351,
+      "name": "Estadio BBVA",
+      "country": {
+        "id": 0,
+        "name": "Mexico"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760466",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026055,
+    "match_date": "2026-06-25",
+    "kick_off": "20:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 11678,
+      "home_team_name": "Curaçao",
+      "home_team_group": "E"
+    },
+    "away_team": {
+      "away_team_id": 4789,
+      "away_team_name": "Ivory Coast",
+      "away_team_group": "E"
+    },
+    "home_score": 0,
+    "away_score": 2,
+    "home_score_regular": 0,
+    "away_score_regular": 2,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 1421,
+      "name": "Lincoln Financial Field",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760473",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026056,
+    "match_date": "2026-06-25",
+    "kick_off": "20:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 209,
+      "home_team_name": "Ecuador",
+      "home_team_group": "E"
+    },
+    "away_team": {
+      "away_team_id": 481,
+      "away_team_name": "Germany",
+      "away_team_group": "E"
+    },
+    "home_score": 2,
+    "away_score": 1,
+    "home_score_regular": 2,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4727,
+      "name": "MetLife Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760468",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026057,
+    "match_date": "2026-06-25",
+    "kick_off": "23:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 627,
+      "home_team_name": "Japan",
+      "home_team_group": "F"
+    },
+    "away_team": {
+      "away_team_id": 466,
+      "away_team_name": "Sweden",
+      "away_team_group": "F"
+    },
+    "home_score": 1,
+    "away_score": 1,
+    "home_score_regular": 1,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 3871,
+      "name": "AT&T Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760471",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026058,
+    "match_date": "2026-06-25",
+    "kick_off": "23:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 659,
+      "home_team_name": "Tunisia",
+      "home_team_group": "F"
+    },
+    "away_team": {
+      "away_team_id": 449,
+      "away_team_name": "Netherlands",
+      "away_team_group": "F"
+    },
+    "home_score": 1,
+    "away_score": 3,
+    "home_score_regular": 1,
+    "away_score_regular": 3,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 10897,
+      "name": "GEHA Field at Arrowhead Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760472",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026059,
+    "match_date": "2026-06-26",
+    "kick_off": "02:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 210,
+      "home_team_name": "Paraguay",
+      "home_team_group": "D"
+    },
+    "away_team": {
+      "away_team_id": 628,
+      "away_team_name": "Australia",
+      "away_team_group": "D"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 5960,
+      "name": "Levi's Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760469",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026060,
+    "match_date": "2026-06-26",
+    "kick_off": "02:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 465,
+      "home_team_name": "Türkiye",
+      "home_team_group": "D"
+    },
+    "away_team": {
+      "away_team_id": 660,
+      "away_team_name": "United States",
+      "away_team_group": "D"
+    },
+    "home_score": 3,
+    "away_score": 2,
+    "home_score_regular": 3,
+    "away_score_regular": 2,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 9115,
+      "name": "SoFi Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760470",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026061,
+    "match_date": "2026-06-26",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 464,
+      "home_team_name": "Norway",
+      "home_team_group": "I"
+    },
+    "away_team": {
+      "away_team_id": 478,
+      "away_team_name": "France",
+      "away_team_group": "I"
+    },
+    "home_score": 1,
+    "away_score": 4,
+    "home_score_regular": 1,
+    "away_score_regular": 4,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 10660,
+      "name": "Gillette Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760475",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026062,
+    "match_date": "2026-06-26",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 654,
+      "home_team_name": "Senegal",
+      "home_team_group": "I"
+    },
+    "away_team": {
+      "away_team_id": 4375,
+      "away_team_name": "Iraq",
+      "away_team_group": "I"
+    },
+    "home_score": 5,
+    "away_score": 0,
+    "home_score_regular": 5,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 10143,
+      "name": "BMO Field",
+      "country": {
+        "id": 0,
+        "name": "Canada"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760474",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026063,
+    "match_date": "2026-06-27",
+    "kick_off": "00:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 2597,
+      "home_team_name": "Cape Verde",
+      "home_team_group": "H"
+    },
+    "away_team": {
+      "away_team_id": 655,
+      "away_team_name": "Saudi Arabia",
+      "away_team_group": "H"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 6262,
+      "name": "NRG Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760478",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026064,
+    "match_date": "2026-06-27",
+    "kick_off": "00:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 212,
+      "home_team_name": "Uruguay",
+      "home_team_group": "H"
+    },
+    "away_team": {
+      "away_team_id": 164,
+      "away_team_name": "Spain",
+      "away_team_group": "H"
+    },
+    "home_score": 0,
+    "away_score": 1,
+    "home_score_regular": 0,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 5009,
+      "name": "Estadio Akron",
+      "country": {
+        "id": 0,
+        "name": "Mexico"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760479",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026065,
+    "match_date": "2026-06-27",
+    "kick_off": "03:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 2620,
+      "home_team_name": "Egypt",
+      "home_team_group": "G"
+    },
+    "away_team": {
+      "away_team_id": 469,
+      "away_team_name": "Iran",
+      "away_team_group": "G"
+    },
+    "home_score": 1,
+    "away_score": 1,
+    "home_score_regular": 1,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4485,
+      "name": "Lumen Field",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760476",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026066,
+    "match_date": "2026-06-27",
+    "kick_off": "03:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 2666,
+      "home_team_name": "New Zealand",
+      "home_team_group": "G"
+    },
+    "away_team": {
+      "away_team_id": 459,
+      "away_team_name": "Belgium",
+      "away_team_group": "G"
+    },
+    "home_score": 1,
+    "away_score": 5,
+    "home_score_regular": 1,
+    "away_score_regular": 5,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4370,
+      "name": "BC Place",
+      "country": {
+        "id": 0,
+        "name": "Canada"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760477",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026067,
+    "match_date": "2026-06-27",
+    "kick_off": "21:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 477,
+      "home_team_name": "Croatia",
+      "home_team_group": "L"
+    },
+    "away_team": {
+      "away_team_id": 4469,
+      "away_team_name": "Ghana",
+      "away_team_group": "L"
+    },
+    "home_score": 2,
+    "away_score": 1,
+    "home_score_regular": 2,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 1421,
+      "name": "Lincoln Financial Field",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760480",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026068,
+    "match_date": "2026-06-27",
+    "kick_off": "21:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 2659,
+      "home_team_name": "Panama",
+      "home_team_group": "L"
+    },
+    "away_team": {
+      "away_team_id": 448,
+      "away_team_name": "England",
+      "away_team_group": "L"
+    },
+    "home_score": 0,
+    "away_score": 2,
+    "home_score_regular": 0,
+    "away_score_regular": 2,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4727,
+      "name": "MetLife Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760485",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026069,
+    "match_date": "2026-06-27",
+    "kick_off": "23:30:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 208,
+      "home_team_name": "Colombia",
+      "home_team_group": "K"
+    },
+    "away_team": {
+      "away_team_id": 482,
+      "away_team_name": "Portugal",
+      "away_team_group": "K"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 4643,
+      "name": "Hard Rock Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760481",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026070,
+    "match_date": "2026-06-27",
+    "kick_off": "23:30:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 2850,
+      "home_team_name": "Congo DR",
+      "home_team_group": "K"
+    },
+    "away_team": {
+      "away_team_id": 2570,
+      "away_team_name": "Uzbekistan",
+      "away_team_group": "K"
+    },
+    "home_score": 3,
+    "away_score": 1,
+    "home_score_regular": 3,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 7485,
+      "name": "Mercedes-Benz Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760482",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026071,
+    "match_date": "2026-06-28",
+    "kick_off": "02:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 624,
+      "home_team_name": "Algeria",
+      "home_team_group": "J"
+    },
+    "away_team": {
+      "away_team_id": 474,
+      "away_team_name": "Austria",
+      "away_team_group": "J"
+    },
+    "home_score": 3,
+    "away_score": 3,
+    "home_score_regular": 3,
+    "away_score_regular": 3,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 10897,
+      "name": "GEHA Field at Arrowhead Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760484",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026072,
+    "match_date": "2026-06-28",
+    "kick_off": "02:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 2917,
+      "home_team_name": "Jordan",
+      "home_team_group": "J"
+    },
+    "away_team": {
+      "away_team_id": 202,
+      "away_team_name": "Argentina",
+      "away_team_group": "J"
+    },
+    "home_score": 1,
+    "away_score": 3,
+    "home_score_regular": 1,
+    "away_score_regular": 3,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 10,
+      "name": "Group Stage"
+    },
+    "stadium": {
+      "id": 3871,
+      "name": "AT&T Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760483",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026073,
+    "match_date": "2026-06-28",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 467,
+      "home_team_name": "South Africa"
+    },
+    "away_team": {
+      "away_team_id": 206,
+      "away_team_name": "Canada"
+    },
+    "home_score": 0,
+    "away_score": 1,
+    "home_score_regular": 0,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 9115,
+      "name": "SoFi Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760486",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026074,
+    "match_date": "2026-06-29",
+    "kick_off": "17:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 205,
+      "home_team_name": "Brazil"
+    },
+    "away_team": {
+      "away_team_id": 627,
+      "away_team_name": "Japan"
+    },
+    "home_score": 2,
+    "away_score": 1,
+    "home_score_regular": 2,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 6262,
+      "name": "NRG Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760487",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026075,
+    "match_date": "2026-06-29",
+    "kick_off": "20:30:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 481,
+      "home_team_name": "Germany"
+    },
+    "away_team": {
+      "away_team_id": 210,
+      "away_team_name": "Paraguay"
+    },
+    "home_score": 1,
+    "away_score": 1,
+    "home_score_regular": 1,
+    "away_score_regular": 1,
+    "home_score_penalties": 3,
+    "away_score_penalties": 4,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 10660,
+      "name": "Gillette Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760489",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Final Score - After Penalties"
+    }
+  },
+  {
+    "match_id": 2026076,
+    "match_date": "2026-06-30",
+    "kick_off": "01:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 449,
+      "home_team_name": "Netherlands"
+    },
+    "away_team": {
+      "away_team_id": 2869,
+      "away_team_name": "Morocco"
+    },
+    "home_score": 1,
+    "away_score": 1,
+    "home_score_regular": 1,
+    "away_score_regular": 1,
+    "home_score_penalties": 2,
+    "away_score_penalties": 3,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 6351,
+      "name": "Estadio BBVA",
+      "country": {
+        "id": 0,
+        "name": "Mexico"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760488",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Final Score - After Penalties"
+    }
+  },
+  {
+    "match_id": 2026077,
+    "match_date": "2026-06-30",
+    "kick_off": "17:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 4789,
+      "home_team_name": "Ivory Coast"
+    },
+    "away_team": {
+      "away_team_id": 464,
+      "away_team_name": "Norway"
+    },
+    "home_score": 1,
+    "away_score": 2,
+    "home_score_regular": 1,
+    "away_score_regular": 2,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 3871,
+      "name": "AT&T Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760490",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026078,
+    "match_date": "2026-06-30",
+    "kick_off": "21:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 478,
+      "home_team_name": "France"
+    },
+    "away_team": {
+      "away_team_id": 466,
+      "away_team_name": "Sweden"
+    },
+    "home_score": 3,
+    "away_score": 0,
+    "home_score_regular": 3,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 4727,
+      "name": "MetLife Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760492",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026079,
+    "match_date": "2026-07-01",
+    "kick_off": "02:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 203,
+      "home_team_name": "Mexico"
+    },
+    "away_team": {
+      "away_team_id": 209,
+      "away_team_name": "Ecuador"
+    },
+    "home_score": 2,
+    "away_score": 0,
+    "home_score_regular": 2,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 1672,
+      "name": "Estadio Banorte",
+      "country": {
+        "id": 0,
+        "name": "Mexico"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760491",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026080,
+    "match_date": "2026-07-01",
+    "kick_off": "16:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 448,
+      "home_team_name": "England"
+    },
+    "away_team": {
+      "away_team_id": 2850,
+      "away_team_name": "Congo DR"
+    },
+    "home_score": 2,
+    "away_score": 1,
+    "home_score_regular": 2,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 7485,
+      "name": "Mercedes-Benz Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760495",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026081,
+    "match_date": "2026-07-01",
+    "kick_off": "20:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 459,
+      "home_team_name": "Belgium"
+    },
+    "away_team": {
+      "away_team_id": 654,
+      "away_team_name": "Senegal"
+    },
+    "home_score": 3,
+    "away_score": 2,
+    "home_score_regular": 3,
+    "away_score_regular": 2,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 4485,
+      "name": "Lumen Field",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760493",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Final Score - After Extra Time"
+    }
+  },
+  {
+    "match_id": 2026082,
+    "match_date": "2026-07-02",
+    "kick_off": "00:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 660,
+      "home_team_name": "United States"
+    },
+    "away_team": {
+      "away_team_id": 452,
+      "away_team_name": "Bosnia-Herzegovina"
+    },
+    "home_score": 2,
+    "away_score": 0,
+    "home_score_regular": 2,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 5960,
+      "name": "Levi's Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760494",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026083,
+    "match_date": "2026-07-02",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 164,
+      "home_team_name": "Spain"
+    },
+    "away_team": {
+      "away_team_id": 474,
+      "away_team_name": "Austria"
+    },
+    "home_score": 3,
+    "away_score": 0,
+    "home_score_regular": 3,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 9115,
+      "name": "SoFi Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760497",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026084,
+    "match_date": "2026-07-02",
+    "kick_off": "23:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 482,
+      "home_team_name": "Portugal"
+    },
+    "away_team": {
+      "away_team_id": 477,
+      "away_team_name": "Croatia"
+    },
+    "home_score": 2,
+    "away_score": 1,
+    "home_score_regular": 2,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 10143,
+      "name": "BMO Field",
+      "country": {
+        "id": 0,
+        "name": "Canada"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760496",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026085,
+    "match_date": "2026-07-03",
+    "kick_off": "03:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 475,
+      "home_team_name": "Switzerland"
+    },
+    "away_team": {
+      "away_team_id": 624,
+      "away_team_name": "Algeria"
+    },
+    "home_score": 2,
+    "away_score": 0,
+    "home_score_regular": 2,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 4370,
+      "name": "BC Place",
+      "country": {
+        "id": 0,
+        "name": "Canada"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760498",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026086,
+    "match_date": "2026-07-03",
+    "kick_off": "18:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 628,
+      "home_team_name": "Australia"
+    },
+    "away_team": {
+      "away_team_id": 2620,
+      "away_team_name": "Egypt"
+    },
+    "home_score": 1,
+    "away_score": 1,
+    "home_score_regular": 1,
+    "away_score_regular": 1,
+    "home_score_penalties": 2,
+    "away_score_penalties": 4,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 3871,
+      "name": "AT&T Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760499",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Final Score - After Penalties"
+    }
+  },
+  {
+    "match_id": 2026087,
+    "match_date": "2026-07-03",
+    "kick_off": "22:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 202,
+      "home_team_name": "Argentina"
+    },
+    "away_team": {
+      "away_team_id": 2597,
+      "away_team_name": "Cape Verde"
+    },
+    "home_score": 3,
+    "away_score": 2,
+    "home_score_regular": 3,
+    "away_score_regular": 2,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 4643,
+      "name": "Hard Rock Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760500",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Final Score - After Extra Time"
+    }
+  },
+  {
+    "match_id": 2026088,
+    "match_date": "2026-07-04",
+    "kick_off": "01:30:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 208,
+      "home_team_name": "Colombia"
+    },
+    "away_team": {
+      "away_team_id": 4469,
+      "away_team_name": "Ghana"
+    },
+    "home_score": 1,
+    "away_score": 0,
+    "home_score_regular": 1,
+    "away_score_regular": 0,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 32,
+      "name": "Round of 32"
+    },
+    "stadium": {
+      "id": 10897,
+      "name": "GEHA Field at Arrowhead Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760501",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026089,
+    "match_date": "2026-07-04",
+    "kick_off": "17:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 206,
+      "home_team_name": "Canada"
+    },
+    "away_team": {
+      "away_team_id": 2869,
+      "away_team_name": "Morocco"
+    },
+    "home_score": 0,
+    "away_score": 3,
+    "home_score_regular": 0,
+    "away_score_regular": 3,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 33,
+      "name": "Round of 16"
+    },
+    "stadium": {
+      "id": 6262,
+      "name": "NRG Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760502",
+      "fetched_at": "2026-07-07T14:38:55.850Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026090,
+    "match_date": "2026-07-04",
+    "kick_off": "21:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 210,
+      "home_team_name": "Paraguay"
+    },
+    "away_team": {
+      "away_team_id": 478,
+      "away_team_name": "France"
+    },
+    "home_score": 0,
+    "away_score": 1,
+    "home_score_regular": 0,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 33,
+      "name": "Round of 16"
+    },
+    "stadium": {
+      "id": 1421,
+      "name": "Lincoln Financial Field",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760503",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026091,
+    "match_date": "2026-07-05",
+    "kick_off": "20:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 205,
+      "home_team_name": "Brazil"
+    },
+    "away_team": {
+      "away_team_id": 464,
+      "away_team_name": "Norway"
+    },
+    "home_score": 1,
+    "away_score": 2,
+    "home_score_regular": 1,
+    "away_score_regular": 2,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 33,
+      "name": "Round of 16"
+    },
+    "stadium": {
+      "id": 4727,
+      "name": "MetLife Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760504",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026092,
+    "match_date": "2026-07-06",
+    "kick_off": "01:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 203,
+      "home_team_name": "Mexico"
+    },
+    "away_team": {
+      "away_team_id": 448,
+      "away_team_name": "England"
+    },
+    "home_score": 2,
+    "away_score": 3,
+    "home_score_regular": 2,
+    "away_score_regular": 3,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 33,
+      "name": "Round of 16"
+    },
+    "stadium": {
+      "id": 1672,
+      "name": "Estadio Banorte",
+      "country": {
+        "id": 0,
+        "name": "Mexico"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760505",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026093,
+    "match_date": "2026-07-06",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 482,
+      "home_team_name": "Portugal"
+    },
+    "away_team": {
+      "away_team_id": 164,
+      "away_team_name": "Spain"
+    },
+    "home_score": 0,
+    "away_score": 1,
+    "home_score_regular": 0,
+    "away_score_regular": 1,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 33,
+      "name": "Round of 16"
+    },
+    "stadium": {
+      "id": 3871,
+      "name": "AT&T Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760506",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026094,
+    "match_date": "2026-07-07",
+    "kick_off": "00:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 660,
+      "home_team_name": "United States"
+    },
+    "away_team": {
+      "away_team_id": 459,
+      "away_team_name": "Belgium"
+    },
+    "home_score": 1,
+    "away_score": 4,
+    "home_score_regular": 1,
+    "away_score_regular": 4,
+    "match_status": "available",
+    "competition_stage": {
+      "id": 33,
+      "name": "Round of 16"
+    },
+    "stadium": {
+      "id": 4485,
+      "name": "Lumen Field",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760507",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Full Time"
+    }
+  },
+  {
+    "match_id": 2026095,
+    "match_date": "2026-07-07",
+    "kick_off": "16:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 202,
+      "home_team_name": "Argentina"
+    },
+    "away_team": {
+      "away_team_id": 2620,
+      "away_team_name": "Egypt"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "scheduled",
+    "competition_stage": {
+      "id": 33,
+      "name": "Round of 16"
+    },
+    "stadium": {
+      "id": 7485,
+      "name": "Mercedes-Benz Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760509",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Scheduled"
+    }
+  },
+  {
+    "match_id": 2026096,
+    "match_date": "2026-07-07",
+    "kick_off": "20:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 475,
+      "home_team_name": "Switzerland"
+    },
+    "away_team": {
+      "away_team_id": 208,
+      "away_team_name": "Colombia"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "scheduled",
+    "competition_stage": {
+      "id": 33,
+      "name": "Round of 16"
+    },
+    "stadium": {
+      "id": 4370,
+      "name": "BC Place",
+      "country": {
+        "id": 0,
+        "name": "Canada"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760508",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Scheduled"
+    }
+  },
+  {
+    "match_id": 2026097,
+    "match_date": "2026-07-09",
+    "kick_off": "20:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 478,
+      "home_team_name": "France"
+    },
+    "away_team": {
+      "away_team_id": 2869,
+      "away_team_name": "Morocco"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "scheduled",
+    "competition_stage": {
+      "id": 11,
+      "name": "Quarter-finals"
+    },
+    "stadium": {
+      "id": 10660,
+      "name": "Gillette Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760510",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Scheduled"
+    }
+  },
+  {
+    "match_id": 2026098,
+    "match_date": "2026-07-10",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 164,
+      "home_team_name": "Spain"
+    },
+    "away_team": {
+      "away_team_id": 459,
+      "away_team_name": "Belgium"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "scheduled",
+    "competition_stage": {
+      "id": 11,
+      "name": "Quarter-finals"
+    },
+    "stadium": {
+      "id": 9115,
+      "name": "SoFi Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760511",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Scheduled"
+    }
+  },
+  {
+    "match_id": 2026099,
+    "match_date": "2026-07-11",
+    "kick_off": "21:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 464,
+      "home_team_name": "Norway"
+    },
+    "away_team": {
+      "away_team_id": 448,
+      "away_team_name": "England"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "scheduled",
+    "competition_stage": {
+      "id": 11,
+      "name": "Quarter-finals"
+    },
+    "stadium": {
+      "id": 4643,
+      "name": "Hard Rock Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760512",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Scheduled"
+    }
+  },
+  {
+    "match_id": 2026100,
+    "match_date": "2026-07-12",
+    "kick_off": "01:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 19280,
+      "home_team_name": "Round of 16 7 Winner"
+    },
+    "away_team": {
+      "away_team_id": 19281,
+      "away_team_name": "Round of 16 8 Winner"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "scheduled",
+    "competition_stage": {
+      "id": 11,
+      "name": "Quarter-finals"
+    },
+    "stadium": {
+      "id": 10897,
+      "name": "GEHA Field at Arrowhead Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760513",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Scheduled"
+    }
+  },
+  {
+    "match_id": 2026101,
+    "match_date": "2026-07-14",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 17631,
+      "home_team_name": "Quarterfinal 1 Winner"
+    },
+    "away_team": {
+      "away_team_id": 17629,
+      "away_team_name": "Quarterfinal 2 Winner"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "scheduled",
+    "competition_stage": {
+      "id": 15,
+      "name": "Semi-finals"
+    },
+    "stadium": {
+      "id": 3871,
+      "name": "AT&T Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760514",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Scheduled"
+    }
+  },
+  {
+    "match_id": 2026102,
+    "match_date": "2026-07-15",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 17630,
+      "home_team_name": "Quarterfinal 3 Winner"
+    },
+    "away_team": {
+      "away_team_id": 17632,
+      "away_team_name": "Quarterfinal 4 Winner"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "scheduled",
+    "competition_stage": {
+      "id": 15,
+      "name": "Semi-finals"
+    },
+    "stadium": {
+      "id": 7485,
+      "name": "Mercedes-Benz Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760515",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Scheduled"
+    }
+  },
+  {
+    "match_id": 2026103,
+    "match_date": "2026-07-18",
+    "kick_off": "21:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 5958,
+      "home_team_name": "Semifinal 1 Loser"
+    },
+    "away_team": {
+      "away_team_id": 5959,
+      "away_team_name": "Semifinal 2 Loser"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "scheduled",
+    "competition_stage": {
+      "id": 25,
+      "name": "Third Place"
+    },
+    "stadium": {
+      "id": 4643,
+      "name": "Hard Rock Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760516",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Scheduled"
+    }
+  },
+  {
+    "match_id": 2026104,
+    "match_date": "2026-07-19",
+    "kick_off": "19:00:00.000",
+    "competition": {
+      "competition_id": 43,
+      "country_name": "International",
+      "competition_name": "FIFA World Cup"
+    },
+    "season": {
+      "season_id": 2026,
+      "season_name": "2026"
+    },
+    "home_team": {
+      "home_team_id": 5960,
+      "home_team_name": "Semifinal 1 Winner"
+    },
+    "away_team": {
+      "away_team_id": 5961,
+      "away_team_name": "Semifinal 2 Winner"
+    },
+    "home_score": 0,
+    "away_score": 0,
+    "home_score_regular": 0,
+    "away_score_regular": 0,
+    "match_status": "scheduled",
+    "competition_stage": {
+      "id": 26,
+      "name": "Final"
+    },
+    "stadium": {
+      "id": 4727,
+      "name": "MetLife Stadium",
+      "country": {
+        "id": 0,
+        "name": "United States"
+      }
+    },
+    "metadata": {
+      "source": "espn-public-api",
+      "espn_event_id": "760517",
+      "fetched_at": "2026-07-07T14:38:55.851Z",
+      "status_detail": "Scheduled"
+    }
+  }
+]
