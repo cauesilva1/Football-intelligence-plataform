@@ -23,8 +23,8 @@ function buildInsights(
     insights.push({
       id: "prospects",
       type: "opportunity",
-      title: `${overview.topProspectsCount} prospects U23 em destaque`,
-      description: "Jogadores sub-23 com rating ≥ 7.0 na temporada atual.",
+      title: `${overview.topProspectsCount} standout U23 prospects`,
+      description: "Sub-23 players with rating ≥ 7.0 in the current season.",
       href: "/scouting?maxAge=23&minRating=7",
     });
   }
@@ -33,19 +33,19 @@ function buildInsights(
     insights.push({
       id: "market",
       type: "opportunity",
-      title: `${overview.marketOpportunitiesCount} oportunidades de mercado`,
-      description: "Alto desempenho com valor de mercado abaixo do patamar de elite.",
+      title: `${overview.marketOpportunitiesCount} market opportunities`,
+      description: "Strong performance with market value below elite benchmarks.",
       href: "/scouting?maxAge=25&minRating=7.2",
     });
   }
 
   if (overview.ratingChange !== 0) {
-    const direction = overview.ratingChange > 0 ? "subiu" : "caiu";
+    const direction = overview.ratingChange > 0 ? "increased" : "decreased";
     insights.push({
       id: "rating-trend",
       type: "trend",
-      title: `Rating médio ${direction} ${Math.abs(overview.ratingChange).toFixed(2)} pts`,
-      description: "Comparativo entre a temporada atual e a anterior na base monitorada.",
+      title: `Average Rating ${direction} ${Math.abs(overview.ratingChange).toFixed(2)} pts`,
+      description: "Comparison between the current and previous season in the monitored database.",
     });
   }
 
@@ -54,8 +54,8 @@ function buildInsights(
     insights.push({
       id: "elite",
       type: "alert",
-      title: `${eliteCount} jogadores com rating ≥ 8.0`,
-      description: "Performers de elite identificados para acompanhamento prioritário.",
+      title: `${eliteCount} players with rating ≥ 8.0`,
+      description: "Elite performers flagged for priority monitoring.",
       href: "/scouting?minRating=8",
     });
   }
@@ -65,8 +65,8 @@ function buildInsights(
     insights.push({
       id: "top-scorer",
       type: "alert",
-      title: `Artilheiro: ${topScorer.knownAs}`,
-      description: `${topScorer.currentSeasonStats.per90.goals.toFixed(2)} gols/90 · ${topScorer.teamShortName ?? "—"}`,
+      title: `Top Scorer: ${topScorer.knownAs}`,
+      description: `${topScorer.currentSeasonStats.per90.goals.toFixed(2)} goals/90 · ${topScorer.teamShortName ?? "—"}`,
       href: `/players/${topScorer.id}`,
     });
   }
@@ -81,8 +81,8 @@ function buildInsights(
     insights.push({
       id: "underperform",
       type: "opportunity",
-      title: `${highXgLowGoals.length} finalizadores subperformando xG`,
-      description: "Jogadores criando chances acima da média de conversão — potencial de regressão positiva.",
+      title: `${highXgLowGoals.length} finishers underperforming xG`,
+      description: "Players creating chances above average conversion — positive regression potential.",
       href: "/scouting?minXGPer90=0.35&minMinutes=600",
     });
   }

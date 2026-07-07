@@ -5,12 +5,12 @@ function clamp(value: number, min = 0, max = 100) {
 }
 
 export const COMPARISON_CATEGORIES = [
-  "Ataque",
-  "Criatividade",
-  "Finalização",
-  "Passe",
-  "Físico",
-  "Defesa",
+  "Attack",
+  "Creativity",
+  "Finishing",
+  "Passing",
+  "Physical",
+  "Defense",
 ] as const;
 
 export type ComparisonCategory = (typeof COMPARISON_CATEGORIES)[number];
@@ -21,11 +21,11 @@ export function toComparisonProfile(stat: PlayerStatistic): Record<ComparisonCat
   const xg90 = stat.minutesPlayed > 0 ? (stat.xG / stat.minutesPlayed) * 90 : 0;
 
   return {
-    Ataque: clamp((p.shots / 4) * 40 + (p.goals / 0.65) * 60),
-    Criatividade: clamp((p.assists / 0.45) * 50 + (p.keyPasses / 2.8) * 50),
-    Finalização: clamp((p.goals / 0.65) * 55 + (xg90 / 0.5) * 45),
-    Passe: clamp(stat.passAccuracy),
-    Físico: clamp(stat.duelsWonPct),
-    Defesa: clamp((p.tackles / 3.5) * 50 + (p.interceptions / 2.5) * 50),
+    Attack: clamp((p.shots / 4) * 40 + (p.goals / 0.65) * 60),
+    Creativity: clamp((p.assists / 0.45) * 50 + (p.keyPasses / 2.8) * 50),
+    Finishing: clamp((p.goals / 0.65) * 55 + (xg90 / 0.5) * 45),
+    Passing: clamp(stat.passAccuracy),
+    Physical: clamp(stat.duelsWonPct),
+    Defense: clamp((p.tackles / 3.5) * 50 + (p.interceptions / 2.5) * 50),
   };
 }

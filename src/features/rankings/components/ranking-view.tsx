@@ -24,16 +24,16 @@ export async function RankingView({
         description={preset.description}
         badge={
           <Link href="/rankings" className={buttonVariants({ variant: "outline", size: "xs" })}>
-            Todos os rankings
+            All rankings
           </Link>
         }
       />
 
       {result.items.length === 0 ? (
         <EmptyState
-          title="Nenhum jogador neste ranking"
-          description="Explore a base completa ou ajuste os critérios de scouting."
-          action={{ label: "Ver jogadores", href: "/players" }}
+          title="No players found in this ranking."
+          description="Explore the full database or adjust scouting criteria."
+          action={{ label: "View Players", href: "/players" }}
         />
       ) : (
         <>

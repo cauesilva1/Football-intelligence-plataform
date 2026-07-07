@@ -27,7 +27,7 @@ function InsightRow({ insight }: { insight: DashboardInsight }) {
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm font-medium text-foreground">{insight.title}</p>
             <Badge variant={badge} className="capitalize">
-              {insight.type === "alert" ? "Alerta" : insight.type === "opportunity" ? "Oportunidade" : "Tendência"}
+              {insight.type === "alert" ? "Alert" : insight.type === "opportunity" ? "Opportunity" : "Trend"}
             </Badge>
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">{insight.description}</p>
@@ -48,8 +48,8 @@ export async function DashboardInsightsSection() {
 
   return (
     <DataPanel
-      title="Insights executivos"
-      description="Alertas e oportunidades gerados a partir da base monitorada."
+      title="Executive Insights"
+      description="Alerts and opportunities generated from the monitored database."
       density="dense"
     >
       <div className="grid gap-2 lg:grid-cols-2">

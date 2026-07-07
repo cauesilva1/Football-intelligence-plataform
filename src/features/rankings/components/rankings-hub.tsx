@@ -5,10 +5,10 @@ export function RankingsHub() {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {[
-        { href: "/rankings/u23", title: "Best U23 Players", desc: "Jovens com maior rating na base." },
-        { href: "/rankings/finishers", title: "Best Finishers", desc: "Maior produção de gols per 90." },
-        { href: "/rankings/creators", title: "Best Creators", desc: "Líderes em assistências per 90." },
-        { href: "/rankings/hidden-gems", title: "Hidden Gems", desc: "Alto rating com valor acessível." },
+        { href: "/rankings/u23", title: "Best U23 Players", desc: "Top Rated Academy & Youth Players" },
+        { href: "/rankings/finishers", title: "Best Finishers", desc: "Highest Goal Production per 90" },
+        { href: "/rankings/creators", title: "Best Creators", desc: "Leaders in assists per 90" },
+        { href: "/rankings/hidden-gems", title: "Hidden Gems", desc: "High rating with accessible value" },
       ].map((item) => (
         <Link
           key={item.href}

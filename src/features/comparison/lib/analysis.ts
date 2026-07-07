@@ -13,7 +13,7 @@ export interface ComparisonReport {
 }
 
 function categoryAdvantageLabel(category: string, playerName: string, margin: number): string {
-  return `${category}: ${playerName} (+${margin} pts no índice)`;
+  return `${category}: ${playerName} (+${margin} index pts)`;
 }
 
 export function buildComparisonReport(a: Player, b: Player): ComparisonReport {
@@ -45,52 +45,52 @@ export function buildComparisonReport(a: Player, b: Player): ComparisonReport {
     const better = sa.per90.goals > sb.per90.goals ? a : b;
     const diff = Math.abs(sa.per90.goals - sb.per90.goals).toFixed(2);
     insights.push(
-      `${better.knownAs} produz ${diff} gol(s) a mais por 90 minutos na temporada atual.`
+      `${better.knownAs} produces ${diff} more goal(s) per 90 in the current season.`
     );
   }
 
   if (sa.per90.assists !== sb.per90.assists) {
     const better = sa.per90.assists > sb.per90.assists ? a : b;
-    insights.push(`${better.knownAs} lidera em assistências por 90.`);
+    insights.push(`${better.knownAs} leads in assists per 90.`);
   }
 
   const xgA = computeXGPer90(sa.minutesPlayed, sa.xG);
   const xgB = computeXGPer90(sb.minutesPlayed, sb.xG);
   if (Math.abs(xgA - xgB) >= 0.08) {
     const better = xgA > xgB ? a : b;
-    insights.push(`${better.knownAs} gera mais xG por 90 (${Math.max(xgA, xgB).toFixed(2)}).`);
+    insights.push(`${better.knownAs} generates more xG per 90 (${Math.max(xgA, xgB).toFixed(2)}).`);
   }
 
   if (Math.abs(sa.passAccuracy - sb.passAccuracy) > 2) {
     const better = sa.passAccuracy > sb.passAccuracy ? a : b;
-    insights.push(`${better.knownAs} apresenta passe mais preciso (${better.currentSeasonStats.passAccuracy.toFixed(0)}%).`);
+    insights.push(`${better.knownAs} shows higher pass accuracy (${better.currentSeasonStats.passAccuracy.toFixed(0)}%).`);
   }
 
   if (Math.abs(a.age - b.age) >= 3) {
     const younger = a.age < b.age ? a : b;
-    insights.push(`${younger.knownAs} é mais jovem — maior horizonte de valorização.`);
+    insights.push(`${younger.knownAs} is younger — greater upside potential.`);
   }
 
   const ratingDiff = sa.rating - sb.rating;
   let recommendation: string;
   if (Math.abs(ratingDiff) < 0.15 && categoryWinsA.length === categoryWinsB.length) {
     recommendation =
-      "Perfis muito equilibrados. A decisão deve priorizar encaixe tático e custo-benefício no contexto do clube.";
+      "Profiles are closely matched. The decision should prioritize tactical fit and cost efficiency for the club context.";
   } else if (ratingDiff > 0.15 || categoryWinsA.length > categoryWinsB.length) {
-    recommendation = `${a.knownAs} apresenta vantagem agregada para scouting imediato, com ${categoryWinsA.length} dimensão(ões) superior(es).`;
+    recommendation = `${a.knownAs} shows the stronger aggregate scouting case with ${categoryWinsA.length} superior dimension(s).`;
   } else {
-    recommendation = `${b.knownAs} apresenta vantagem agregada para scouting imediato, com ${categoryWinsB.length} dimensão(ões) superior(es).`;
+    recommendation = `${b.knownAs} shows the stronger aggregate scouting case with ${categoryWinsB.length} superior dimension(s).`;
   }
 
   const categoryLeader = categoryWinsA.length >= categoryWinsB.length ? a : b;
   const categoryWinCount = Math.max(categoryWinsA.length, categoryWinsB.length);
-  const summary = `Comparando ${a.knownAs} (${sa.rating.toFixed(1)}) e ${b.knownAs} (${sb.rating.toFixed(1)}). ${categoryLeader.knownAs} lidera em ${categoryWinCount} de ${COMPARISON_CATEGORIES.length} categorias técnicas.`;
+  const summary = `Comparing ${a.knownAs} (${sa.rating.toFixed(1)}) and ${b.knownAs} (${sb.rating.toFixed(1)}). ${categoryLeader.knownAs} leads in ${categoryWinCount} of ${COMPARISON_CATEGORIES.length} technical categories.`;
 
   if (advantagesA.length === 0) {
-    advantagesA.push("Sem vantagem clara em categorias isoladas — desempenho próximo da média do adversário.");
+    advantagesA.push("No clear edge in isolated categories — performance close to the opponent's baseline.");
   }
   if (advantagesB.length === 0) {
-    advantagesB.push("Sem vantagem clara em categorias isoladas — desempenho próximo da média do adversário.");
+    advantagesB.push("No clear edge in isolated categories — performance close to the opponent's baseline.");
   }
 
   return {

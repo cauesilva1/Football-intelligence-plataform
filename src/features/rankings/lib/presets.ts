@@ -14,14 +14,14 @@ export const RANKING_PRESETS: RankingPreset[] = [
   {
     slug: "u23",
     title: "Best U23 Players",
-    description: "Jovens com maior rating na base — potencial de valorização.",
+    description: "Top Rated Academy & Youth Players — high upside potential.",
     href: "/rankings/u23",
     filters: { maxAge: 23, minRating: 7, sortBy: "rating", sortDir: "desc", page: 1, pageSize: 20 },
   },
   {
     slug: "finishers",
     title: "Best Finishers",
-    description: "Maior produção de gols normalizada por 90 minutos.",
+    description: "Highest Goal Production per 90 — normalized scoring output.",
     href: "/rankings/finishers",
     filters: {
       minMinutes: 450,
@@ -35,14 +35,14 @@ export const RANKING_PRESETS: RankingPreset[] = [
   {
     slug: "creators",
     title: "Best Creators",
-    description: "Líderes em assistências e criação de jogadas per 90.",
+    description: "Leaders in assists and chance creation per 90.",
     href: "/rankings/creators",
     filters: { minMinutes: 450, sortBy: "assistsPer90", sortDir: "desc", page: 1, pageSize: 20 },
   },
   {
     slug: "hidden-gems",
     title: "Hidden Gems",
-    description: "Alto desempenho com valor de mercado acessível.",
+    description: "Strong performance with accessible market value.",
     href: "/rankings/hidden-gems",
     filters: {
       maxAge: 25,

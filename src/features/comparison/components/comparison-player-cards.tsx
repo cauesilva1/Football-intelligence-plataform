@@ -26,10 +26,10 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
           >
             <div className="mb-3 flex items-center justify-between gap-2">
               <Badge variant={index === 0 ? "default" : "azure"}>
-                Jogador {index === 0 ? "A" : "B"}
+                Player {index === 0 ? "A" : "B"}
               </Badge>
               <Link href={`/players/${p.id}`} className={buttonVariants({ variant: "ghost", size: "xs" })}>
-                Ver perfil
+                View profile
               </Link>
             </div>
             <div className="flex items-start justify-between gap-4">
@@ -47,9 +47,9 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
                 <div className="min-w-0">
                   <p className="truncate font-display text-base font-semibold text-white">{p.fullName}</p>
                   <p className="text-xs text-white/75">
-                    {p.position} · {p.nationality} · {p.age} anos
+                    {p.position} · {p.nationality} · {p.age} years old
                   </p>
-                  <p className="truncate text-2xs text-white/60">{p.teamName ?? "Sem clube"}</p>
+                  <p className="truncate text-2xs text-white/60">{p.teamName ?? "No club"}</p>
                 </div>
               </div>
               <div className="shrink-0 text-right">
@@ -62,7 +62,7 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
             <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/15 pt-3 text-center">
               <div>
                 <p className="font-mono text-sm font-semibold tabular-nums text-white">{s.per90.goals.toFixed(2)}</p>
-                <p className="text-2xs text-white/60">Gols/90</p>
+                <p className="text-2xs text-white/60">Goals/90</p>
               </div>
               <div>
                 <p className="font-mono text-sm font-semibold tabular-nums text-white">{s.per90.assists.toFixed(2)}</p>

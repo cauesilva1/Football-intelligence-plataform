@@ -9,39 +9,39 @@ export async function DashboardStatsSection() {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       <MetricCard
-        label="Total de jogadores"
+        label="Total Players"
         value={String(overview.totalPlayers)}
         icon={Users}
         accent="info"
-        trend={`Base ${appConfig.season}`}
+        trend={`${appConfig.season} database`}
       />
       <MetricCard
-        label="Top prospects"
+        label="Top Prospects"
         value={String(overview.topProspectsCount)}
         icon={Sparkles}
         accent="primary"
         trend="U23 · rating ≥ 7.0"
       />
       <MetricCard
-        label="Idade média"
+        label="Average Age"
         value={overview.avgAge.toFixed(1)}
         icon={Calendar}
         accent="warning"
-        trend={`${overview.totalTeams} clubes`}
+        trend={`${overview.totalTeams} clubs`}
       />
       <MetricCard
-        label="Best performers"
+        label="Best Performers"
         value={String(overview.bestPerformersCount)}
         icon={Star}
         accent="info"
         trend="Rating ≥ 7.5"
       />
       <MetricCard
-        label="Market opportunities"
+        label="Market Opportunities"
         value={String(overview.marketOpportunitiesCount)}
         icon={TrendingUp}
         accent="negative"
-        trend="Alto rating · valor ≤ €8M"
+        trend="High rating · value ≤ €8M"
       />
     </div>
   );

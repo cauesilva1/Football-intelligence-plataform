@@ -11,7 +11,7 @@ import { chartTheme } from "@/lib/chart-theme";
 import { toRadarProfile } from "@/lib/normalize";
 import { notFound } from "next/navigation";
 
-const RADAR_METRICS = ["Finalização", "Criação", "Passe", "Drible", "Defesa", "Físico"];
+const RADAR_METRICS = ["Finishing", "Creation", "Passing", "Dribbling", "Defense", "Physical"];
 
 export async function ComparisonResult({ playerA, playerB }: { playerA: string; playerB: string }) {
   const pair = await queryPlayersForComparison(playerA, playerB);
@@ -27,14 +27,14 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
       <ComparisonPlayerCards players={[a, b]} />
 
       <DataPanel
-        title="Resumo da comparação"
+        title="Comparison Summary"
         description={report.summary}
         density="dense"
       >
         <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
           <div className="mb-1 flex items-center gap-2">
             <Trophy className="h-4 w-4 text-primary" />
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Recomendação</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Recommendation</p>
           </div>
           <p className="text-sm text-foreground">{report.recommendation}</p>
         </div>
@@ -42,8 +42,8 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
 
       <div className="grid gap-4 lg:grid-cols-2">
         <DataPanel
-          title="Comparação por categoria"
-          description="Ataque, criatividade, finalização, passe, físico e defesa (índice 0–100)."
+          title="Category Comparison"
+          description="Attack, creativity, finishing, passing, physical, and defense (0–100 index)."
           density="dense"
         >
           <ComparisonBarChart
@@ -55,7 +55,7 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
           />
         </DataPanel>
 
-        <DataPanel title="Perfil radar" description="Visão multidimensional normalizada per 90." density="dense">
+        <DataPanel title="Radar Profile" description="Normalized multidimensional view per 90." density="dense">
           <StatRadarChart
             metrics={RADAR_METRICS}
             series={[
@@ -67,7 +67,7 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <DataPanel title={`Vantagens — ${a.knownAs}`} density="dense">
+        <DataPanel title={`Competitive Advantages — ${a.knownAs}`} density="dense">
           <ul className="space-y-2">
             {report.advantagesA.map((item) => (
               <li
@@ -87,7 +87,7 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
           )}
         </DataPanel>
 
-        <DataPanel title={`Vantagens — ${b.knownAs}`} density="dense">
+        <DataPanel title={`Competitive Advantages — ${b.knownAs}`} density="dense">
           <ul className="space-y-2">
             {report.advantagesB.map((item) => (
               <li
@@ -109,8 +109,8 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
       </div>
 
       <DataPanel
-        title="Insights automáticos"
-        description="Análise quantitativa da temporada atual."
+        title="Automated Insights"
+        description="Quantitative analysis for the current season."
         density="dense"
       >
         <div className="space-y-2">

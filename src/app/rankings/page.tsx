@@ -12,8 +12,8 @@ export default async function RankingsPage() {
     <DashboardShell subtitle="Rankings" userName={session?.name}>
       <div className="space-y-6">
         <PageHeader
-          title="Rankings curados"
-          description="Listas pré-configuradas para scouting rápido por perfil de jogador."
+          title="Curated Rankings"
+          description="Pre-configured lists for fast scouting by player profile."
         />
         <RankingsHub />
       </div>

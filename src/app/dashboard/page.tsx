@@ -23,8 +23,8 @@ export default async function DashboardPage() {
     <DashboardShell subtitle="Overview" userName={session?.name}>
       <div className="space-y-6">
         <PageHeader
-          title="Visão executiva"
-          description={`Painel de inteligência · Temporada ${appConfig.season} · ${appConfig.name}`}
+          title="Executive Dashboard"
+          description={`Intelligence Panel · Season ${appConfig.season} · ${appConfig.name}`}
         />
 
         <Suspense fallback={<DashboardStatsSkeleton />}>

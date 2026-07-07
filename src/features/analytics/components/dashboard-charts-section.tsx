@@ -8,16 +8,16 @@ export async function DashboardChartsSection() {
   const latest = overview.ratingTrend[overview.ratingTrend.length - 1];
   const changeLabel =
     overview.ratingChange >= 0
-      ? `+${overview.ratingChange.toFixed(2)} vs temporada anterior`
-      : `${overview.ratingChange.toFixed(2)} vs temporada anterior`;
+      ? `+${overview.ratingChange.toFixed(2)} vs previous season`
+      : `${overview.ratingChange.toFixed(2)} vs previous season`;
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <DataPanel title="Gols por posição" description="Distribuição ofensiva agregada na temporada." density="dense">
+      <DataPanel title="Goals by Position" description="Aggregated offensive distribution this season." density="dense">
         <GoalsBarChart data={overview.goalsByPosition} />
       </DataPanel>
       <DataPanel
-        title="Evolução do rating médio"
+        title="Average Rating Trend"
         description={`${latest?.season ?? "—"} · ${latest?.avgRating.toFixed(2)} (${changeLabel})`}
         density="dense"
       >

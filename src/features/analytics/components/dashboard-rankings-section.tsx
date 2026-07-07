@@ -24,7 +24,7 @@ function RankingList({
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-foreground">{p.knownAs}</p>
               <p className="truncate text-2xs text-muted-foreground">
-                {p.teamShortName ?? "—"} · {p.age}a
+                {p.teamShortName ?? "—"} · {p.age}y
               </p>
             </div>
             <Badge variant="neutral">{p.position}</Badge>
@@ -49,19 +49,19 @@ export async function DashboardRankingsSection() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <DataPanel title="Top prospects U23" description="Jovens com rating ≥ 7.0." density="dense">
+      <DataPanel title="Top U23 Prospects" description="Youth players with rating ≥ 7.0." density="dense">
         <RankingList players={overview.topProspects} metric="rating" />
       </DataPanel>
 
-      <DataPanel title="Best performers" description="Maiores ratings da temporada." density="dense">
+      <DataPanel title="Best Performers" description="Highest ratings this season." density="dense">
         <RankingList players={overview.bestPerformers} metric="rating" />
       </DataPanel>
 
-      <DataPanel title="Market opportunities" description="Alto desempenho · valor acessível." density="dense">
+      <DataPanel title="Market Opportunities" description="Strong performance · accessible value." density="dense">
         <RankingList players={overview.marketOpportunities} metric="value" />
       </DataPanel>
 
-      <DataPanel title="Artilheiros (g/90)" description="Produção ofensiva normalizada." density="dense">
+      <DataPanel title="Top Scorers (g/90)" description="Normalized offensive output." density="dense">
         <RankingList players={overview.topScorers} metric="goals90" />
       </DataPanel>
     </div>
