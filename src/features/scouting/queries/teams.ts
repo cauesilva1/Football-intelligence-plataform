@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { getTeamRepository } from "@/features/scouting/repository";
+import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
 import {
   resolveCompetitionIdFromLeagueParam,
   resolveTeamLeagueTabs,
@@ -84,20 +85,24 @@ async function attachStatsBomb<
 }
 
 export const queryCompetitions = cache(async () => {
+  await ensureRuntimeDataSource();
   return getTeamRepository().getCompetitions();
 });
 
 export const queryTeamLeagueTabs = cache(async () => {
+  await ensureRuntimeDataSource();
   const competitions = await getTeamRepository().getCompetitions();
   return resolveTeamLeagueTabs(competitions);
 });
 
 export const queryCompetitionIdForLeague = cache(async (leagueParam?: string) => {
+  await ensureRuntimeDataSource();
   const tabs = await queryTeamLeagueTabs();
   return resolveCompetitionIdFromLeagueParam(leagueParam, tabs);
 });
 
 export const queryTeams = cache(async (competitionId?: string) => {
+  await ensureRuntimeDataSource();
   const teams = await getTeamRepository().findAll(competitionId);
   const enriched = await attachStatsBomb(teams);
   return enriched.map((team) => ({
@@ -109,6 +114,7 @@ export const queryTeams = cache(async (competitionId?: string) => {
 });
 
 export const queryTeamById = cache(async (id: string) => {
+  await ensureRuntimeDataSource();
   const team = await getTeamRepository().findById(id);
   if (!team) return null;
 

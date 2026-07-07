@@ -1,6 +1,7 @@
 import { getTeamRepository, isDbSource } from "@/features/scouting/repository";
 import { LEAGUES } from "@/features/scouting/lib/constants";
 import { TEAM_OPTIONS, type TeamOption } from "@/features/scouting/lib/teams-options";
+import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
 
 export interface LeagueOption {
   id: string;
@@ -18,6 +19,7 @@ export async function queryScoutingFilterOptions(): Promise<{
     };
   }
 
+  await ensureRuntimeDataSource();
   const repo = getTeamRepository();
   const [competitions, teams] = await Promise.all([repo.getCompetitions(), repo.findAll()]);
 

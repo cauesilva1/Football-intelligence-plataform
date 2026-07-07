@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { isDbSource } from "@/lib/data-source";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -11,7 +12,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export function canUseDatabase(): boolean {
-  return process.env.DATA_SOURCE === "db" && Boolean(process.env.DATABASE_URL?.trim());
+  return isDbSource() && Boolean(process.env.DATABASE_URL?.trim());
 }
 
 export async function readSystemCache<T>(key: string): Promise<T | null> {

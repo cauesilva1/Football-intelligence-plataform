@@ -33,9 +33,7 @@ function loadPrismaDashboardRepository(): DashboardRepository {
   return prismaDashboardRepository!;
 }
 
-export function isDbSource(): boolean {
-  return process.env.DATA_SOURCE === "db";
-}
+import { isDbSource } from "@/lib/data-source";
 
 export function getPlayerRepository(): PlayerRepository {
   return isDbSource() ? loadPrismaPlayerRepository() : mockPlayerRepository;
@@ -50,3 +48,4 @@ export function getDashboardRepository(): DashboardRepository {
 }
 
 export type { PlayerRepository, TeamRepository, DashboardRepository } from "./types";
+export { isDbSource } from "@/lib/data-source";
