@@ -1,5 +1,6 @@
 import { getPrisma } from "@/lib/prisma";
 import { canUseDatabase, readSystemCache, writeSystemCache } from "@/lib/system-cache";
+import { isUsablePlayerPhotoUrl, resolvePlayerPhotoUrl } from "@/lib/player-media";
 import { CURRENT_SEASON } from "@/lib/data/generators";
 import { sanitizeApiSportsSearch } from "@/lib/crests/sanitize-search";
 import { apiSportsTeamLogoUrl, resolveClubCrestUrlSync } from "@/lib/crests/club-crests";
@@ -161,12 +162,7 @@ function teamStatsNeedEnrichment(stats?: {
 }
 
 function hasValidPersistedPhoto(photoUrl: string | null | undefined): boolean {
-  const url = photoUrl?.trim();
-  if (!url) return false;
-  return (
-    url.includes("media.api-sports.io/football/players/") ||
-    /\.(png|jpe?g|webp)(\?|$)/i.test(url)
-  );
+  return isUsablePlayerPhotoUrl(photoUrl);
 }
 
 function playerNeedsEnrichment(player: {
@@ -358,7 +354,10 @@ export async function enrichPlayerIfNeeded(playerId: string): Promise<void> {
 
   const height = parseHeightCm(match.height) || player.height;
   const weight = parseWeightKg(match.weight) || player.weight;
-  const photoUrl = match.photo?.trim() || apiSportsPlayerPhotoUrl(match.id);
+  const photoUrl = resolvePlayerPhotoUrl({
+    externalPhoto: match.photo,
+    apiSportsId: match.id,
+  });
 
   await prisma.player.update({
     where: { id: playerId },

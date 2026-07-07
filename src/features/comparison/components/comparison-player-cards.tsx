@@ -36,6 +36,7 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
               <div className="flex min-w-0 gap-3">
                 <PlayerAvatar
                   name={p.knownAs}
+                  fullName={p.fullName}
                   position={p.position}
                   competitionName={p.competitionName}
                   teamName={p.teamName}

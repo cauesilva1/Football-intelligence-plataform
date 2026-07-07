@@ -60,6 +60,7 @@ export function TeamSquadTable({
                   <Link href={`/players/${player.id}`} className="flex items-center gap-3 hover:text-primary">
                     <PlayerAvatar
                       name={player.knownAs}
+                      fullName={player.fullName}
                       position={player.position}
                       competitionName={competitionName}
                       teamName={teamName}

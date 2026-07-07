@@ -4,6 +4,7 @@ import { CURRENT_SEASON } from "@/lib/data/generators";
 import { toPlayerStatistic } from "@/lib/metrics/map-statistic";
 import { calcAge } from "@/lib/utils";
 import { filterAndSortPlayers } from "@/features/scouting/lib/filter-players";
+import { resolvePlayerPhotoUrl } from "@/lib/player-media";
 import type { Foot, Player, PlayerFilters, PlayerStatistic } from "@/types";
 import type { PlayerRepository } from "./types";
 
@@ -138,7 +139,10 @@ function mapPlayer(record: PrismaPlayerWithStats): Player {
     weight: record.weight,
     preferredFoot: record.preferredFoot as Foot,
     marketValue: record.marketValue,
-    photoUrl: record.photoUrl ?? undefined,
+    photoUrl: resolvePlayerPhotoUrl({
+      photoUrl: record.photoUrl,
+      apiSportsId: record.apiSportsId,
+    }),
     apiSportsId: record.apiSportsId ?? undefined,
     teamId: record.teamId ?? "",
     teamName: record.team?.name,

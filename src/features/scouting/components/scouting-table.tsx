@@ -124,6 +124,7 @@ export function ScoutingTable({
                 <div className="flex items-center gap-3">
                   <PlayerAvatar
                     name={p.knownAs}
+                    fullName={p.fullName}
                     position={p.position}
                     competitionName={p.competitionName}
                     teamName={p.teamName}

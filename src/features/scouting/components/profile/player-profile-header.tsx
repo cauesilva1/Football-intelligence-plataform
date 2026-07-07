@@ -58,6 +58,7 @@ export function PlayerProfileHeader({
         <div className="flex min-w-0 gap-4">
           <PlayerAvatar
             name={player.knownAs}
+            fullName={player.fullName}
             position={player.position}
             competitionName={player.competitionName}
             teamName={player.teamName}
