@@ -7,7 +7,7 @@ import type { TournamentMatch } from "@/lib/tournaments/types";
 
 function formatDisplayDate(match: TournamentMatch): string {
   if (match.kickOff?.includes("T")) {
-    return new Date(match.kickOff).toLocaleDateString("pt-BR", {
+    return new Date(match.kickOff).toLocaleDateString("en-US", {
       weekday: "short",
       day: "2-digit",
       month: "short",
@@ -19,7 +19,7 @@ function formatDisplayDate(match: TournamentMatch): string {
 
   const [hours, minutes] = (match.kickOff ?? "12:00:00").split(":");
   const parsed = new Date(`${match.date}T${hours}:${minutes}:00`);
-  return parsed.toLocaleDateString("pt-BR", {
+  return parsed.toLocaleDateString("en-US", {
     weekday: "short",
     day: "2-digit",
     month: "short",
@@ -66,7 +66,7 @@ export function MatchCard({ match }: { match: TournamentMatch }) {
           <div className="flex items-center gap-2">
             {match.matchWeek != null && match.stageKey === "group" ? (
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Rod. {match.matchWeek}
+                MD {match.matchWeek}
               </span>
             ) : null}
             <StatusBadge match={match} />

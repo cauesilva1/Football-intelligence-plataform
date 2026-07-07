@@ -46,10 +46,10 @@ export interface TournamentRound {
 }
 
 export const PHASE_FILTER_OPTIONS: Array<{ value: PhaseFilterKey; label: string }> = [
-  { value: "all", label: "Todas as Fases" },
-  { value: "group", label: "Fase de Grupos" },
-  { value: "r16", label: "Oitavas de Final" },
-  { value: "quarter", label: "Quartas de Final" },
-  { value: "semi", label: "Semifinal" },
+  { value: "all", label: "All Phases" },
+  { value: "group", label: "Group Stage" },
+  { value: "r16", label: "Round of 16" },
+  { value: "quarter", label: "Quarter-finals" },
+  { value: "semi", label: "Semi-finals" },
   { value: "final", label: "Final" },
 ];

@@ -24,7 +24,7 @@ function normalizeSearch(value: string): string {
 }
 
 function formatPlayerLabel(player: PlayerLite): string {
-  const club = player.teamName ?? player.teamShortName ?? "Sem clube";
+  const club = player.teamName ?? player.teamShortName ?? "No club";
   return `${player.knownAs || player.fullName} - ${player.position} | ${club}`;
 }
 
@@ -79,7 +79,7 @@ export function PlayerSearchCombobox({
             className="h-11 w-full justify-between font-normal"
           >
             <span className="truncate text-left">
-              {selected ? formatPlayerLabel(selected) : "Buscar jogador..."}
+              {selected ? formatPlayerLabel(selected) : "Search player..."}
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -87,12 +87,12 @@ export function PlayerSearchCombobox({
         <PopoverContent className="w-[min(100vw-2rem,32rem)] p-0" align="start">
           <Command shouldFilter={false}>
             <CommandInput
-              placeholder="Digite nome, posição ou clube..."
+              placeholder="Search by name, position, or club..."
               value={query}
               onValueChange={setQuery}
             />
             <CommandList>
-              <CommandEmpty>Nenhum jogador encontrado.</CommandEmpty>
+              <CommandEmpty>No player found.</CommandEmpty>
               <CommandGroup>
                 {filtered.map((player) => (
                   <CommandItem

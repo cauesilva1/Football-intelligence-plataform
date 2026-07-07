@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { href: "/scouting", label: "Ligas" },
-  { href: "/teams", label: "Clubes" },
-  { href: "/tournaments", label: "Torneios" },
+  { href: "/scouting", label: "Leagues" },
+  { href: "/teams", label: "Clubs" },
+  { href: "/tournaments", label: "Tournaments" },
 ] as const;
 
 export function HeaderNav() {

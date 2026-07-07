@@ -1,4 +1,4 @@
-import { STATSBOMB_RAW_BASE, STAGE_LABELS_PT } from "./constants";
+import { STATSBOMB_RAW_BASE, STAGE_LABELS } from "./constants";
 import type { StatsBombMatch } from "./types";
 
 export async function fetchStatsBombMatches(
@@ -19,13 +19,13 @@ export async function fetchStatsBombMatches(
 }
 
 export function formatStageLabel(stageName: string): string {
-  return STAGE_LABELS_PT[stageName] ?? stageName;
+  return STAGE_LABELS[stageName] ?? stageName;
 }
 
 export function formatMatchDate(date: string, kickOff: string): string {
   const [hours, minutes] = kickOff.split(":");
   const parsed = new Date(`${date}T${hours}:${minutes}:00`);
-  return parsed.toLocaleDateString("pt-BR", {
+  return parsed.toLocaleDateString("en-US", {
     weekday: "short",
     day: "2-digit",
     month: "short",

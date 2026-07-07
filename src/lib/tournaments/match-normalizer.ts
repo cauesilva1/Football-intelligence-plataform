@@ -30,26 +30,18 @@ function mapStatsBombStatus(match: StatsBombMatch): { status: MatchStatus; statu
   const raw = match.match_status?.toLowerCase();
 
   if (raw === "live" || raw === "in") {
-    return { status: "live", statusLabel: "Em Andamento" };
+    return { status: "live", statusLabel: "Live" };
   }
 
   if (raw === "available" || raw === "played" || raw === "finished") {
-    return { status: "finished", statusLabel: "Encerrado" };
+    return { status: "finished", statusLabel: "Finished" };
   }
 
   if (raw === "postponed" || raw === "cancelled") {
-    return { status: "postponed", statusLabel: "Adiado" };
+    return { status: "postponed", statusLabel: "Postponed" };
   }
 
-  const [hours, minutes] = (match.kick_off ?? "12:00:00").split(":");
-  const scheduled = new Date(`${match.match_date}T${hours}:${minutes}:00Z`);
-  const label = scheduled.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  return { status: "scheduled", statusLabel: label };
+  return { status: "scheduled", statusLabel: "Scheduled" };
 }
 
 export function fromStatsBombMatch(match: StatsBombMatch, source: TournamentMatch["source"] = "statsbomb"): TournamentMatch {
@@ -101,23 +93,16 @@ function mapApiStatus(short: string, dateIso: string): { status: MatchStatus; st
   const postponedCodes = new Set(["PST", "CANC", "ABD", "SUSP"]);
 
   if (liveCodes.has(short)) {
-    return { status: "live", statusLabel: "Em Andamento" };
+    return { status: "live", statusLabel: "Live" };
   }
   if (finishedCodes.has(short)) {
-    return { status: "finished", statusLabel: "Encerrado" };
+    return { status: "finished", statusLabel: "Finished" };
   }
   if (postponedCodes.has(short)) {
-    return { status: "postponed", statusLabel: "Adiado" };
+    return { status: "postponed", statusLabel: "Postponed" };
   }
 
-  const scheduled = new Date(dateIso);
-  const label = scheduled.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  return { status: "scheduled", statusLabel: label };
+  return { status: "scheduled", statusLabel: "Scheduled" };
 }
 
 export function fromApiSportsFixture(item: ApiSportsFixtureItem): TournamentMatch {
@@ -137,7 +122,7 @@ export function fromApiSportsFixture(item: ApiSportsFixtureItem): TournamentMatc
     stageName,
     stageKey: resolvePhaseKey(stageName),
     stageOrder: STAGE_ORDER[stageName] ?? 99,
-    stadium: item.fixture.venue?.name ?? "A definir",
+    stadium: item.fixture.venue?.name ?? "TBD",
     stadiumCountry: item.fixture.venue?.city ?? undefined,
     status,
     statusLabel,

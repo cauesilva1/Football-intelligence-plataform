@@ -27,7 +27,7 @@ export function TournamentToolbar({
           value={phase}
           onChange={(e) => onPhaseChange(e.target.value as PhaseFilterKey)}
           className="sm:max-w-[220px]"
-          aria-label="Filtrar por fase"
+          aria-label="Filter by phase"
         >
           {PHASE_FILTER_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -39,7 +39,7 @@ export function TournamentToolbar({
         <div className="relative min-w-0 flex-1 sm:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Buscar seleção (ex: Arg, Brasil...)"
+            placeholder="Search nation (e.g. ARG, Brazil...)"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-9"
@@ -48,8 +48,8 @@ export function TournamentToolbar({
       </div>
 
       <p className="text-xs text-muted-foreground sm:text-right">
-        Exibindo <span className="font-semibold text-foreground">{visibleCount}</span> de{" "}
-        <span className="font-semibold text-foreground">{totalCount}</span> jogos
+        Showing <span className="font-semibold text-foreground">{visibleCount}</span> of{" "}
+        <span className="font-semibold text-foreground">{totalCount}</span> matches
       </p>
     </div>
   );

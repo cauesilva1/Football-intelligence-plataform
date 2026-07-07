@@ -6,30 +6,30 @@ export const STATSBOMB_RAW_BASE =
 export const TOURNAMENTS: TournamentConfig[] = [
   {
     id: "wc-2026",
-    label: "Copa do Mundo 2026",
-    description: "EUA · México · Canadá · scraper ESPN + cache local",
+    label: "FIFA World Cup 2026",
+    description: "USA · Mexico · Canada · ESPN scraper + local cache",
     source: "scraped",
   },
   {
     id: "wc-2022",
-    label: "Copa do Mundo 2022",
-    description: "Qatar · 32 seleções · StatsBomb Open Data",
+    label: "FIFA World Cup 2022",
+    description: "Qatar · 32 nations · StatsBomb Open Data",
     source: "statsbomb",
     competitionId: 43,
     seasonId: 106,
   },
   {
     id: "wc-2018",
-    label: "Copa do Mundo 2018",
-    description: "Rússia · edição histórica",
+    label: "FIFA World Cup 2018",
+    description: "Russia · historical edition",
     source: "statsbomb",
     competitionId: 43,
     seasonId: 3,
   },
   {
     id: "eu-2020",
-    label: "Euro 2020",
-    description: "Europa · campeã Itália",
+    label: "UEFA Euro 2020",
+    description: "Europe · Italy champions",
     source: "statsbomb",
     competitionId: 55,
     seasonId: 43,
@@ -46,12 +46,15 @@ export const STAGE_ORDER: Record<string, number> = {
   Final: 6,
 };
 
-export const STAGE_LABELS_PT: Record<string, string> = {
-  "Group Stage": "Fase de Grupos",
-  "Round of 32": "Rodada de 32",
-  "Round of 16": "Oitavas de Final",
-  "Quarter-finals": "Quartas de Final",
-  "Semi-finals": "Semifinal",
-  "Third Place": "Disputa do 3º Lugar",
+export const STAGE_LABELS: Record<string, string> = {
+  "Group Stage": "Group Stage",
+  "Round of 32": "Round of 32",
+  "Round of 16": "Round of 16",
+  "Quarter-finals": "Quarter-finals",
+  "Semi-finals": "Semi-finals",
+  "Third Place": "Third Place",
   Final: "Final",
 };
+
+/** @deprecated Use STAGE_LABELS */
+export const STAGE_LABELS_PT = STAGE_LABELS;

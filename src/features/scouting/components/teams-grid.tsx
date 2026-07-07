@@ -12,7 +12,7 @@ export async function TeamsGrid({ competitionId }: { competitionId?: string }) {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        {teams.length} clubes · StatsBomb, ESPN ou dados locais ({teams[0]?.statsBomb?.seasonLabel ?? "2025/26"})
+        {teams.length} clubs · StatsBomb, ESPN, or local data ({teams[0]?.statsBomb?.seasonLabel ?? "2025/26"})
       </p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {teams.map((team) => {
@@ -42,24 +42,24 @@ export async function TeamsGrid({ competitionId }: { competitionId?: string }) {
                   <div className="mt-4 grid grid-cols-4 gap-2 text-center">
                     <div>
                       <p className="font-display text-sm font-bold text-primary">{sb?.wins ?? "—"}</p>
-                      <p className="text-[10px] uppercase text-muted-foreground">Vitórias</p>
+                      <p className="text-[10px] uppercase text-muted-foreground">Wins</p>
                     </div>
                     <div>
                       <p className="font-display text-sm font-bold text-foreground">{sb?.draws ?? "—"}</p>
-                      <p className="text-[10px] uppercase text-muted-foreground">Empates</p>
+                      <p className="text-[10px] uppercase text-muted-foreground">Draws</p>
                     </div>
                     <div>
                       <p className="font-display text-sm font-bold text-foreground">{sb?.losses ?? "—"}</p>
-                      <p className="text-[10px] uppercase text-muted-foreground">Derrotas</p>
+                      <p className="text-[10px] uppercase text-muted-foreground">Losses</p>
                     </div>
                     <div>
                       <p className="font-display text-sm font-bold text-foreground">{sb ? balanceLabel : "—"}</p>
-                      <p className="text-[10px] uppercase text-muted-foreground">Saldo</p>
+                      <p className="text-[10px] uppercase text-muted-foreground">GD</p>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
-                      <Users className="h-3 w-3" /> {team.squadSize} jogadores
+                      <Users className="h-3 w-3" /> {team.squadSize} players
                     </span>
                     {sb ? <span className="text-primary/80">{sb.seasonLabel}</span> : null}
                   </div>
@@ -71,7 +71,7 @@ export async function TeamsGrid({ competitionId }: { competitionId?: string }) {
       </div>
       {teams.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-          Nenhum clube encontrado para este filtro.
+          No clubs found for this filter.
         </p>
       ) : null}
       <StatsBombAttribution />

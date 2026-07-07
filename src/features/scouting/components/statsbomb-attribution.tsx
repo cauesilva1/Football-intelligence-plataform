@@ -6,17 +6,15 @@ export function StatsBombAttribution({ className }: { className?: string }) {
           Stats<span className="text-[#e94560]">Bomb</span>
         </div>
         <p className="max-w-lg text-xs text-muted-foreground">
-          Dados fornecidos gratuitamente por StatsBomb. Estatísticas de confrontos calculadas a partir do
-          repositório{" "}
+          Data Source: StatsBomb Open Data —{" "}
           <a
             href="https://github.com/statsbomb/open-data"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:underline"
           >
-            open-data
+            github.com/statsbomb/open-data
           </a>
-          .
         </p>
       </div>
     </footer>

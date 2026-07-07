@@ -25,7 +25,7 @@ export function NationalTeamCrest({
   return (
     <CrestImage
       src={resolvedUrl}
-      alt={`Seleção ${name}`}
+      alt={`${name} national team`}
       theme={theme}
       fallbackLabel={initial}
       sizeClass={cn(sizeClass, className)}

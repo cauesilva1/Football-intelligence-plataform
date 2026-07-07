@@ -25,16 +25,16 @@ export function TeamsLeagueFilter({
     <div className="space-y-4 rounded-xl border border-border bg-card/60 p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-muted-foreground">
-          Exibindo{" "}
-          <span className="font-semibold text-foreground">{visibleCount}</span> de{" "}
-          <span className="font-semibold text-foreground">{totalCount}</span> clubes
+          Showing{" "}
+          <span className="font-semibold text-foreground">{visibleCount}</span> of{" "}
+          <span className="font-semibold text-foreground">{totalCount}</span> clubs
         </p>
       </div>
 
       <div
         className="flex flex-wrap gap-2"
         role="tablist"
-        aria-label="Filtrar clubes por liga"
+        aria-label="Filter clubs by league"
       >
         {tabs.map((tab) => {
           const href = tab.key === "all" ? "/teams" : `/teams?league=${tab.key}`;

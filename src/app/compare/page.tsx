@@ -9,7 +9,7 @@ import { CompareSelectorForm } from "@/features/comparison/components/compare-se
 import { ComparisonResult } from "@/features/comparison/components/comparison-result";
 import { ComparisonResultSkeleton } from "@/features/comparison/components/comparison-result-skeleton";
 
-export const metadata = { title: "Comparação · Football Intelligence Platform" };
+export const metadata = { title: "Compare · Football Intelligence Platform" };
 
 export default async function ComparePage({
   searchParams,
@@ -26,19 +26,19 @@ export default async function ComparePage({
   const bothSelected = Boolean(playerA && playerB);
 
   return (
-    <DashboardShell subtitle="Comparação de jogadores" userName={session?.name}>
+    <DashboardShell subtitle="Player comparison" userName={session?.name}>
       <div className="space-y-6">
         <PageHeader
-          title="Comparar jogadores"
-          description="Análise lado a lado por categorias técnicas, radar e vantagens competitivas."
+          title="Compare players"
+          description="Side-by-side analysis by technical categories, radar chart, and competitive edges."
         />
 
         <CompareSelectorForm players={playersLite} playerA={playerA} playerB={playerB} />
 
         {!bothSelected && (
           <EmptyState
-            title="Selecione dois jogadores"
-            description="Escolha um jogador em cada campo acima para iniciar a comparação detalhada."
+            title="Select two players"
+            description="Choose a player in each field above to start a detailed comparison."
           />
         )}
 

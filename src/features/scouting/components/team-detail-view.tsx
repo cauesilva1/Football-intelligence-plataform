@@ -18,10 +18,10 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
   const balanceLabel = goalBalance > 0 ? `+${goalBalance}` : String(goalBalance);
 
   const statCards = [
-    { label: "Vitórias", value: sb?.wins ?? "—", accent: theme.primaryColor },
-    { label: "Empates", value: sb?.draws ?? "—", accent: "#94a3b8" },
-    { label: "Derrotas", value: sb?.losses ?? "—", accent: "#f87171" },
-    { label: "Saldo de gols", value: sb ? balanceLabel : "—", accent: goalBalance >= 0 ? theme.secondaryColor : "#f87171" },
+    { label: "Wins", value: sb?.wins ?? "—", accent: theme.primaryColor },
+    { label: "Draws", value: sb?.draws ?? "—", accent: "#94a3b8" },
+    { label: "Losses", value: sb?.losses ?? "—", accent: "#f87171" },
+    { label: "Goal difference", value: sb ? balanceLabel : "—", accent: goalBalance >= 0 ? theme.secondaryColor : "#f87171" },
   ];
 
   return (
@@ -62,7 +62,7 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
             </div>
             {sb ? (
               <p className="text-xs text-white/50">
-                {sb.matchesPlayed} jogos · {sb.goalsFor} gols marcados · {sb.goalsAgainst} sofridos · fonte:{" "}
+                {sb.matchesPlayed} matches · {sb.goalsFor} goals scored · {sb.goalsAgainst} conceded · source:{" "}
                 {sb.statsBombCompetitionName}
               </p>
             ) : null}
@@ -90,7 +90,7 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
 
       <Card>
         <CardHeader className="border-b border-border/60 pb-4">
-          <CardTitle className="font-display text-lg">Elenco · {(team.squad ?? []).length} jogadores</CardTitle>
+          <CardTitle className="font-display text-lg">Squad · {(team.squad ?? []).length} players</CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
           <TeamSquadTable

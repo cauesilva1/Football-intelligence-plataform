@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { TOURNAMENTS } from "@/lib/statsbomb/constants";
-import { STAGE_LABELS_PT } from "@/lib/statsbomb/constants";
+import { STAGE_LABELS } from "@/lib/statsbomb/constants";
 import type { PhaseFilterKey, TournamentRound } from "@/lib/tournaments/types";
 import { filterTournamentRounds } from "@/lib/tournaments/match-normalizer";
 import { MatchCard } from "@/features/tournaments/components/match-card";
@@ -11,7 +11,7 @@ import { TournamentToolbar } from "@/features/tournaments/components/tournament-
 import { TournamentAttribution } from "@/features/tournaments/components/tournament-attribution";
 
 function formatStageLabel(stageName: string): string {
-  return STAGE_LABELS_PT[stageName] ?? stageName;
+  return STAGE_LABELS[stageName] ?? stageName;
 }
 
 export function TournamentView({
@@ -43,13 +43,13 @@ export function TournamentView({
   return (
     <div className="space-y-6">
       <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-6 shadow-panel md:p-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Hub de Torneios</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Tournament Hub</p>
         <h1 className="mt-2 font-display text-2xl font-bold text-foreground md:text-3xl">
-          Competições Internacionais
+          International Competitions
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Copa 2026 via scraper ESPN (JSON local) e arquivo histórico StatsBomb — filtros por fase e busca
-          instantânea por seleção.
+          World Cup 2026 via ESPN scraper (local JSON) and StatsBomb historical archive — filter by phase
+          and search by nation instantly.
         </p>
 
         <div className="mt-6 flex flex-wrap gap-2">
@@ -85,14 +85,14 @@ export function TournamentView({
         <div className="text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{active.label}</span>
           {" · "}
-          {totalCount} partidas
+          {totalCount} matches
           {active.source === "scraped" ? (
             <span className="ml-2 rounded-full bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-400">
-              JSON local
+              Local JSON
             </span>
           ) : active.source === "api-sports" ? (
             <span className="ml-2 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-400">
-              Cache 15 min
+              15 min cache
             </span>
           ) : null}
         </div>
@@ -100,7 +100,7 @@ export function TournamentView({
 
       {filteredRounds.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-          Nenhum jogo encontrado para os filtros atuais.
+          No matches found for the current filters.
         </p>
       ) : (
         filteredRounds.map((round) => (
@@ -110,7 +110,7 @@ export function TournamentView({
                 {formatStageLabel(round.stageName)}
               </h2>
               <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] text-muted-foreground">
-                {round.matches.length} jogos
+                {round.matches.length} matches
               </span>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

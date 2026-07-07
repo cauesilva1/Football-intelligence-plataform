@@ -9,8 +9,7 @@ function ApiSportsAttribution() {
           API<span className="text-[#4ade80]">-Sports</span>
         </div>
         <p className="max-w-lg text-xs text-muted-foreground">
-          Dados em tempo real fornecidos por API-Football (API-Sports). Atualização automática a cada 15
-          minutos via cache local.
+          Data Source: API-Football (API-Sports) — live match data with 15-minute local cache refresh.
         </p>
       </div>
     </footer>
@@ -25,9 +24,9 @@ function ScrapedAttribution() {
           ESPN<span className="text-sky-400"> Scraper</span>
         </div>
         <p className="max-w-lg text-xs text-muted-foreground">
-          Dados extraídos de feed público ESPN e armazenados em{" "}
-          <code className="text-[10px]">src/data/mock/world-cup-2026.json</code>. Atualize com{" "}
-          <code className="text-[10px]">npm run fetch:wc2026</code> — sem consumo da cota API-Sports.
+          Data Source: ESPN Scraper — public ESPN feed stored in{" "}
+          <code className="text-[10px]">src/data/mock/world-cup-2026.json</code>. Refresh with{" "}
+          <code className="text-[10px]">npm run fetch:wc2026</code>.
         </p>
       </div>
     </footer>

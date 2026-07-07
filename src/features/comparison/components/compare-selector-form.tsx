@@ -32,7 +32,7 @@ export function CompareSelectorForm({
     <Card className={isPending ? "opacity-70 transition-opacity" : ""}>
       <CardContent className="grid gap-4 p-5 md:grid-cols-2">
         <PlayerSearchCombobox
-          label="Jogador A"
+          label="Player A"
           players={players}
           value={playerA}
           excludeId={playerB}
@@ -40,7 +40,7 @@ export function CompareSelectorForm({
           disabled={isPending}
         />
         <PlayerSearchCombobox
-          label="Jogador B"
+          label="Player B"
           players={players}
           value={playerB}
           excludeId={playerA}

@@ -7,7 +7,7 @@ export interface TeamLeagueTab {
 }
 
 const TAB_DEFINITIONS = [
-  { key: "all", label: "Todos" },
+  { key: "all", label: "All" },
   {
     key: "premier-league",
     label: "Premier League",
@@ -37,7 +37,7 @@ const TAB_DEFINITIONS = [
   },
   {
     key: "brasileirao",
-    label: "Brasileirão",
+    label: "Brasileirao",
     match: (name: string) => name.includes("brasileir"),
   },
 ] as const;

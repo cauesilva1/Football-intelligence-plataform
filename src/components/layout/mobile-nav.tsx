@@ -17,13 +17,13 @@ import { cn } from "@/lib/utils";
 
 export const NAV_ITEMS = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/players", label: "Jogadores", icon: Users },
+  { href: "/players", label: "Players", icon: Users },
   { href: "/scouting", label: "Scouting", icon: Radar },
   { href: "/rankings", label: "Rankings", icon: BarChart3 },
   { href: "/shortlist", label: "My Players", icon: Bookmark },
   { href: "/compare", label: "Compare", icon: GitCompareArrows },
-  { href: "/teams", label: "Clubes", icon: ShieldHalf },
-  { href: "/tournaments", label: "Torneios", icon: Trophy },
+  { href: "/teams", label: "Clubs", icon: ShieldHalf },
+  { href: "/tournaments", label: "Tournaments", icon: Trophy },
   { href: "/reports", label: "Reports", icon: FileText },
 ];
 

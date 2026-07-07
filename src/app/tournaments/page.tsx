@@ -13,7 +13,7 @@ import { enrichTournamentRoundsWithCrests } from "@/lib/tournaments/enrich-crest
 import type { TournamentRound } from "@/lib/tournaments/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const metadata = { title: "Torneios · Football Intelligence Platform" };
+export const metadata = { title: "Tournaments · Football Intelligence Platform" };
 
 async function TournamentData() {
   const roundsByTournament: Record<string, TournamentRound[]> = {};
@@ -64,7 +64,7 @@ export default async function TournamentsPage() {
   const session = await getSession();
 
   return (
-    <DashboardShell subtitle="Torneios" userName={session?.name}>
+    <DashboardShell subtitle="Tournaments" userName={session?.name}>
       <Suspense fallback={<TournamentSkeleton />}>
         <TournamentData />
       </Suspense>

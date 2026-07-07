@@ -11,7 +11,7 @@ import {
 } from "@/features/scouting/queries/teams";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const metadata = { title: "Clubes · Football Intelligence Platform" };
+export const metadata = { title: "Clubs · Football Intelligence Platform" };
 
 function FilterSkeleton() {
   return <Skeleton className="h-24 w-full rounded-xl" />;
@@ -52,18 +52,15 @@ export default async function TeamsPage({
   const competitionId = await queryCompetitionIdForLeague(leagueParam);
 
   return (
-    <DashboardShell subtitle="Clubes" userName={session?.name}>
+    <DashboardShell subtitle="Clubs" userName={session?.name}>
       <div className="space-y-6">
         <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-6 shadow-panel md:p-8">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-            Hub de Clubes
-          </p>
           <h1 className="mt-2 font-display text-2xl font-bold text-foreground md:text-3xl">
-            Ligas Europeias
+            Club Hub · European Leagues
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Filtre por competição para explorar clubes das cinco grandes ligas — estatísticas reais
-            via StatsBomb Open Data.
+            Filter by competition to explore clubs from the top five leagues — real match statistics via
+            StatsBomb Open Data.
           </p>
         </div>
 
