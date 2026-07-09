@@ -10,8 +10,19 @@ export const mockPlayerRepository: PlayerRepository = {
     return paginatePlayers(sorted, page, pageSize);
   },
 
-  async findById(id) {
-    return getPlayerById(id) ?? null;
+  async findById(id, options) {
+    const player = getPlayerById(id);
+    if (!player) return null;
+    if (!options?.season || options.season === player.selectedSeason) return player;
+
+    const currentSeasonStats =
+      player.history.find((row) => row.season === options.season) ?? player.currentSeasonStats;
+
+    return {
+      ...player,
+      selectedSeason: options.season,
+      currentSeasonStats,
+    };
   },
 
   async findLite() {

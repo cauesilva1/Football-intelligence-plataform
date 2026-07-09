@@ -5,6 +5,7 @@ import { DataPanel } from "@/components/data/data-panel";
 import { PlayerSeasonChart } from "@/components/charts/player-season-chart";
 import { StatRadarChart } from "@/components/charts/stat-radar-chart";
 import { aggregateSeasonTimeline } from "@/features/scouting/lib/season-history";
+import { PlayerSeasonSelector } from "@/features/scouting/components/profile/player-season-selector";
 import { toRadarProfile } from "@/lib/normalize";
 import { getTeamTheme } from "@/lib/team-theme";
 import type { Player } from "@/types";
@@ -18,6 +19,16 @@ export function PlayerPerformanceSection({ player }: { player: Player }) {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <PlayerSeasonSelector
+          playerId={player.id}
+          availableSeasons={player.availableSeasons}
+          selectedSeason={player.selectedSeason}
+        />
+        <p className="text-xs text-muted-foreground">
+          Showing campaign <span className="font-medium text-foreground">{player.selectedSeason}</span>
+        </p>
+      </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Minutes"
@@ -62,7 +73,7 @@ export function PlayerPerformanceSection({ player }: { player: Player }) {
 
         <DataPanel
           title="Performance Profile"
-          description="Normalized per-90 dimensions — current season."
+          description={`Normalized per-90 dimensions — season ${player.selectedSeason}.`}
           density="dense"
           className="border"
           style={{ borderColor: `${theme.primaryColor}33` }}
@@ -76,7 +87,7 @@ export function PlayerPerformanceSection({ player }: { player: Player }) {
 
       <DataPanel
         title="Detailed Metrics"
-        description="Season totals and per-90 rates for the current campaign."
+        description={`Season totals and per-90 rates for ${player.selectedSeason}.`}
         density="dense"
         className="border"
         style={{ borderColor: `${theme.primaryColor}33` }}

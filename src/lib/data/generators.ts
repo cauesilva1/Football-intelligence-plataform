@@ -249,6 +249,8 @@ export function generatePlayers(teams: Team[], count = PLAYER_COUNT): Player[] {
       strengths: shuffleTake(rand, STRENGTHS_BY_POS[position], 3),
       weaknesses: shuffleTake(rand, WEAKNESSES_BY_POS[position], 2),
       currentSeasonStats: aggregatedCurrent,
+      availableSeasons: history.map((row) => row.season),
+      selectedSeason: CURRENT_SEASON,
       history,
     });
   }

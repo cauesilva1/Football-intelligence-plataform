@@ -10,6 +10,14 @@ export interface SeasonTimelinePoint {
   appearances: number;
 }
 
+function sortSeasonLabels(seasons: string[]): string[] {
+  return [...new Set(seasons)].sort((a, b) => {
+    const yearA = Number.parseInt(a.split("/")[0] ?? a, 10);
+    const yearB = Number.parseInt(b.split("/")[0] ?? b, 10);
+    return yearA - yearB;
+  });
+}
+
 /** Aggregates multi-club records into one point per season (minutes-weighted). */
 export function aggregateSeasonTimeline(history: PlayerStatistic[]): SeasonTimelinePoint[] {
   const bySeason = new Map<string, PlayerStatistic[]>();
@@ -20,7 +28,12 @@ export function aggregateSeasonTimeline(history: PlayerStatistic[]): SeasonTimel
     bySeason.set(record.season, bucket);
   }
 
-  return SEASONS.filter((season) => bySeason.has(season)).map((season) => {
+  const seasons = sortSeasonLabels([
+    ...SEASONS.filter((season) => bySeason.has(season)),
+    ...[...bySeason.keys()].filter((season) => !SEASONS.includes(season as (typeof SEASONS)[number])),
+  ]);
+
+  return seasons.map((season) => {
     const records = bySeason.get(season)!;
     const minutes = records.reduce((sum, r) => sum + r.minutesPlayed, 0);
     const appearances = records.reduce((sum, r) => sum + r.appearances, 0);

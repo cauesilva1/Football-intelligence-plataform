@@ -12,8 +12,14 @@ function SimilarSkeleton() {
   return <Skeleton className="h-48 w-full rounded-xl" />;
 }
 
-export async function PlayerProfileView({ playerId }: { playerId: string }) {
-  const player = await queryPlayerById(playerId);
+export async function PlayerProfileView({
+  playerId,
+  season,
+}: {
+  playerId: string;
+  season?: string;
+}) {
+  const player = await queryPlayerById(playerId, season);
   if (!player) notFound();
 
   return (

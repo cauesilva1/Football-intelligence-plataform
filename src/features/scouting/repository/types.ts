@@ -11,7 +11,7 @@ import type {
 
 export interface PlayerRepository {
   findMany(filters: PlayerFilters): Promise<PaginatedResult<Player>>;
-  findById(id: string): Promise<Player | null>;
+  findById(id: string, options?: { season?: string }): Promise<Player | null>;
   findLite(): Promise<PlayerLite[]>;
   findForComparison(idA: string, idB: string): Promise<[Player, Player] | null>;
   getAll(): Promise<Player[]>;

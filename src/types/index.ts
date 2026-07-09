@@ -85,6 +85,10 @@ export interface Player {
   strengths: string[];
   weaknesses: string[];
   currentSeasonStats: PlayerStatistic;
+  /** Temporadas disponíveis em PlayerSeasonStats / histórico legado. */
+  availableSeasons: string[];
+  /** Temporada exibida na UI (padrão: ano mais recente). */
+  selectedSeason: string;
   history: PlayerStatistic[];
 }
 

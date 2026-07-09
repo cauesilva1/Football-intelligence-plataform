@@ -2,6 +2,11 @@ import type { Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { CURRENT_SEASON } from "@/lib/data/generators";
 import { toPlayerStatistic } from "@/lib/metrics/map-statistic";
+import {
+  mapSeasonStatsRow,
+  mergeSeasonHistories,
+  resolveSelectedSeasonStats,
+} from "@/lib/metrics/map-season-stats";
 import { calcAge } from "@/lib/utils";
 import { filterAndSortPlayers } from "@/features/scouting/lib/filter-players";
 import { resolvePlayerPhotoUrl } from "@/lib/player-media";
@@ -15,6 +20,9 @@ export const playerInclude = {
   statistics: {
     include: { team: true },
     orderBy: [{ season: "asc" as const }, { createdAt: "asc" as const }],
+  },
+  stats: {
+    orderBy: [{ season: "asc" as const }],
   },
 } satisfies Prisma.PlayerInclude;
 
@@ -155,8 +163,18 @@ function aggregateCurrentSeason(
   });
 }
 
-function mapPlayer(record: PrismaPlayerWithStats): Player {
-  const history = record.statistics.map(mapStatistic);
+function mapPlayer(record: PrismaPlayerWithStats, options?: { season?: string }): Player {
+  const legacyHistory = record.statistics.map(mapStatistic);
+  const seasonStatsHistory = record.stats.map((stat) =>
+    mapSeasonStatsRow(
+      stat,
+      record.team
+        ? { id: record.team.id, name: record.team.name, shortName: record.team.shortName }
+        : undefined
+    )
+  );
+  const history = mergeSeasonHistories(legacyHistory, seasonStatsHistory);
+  const { selectedSeason, currentSeasonStats } = resolveSelectedSeasonStats(history, options?.season);
   const dob = record.dateOfBirth.toISOString();
 
   return {
@@ -183,7 +201,9 @@ function mapPlayer(record: PrismaPlayerWithStats): Player {
     competitionName: record.team?.competition?.name,
     strengths: record.strengths,
     weaknesses: record.weaknesses,
-    currentSeasonStats: aggregateCurrentSeason(record.id, record.teamId ?? undefined, history),
+    currentSeasonStats,
+    availableSeasons: history.map((row) => row.season),
+    selectedSeason,
     history,
   };
 }
@@ -320,7 +340,7 @@ export const prismaPlayerRepository: PlayerRepository & {
     };
   },
 
-  async findById(id) {
+  async findById(id, options) {
     let record = await getPrisma().player.findUnique({ where: { id }, include: playerInclude });
     if (!record) return null;
 
@@ -334,11 +354,11 @@ export const prismaPlayerRepository: PlayerRepository & {
       }
     }
 
-    return mapPlayer(record);
+    return mapPlayer(record, options);
   },
 
-  mapFromRecord(record: PrismaPlayerWithStats): Player {
-    return mapPlayer(record);
+  mapFromRecord(record: PrismaPlayerWithStats, options?: { season?: string }): Player {
+    return mapPlayer(record, options);
   },
 
   async findLite() {
@@ -371,6 +391,6 @@ export const prismaPlayerRepository: PlayerRepository & {
 
   async getAll() {
     const records = await getPrisma().player.findMany({ include: playerInclude });
-    return records.map(mapPlayer);
+    return records.map((record) => mapPlayer(record));
   },
 };

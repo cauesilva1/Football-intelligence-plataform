@@ -2,12 +2,12 @@ import type { Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { canUseDatabase } from "@/lib/system-cache";
 import { BRAZIL_SEASON_LABEL, CURRENT_SEASON } from "@/lib/seasons";
-import { syncEspnMatchesForCompetition } from "@/lib/api/espn-matches";
 import {
-  buildFbrefExternalKey,
-  estimateRatingFromFbref,
-  findFbrefPlayerRecord,
-} from "@/lib/api/csv-parser";
+  resolveSeasonYearFromLabel,
+  upsertPlayerSeasonStats,
+} from "@/lib/metrics/upsert-player-season-stats";
+import { syncEspnMatchesForCompetition } from "@/lib/api/espn-matches";
+import { findFbrefPlayerRecord } from "@/lib/api/csv-parser";
 import type { TransformedRecord } from "@/etl/transform/transformer";
 import {
   fetchPlayerProfile,
@@ -151,50 +151,29 @@ export async function upsertPlayerHybrid(
 
   const { statistic } = fbref;
   const minutes = statistic.minutesPlayed ?? 0;
-  const baseRating = statistic.rating ?? 0;
-  const rating = baseRating > 0 ? baseRating : estimateRatingFromFbref(statistic, minutes);
   const passAccuracy = estimatePassAccuracyFromFbref(statistic);
-  const externalKey =
-    fbref.externalKey ??
-    buildFbrefExternalKey(player.fullName, player.team?.name ?? fbref.source.squad, CURRENT_SEASON);
 
-  const statPayload = {
-    appearances: statistic.appearances ?? 0,
-    minutesPlayed: minutes,
+  const seasonLabel = isBrazilianLeague(player.team?.competition?.name)
+    ? BRAZIL_SEASON_LABEL
+    : CURRENT_SEASON;
+  const seasonYear = resolveSeasonYearFromLabel(seasonLabel);
+
+  await upsertPlayerSeasonStats(getPrisma(), player.id, seasonYear, {
     goals: statistic.goals ?? 0,
     assists: statistic.assists ?? 0,
-    xG: statistic.xG ?? 0,
-    xA: statistic.xA ?? 0,
-    shots: statistic.shots ?? 0,
-    shotsOnTarget: statistic.shotsOnTarget ?? 0,
-    passes: statistic.passes ?? 0,
-    passAccuracy,
-    keyPasses: statistic.keyPasses ?? 0,
-    dribblesCompleted: statistic.dribblesCompleted ?? 0,
-    tacklesWon: statistic.tacklesWon ?? 0,
+    tackles: statistic.tacklesWon ?? 0,
     interceptions: statistic.interceptions ?? 0,
-    duelsWonPct: statistic.duelsWonPct ?? 0,
-    yellowCards: statistic.yellowCards ?? 0,
-    redCards: statistic.redCards ?? 0,
-    rating,
-  };
+    passingAccuracy: passAccuracy,
+    minutesPlayed: minutes,
+    matchesPlayed: statistic.appearances ?? 0,
+  });
 
-  await prisma.playerStatistic.upsert({
-    where: {
-      playerId_teamId_season: {
-        playerId: player.id,
-        teamId: player.teamId,
-        season: CURRENT_SEASON,
-      },
+  await getPrisma().player.update({
+    where: { id: player.id },
+    data: {
+      dataSyncedSeason: String(seasonYear),
+      dataSyncedAt: new Date(),
     },
-    create: {
-      externalKey,
-      playerId: player.id,
-      teamId: player.teamId,
-      season: CURRENT_SEASON,
-      ...statPayload,
-    },
-    update: statPayload,
   });
 }
 

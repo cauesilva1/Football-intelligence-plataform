@@ -4,6 +4,11 @@ import { getPrisma } from "@/lib/prisma";
 import type { CsvPlayerRow } from "@/etl/data-dictionary";
 import { resolveCsvPath } from "@/etl/paths";
 import { buildPlayerTeamKey, transformCsvRow } from "@/etl/transform/transformer";
+import {
+  europeanCsvToSeasonStatsPayload,
+  resolveSeasonYearFromLabel,
+  upsertPlayerSeasonStats,
+} from "@/lib/metrics/upsert-player-season-stats";
 
 const PROGRESS_INTERVAL = 100;
 
@@ -159,19 +164,21 @@ async function upsertStatisticForRecord(
 ): Promise<void> {
   const teamId = await getOrCreateTeam(record.player.teamName, record.player.competitionName, cache);
   const playerId = await getOrCreatePlayer(record, teamId, cache);
+  const seasonYear = resolveSeasonYearFromLabel(record.season);
+  const prisma = getPrisma();
 
-  await getPrisma().playerStatistic.upsert({
-    where: { externalKey: record.externalKey },
-    create: {
-      externalKey: record.externalKey,
-      playerId,
-      teamId,
-      ...record.statistic,
-    },
-    update: {
-      playerId,
-      teamId,
-      ...record.statistic,
+  await upsertPlayerSeasonStats(
+    prisma,
+    playerId,
+    seasonYear,
+    europeanCsvToSeasonStatsPayload(record.statistic)
+  );
+
+  await prisma.player.update({
+    where: { id: playerId },
+    data: {
+      dataSyncedSeason: String(seasonYear),
+      dataSyncedAt: new Date(),
     },
   });
 }

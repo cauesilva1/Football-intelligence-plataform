@@ -19,9 +19,11 @@ export const queryPlayers = cache(async (filters: PlayerFilters) => {
   return withSupabaseErrorLog("queryPlayers", () => getPlayerRepository().findMany(filters));
 });
 
-export const queryPlayerById = cache(async (id: string) => {
+export const queryPlayerById = cache(async (id: string, season?: string) => {
   await ensureRuntimeDataSource();
-  return withSupabaseErrorLog("queryPlayerById", () => getPlayerRepository().findById(id));
+  return withSupabaseErrorLog("queryPlayerById", () =>
+    getPlayerRepository().findById(id, season ? { season } : undefined)
+  );
 });
 
 export const queryAllPlayersLite = cache(async () => {

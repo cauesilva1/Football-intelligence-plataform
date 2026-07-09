@@ -15,14 +15,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   };
 }
 
-export default async function PlayerDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const player = await queryPlayerById(id);
+export default async function PlayerDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ season?: string }>;
+}) {
+  const [{ id }, query] = await Promise.all([params, searchParams]);
+  const player = await queryPlayerById(id, query.season);
 
   return (
     <DashboardShell subtitle={player?.knownAs ?? "Player Profile"}>
       <Suspense fallback={<PlayerProfileSkeleton />}>
-        <PlayerProfileView playerId={id} />
+        <PlayerProfileView playerId={id} season={query.season} />
       </Suspense>
     </DashboardShell>
   );
