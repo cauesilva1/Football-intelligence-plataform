@@ -19,7 +19,7 @@ export async function TeamsGrid({ competitionId }: { competitionId?: string }) {
           ? `Supabase + ESPN live (${teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`
           : `StatsBomb, ESPN, or local data (${teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`}
       </p>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {teams.map((team) => {
           const sb = team.statsBomb;
           const goalBalance = sb ? sb.goalBalance : 0;

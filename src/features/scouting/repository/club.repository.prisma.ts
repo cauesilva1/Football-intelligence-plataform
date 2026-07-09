@@ -16,11 +16,21 @@ import {
   type TransfermarktPlayerProfile,
   type TransfermarktSquadPlayer,
 } from "@/lib/api/transfermarkt";
-import { namesLikelyMatch, needsPlayerSync, needsTeamSync } from "@/lib/sync/data-staleness";
+import { namesLikelyMatch, needsMatchSync, needsPlayerSync, needsTeamSync } from "@/lib/sync/data-staleness";
 import { resolvePlayerPhotoUrl } from "@/lib/player-media";
 
-type DbPlayer = Prisma.PlayerGetPayload<{ include: { team: { include: { competition: true } } } }>;
-type DbTeam = Prisma.TeamGetPayload<{ include: { competition: true } }>;
+type DbPlayer = Prisma.PlayerGetPayload<{
+  include: {
+    team: { include: { competition: true } };
+    statistics: true;
+  };
+}>;
+type DbTeam = Prisma.TeamGetPayload<{
+  include: {
+    competition: true;
+    statistics: { where: { season: string } };
+  };
+}>;
 
 function mapPosition(raw?: string): string {
   if (!raw) return "CM";
@@ -63,6 +73,7 @@ export async function upsertPlayerFromTransfermarkt(
       nationality: profile.citizenship?.[0] ?? undefined,
       position: profile.position?.main ? mapPosition(profile.position.main) : undefined,
       dataSyncedAt: new Date(),
+      dataSyncedSeason: CURRENT_SEASON,
     },
   });
 }
@@ -87,6 +98,7 @@ export async function upsertClubFromTransfermarkt(
       stadium: profile.stadiumName ?? undefined,
       foundedYear: parseFoundedYear(profile.foundedOn),
       dataSyncedAt: new Date(),
+      dataSyncedSeason: CURRENT_SEASON,
     },
   });
 }
@@ -119,6 +131,7 @@ async function syncSquadPlayers(
         nationality: tmPlayer.nationality?.[0] ?? match.nationality,
         position: tmPlayer.position ? mapPosition(tmPlayer.position) : match.position,
         dataSyncedAt: new Date(),
+        dataSyncedSeason: CURRENT_SEASON,
       },
     });
   }
@@ -126,7 +139,24 @@ async function syncSquadPlayers(
 
 /** Ensure player has fresh Transfermarkt data; falls back to existing DB row on API failure. */
 export async function ensurePlayerPersisted(player: DbPlayer): Promise<void> {
-  if (!canUseDatabase() || !needsPlayerSync(player)) return;
+  if (!canUseDatabase()) return;
+
+  const currentSeasonLabel =
+    player.statistics?.find((s) => s.season === CURRENT_SEASON)?.season ??
+    player.dataSyncedSeason;
+
+  if (
+    !needsPlayerSync({
+      photoUrl: player.photoUrl,
+      marketValue: player.marketValue,
+      dataSyncedAt: player.dataSyncedAt,
+      dataSyncedSeason: player.dataSyncedSeason,
+      competitionName: player.team?.competition?.name,
+      currentSeasonLabel,
+    })
+  ) {
+    return;
+  }
 
   try {
     let tmId = player.transfermarktId;
@@ -152,7 +182,30 @@ export async function ensurePlayerPersisted(player: DbPlayer): Promise<void> {
 export async function ensureClubPersisted(team: DbTeam): Promise<void> {
   if (!canUseDatabase()) return;
 
-  const shouldSyncTeam = needsTeamSync(team);
+  const prisma = getPrisma();
+  const currentTeamStat = team.statistics?.find((s) => s.season === CURRENT_SEASON);
+  const latestMatch = await prisma.match.findFirst({
+    where: {
+      OR: [{ homeTeamId: team.id }, { awayTeamId: team.id }],
+    },
+    orderBy: { matchDate: "desc" },
+    select: { seasonLabel: true, updatedAt: true },
+  });
+
+  const shouldSyncTeam = needsTeamSync({
+    crestUrl: team.crestUrl,
+    stadium: team.stadium,
+    dataSyncedAt: team.dataSyncedAt,
+    dataSyncedSeason: team.dataSyncedSeason,
+    competitionName: team.competition?.name,
+    currentSeasonLabel: currentTeamStat?.season ?? team.dataSyncedSeason,
+  });
+
+  const shouldSyncMatches = needsMatchSync(
+    latestMatch?.seasonLabel,
+    team.competition?.name,
+    latestMatch?.updatedAt
+  );
 
   try {
     if (shouldSyncTeam) {
@@ -169,7 +222,9 @@ export async function ensureClubPersisted(team: DbTeam): Promise<void> {
       }
     }
 
-    await syncEspnMatchesForCompetition(team.competition?.name);
+    if (shouldSyncMatches) {
+      await syncEspnMatchesForCompetition(team.competition?.name);
+    }
   } catch (error) {
     console.warn("[club-repo] External sync failed — using DB cache:", team.id, error);
   }

@@ -31,7 +31,7 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
         className={`overflow-hidden rounded-2xl border border-border bg-gradient-to-br shadow-panel ${theme.gradientString}`}
         style={{ borderColor: `${theme.primaryColor}44` }}
       >
-        <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-6 p-4 sm:flex-row sm:items-center md:p-6">
           <TeamCrest
             name={team.name}
             crestUrl={team.crestUrl}
@@ -41,7 +41,7 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
           />
           <div className="min-w-0 flex-1 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-2xl font-bold tracking-tight text-white md:text-3xl">
+              <h1 className="font-display text-xl font-bold tracking-tight text-white md:text-3xl">
                 {team.name}
               </h1>
               <Badge variant="secondary">{team.shortName}</Badge>
@@ -71,7 +71,7 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
         </div>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {statCards.map((card) => (
           <Card key={card.label} className="border-border/80 bg-card/80">
             <CardContent className="p-5">

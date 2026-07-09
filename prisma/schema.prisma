@@ -64,6 +64,7 @@ model Team {
   apiSportsId     Int?
   transfermarktId Int?
   dataSyncedAt    DateTime?
+  dataSyncedSeason String?
   competitionId   String?
   competition     Competition?    @relation(fields: [competitionId], references: [id])
   players         Player[]
@@ -95,6 +96,7 @@ model Player {
   apiSportsId       Int?
   transfermarktId   Int?
   dataSyncedAt      DateTime?
+  dataSyncedSeason  String?
   teamId            String?
   team              Team?             @relation(fields: [teamId], references: [id])
   statistics        PlayerStatistic[]

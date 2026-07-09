@@ -54,7 +54,7 @@ export function PlayerProfileHeader({
           background: `radial-gradient(ellipse at top right, ${theme.primaryColor}55 0%, transparent 60%)`,
         }}
       />
-      <div className="relative flex flex-col gap-6 p-5 lg:flex-row lg:items-start lg:justify-between lg:p-7">
+      <div className="relative flex flex-col gap-6 p-4 lg:flex-row lg:items-start lg:justify-between md:p-7">
         <div className="flex min-w-0 gap-4">
           <PlayerAvatar
             name={player.knownAs}
@@ -69,7 +69,7 @@ export function PlayerProfileHeader({
           />
           <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-xl font-semibold tracking-tight text-white md:text-2xl">
+              <h1 className="font-display text-xl font-semibold tracking-tight text-white md:text-3xl">
                 {player.fullName}
               </h1>
               <Badge variant={statusVariant}>{status.label}</Badge>

@@ -14,7 +14,7 @@ export function DashboardShell({
       <Sidebar />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Header subtitle={subtitle} />
-        <main className="min-h-0 flex-1 overflow-y-auto p-4 pb-20 md:p-6 md:pb-6">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-24 md:px-8 md:py-6 md:pb-6">{children}</main>
       </div>
       <MobileNav />
     </div>

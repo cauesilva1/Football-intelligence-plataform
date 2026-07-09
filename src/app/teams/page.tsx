@@ -59,8 +59,8 @@ export default async function TeamsPage({
   return (
     <DashboardShell subtitle="Clubs">
       <div className="space-y-6">
-        <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-6 shadow-panel md:p-8">
-          <h1 className="mt-2 font-display text-2xl font-bold text-foreground md:text-3xl">
+        <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-8">
+          <h1 className="mt-2 font-display text-xl font-bold text-foreground md:text-3xl">
             Club Hub · European Leagues
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">

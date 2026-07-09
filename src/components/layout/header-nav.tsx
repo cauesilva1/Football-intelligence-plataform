@@ -14,7 +14,7 @@ export function HeaderNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex items-center gap-1 rounded-lg border border-border bg-card/60 p-1">
+    <nav className="hidden lg:flex items-center gap-1 rounded-lg border border-border bg-card/60 p-1">
       {NAV_LINKS.map((item) => {
         const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
         return (

@@ -22,8 +22,8 @@ export interface TableProps
 
 export function Table({ className, density, stickyHeader, ...props }: TableProps) {
   return (
-    <div className={cn(tableWrapperVariants({ density, stickyHeader }))}>
-      <table className={cn("w-full caption-bottom", density === "dense" ? "text-xs" : "text-sm", className)} {...props} />
+    <div className={cn(tableWrapperVariants({ density, stickyHeader }), "whitespace-nowrap")}>
+      <table className={cn("w-full min-w-max caption-bottom", density === "dense" ? "text-xs" : "text-sm", className)} {...props} />
     </div>
   );
 }

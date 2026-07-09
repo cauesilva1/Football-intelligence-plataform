@@ -42,9 +42,9 @@ export function TournamentView({
 
   return (
     <div className="space-y-6">
-      <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-6 shadow-panel md:p-8">
+      <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-8">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Tournament Hub</p>
-        <h1 className="mt-2 font-display text-2xl font-bold text-foreground md:text-3xl">
+        <h1 className="mt-2 font-display text-xl font-bold text-foreground md:text-3xl">
           International Competitions
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
@@ -113,7 +113,7 @@ export function TournamentView({
                 {round.matches.length} matches
               </span>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {round.matches.map((match) => (
                 <MatchCard key={match.id} match={match} />
               ))}
