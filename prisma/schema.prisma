@@ -45,6 +45,7 @@ model Competition {
   country   String
   tier      Int      @default(1)
   logoUrl   String?
+  espnSlug  String?
   teams     Team[]
   matches   Match[]
   createdAt DateTime @default(now())
@@ -53,25 +54,28 @@ model Competition {
 }
 
 model Team {
-  id            String          @id @default(uuid())
-  name          String
-  shortName     String
-  country       String
-  crestUrl      String?
-  foundedYear   Int?
-  stadium       String?
-  apiSportsId   Int?
-  competitionId String?
-  competition   Competition?    @relation(fields: [competitionId], references: [id])
-  players       Player[]
-  homeMatches   Match[]         @relation("HomeTeam")
-  awayMatches   Match[]         @relation("AwayTeam")
-  statistics    TeamStatistic[]
-  playerStats   PlayerStatistic[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id              String          @id @default(uuid())
+  name            String
+  shortName       String
+  country         String
+  crestUrl        String?
+  foundedYear     Int?
+  stadium         String?
+  apiSportsId     Int?
+  transfermarktId Int?
+  dataSyncedAt    DateTime?
+  competitionId   String?
+  competition     Competition?    @relation(fields: [competitionId], references: [id])
+  players         Player[]
+  homeMatches     Match[]         @relation("HomeTeam")
+  awayMatches     Match[]         @relation("AwayTeam")
+  statistics      TeamStatistic[]
+  playerStats     PlayerStatistic[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   @@index([apiSportsId])
+  @@index([transfermarktId])
   @@map("teams")
 }
 
@@ -89,6 +93,8 @@ model Player {
   marketValue       Int               @default(0)
   photoUrl          String?
   apiSportsId       Int?
+  transfermarktId   Int?
+  dataSyncedAt      DateTime?
   teamId            String?
   team              Team?             @relation(fields: [teamId], references: [id])
   statistics        PlayerStatistic[]
@@ -101,11 +107,13 @@ model Player {
   @@index([teamId])
   @@index([position])
   @@index([apiSportsId])
+  @@index([transfermarktId])
   @@map("players")
 }
 
 model Match {
   id            String       @id @default(uuid())
+  externalKey   String?      @unique
   competitionId String?
   competition   Competition? @relation(fields: [competitionId], references: [id])
   homeTeamId    String
@@ -116,10 +124,16 @@ model Match {
   awayScore     Int          @default(0)
   matchDate     DateTime
   round         String?
+  status        String?
+  seasonLabel   String?
+  source        String       @default("espn")
   createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   @@index([homeTeamId])
   @@index([awayTeamId])
+  @@index([matchDate])
+  @@index([competitionId])
   @@map("matches")
 }
 

@@ -1,6 +1,7 @@
 import { isDbSource } from "@/lib/data-source";
 import { logSupabaseError } from "@/lib/db-errors";
 import { getEspnStatsForTeam, preloadEspnLeague } from "@/lib/crests/espn-standings";
+import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
 import { CURRENT_SEASON } from "@/lib/seasons";
 import {
   getStatsBombStatsForTeam,
@@ -55,6 +56,7 @@ export function toDisplayStatsFromAggregated(sb: AggregatedTeamStats): TeamStati
 }
 
 async function resolveDbModeTeamStats(
+  teamId: string | undefined,
   teamName: string,
   competitionName: string | undefined,
   dbStats?: TeamStatistic
@@ -66,6 +68,22 @@ async function resolveDbModeTeamStats(
   try {
     const espnStats = await getEspnStatsForTeam(teamName, competitionName);
     if (hasMeaningfulStats(espnStats)) {
+      const persistTeamId = teamId ?? dbStats?.teamId;
+      if (isDbSource() && persistTeamId) {
+        try {
+          await clubRepository.upsertTeamSeasonStats(persistTeamId, {
+            matchesPlayed: espnStats!.matchesPlayed,
+            wins: espnStats!.wins,
+            draws: espnStats!.draws,
+            losses: espnStats!.losses,
+            goalsFor: espnStats!.goalsFor,
+            goalsAgainst: espnStats!.goalsAgainst,
+          });
+        } catch (error) {
+          logSupabaseError(`upsertTeamSeasonStats:${teamName}`, error);
+        }
+      }
+
       return espnStats
         ? {
             ...espnStats,
@@ -86,7 +104,7 @@ async function resolveDbModeTeamStats(
 
 /** Attaches live standings — Supabase + ESPN in db mode; StatsBomb only in mock/demo mode. */
 export async function attachTeamLiveStats<
-  T extends { name: string; competition?: Competition; stats?: TeamStatistic },
+  T extends { id?: string; name: string; competition?: Competition; stats?: TeamStatistic },
 >(teams: T[]): Promise<(T & { statsBomb?: AggregatedTeamStats; stats?: TeamStatistic })[]> {
   const leagues = new Set(
     teams.map((t) => t.competition?.name).filter((name): name is string => Boolean(name))
@@ -98,6 +116,7 @@ export async function attachTeamLiveStats<
     return Promise.all(
       teams.map(async (team) => {
         const statsBomb = await resolveDbModeTeamStats(
+          team.id,
           team.name,
           team.competition?.name,
           team.stats

@@ -5,6 +5,8 @@ import { toPlayerStatistic } from "@/lib/metrics/map-statistic";
 import { calcAge } from "@/lib/utils";
 import { filterAndSortPlayers } from "@/features/scouting/lib/filter-players";
 import { resolvePlayerPhotoUrl } from "@/lib/player-media";
+import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
+import { isDbSource } from "@/lib/data-source";
 import type { Foot, Player, PlayerFilters, PlayerStatistic } from "@/types";
 import type { PlayerRepository } from "./types";
 
@@ -317,8 +319,20 @@ export const prismaPlayerRepository: PlayerRepository = {
   },
 
   async findById(id) {
-    const record = await getPrisma().player.findUnique({ where: { id }, include: playerInclude });
-    return record ? mapPlayer(record) : null;
+    let record = await getPrisma().player.findUnique({ where: { id }, include: playerInclude });
+    if (!record) return null;
+
+    if (isDbSource()) {
+      try {
+        await clubRepository.ensurePlayerPersisted(record);
+        record =
+          (await getPrisma().player.findUnique({ where: { id }, include: playerInclude })) ?? record;
+      } catch (error) {
+        console.warn("[player-repo] Sync skipped — returning cached Supabase row:", id, error);
+      }
+    }
+
+    return mapPlayer(record);
   },
 
   async findLite() {

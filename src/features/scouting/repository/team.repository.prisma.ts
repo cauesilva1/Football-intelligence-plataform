@@ -1,5 +1,7 @@
 import { getPrisma } from "@/lib/prisma";
 import { CURRENT_SEASON } from "@/lib/seasons";
+import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
+import { isDbSource } from "@/lib/data-source";
 import type { TeamRepository } from "./types";
 import { prismaPlayerRepository } from "./player.repository.prisma";
 
@@ -58,7 +60,7 @@ export const prismaTeamRepository: TeamRepository = {
   },
 
   async findById(id) {
-    const team = await getPrisma().team.findUnique({
+    let team = await getPrisma().team.findUnique({
       where: { id },
       include: {
         competition: true,
@@ -66,6 +68,22 @@ export const prismaTeamRepository: TeamRepository = {
       },
     });
     if (!team) return null;
+
+    if (isDbSource()) {
+      try {
+        await clubRepository.ensureClubPersisted(team);
+        team =
+          (await getPrisma().team.findUnique({
+            where: { id },
+            include: {
+              competition: true,
+              statistics: { where: { season: CURRENT_SEASON } },
+            },
+          })) ?? team;
+      } catch (error) {
+        console.warn("[team-repo] Sync skipped — returning cached Supabase row:", id, error);
+      }
+    }
 
     const squadRecords = await getPrisma().player.findMany({
       where: { teamId: id },
