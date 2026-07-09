@@ -15,6 +15,7 @@
     "etl:validate": "tsx src/etl/extract/csv-reader.ts",
     "etl:load": "tsx src/etl/load/prisma-loader.ts",
     "etl:enrich": "tsx src/etl/load/enrich-players.ts",
+    "data:sync-br2025-db": "tsx src/scripts/sync-brasileirao-2025-db.ts",
     "fetch:wc2026": "node scripts/fetch-wc2026.js"
   },
   "dependencies": {
