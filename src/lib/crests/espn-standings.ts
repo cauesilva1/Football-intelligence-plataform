@@ -4,6 +4,7 @@ import {
   CURRENT_SEASON,
   ESPN_BRAZIL_SEASON_YEAR,
   ESPN_EUROPEAN_SEASON_YEAR,
+  FIFA_WORLD_CUP_SEASON_YEAR,
 } from "@/lib/seasons";
 import {
   findStatsBombStatsForTeam,
@@ -50,6 +51,13 @@ const ESPN_LEAGUES: EspnLeagueConfig[] = [
     competitionLabel: "Brasileirão Série A",
     cacheKey: `espn:standings:brasileirao:${ESPN_BRAZIL_SEASON_YEAR}`,
     preferredSeason: ESPN_BRAZIL_SEASON_YEAR,
+  },
+  {
+    match: (n) => n.includes("world cup") || n.includes("fifa.world"),
+    slug: "fifa.world",
+    competitionLabel: "FIFA World Cup",
+    cacheKey: `espn:worldcup:${FIFA_WORLD_CUP_SEASON_YEAR}`,
+    preferredSeason: FIFA_WORLD_CUP_SEASON_YEAR,
   },
 ];
 

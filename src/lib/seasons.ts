@@ -21,6 +21,17 @@ export const TRANSFERMARKT_BRAZIL_SEASON_ID = 2025;
 /** Rótulo persistido no banco para dados do Brasileirão (campanha calendário 2025). */
 export const BRAZIL_SEASON_LABEL = "2025";
 
+/** ESPN slug + season para a Copa do Mundo 2026 (torneio em andamento). */
+export const FIFA_WORLD_CUP_SLUG = "fifa.world";
+export const FIFA_WORLD_CUP_SEASON_YEAR = 2026;
+export const FIFA_WORLD_CUP_SEASON_LABEL = "2026";
+export const FIFA_WORLD_CUP_LABEL = "FIFA World Cup";
+
+export function isWorldCupCompetition(competitionName?: string | null): boolean {
+  const normalized = competitionName?.toLowerCase() ?? "";
+  return normalized.includes("world cup") || normalized.includes("fifa.world");
+}
+
 /**
  * API-Football free tier: `/players` squad/media endpoints only accept seasons ≤ 2024.
  * Player IDs are stable across seasons — use 2024 for photo/height/weight enrichment.
@@ -40,6 +51,7 @@ export function resolveApiFootballSeasonYear(competitionName?: string | null): n
 
 /** Resolves the ESPN standings season year from a DB competition name. */
 export function resolveEspnSeasonYear(competitionName?: string | null): number {
+  if (isWorldCupCompetition(competitionName)) return FIFA_WORLD_CUP_SEASON_YEAR;
   return isBrazilianLeague(competitionName)
     ? ESPN_BRAZIL_SEASON_YEAR
     : ESPN_EUROPEAN_SEASON_YEAR;
