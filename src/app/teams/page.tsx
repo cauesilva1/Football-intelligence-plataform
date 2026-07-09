@@ -16,6 +16,7 @@ export const metadata = { title: "Clubs · Football Intelligence Platform" };
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const maxDuration = 60;
 
 function FilterSkeleton() {
   return <Skeleton className="h-24 w-full rounded-xl" />;

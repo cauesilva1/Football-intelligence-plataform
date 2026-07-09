@@ -10,6 +10,7 @@ export const metadata = { title: "Players · Football Intelligence Platform" };
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const maxDuration = 60;
 
 function FiltersSkeleton() {
   return <Skeleton className="h-28 w-full rounded-xl" />;

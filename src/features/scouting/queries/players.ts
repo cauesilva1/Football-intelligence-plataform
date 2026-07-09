@@ -15,28 +15,10 @@ async function withSupabaseErrorLog<T>(context: string, fn: () => Promise<T>): P
   }
 }
 
-async function enrichPlayersOnPage(playerIds: string[]): Promise<void> {
-  if (!isDbSource() || !process.env.APISPORTS_KEY?.trim() || playerIds.length === 0) return;
-
-  await Promise.all(
-    playerIds.map((id) => enrichPlayerIfNeeded(id).catch(() => undefined))
-  );
-}
-
+/** List views read Supabase only — photo enrichment runs on player detail pages. */
 export const queryPlayers = cache(async (filters: PlayerFilters) => {
   await ensureRuntimeDataSource();
-  const result = await withSupabaseErrorLog("queryPlayers", () =>
-    getPlayerRepository().findMany(filters)
-  );
-
-  await enrichPlayersOnPage(result.items.map((player) => player.id));
-  if (isDbSource() && process.env.APISPORTS_KEY?.trim()) {
-    return withSupabaseErrorLog("queryPlayers:refresh", () =>
-      getPlayerRepository().findMany(filters)
-    );
-  }
-
-  return result;
+  return withSupabaseErrorLog("queryPlayers", () => getPlayerRepository().findMany(filters));
 });
 
 export const queryPlayerById = cache(async (id: string) => {

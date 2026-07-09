@@ -49,9 +49,40 @@ function mapStatistic(
   });
 }
 
-function aggregateCurrentSeason(stats: PlayerStatistic[]): PlayerStatistic {
+function emptySeasonStats(playerId: string, teamId?: string): PlayerStatistic {
+  return toPlayerStatistic({
+    id: `empty-${playerId}`,
+    playerId,
+    teamId: teamId ?? "",
+    season: CURRENT_SEASON,
+    appearances: 0,
+    minutesPlayed: 0,
+    goals: 0,
+    assists: 0,
+    xG: 0,
+    xA: 0,
+    shots: 0,
+    shotsOnTarget: 0,
+    passes: 0,
+    passAccuracy: 0,
+    keyPasses: 0,
+    dribblesCompleted: 0,
+    tacklesWon: 0,
+    interceptions: 0,
+    duelsWonPct: 0,
+    yellowCards: 0,
+    redCards: 0,
+    rating: 0,
+  });
+}
+
+function aggregateCurrentSeason(
+  playerId: string,
+  teamId: string | undefined,
+  stats: PlayerStatistic[]
+): PlayerStatistic {
   const current = stats.filter((s) => s.season === CURRENT_SEASON);
-  if (current.length === 0) return stats[stats.length - 1];
+  if (current.length === 0) return stats[stats.length - 1] ?? emptySeasonStats(playerId, teamId);
   if (current.length === 1) return current[0];
 
   const latest = current[current.length - 1];
@@ -150,7 +181,7 @@ function mapPlayer(record: PrismaPlayerWithStats): Player {
     competitionName: record.team?.competition?.name,
     strengths: record.strengths,
     weaknesses: record.weaknesses,
-    currentSeasonStats: aggregateCurrentSeason(history),
+    currentSeasonStats: aggregateCurrentSeason(record.id, record.teamId ?? undefined, history),
     history,
   };
 }

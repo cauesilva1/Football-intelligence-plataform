@@ -200,7 +200,6 @@ async function loadEspnLeagueTable(
     if (payload?.teams?.length) {
       const hasPlayed = payload.teams.some((t) => t.matchesPlayed > 0);
       if (hasPlayed || season.year === seasons[seasons.length - 1]?.year) {
-        if (payload.crests) await persistEspnCrests(payload.crests);
         return new Map(payload.teams.map((t) => [t.teamName, t]));
       }
     }

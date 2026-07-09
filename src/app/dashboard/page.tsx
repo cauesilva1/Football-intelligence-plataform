@@ -17,6 +17,7 @@ export const metadata = { title: "Overview · Football Intelligence Platform" };
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const maxDuration = 60;
 
 export default async function DashboardPage() {
   return (
