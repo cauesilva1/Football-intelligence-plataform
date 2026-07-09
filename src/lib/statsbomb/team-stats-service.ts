@@ -1,4 +1,6 @@
 import { cache } from "react";
+import { isDbSource } from "@/lib/data-source";
+import { logSupabaseError } from "@/lib/db-errors";
 import { getEspnStatsForTeam, preloadEspnLeague } from "@/lib/crests/espn-standings";
 import { fetchStatsBombMatches } from "./fetch-matches";
 import {
@@ -39,6 +41,16 @@ export const getStatsBombStatsForTeam = cache(
     teamName: string,
     competitionName?: string | null
   ): Promise<AggregatedTeamStats | null> => {
+    if (isDbSource()) {
+      try {
+        const espnStats = await getEspnStatsForTeam(teamName, competitionName);
+        if (hasMeaningfulStats(espnStats)) return espnStats;
+      } catch (error) {
+        logSupabaseError(`getStatsBombStatsForTeam:espn:${teamName}`, error);
+      }
+      return null;
+    }
+
     let statsBombResult: AggregatedTeamStats | null = null;
 
     const source = resolveStatsBombLeague(competitionName);
@@ -69,14 +81,17 @@ export const getStatsBombStatsForTeam = cache(
 );
 
 export const preloadStatsBombLeague = cache(async (competitionName?: string | null) => {
-  const source = resolveStatsBombLeague(competitionName);
-  if (source) {
-    try {
-      await loadLeagueTable(source);
-    } catch {
-      // StatsBomb indisponível — ESPN assume no getStatsBombStatsForTeam
+  if (!isDbSource()) {
+    const source = resolveStatsBombLeague(competitionName);
+    if (source) {
+      try {
+        await loadLeagueTable(source);
+      } catch {
+        // StatsBomb indisponível — ESPN assume no getStatsBombStatsForTeam
+      }
     }
   }
+
   await preloadEspnLeague(competitionName);
   return null;
 });

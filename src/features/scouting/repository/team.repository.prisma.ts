@@ -1,5 +1,5 @@
 import { getPrisma } from "@/lib/prisma";
-import { CURRENT_SEASON } from "@/lib/data/generators";
+import { CURRENT_SEASON } from "@/lib/seasons";
 import type { TeamRepository } from "./types";
 import { prismaPlayerRepository } from "./player.repository.prisma";
 

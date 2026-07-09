@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { TeamCrest } from "@/components/teams/team-crest";
 import { StatsBombAttribution } from "@/features/scouting/components/statsbomb-attribution";
 import { queryTeams } from "@/features/scouting/queries/teams";
+import { isDbSource } from "@/lib/data-source";
+import { CURRENT_SEASON } from "@/lib/seasons";
 
 export async function TeamsGrid({ competitionId }: { competitionId?: string }) {
   const teams = await queryTeams(competitionId);
@@ -12,7 +14,10 @@ export async function TeamsGrid({ competitionId }: { competitionId?: string }) {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        {teams.length} clubs · StatsBomb, ESPN, or local data ({teams[0]?.statsBomb?.seasonLabel ?? "2025/26"})
+        {teams.length} clubs ·{" "}
+        {isDbSource()
+          ? `Supabase + ESPN live (${teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`
+          : `StatsBomb, ESPN, or local data (${teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`}
       </p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {teams.map((team) => {
@@ -74,7 +79,7 @@ export async function TeamsGrid({ competitionId }: { competitionId?: string }) {
           No clubs found for this filter.
         </p>
       ) : null}
-      <StatsBombAttribution />
+      {!isDbSource() ? <StatsBombAttribution /> : null}
     </div>
   );
 }

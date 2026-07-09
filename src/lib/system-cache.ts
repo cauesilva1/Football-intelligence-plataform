@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { isDbSource } from "@/lib/data-source";
+import { logSupabaseError } from "@/lib/db-errors";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -16,26 +17,45 @@ export function canUseDatabase(): boolean {
 }
 
 export async function readSystemCache<T>(key: string): Promise<T | null> {
-  if (!canUseDatabase()) {
-    const value = memoryCache.get(key);
-    return (value as T) ?? null;
+  if (isDbSource()) {
+    if (!process.env.DATABASE_URL?.trim()) {
+      logSupabaseError(`readSystemCache:${key}`, new Error("DATABASE_URL ausente com DATA_SOURCE=db"));
+      return null;
+    }
+
+    try {
+      const { getPrisma } = await import("@/lib/prisma");
+      const row = await getPrisma().systemCache.findUnique({ where: { key } });
+      return (row?.json as T) ?? null;
+    } catch (error) {
+      logSupabaseError(`readSystemCache:${key}`, error);
+      return null;
+    }
   }
 
-  const { getPrisma } = await import("@/lib/prisma");
-  const row = await getPrisma().systemCache.findUnique({ where: { key } });
-  return (row?.json as T) ?? null;
+  const value = memoryCache.get(key);
+  return (value as T) ?? null;
 }
 
 export async function writeSystemCache(key: string, json: Prisma.InputJsonValue): Promise<void> {
-  if (!canUseDatabase()) {
-    memoryCache.set(key, json);
+  if (isDbSource()) {
+    if (!process.env.DATABASE_URL?.trim()) {
+      logSupabaseError(`writeSystemCache:${key}`, new Error("DATABASE_URL ausente com DATA_SOURCE=db"));
+      return;
+    }
+
+    try {
+      const { getPrisma } = await import("@/lib/prisma");
+      await getPrisma().systemCache.upsert({
+        where: { key },
+        create: { key, json },
+        update: { json },
+      });
+    } catch (error) {
+      logSupabaseError(`writeSystemCache:${key}`, error);
+    }
     return;
   }
 
-  const { getPrisma } = await import("@/lib/prisma");
-  await getPrisma().systemCache.upsert({
-    where: { key },
-    create: { key, json },
-    update: { json },
-  });
+  memoryCache.set(key, json);
 }

@@ -9,6 +9,8 @@ import {
   queryTeams,
 } from "@/features/scouting/queries/teams";
 import { Skeleton } from "@/components/ui/skeleton";
+import { isDbSource } from "@/lib/data-source";
+import { CURRENT_SEASON } from "@/lib/seasons";
 
 export const metadata = { title: "Clubs · Football Intelligence Platform" };
 
@@ -61,8 +63,9 @@ export default async function TeamsPage({
             Club Hub · European Leagues
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Filter by competition to explore clubs from the top five leagues — real match statistics via
-            StatsBomb Open Data.
+            Filter by competition to explore clubs from the top five leagues and Brasileirão — live
+            standings via{" "}
+            {isDbSource() ? `Supabase + ESPN (${CURRENT_SEASON})` : "StatsBomb Open Data (demo mode)"}.
           </p>
         </div>
 

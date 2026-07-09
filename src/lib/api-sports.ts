@@ -2,6 +2,7 @@ import { getPrisma } from "@/lib/prisma";
 import { canUseDatabase, readSystemCache, writeSystemCache } from "@/lib/system-cache";
 import { isUsablePlayerPhotoUrl, resolvePlayerPhotoUrl } from "@/lib/player-media";
 import { CURRENT_SEASON, API_FOOTBALL_PLAYER_MEDIA_SEASON, resolveApiFootballSeasonYear } from "@/lib/seasons";
+import { isDbSource } from "@/lib/data-source";
 import { sanitizeApiSportsSearch } from "@/lib/crests/sanitize-search";
 import { apiSportsTeamLogoUrl, resolveClubCrestUrlSync } from "@/lib/crests/club-crests";
 
@@ -250,8 +251,9 @@ async function resolveApiTeamId(
   return match.id;
 }
 
-/** Lazy-load team statistics and crest from API-Football when DB stats are empty. */
+/** Team statistics via API-Football — disabled in db mode (Supabase + ESPN handle live data). */
 export async function enrichTeamIfNeeded(teamId: string): Promise<void> {
+  if (isDbSource()) return;
   if (!canUseDatabase() || !getApiKey()) return;
 
   const prisma = getPrisma();
@@ -333,7 +335,7 @@ export async function enrichTeamIfNeeded(teamId: string): Promise<void> {
   ]);
 }
 
-/** Lazy-load player height, weight and photo from API-Football when missing. */
+/** Lazy-load player height, weight and photo from API-Football (season=2024 media only). */
 export async function enrichPlayerIfNeeded(playerId: string): Promise<void> {
   if (!canUseDatabase() || !getApiKey()) return;
 

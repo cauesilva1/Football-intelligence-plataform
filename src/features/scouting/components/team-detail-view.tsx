@@ -5,6 +5,7 @@ import { TeamCrest } from "@/components/teams/team-crest";
 import { TeamSquadTable } from "@/features/scouting/components/team-squad-table";
 import { StatsBombAttribution } from "@/features/scouting/components/statsbomb-attribution";
 import { queryTeamById } from "@/features/scouting/queries/teams";
+import { isDbSource } from "@/lib/data-source";
 import { getTeamTheme } from "@/lib/team-theme";
 import { notFound } from "next/navigation";
 
@@ -50,7 +51,7 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
                 <span className="inline-flex items-center gap-1.5 font-medium text-white/90">
                   <Trophy className="h-4 w-4" style={{ color: theme.secondaryColor }} />
                   {team.competition.name}
-                  {sb ? ` · StatsBomb ${sb.seasonLabel}` : ""}
+                  {sb ? ` · ${sb.seasonLabel}` : ""}
                 </span>
               ) : null}
               {team.stadium ? (
@@ -62,7 +63,7 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
             </div>
             {sb ? (
               <p className="text-xs text-white/50">
-                {sb.matchesPlayed} matches · {sb.goalsFor} goals scored · {sb.goalsAgainst} conceded · source:{" "}
+                {sb.matchesPlayed} matches · {sb.goalsFor} goals scored · {sb.goalsAgainst} conceded ·{" "}
                 {sb.statsBombCompetitionName}
               </p>
             ) : null}
@@ -101,7 +102,7 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
         </CardContent>
       </Card>
 
-      <StatsBombAttribution />
+      {!isDbSource() ? <StatsBombAttribution /> : null}
     </div>
   );
 }

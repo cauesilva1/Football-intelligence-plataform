@@ -1,11 +1,12 @@
 import { cache } from "react";
 import { getTeamRepository } from "@/features/scouting/repository";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
+import { logSupabaseError } from "@/lib/db-errors";
 import {
   resolveCompetitionIdFromLeagueParam,
   resolveTeamLeagueTabs,
 } from "@/features/scouting/lib/team-league-filters";
-import { getStatsBombStatsForTeam, preloadStatsBombLeague } from "@/lib/statsbomb/team-stats-service";
+import { attachTeamLiveStats } from "@/lib/team-live-stats";
 import { resolveClubCrestUrlSync } from "@/lib/crests/club-crests";
 import type { AggregatedTeamStats } from "@/lib/statsbomb/aggregate-team-stats";
 import type { Competition, Player, Team, TeamStatistic } from "@/types";
@@ -18,80 +19,25 @@ export type TeamWithStatsBomb = Team & {
   squad?: Player[];
 };
 
-function toDisplayStats(sb: AggregatedTeamStats): TeamStatistic {
-  return {
-    id: `sb-${sb.teamName}`,
-    teamId: "",
-    season: sb.seasonLabel,
-    matchesPlayed: sb.matchesPlayed,
-    wins: sb.wins,
-    draws: sb.draws,
-    losses: sb.losses,
-    goalsFor: sb.goalsFor,
-    goalsAgainst: sb.goalsAgainst,
-    xG: 0,
-    xGA: 0,
-    possessionPct: 0,
-    passAccuracyPct: 0,
-    pressuresPer90: 0,
-    attackRating: 0,
-    defenseRating: 0,
-  };
-}
-
-function dbStatsToAggregated(
-  teamName: string,
-  stats: TeamStatistic,
-  competitionName?: string
-): AggregatedTeamStats {
-  return {
-    teamName,
-    wins: stats.wins,
-    draws: stats.draws,
-    losses: stats.losses,
-    goalsFor: stats.goalsFor,
-    goalsAgainst: stats.goalsAgainst,
-    matchesPlayed: stats.matchesPlayed,
-    goalBalance: stats.goalsFor - stats.goalsAgainst,
-    seasonLabel: stats.season,
-    statsBombCompetitionName: competitionName ?? "Liga",
-  };
-}
-
-async function attachStatsBomb<
-  T extends { name: string; competition?: Competition; stats?: TeamStatistic },
->(teams: T[]): Promise<(T & { statsBomb?: AggregatedTeamStats; stats?: TeamStatistic })[]> {
-  const leagues = new Set(
-    teams.map((t) => t.competition?.name).filter((name): name is string => Boolean(name))
-  );
-
-  await Promise.all([...leagues].map((name) => preloadStatsBombLeague(name)));
-
-  return Promise.all(
-    teams.map(async (team) => {
-      let statsBomb = await getStatsBombStatsForTeam(team.name, team.competition?.name);
-
-      if (!statsBomb && team.stats) {
-        statsBomb = dbStatsToAggregated(team.name, team.stats, team.competition?.name);
-      }
-
-      return {
-        ...team,
-        statsBomb: statsBomb ?? undefined,
-        stats: statsBomb ? toDisplayStats(statsBomb) : team.stats,
-      };
-    })
-  );
+async function withSupabaseErrorLog<T>(context: string, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    logSupabaseError(context, error);
+    throw error;
+  }
 }
 
 export const queryCompetitions = cache(async () => {
   await ensureRuntimeDataSource();
-  return getTeamRepository().getCompetitions();
+  return withSupabaseErrorLog("queryCompetitions", () => getTeamRepository().getCompetitions());
 });
 
 export const queryTeamLeagueTabs = cache(async () => {
   await ensureRuntimeDataSource();
-  const competitions = await getTeamRepository().getCompetitions();
+  const competitions = await withSupabaseErrorLog("queryTeamLeagueTabs", () =>
+    getTeamRepository().getCompetitions()
+  );
   return resolveTeamLeagueTabs(competitions);
 });
 
@@ -103,8 +49,10 @@ export const queryCompetitionIdForLeague = cache(async (leagueParam?: string) =>
 
 export const queryTeams = cache(async (competitionId?: string) => {
   await ensureRuntimeDataSource();
-  const teams = await getTeamRepository().findAll(competitionId);
-  const enriched = await attachStatsBomb(teams);
+  const teams = await withSupabaseErrorLog("queryTeams", () =>
+    getTeamRepository().findAll(competitionId)
+  );
+  const enriched = await attachTeamLiveStats(teams);
   return enriched.map((team) => ({
     ...team,
     crestUrl:
@@ -115,10 +63,10 @@ export const queryTeams = cache(async (competitionId?: string) => {
 
 export const queryTeamById = cache(async (id: string) => {
   await ensureRuntimeDataSource();
-  const team = await getTeamRepository().findById(id);
+  const team = await withSupabaseErrorLog("queryTeamById", () => getTeamRepository().findById(id));
   if (!team) return null;
 
-  const [enriched] = await attachStatsBomb([team]);
+  const [enriched] = await attachTeamLiveStats([team]);
   if (!enriched) return null;
 
   return {

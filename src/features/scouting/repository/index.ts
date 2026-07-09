@@ -1,7 +1,9 @@
+import { mockDashboardRepository } from "@/features/analytics/repository/dashboard.repository.mock";
+import { isDbSource } from "@/lib/data-source";
+import { logSupabaseError } from "@/lib/db-errors";
 import { mockPlayerRepository } from "./player.repository.mock";
 import { mockTeamRepository } from "./team.repository.mock";
 import type { DashboardRepository, PlayerRepository, TeamRepository } from "./types";
-import { mockDashboardRepository } from "@/features/analytics/repository/dashboard.repository.mock";
 
 let prismaPlayerRepository: PlayerRepository | undefined;
 let prismaTeamRepository: TeamRepository | undefined;
@@ -33,18 +35,36 @@ function loadPrismaDashboardRepository(): DashboardRepository {
   return prismaDashboardRepository!;
 }
 
-import { isDbSource } from "@/lib/data-source";
+function assertDbConfigured(): void {
+  if (isDbSource() && !process.env.DATABASE_URL?.trim()) {
+    const error = new Error("DATABASE_URL ausente com DATA_SOURCE=db");
+    logSupabaseError("repository:config", error);
+    throw error;
+  }
+}
 
 export function getPlayerRepository(): PlayerRepository {
-  return isDbSource() ? loadPrismaPlayerRepository() : mockPlayerRepository;
+  if (isDbSource()) {
+    assertDbConfigured();
+    return loadPrismaPlayerRepository();
+  }
+  return mockPlayerRepository;
 }
 
 export function getTeamRepository(): TeamRepository {
-  return isDbSource() ? loadPrismaTeamRepository() : mockTeamRepository;
+  if (isDbSource()) {
+    assertDbConfigured();
+    return loadPrismaTeamRepository();
+  }
+  return mockTeamRepository;
 }
 
 export function getDashboardRepository(): DashboardRepository {
-  return isDbSource() ? loadPrismaDashboardRepository() : mockDashboardRepository;
+  if (isDbSource()) {
+    assertDbConfigured();
+    return loadPrismaDashboardRepository();
+  }
+  return mockDashboardRepository;
 }
 
 export type { PlayerRepository, TeamRepository, DashboardRepository } from "./types";
