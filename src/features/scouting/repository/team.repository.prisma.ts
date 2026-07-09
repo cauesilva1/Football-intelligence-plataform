@@ -3,7 +3,7 @@ import { CURRENT_SEASON } from "@/lib/seasons";
 import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
 import { isDbSource } from "@/lib/data-source";
 import type { TeamRepository } from "./types";
-import { prismaPlayerRepository } from "./player.repository.prisma";
+import { playerInclude, prismaPlayerRepository } from "./player.repository.prisma";
 
 export const prismaTeamRepository: TeamRepository = {
   async findAll(competitionId?: string) {
@@ -87,18 +87,10 @@ export const prismaTeamRepository: TeamRepository = {
 
     const squadRecords = await getPrisma().player.findMany({
       where: { teamId: id },
-      include: {
-        team: true,
-        statistics: { include: { team: true }, orderBy: [{ season: "asc" }, { createdAt: "asc" }] },
-      },
+      include: playerInclude,
     });
 
-    const squad = await Promise.all(
-      squadRecords.map(async (p) => {
-        const mapped = await prismaPlayerRepository.findById(p.id);
-        return mapped!;
-      })
-    );
+    const squad = squadRecords.map((record) => prismaPlayerRepository.mapFromRecord(record));
 
     return {
       id: team.id,

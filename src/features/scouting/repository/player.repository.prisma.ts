@@ -10,7 +10,7 @@ import { isDbSource } from "@/lib/data-source";
 import type { Foot, Player, PlayerFilters, PlayerStatistic } from "@/types";
 import type { PlayerRepository } from "./types";
 
-const playerInclude = {
+export const playerInclude = {
   team: { include: { competition: true } },
   statistics: {
     include: { team: true },
@@ -280,7 +280,9 @@ function buildStatOrderBy(filters: PlayerFilters): Prisma.PlayerStatisticOrderBy
   }
 }
 
-export const prismaPlayerRepository: PlayerRepository = {
+export const prismaPlayerRepository: PlayerRepository & {
+  mapFromRecord(record: PrismaPlayerWithStats): Player;
+} = {
   async findMany(filters) {
     const { page = 1, pageSize = 25 } = filters;
     const where = buildStatWhere(filters);
@@ -332,6 +334,10 @@ export const prismaPlayerRepository: PlayerRepository = {
       }
     }
 
+    return mapPlayer(record);
+  },
+
+  mapFromRecord(record: PrismaPlayerWithStats): Player {
     return mapPlayer(record);
   },
 

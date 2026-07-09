@@ -1,7 +1,8 @@
 import {
+  API_FOOTBALL_EUROPEAN_SEASON_YEAR,
   CURRENT_SEASON,
   isBrazilianLeague,
-  resolveApiFootballSeasonYear,
+  TRANSFERMARKT_BRAZIL_SEASON_ID,
 } from "@/lib/seasons";
 import { namesLikelyMatch, normalizeNameForMatch } from "@/lib/sync/data-staleness";
 
@@ -36,6 +37,7 @@ export interface TransfermarktSquadPlayer {
   marketValue?: number;
   height?: number;
   nationality?: string[];
+  dateOfBirth?: string;
 }
 
 const CLUB_NAME_TO_TM_ID: Array<{ keys: string[]; id: number }> = [
@@ -72,7 +74,10 @@ const CLUB_NAME_TO_TM_ID: Array<{ keys: string[]; id: number }> = [
 ];
 
 function resolveTransfermarktSeasonId(competitionName?: string | null): number {
-  return resolveApiFootballSeasonYear(competitionName);
+  if (isBrazilianLeague(competitionName)) {
+    return TRANSFERMARKT_BRAZIL_SEASON_ID;
+  }
+  return API_FOOTBALL_EUROPEAN_SEASON_YEAR;
 }
 
 async function tmFetch<T>(path: string): Promise<T | null> {
@@ -165,7 +170,7 @@ export async function fetchClubSquad(
   return data?.players ?? [];
 }
 
-/** Fetch and normalize club data for the active season (25/26 EU, 2026 BR). */
+/** Fetch and normalize club data for the active season (25/26 EU, 2025 BR histórico). */
 export async function syncClub(
   clubId: number,
   competitionName?: string | null
@@ -192,4 +197,4 @@ export function parseFoundedYear(foundedOn?: string): number | undefined {
   return Number.isFinite(year) ? year : undefined;
 }
 
-export { CURRENT_SEASON, isBrazilianLeague };
+export { CURRENT_SEASON, isBrazilianLeague, TRANSFERMARKT_BRAZIL_SEASON_ID };

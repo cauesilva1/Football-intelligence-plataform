@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { canUseDatabase } from "@/lib/system-cache";
-import { CURRENT_SEASON } from "@/lib/seasons";
+import { BRAZIL_SEASON_LABEL, CURRENT_SEASON } from "@/lib/seasons";
 import { syncEspnMatchesForCompetition } from "@/lib/api/espn-matches";
 import {
   buildFbrefExternalKey,
@@ -18,6 +18,7 @@ import {
   syncClub,
   transfermarktCrestUrl,
   transfermarktPlayerPhotoUrl,
+  isBrazilianLeague,
   type TransfermarktClubProfile,
   type TransfermarktPlayerProfile,
   type TransfermarktSquadPlayer,
@@ -229,7 +230,8 @@ export async function upsertPlayerFromTransfermarkt(
 /** Upsert club crest, stadium and metadata from Transfermarkt into Supabase. */
 export async function upsertClubFromTransfermarkt(
   dbTeamId: string,
-  profile: TransfermarktClubProfile
+  profile: TransfermarktClubProfile,
+  competitionName?: string | null
 ): Promise<void> {
   if (!canUseDatabase()) return;
 
@@ -237,6 +239,9 @@ export async function upsertClubFromTransfermarkt(
   const crestUrl =
     profile.image?.replace("/big/", "/head/").replace("//images", "/images") ??
     transfermarktCrestUrl(tmId);
+  const syncedSeason = isBrazilianLeague(competitionName)
+    ? BRAZIL_SEASON_LABEL
+    : CURRENT_SEASON;
 
   await getPrisma().team.update({
     where: { id: dbTeamId },
@@ -246,40 +251,83 @@ export async function upsertClubFromTransfermarkt(
       stadium: profile.stadiumName ?? undefined,
       foundedYear: parseFoundedYear(profile.foundedOn),
       dataSyncedAt: new Date(),
-      dataSyncedSeason: CURRENT_SEASON,
+      dataSyncedSeason: syncedSeason,
     },
   });
 }
 
-async function syncSquadPlayers(
+function parseSquadDateOfBirth(raw?: string): Date {
+  if (!raw?.trim()) return new Date(Date.UTC(2000, 0, 1));
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? new Date(Date.UTC(2000, 0, 1)) : parsed;
+}
+
+/** Create or update squad players from Transfermarkt (including empty Brazilian rosters). */
+export async function persistSquadFromTransfermarkt(
   dbTeamId: string,
-  squad: TransfermarktSquadPlayer[]
+  squad: TransfermarktSquadPlayer[],
+  competitionName?: string | null
 ): Promise<void> {
   if (!canUseDatabase() || squad.length === 0) return;
 
   const prisma = getPrisma();
+  const seasonLabel = isBrazilianLeague(competitionName) ? BRAZIL_SEASON_LABEL : CURRENT_SEASON;
   const dbPlayers = await prisma.player.findMany({ where: { teamId: dbTeamId } });
 
   for (const tmPlayer of squad) {
-    const match = dbPlayers.find(
-      (player) =>
-        namesLikelyMatch(player.fullName, tmPlayer.name) ||
-        namesLikelyMatch(player.knownAs, tmPlayer.name)
-    );
-    if (!match) continue;
+    const tmId = Number(tmPlayer.id);
+    if (!Number.isFinite(tmId)) continue;
 
-    const photoUrl = transfermarktPlayerPhotoUrl(Number(tmPlayer.id));
-    await prisma.player.update({
-      where: { id: match.id },
+    const photoUrl = transfermarktPlayerPhotoUrl(tmId);
+    const knownAs = tmPlayer.name.split(" ").pop() ?? tmPlayer.name;
+    const position = tmPlayer.position ? mapPosition(tmPlayer.position) : "CM";
+    const nationality = tmPlayer.nationality?.[0] ?? "UNK";
+    const height = tmPlayer.height && tmPlayer.height > 0 ? Math.round(tmPlayer.height) : 180;
+
+    const existing =
+      dbPlayers.find(
+        (player) =>
+          player.transfermarktId === tmId ||
+          namesLikelyMatch(player.fullName, tmPlayer.name) ||
+          namesLikelyMatch(player.knownAs, tmPlayer.name)
+      ) ??
+      (await prisma.player.findFirst({ where: { transfermarktId: tmId } }));
+
+    if (existing) {
+      await prisma.player.update({
+        where: { id: existing.id },
+        data: {
+          teamId: dbTeamId,
+          transfermarktId: tmId,
+          photoUrl: resolvePlayerPhotoUrl({ photoUrl, externalPhoto: photoUrl }),
+          marketValue: tmPlayer.marketValue ?? existing.marketValue,
+          height,
+          nationality,
+          position,
+          dataSyncedAt: new Date(),
+          dataSyncedSeason: seasonLabel,
+        },
+      });
+      continue;
+    }
+
+    await prisma.player.create({
       data: {
-        transfermarktId: Number(tmPlayer.id),
+        fullName: tmPlayer.name,
+        knownAs,
+        dateOfBirth: parseSquadDateOfBirth(tmPlayer.dateOfBirth),
+        nationality,
+        position,
+        height,
+        weight: 75,
+        marketValue: tmPlayer.marketValue ?? 0,
         photoUrl: resolvePlayerPhotoUrl({ photoUrl, externalPhoto: photoUrl }),
-        marketValue: tmPlayer.marketValue ?? match.marketValue,
-        height: tmPlayer.height && tmPlayer.height > 0 ? Math.round(tmPlayer.height) : match.height,
-        nationality: tmPlayer.nationality?.[0] ?? match.nationality,
-        position: tmPlayer.position ? mapPosition(tmPlayer.position) : match.position,
+        transfermarktId: tmId,
+        teamId: dbTeamId,
+        strengths: [],
+        weaknesses: [],
         dataSyncedAt: new Date(),
-        dataSyncedSeason: CURRENT_SEASON,
+        dataSyncedSeason: seasonLabel,
       },
     });
   }
@@ -374,8 +422,12 @@ export async function ensureClubPersisted(team: DbTeam): Promise<void> {
     Boolean(staleScheduled)
   );
 
+  const squadCount = await prisma.player.count({ where: { teamId: team.id } });
+  const isBrazil = isBrazilianLeague(team.competition?.name);
+  const shouldSyncSquad = isBrazil && squadCount < 8;
+
   try {
-    if (shouldSyncTeam) {
+    if (shouldSyncTeam || shouldSyncSquad) {
       let tmId = resolveTransfermarktClubId(team.name, team.transfermarktId);
       if (!tmId) {
         tmId = await searchTransfermarktClub(team.name);
@@ -383,9 +435,9 @@ export async function ensureClubPersisted(team: DbTeam): Promise<void> {
       if (tmId) {
         const { profile, squad } = await syncClub(tmId, team.competition?.name);
         if (profile) {
-          await upsertClubFromTransfermarkt(team.id, profile);
+          await upsertClubFromTransfermarkt(team.id, profile, team.competition?.name);
         }
-        await syncSquadPlayers(team.id, squad);
+        await persistSquadFromTransfermarkt(team.id, squad, team.competition?.name);
       }
     }
 
@@ -449,6 +501,7 @@ export const clubRepository = {
   upsertPlayerFromTransfermarkt,
   upsertPlayerHybrid,
   upsertClubFromTransfermarkt,
+  persistSquadFromTransfermarkt,
   upsertTeamSeasonStats,
   ensurePlayerPersisted,
   ensureClubPersisted,

@@ -3,6 +3,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { TeamsGrid } from "@/features/scouting/components/teams-grid";
 import { TeamsGridSkeleton } from "@/features/scouting/components/teams-grid-skeleton";
 import { TeamsLeagueFilter } from "@/features/scouting/components/teams-league-filter";
+import { BrasileiraoSeasonNotice } from "@/features/scouting/components/brasileirao-season-notice";
 import {
   queryCompetitionIdForLeague,
   queryTeamLeagueTabs,
@@ -73,6 +74,8 @@ export default async function TeamsPage({
         <Suspense fallback={<FilterSkeleton />}>
           <TeamsToolbar leagueParam={leagueParam} />
         </Suspense>
+
+        {leagueParam === "brasileirao" ? <BrasileiraoSeasonNotice /> : null}
 
         <Suspense key={competitionId ?? "all"} fallback={<TeamsGridSkeleton />}>
           <TeamsGrid competitionId={competitionId} />

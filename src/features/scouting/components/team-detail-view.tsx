@@ -4,8 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { TeamCrest } from "@/components/teams/team-crest";
 import { TeamSquadTable } from "@/features/scouting/components/team-squad-table";
 import { StatsBombAttribution } from "@/features/scouting/components/statsbomb-attribution";
+import { BrasileiraoSeasonNotice } from "@/features/scouting/components/brasileirao-season-notice";
+import { TeamBackLink } from "@/features/scouting/components/team-back-link";
 import { queryTeamById } from "@/features/scouting/queries/teams";
 import { isDbSource } from "@/lib/data-source";
+import { isBrazilianLeague } from "@/lib/seasons";
 import { getTeamTheme } from "@/lib/team-theme";
 import { notFound } from "next/navigation";
 
@@ -15,6 +18,7 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
 
   const sb = team.statsBomb;
   const theme = getTeamTheme(team.competition?.name, team.name);
+  const isBrasileirao = isBrazilianLeague(team.competition?.name);
   const goalBalance = sb?.goalBalance ?? 0;
   const balanceLabel = goalBalance > 0 ? `+${goalBalance}` : String(goalBalance);
 
@@ -27,6 +31,10 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
 
   return (
     <div className="space-y-6">
+      <TeamBackLink competitionName={team.competition?.name} />
+
+      {isBrasileirao ? <BrasileiraoSeasonNotice /> : null}
+
       <section
         className={`overflow-hidden rounded-2xl border border-border bg-gradient-to-br shadow-panel ${theme.gradientString}`}
         style={{ borderColor: `${theme.primaryColor}44` }}

@@ -15,6 +15,9 @@ export const ESPN_EUROPEAN_SEASON_YEAR = 2025;
 /** ESPN `season` query param for Brasileirão — temporada histórica finalizada 2025. */
 export const ESPN_BRAZIL_SEASON_YEAR = 2025;
 
+/** Transfermarkt `season_id` para elencos retroativos do Brasileirão. */
+export const TRANSFERMARKT_BRAZIL_SEASON_ID = 2025;
+
 /** Rótulo persistido no banco para dados do Brasileirão (campanha calendário 2025). */
 export const BRAZIL_SEASON_LABEL = "2025";
 

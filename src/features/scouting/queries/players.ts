@@ -1,7 +1,5 @@
 import { cache } from "react";
 import { getPlayerRepository } from "@/features/scouting/repository";
-import { enrichPlayerIfNeeded } from "@/lib/api-sports";
-import { isDbSource } from "@/lib/data-source";
 import { logSupabaseError } from "@/lib/db-errors";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
 import type { PlayerFilters } from "@/types";
@@ -23,13 +21,6 @@ export const queryPlayers = cache(async (filters: PlayerFilters) => {
 
 export const queryPlayerById = cache(async (id: string) => {
   await ensureRuntimeDataSource();
-  if (isDbSource() && process.env.APISPORTS_KEY?.trim()) {
-    try {
-      await enrichPlayerIfNeeded(id);
-    } catch (error) {
-      console.warn("[api-sports] Player photo enrichment failed:", error);
-    }
-  }
   return withSupabaseErrorLog("queryPlayerById", () => getPlayerRepository().findById(id));
 });
 
