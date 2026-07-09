@@ -1,6 +1,7 @@
 import { getPrisma } from "@/lib/prisma";
 import { canUseDatabase } from "@/lib/system-cache";
-import { CURRENT_SEASON, ESPN_BRAZIL_SEASON_YEAR } from "@/lib/seasons";
+import { BRAZIL_SEASON_LABEL, ESPN_BRAZIL_SEASON_YEAR } from "@/lib/seasons";
+import { syncBrasileiraoHistoricalMatches } from "@/lib/api/espn-matches";
 
 const ESPN_BASE = "https://site.api.espn.com/apis/v2/sports/soccer";
 const BRASILEIRAO_NAME = "Brasileirão Série A";
@@ -55,7 +56,8 @@ async function fetchEspnStandingsTeams(seasonYear: number): Promise<
 }
 
 /**
- * Ensures Brasileirão competition exists with espnSlug and seeds teams from ESPN (season 2026).
+ * Ensures Brasileirão competition exists with espnSlug and seeds teams from ESPN season 2025.
+ * Ingests finished fixtures from the 2025 campaign to unlock `/teams` with stable historical data.
  */
 export async function ensureBrasileiraoCompetition(): Promise<void> {
   if (!canUseDatabase()) return;
@@ -95,43 +97,62 @@ export async function ensureBrasileiraoCompetition(): Promise<void> {
     where: { competitionId: competition.id },
   });
 
-  if (existingCount >= 15) return;
+  const staleSeasonTeams = await prisma.team.count({
+    where: {
+      competitionId: competition.id,
+      NOT: { dataSyncedSeason: BRAZIL_SEASON_LABEL },
+    },
+  });
 
-  const espnTeams = await fetchEspnStandingsTeams(ESPN_BRAZIL_SEASON_YEAR);
-  if (!espnTeams.length) return;
+  const needsTeamBootstrap = existingCount < 15 || staleSeasonTeams > 0;
 
-  for (const espnTeam of espnTeams) {
-    const existing = await prisma.team.findFirst({
-      where: { name: { equals: espnTeam.name, mode: "insensitive" } },
-    });
+  if (needsTeamBootstrap) {
+    const espnTeams = await fetchEspnStandingsTeams(ESPN_BRAZIL_SEASON_YEAR);
+    if (espnTeams.length) {
+      for (const espnTeam of espnTeams) {
+        const existing = await prisma.team.findFirst({
+          where: { name: { equals: espnTeam.name, mode: "insensitive" } },
+        });
 
-    if (existing) {
-      if (existing.competitionId !== competition.id || !existing.crestUrl) {
-        await prisma.team.update({
-          where: { id: existing.id },
+        if (existing) {
+          await prisma.team.update({
+            where: { id: existing.id },
+            data: {
+              competitionId: competition.id,
+              country: "Brazil",
+              crestUrl: espnTeam.crestUrl ?? existing.crestUrl ?? undefined,
+              dataSyncedSeason: BRAZIL_SEASON_LABEL,
+              dataSyncedAt: new Date(),
+            },
+          });
+          continue;
+        }
+
+        await prisma.team.create({
           data: {
-            competitionId: competition.id,
+            name: espnTeam.name,
+            shortName: teamShortName(espnTeam.name),
             country: "Brazil",
-            crestUrl: espnTeam.crestUrl ?? existing.crestUrl ?? undefined,
-            dataSyncedSeason: CURRENT_SEASON,
+            crestUrl: espnTeam.crestUrl,
+            competitionId: competition.id,
+            dataSyncedSeason: BRAZIL_SEASON_LABEL,
             dataSyncedAt: new Date(),
           },
         });
       }
-      continue;
     }
+  }
 
-    await prisma.team.create({
-      data: {
-        name: espnTeam.name,
-        shortName: teamShortName(espnTeam.name),
-        country: "Brazil",
-        crestUrl: espnTeam.crestUrl,
-        competitionId: competition.id,
-        dataSyncedSeason: CURRENT_SEASON,
-        dataSyncedAt: new Date(),
-      },
-    });
+  const finishedMatches = await prisma.match.count({
+    where: {
+      competitionId: competition.id,
+      status: "finished",
+      seasonLabel: BRAZIL_SEASON_LABEL,
+    },
+  });
+
+  if (finishedMatches < 20) {
+    await syncBrasileiraoHistoricalMatches();
   }
 }
 

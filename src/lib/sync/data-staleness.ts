@@ -1,5 +1,7 @@
 import {
+  BRAZIL_SEASON_LABEL,
   CURRENT_SEASON,
+  isBrazilianLeague,
   resolveApiFootballSeasonYear,
 } from "@/lib/seasons";
 
@@ -24,13 +26,16 @@ export function parseSeasonStartYear(seasonLabel?: string | null): number | null
 
 /**
  * Validates cached data against the active campaign:
- * Europe ≥ 2025 (25/26), Brasileirão ≥ 2026.
+ * Europe ≥ 2025 (25/26), Brasileirão travado em 2025 (histórico finalizado).
  */
 export function isSeasonCurrentForCompetition(
   seasonLabel: string | null | undefined,
   competitionName?: string | null
 ): boolean {
   if (!seasonLabel?.trim()) return false;
+  if (isBrazilianLeague(competitionName)) {
+    return seasonLabel === BRAZIL_SEASON_LABEL;
+  }
   if (seasonLabel === CURRENT_SEASON) return true;
 
   const minYear = resolveApiFootballSeasonYear(competitionName);

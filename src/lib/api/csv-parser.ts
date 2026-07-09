@@ -5,21 +5,21 @@ import { DEFAULT_SEASON } from "@/etl/data-dictionary";
 import { buildExternalKey, type TransformedRecord } from "@/etl/transform/transformer";
 import { namesLikelyMatch, normalizeNameForMatch } from "@/lib/sync/data-staleness";
 
-const CSV_CANDIDATES = [
-  "players_data-2025_2026.csv",
-  "players_data_light-2025_2026.csv",
-];
+const ELITE_EUROPEAN_CSV = "players_data-2025_2026.csv";
+const LIGHT_CSV_FALLBACK = "players_data_light-2025_2026.csv";
 
 let cachedIndex: TransformedRecord[] | null = null;
 let cachedPath: string | null = null;
 
-/** Resolves the FBref CSV path (full dataset preferred, light fallback). */
+/** Resolves the elite European FBref CSV (`players_data-2025_2026.csv`). */
 export function resolveFbrefCsvPath(): string | null {
   const rawDir = path.join(process.cwd(), "data", "raw");
-  for (const filename of CSV_CANDIDATES) {
-    const full = path.join(rawDir, filename);
-    if (fs.existsSync(full)) return full;
-  }
+  const elitePath = path.join(rawDir, ELITE_EUROPEAN_CSV);
+  if (fs.existsSync(elitePath)) return elitePath;
+
+  const lightPath = path.join(rawDir, LIGHT_CSV_FALLBACK);
+  if (fs.existsSync(lightPath)) return lightPath;
+
   return null;
 }
 

@@ -1,12 +1,17 @@
 import { getPrisma } from "@/lib/prisma";
 import { canUseDatabase } from "@/lib/system-cache";
-import { CURRENT_SEASON, resolveEspnSeasonYear } from "@/lib/seasons";
+import {
+  BRAZIL_SEASON_LABEL,
+  CURRENT_SEASON,
+  ESPN_BRAZIL_SEASON_YEAR,
+  resolveEspnSeasonYear,
+} from "@/lib/seasons";
 import { isBrazilianLeague } from "@/lib/api/transfermarkt";
 import { matchNeedsScoreRefresh, namesLikelyMatch } from "@/lib/sync/data-staleness";
 import { resolveEspnLeague } from "@/lib/crests/espn-standings";
 
 const ESPN_SCOREBOARD_BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer";
-const RECENT_MATCH_WINDOW_DAYS = 14;
+const EUROPEAN_MATCH_WINDOW_DAYS = 21;
 
 export interface EspnScoreboardEvent {
   externalKey: string;
@@ -42,6 +47,12 @@ interface EspnScoreboardResponse {
   }>;
 }
 
+export interface EspnScoreboardFetchOptions {
+  date?: Date;
+  seasonYear?: number;
+  seasonLabel?: string;
+}
+
 function formatEspnDate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -73,7 +84,7 @@ function mapEventStatus(
   return "scheduled";
 }
 
-function recentMatchDates(windowDays = RECENT_MATCH_WINDOW_DAYS): Date[] {
+function recentEuropeanMatchDates(windowDays = EUROPEAN_MATCH_WINDOW_DAYS): Date[] {
   const dates: Date[] = [];
   const today = new Date();
   for (let offset = 0; offset < windowDays; offset += 1) {
@@ -84,13 +95,33 @@ function recentMatchDates(windowDays = RECENT_MATCH_WINDOW_DAYS): Date[] {
   return dates;
 }
 
+/** Bi-weekly sample dates across the finished Brasileirão 2025 campaign. */
+export function brasileiraoHistoricalFetchDates(): Date[] {
+  const dates: Date[] = [];
+  const start = new Date(Date.UTC(2025, 3, 12));
+  const end = new Date(Date.UTC(2025, 11, 7));
+  for (let cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 14)) {
+    dates.push(new Date(cursor));
+  }
+  return dates;
+}
+
+function resolveSeasonLabel(competitionLabel: string, override?: string): string {
+  if (override) return override;
+  return isBrazilianLeague(competitionLabel) ? BRAZIL_SEASON_LABEL : CURRENT_SEASON;
+}
+
 export async function fetchEspnScoreboard(
   slug: string,
   competitionLabel: string,
-  date?: Date
+  options: EspnScoreboardFetchOptions = {}
 ): Promise<EspnScoreboardEvent[]> {
-  const params = new URLSearchParams({ limit: "100" });
-  if (date) params.set("dates", formatEspnDate(date));
+  const seasonYear = options.seasonYear ?? resolveEspnSeasonYear(competitionLabel);
+  const params = new URLSearchParams({
+    limit: "100",
+    season: String(seasonYear),
+  });
+  if (options.date) params.set("dates", formatEspnDate(options.date));
 
   const url = `${ESPN_SCOREBOARD_BASE}/${slug}/scoreboard?${params.toString()}`;
   const response = await fetch(url, {
@@ -99,12 +130,12 @@ export async function fetchEspnScoreboard(
   });
 
   if (!response.ok) {
-    console.warn(`[espn-matches] HTTP ${response.status} on ${slug}`);
+    console.warn(`[espn-matches] HTTP ${response.status} on ${slug} season=${seasonYear}`);
     return [];
   }
 
   const data = (await response.json()) as EspnScoreboardResponse;
-  const seasonLabel = CURRENT_SEASON;
+  const seasonLabel = resolveSeasonLabel(competitionLabel, options.seasonLabel);
 
   return (data.events ?? [])
     .map((event) => {
@@ -251,21 +282,25 @@ export async function persistEspnMatches(events: EspnScoreboardEvent[]): Promise
   return saved;
 }
 
-/** Re-fetch ESPN scoreboards for matches that stayed scheduled after kickoff. */
+/** Re-fetch ESPN scoreboards for European matches stuck as scheduled/0x0 after kickoff. */
 export async function refreshStaleEspnMatches(
   competitionName?: string | null,
   teamIds?: string[]
 ): Promise<number> {
   if (!canUseDatabase()) return 0;
+  if (isBrazilianLeague(competitionName)) return 0;
 
   const prisma = getPrisma();
   const config = resolveEspnLeague(competitionName);
   if (!config) return 0;
 
+  const seasonYear = resolveEspnSeasonYear(competitionName);
+
   const staleMatches = await prisma.match.findMany({
     where: {
       source: "espn",
       externalKey: { startsWith: `espn:${config.slug}:` },
+      seasonLabel: CURRENT_SEASON,
       ...(teamIds?.length
         ? { OR: [{ homeTeamId: { in: teamIds } }, { awayTeamId: { in: teamIds } }] }
         : {}),
@@ -279,7 +314,7 @@ export async function refreshStaleEspnMatches(
       awayScore: true,
     },
     orderBy: { matchDate: "desc" },
-    take: 40,
+    take: 60,
   });
 
   const needsRefresh = staleMatches.filter((match) =>
@@ -303,7 +338,11 @@ export async function refreshStaleEspnMatches(
       const y = Number(dateStr.slice(0, 4));
       const m = Number(dateStr.slice(4, 6)) - 1;
       const d = Number(dateStr.slice(6, 8));
-      return fetchEspnScoreboard(config.slug, config.competitionLabel, new Date(y, m, d));
+      return fetchEspnScoreboard(config.slug, config.competitionLabel, {
+        date: new Date(y, m, d),
+        seasonYear,
+        seasonLabel: CURRENT_SEASON,
+      });
     })
   );
 
@@ -321,19 +360,63 @@ export async function refreshStaleEspnMatches(
   return persistEspnMatches(targeted);
 }
 
-/** Sync recent fixtures for a competition (last 14 days + live board). */
+/** Ingest finished Brasileirão fixtures from ESPN season 2025 (historical, stable). */
+export async function syncBrasileiraoHistoricalMatches(): Promise<number> {
+  const config = resolveEspnLeague("Brasileirão Série A");
+  if (!config) return 0;
+
+  try {
+    const dateFetches = brasileiraoHistoricalFetchDates().map((date) =>
+      fetchEspnScoreboard(config.slug, config.competitionLabel, {
+        date,
+        seasonYear: ESPN_BRAZIL_SEASON_YEAR,
+        seasonLabel: BRAZIL_SEASON_LABEL,
+      })
+    );
+
+    const batches = await Promise.all(dateFetches);
+    const merged = new Map<string, EspnScoreboardEvent>();
+    for (const batch of batches) {
+      for (const event of batch) {
+        if (event.status === "finished") {
+          merged.set(event.externalKey, event);
+        }
+      }
+    }
+
+    return persistEspnMatches([...merged.values()]);
+  } catch (error) {
+    console.warn("[espn-matches] Brasileirão 2025 historical sync failed:", error);
+    return 0;
+  }
+}
+
+/** Sync recent fixtures for a competition (European live board or Brasileirão 2025 archive). */
 export async function syncEspnMatchesForCompetition(
   competitionName?: string | null
 ): Promise<number> {
   const config = resolveEspnLeague(competitionName);
   if (!config) return 0;
 
+  if (isBrazilianLeague(competitionName)) {
+    return syncBrasileiraoHistoricalMatches();
+  }
+
+  const seasonYear = resolveEspnSeasonYear(competitionName);
+
   try {
-    const dateFetches = recentMatchDates().map((date) =>
-      fetchEspnScoreboard(config.slug, config.competitionLabel, date)
+    const dateFetches = recentEuropeanMatchDates().map((date) =>
+      fetchEspnScoreboard(config.slug, config.competitionLabel, {
+        date,
+        seasonYear,
+        seasonLabel: CURRENT_SEASON,
+      })
     );
     const [recentEvents, ...datedEvents] = await Promise.all([
-      fetchEspnScoreboard(config.slug, config.competitionLabel),
+      fetchEspnScoreboard(config.slug, config.competitionLabel, {
+        seasonYear,
+        seasonLabel: CURRENT_SEASON,
+      }),
       ...dateFetches,
     ]);
 

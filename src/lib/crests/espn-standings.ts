@@ -1,5 +1,6 @@
 import { readSystemCache, writeSystemCache, canUseDatabase } from "@/lib/system-cache";
 import {
+  BRAZIL_SEASON_LABEL,
   CURRENT_SEASON,
   ESPN_BRAZIL_SEASON_YEAR,
   ESPN_EUROPEAN_SEASON_YEAR,
@@ -58,8 +59,8 @@ const EUROPEAN_SEASON_CANDIDATES = [
 ] as const;
 
 const BRAZIL_SEASON_CANDIDATES = [
-  { year: ESPN_BRAZIL_SEASON_YEAR, label: CURRENT_SEASON },
-  { year: ESPN_BRAZIL_SEASON_YEAR - 1, label: "2025" },
+  { year: ESPN_BRAZIL_SEASON_YEAR, label: BRAZIL_SEASON_LABEL },
+  { year: ESPN_BRAZIL_SEASON_YEAR - 1, label: "2024" },
 ] as const;
 
 interface EspnStandingsEntry {

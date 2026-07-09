@@ -6,14 +6,17 @@ export const SEASONS = ["2023/24", "2024/25", CURRENT_SEASON] as const;
 /** API-Football `season` param for European cross-year leagues (2025/26 → 2025). */
 export const API_FOOTBALL_EUROPEAN_SEASON_YEAR = 2025;
 
-/** API-Football `season` param for calendar-year leagues (Brasileirão 2026). */
-export const API_FOOTBALL_BRAZIL_SEASON_YEAR = 2026;
+/** API-Football `season` param for calendar-year leagues (Brasileirão 2025 histórico). */
+export const API_FOOTBALL_BRAZIL_SEASON_YEAR = 2025;
 
 /** ESPN standings `season` query param for European leagues. */
 export const ESPN_EUROPEAN_SEASON_YEAR = 2025;
 
-/** ESPN standings `season` query param for Brasileirão. */
-export const ESPN_BRAZIL_SEASON_YEAR = 2026;
+/** ESPN `season` query param for Brasileirão — temporada histórica finalizada 2025. */
+export const ESPN_BRAZIL_SEASON_YEAR = 2025;
+
+/** Rótulo persistido no banco para dados do Brasileirão (campanha calendário 2025). */
+export const BRAZIL_SEASON_LABEL = "2025";
 
 /**
  * API-Football free tier: `/players` squad/media endpoints only accept seasons ≤ 2024.
