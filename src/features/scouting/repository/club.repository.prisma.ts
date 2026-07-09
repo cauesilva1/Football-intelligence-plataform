@@ -4,6 +4,12 @@ import { canUseDatabase } from "@/lib/system-cache";
 import { CURRENT_SEASON } from "@/lib/seasons";
 import { syncEspnMatchesForCompetition } from "@/lib/api/espn-matches";
 import {
+  buildFbrefExternalKey,
+  estimateRatingFromFbref,
+  findFbrefPlayerRecord,
+} from "@/lib/api/csv-parser";
+import type { TransformedRecord } from "@/etl/transform/transformer";
+import {
   fetchPlayerProfile,
   parseFoundedYear,
   resolveTransfermarktClubId,
@@ -47,6 +53,148 @@ function mapPosition(raw?: string): string {
     return "ST";
   if (value.includes("midfield")) return "CM";
   return "CM";
+}
+
+function currentSeasonStat(player: DbPlayer) {
+  return (
+    player.statistics?.find((s) => s.season === CURRENT_SEASON) ?? player.statistics?.[0] ?? null
+  );
+}
+
+function hasMeaningfulSeasonStats(player: DbPlayer): boolean {
+  const stat = currentSeasonStat(player);
+  if (!stat) return false;
+  if (stat.minutesPlayed <= 0) return true;
+  return (
+    stat.tacklesWon > 0 ||
+    stat.interceptions > 0 ||
+    stat.goals > 0 ||
+    stat.assists > 0 ||
+    stat.passAccuracy > 0 ||
+    stat.keyPasses > 0
+  );
+}
+
+/** Proxy pass accuracy when the light FBref CSV has no dedicated column. */
+function estimatePassAccuracyFromFbref(fbref: TransformedRecord["statistic"]): number {
+  const passAccuracy = fbref.passAccuracy ?? 0;
+  if (passAccuracy > 0) return passAccuracy;
+  if ((fbref.shots ?? 0) > 0) {
+    const shotPct = ((fbref.shotsOnTarget ?? 0) / (fbref.shots ?? 1)) * 100;
+    return Number(Math.min(92, Math.max(68, 70 + shotPct * 0.22)).toFixed(1));
+  }
+  return 0;
+}
+
+/** Merge Transfermarkt profile fields with FBref advanced stats into Supabase. */
+export async function upsertPlayerHybrid(
+  player: DbPlayer,
+  tmProfile: TransfermarktPlayerProfile | null,
+  fbref: TransformedRecord | null
+): Promise<void> {
+  if (!canUseDatabase()) return;
+
+  const prisma = getPrisma();
+  const tmId = tmProfile ? Number(tmProfile.id) : player.transfermarktId;
+  const photoUrl = tmProfile
+    ? resolvePlayerPhotoUrl({
+        externalPhoto: tmProfile.imageUrl,
+        apiSportsId: player.apiSportsId,
+        photoUrl: tmProfile.imageUrl ?? transfermarktPlayerPhotoUrl(tmId ?? 0),
+      })
+    : player.photoUrl;
+
+  await prisma.player.upsert({
+    where: { id: player.id },
+    create: {
+      id: player.id,
+      fullName: player.fullName,
+      knownAs: player.knownAs,
+      dateOfBirth: player.dateOfBirth,
+      nationality: tmProfile?.citizenship?.[0] ?? player.nationality,
+      position: tmProfile?.position?.main
+        ? mapPosition(tmProfile.position.main)
+        : player.position,
+      height:
+        tmProfile?.height && tmProfile.height > 0
+          ? Math.round(tmProfile.height)
+          : player.height,
+      weight: player.weight,
+      marketValue: tmProfile?.marketValue ?? player.marketValue,
+      photoUrl,
+      transfermarktId: tmId ?? undefined,
+      teamId: player.teamId ?? undefined,
+      strengths: player.strengths,
+      weaknesses: player.weaknesses,
+      dataSyncedAt: new Date(),
+      dataSyncedSeason: CURRENT_SEASON,
+    },
+    update: {
+      transfermarktId: tmId ?? undefined,
+      photoUrl,
+      marketValue: tmProfile?.marketValue ?? undefined,
+      height:
+        tmProfile?.height && tmProfile.height > 0
+          ? Math.round(tmProfile.height)
+          : undefined,
+      nationality: tmProfile?.citizenship?.[0] ?? undefined,
+      position: tmProfile?.position?.main
+        ? mapPosition(tmProfile.position.main)
+        : undefined,
+      dataSyncedAt: new Date(),
+      dataSyncedSeason: CURRENT_SEASON,
+    },
+  });
+
+  if (!fbref || !player.teamId) return;
+
+  const { statistic } = fbref;
+  const minutes = statistic.minutesPlayed ?? 0;
+  const baseRating = statistic.rating ?? 0;
+  const rating = baseRating > 0 ? baseRating : estimateRatingFromFbref(statistic, minutes);
+  const passAccuracy = estimatePassAccuracyFromFbref(statistic);
+  const externalKey =
+    fbref.externalKey ??
+    buildFbrefExternalKey(player.fullName, player.team?.name ?? fbref.source.squad, CURRENT_SEASON);
+
+  const statPayload = {
+    appearances: statistic.appearances ?? 0,
+    minutesPlayed: minutes,
+    goals: statistic.goals ?? 0,
+    assists: statistic.assists ?? 0,
+    xG: statistic.xG ?? 0,
+    xA: statistic.xA ?? 0,
+    shots: statistic.shots ?? 0,
+    shotsOnTarget: statistic.shotsOnTarget ?? 0,
+    passes: statistic.passes ?? 0,
+    passAccuracy,
+    keyPasses: statistic.keyPasses ?? 0,
+    dribblesCompleted: statistic.dribblesCompleted ?? 0,
+    tacklesWon: statistic.tacklesWon ?? 0,
+    interceptions: statistic.interceptions ?? 0,
+    duelsWonPct: statistic.duelsWonPct ?? 0,
+    yellowCards: statistic.yellowCards ?? 0,
+    redCards: statistic.redCards ?? 0,
+    rating,
+  };
+
+  await prisma.playerStatistic.upsert({
+    where: {
+      playerId_teamId_season: {
+        playerId: player.id,
+        teamId: player.teamId,
+        season: CURRENT_SEASON,
+      },
+    },
+    create: {
+      externalKey,
+      playerId: player.id,
+      teamId: player.teamId,
+      season: CURRENT_SEASON,
+      ...statPayload,
+    },
+    update: statPayload,
+  });
 }
 
 /** Upsert player media/market fields from Transfermarkt into Supabase. */
@@ -137,7 +285,7 @@ async function syncSquadPlayers(
   }
 }
 
-/** Ensure player has fresh Transfermarkt data; falls back to existing DB row on API failure. */
+/** Ensure player has fresh Transfermarkt + FBref data; falls back to DB cache on API failure. */
 export async function ensurePlayerPersisted(player: DbPlayer): Promise<void> {
   if (!canUseDatabase()) return;
 
@@ -153,6 +301,7 @@ export async function ensurePlayerPersisted(player: DbPlayer): Promise<void> {
       dataSyncedSeason: player.dataSyncedSeason,
       competitionName: player.team?.competition?.name,
       currentSeasonLabel,
+      hasMeaningfulStats: hasMeaningfulSeasonStats(player),
     })
   ) {
     return;
@@ -167,14 +316,22 @@ export async function ensurePlayerPersisted(player: DbPlayer): Promise<void> {
           player.team?.name
         )) ?? null;
     }
-    if (!tmId) return;
 
-    const profile = await fetchPlayerProfile(tmId);
-    if (!profile) return;
+    const [profile, fbref] = await Promise.all([
+      tmId ? fetchPlayerProfile(tmId) : Promise.resolve(null),
+      findFbrefPlayerRecord(
+        player.fullName,
+        player.knownAs,
+        player.team?.name,
+        player.team?.competition?.name
+      ),
+    ]);
 
-    await upsertPlayerFromTransfermarkt(player.id, profile);
+    if (!profile && !fbref) return;
+
+    await upsertPlayerHybrid(player, profile, fbref);
   } catch (error) {
-    console.warn("[club-repo] Transfermarkt player sync failed — using DB cache:", player.id, error);
+    console.warn("[club-repo] Hybrid player sync failed — using DB cache:", player.id, error);
   }
 }
 
@@ -189,7 +346,16 @@ export async function ensureClubPersisted(team: DbTeam): Promise<void> {
       OR: [{ homeTeamId: team.id }, { awayTeamId: team.id }],
     },
     orderBy: { matchDate: "desc" },
-    select: { seasonLabel: true, updatedAt: true },
+    select: { seasonLabel: true, updatedAt: true, status: true, matchDate: true, homeScore: true, awayScore: true },
+  });
+
+  const staleScheduled = await prisma.match.findFirst({
+    where: {
+      OR: [{ homeTeamId: team.id }, { awayTeamId: team.id }],
+      status: { not: "finished" },
+      matchDate: { lt: new Date(Date.now() - 2 * 60 * 60 * 1000) },
+    },
+    select: { id: true },
   });
 
   const shouldSyncTeam = needsTeamSync({
@@ -204,7 +370,8 @@ export async function ensureClubPersisted(team: DbTeam): Promise<void> {
   const shouldSyncMatches = needsMatchSync(
     latestMatch?.seasonLabel,
     team.competition?.name,
-    latestMatch?.updatedAt
+    latestMatch?.updatedAt,
+    Boolean(staleScheduled)
   );
 
   try {
@@ -280,6 +447,7 @@ export async function upsertTeamSeasonStats(
 
 export const clubRepository = {
   upsertPlayerFromTransfermarkt,
+  upsertPlayerHybrid,
   upsertClubFromTransfermarkt,
   upsertTeamSeasonStats,
   ensurePlayerPersisted,

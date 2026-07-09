@@ -63,7 +63,7 @@ export const playerMapping: Record<StatisticField, PlayerMappingEntry> = {
   shotsOnTarget: { csv: "SoT", kind: "int" },
   passes: { default: 0 },
   passAccuracy: { default: 0 },
-  keyPasses: { default: 0 },
+  keyPasses: { csv: "Crs", kind: "float" },
   dribblesCompleted: { default: 0 },
   tacklesWon: { csv: "TklW", kind: "float" },
   interceptions: { csv: "Int", kind: "float" },

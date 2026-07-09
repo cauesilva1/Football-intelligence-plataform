@@ -8,6 +8,7 @@ import {
 } from "@/features/scouting/lib/team-league-filters";
 import { attachTeamLiveStats } from "@/lib/team-live-stats";
 import { resolveClubCrestUrlSync } from "@/lib/crests/club-crests";
+import { ensureBrasileiraoCompetition } from "@/lib/sync/brasileirao-bootstrap";
 import type { AggregatedTeamStats } from "@/lib/statsbomb/aggregate-team-stats";
 import type { Competition, Player, Team, TeamStatistic } from "@/types";
 
@@ -35,6 +36,11 @@ export const queryCompetitions = cache(async () => {
 
 export const queryTeamLeagueTabs = cache(async () => {
   await ensureRuntimeDataSource();
+  try {
+    await ensureBrasileiraoCompetition();
+  } catch (error) {
+    console.warn("[teams] Brasileirão bootstrap skipped:", error);
+  }
   const competitions = await withSupabaseErrorLog("queryTeamLeagueTabs", () =>
     getTeamRepository().getCompetitions()
   );

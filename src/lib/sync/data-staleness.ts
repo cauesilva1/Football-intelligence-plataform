@@ -45,9 +45,11 @@ export function needsPlayerSync(player: {
   dataSyncedSeason?: string | null;
   competitionName?: string | null;
   currentSeasonLabel?: string | null;
+  hasMeaningfulStats?: boolean;
 }): boolean {
   const seasonLabel = player.dataSyncedSeason ?? player.currentSeasonLabel;
   if (!isSeasonCurrentForCompetition(seasonLabel, player.competitionName)) return true;
+  if (player.hasMeaningfulStats === false) return true;
   if (!player.photoUrl?.trim() || player.marketValue <= 0) return true;
   return isStale(player.dataSyncedAt);
 }
@@ -69,10 +71,24 @@ export function needsTeamSync(team: {
 export function needsMatchSync(
   latestSeasonLabel: string | null | undefined,
   competitionName?: string | null,
-  syncedAt?: Date | null
+  syncedAt?: Date | null,
+  hasStaleScheduled = false
 ): boolean {
   if (!isSeasonCurrentForCompetition(latestSeasonLabel, competitionName)) return true;
+  if (hasStaleScheduled) return true;
   return isStale(syncedAt, MATCH_SYNC_TTL_MS);
+}
+
+export function matchNeedsScoreRefresh(match: {
+  status: string;
+  matchDate: Date;
+  homeScore: number;
+  awayScore: number;
+}): boolean {
+  const kickoffPassed = match.matchDate.getTime() < Date.now() - 2 * 60 * 60 * 1000;
+  const notFinished = match.status !== "finished";
+  const frozenScoreline = match.homeScore === 0 && match.awayScore === 0;
+  return kickoffPassed && (notFinished || frozenScoreline);
 }
 
 export function normalizeNameForMatch(name: string): string {
