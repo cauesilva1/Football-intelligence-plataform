@@ -9,11 +9,14 @@ import {
   queryTeamLeagueTabs,
   queryTeams,
 } from "@/features/scouting/queries/teams";
+import { getServerSport } from "@/lib/sport-server";
+import { sportLabel } from "@/lib/sport";
+import { APP_NAME } from "@/lib/config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isDbSource } from "@/lib/data-source";
 import { CURRENT_SEASON } from "@/lib/seasons";
 
-export const metadata = { title: "Clubs · Football Intelligence Platform" };
+export const metadata = { title: `Clubs · ${APP_NAME}` };
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -52,22 +55,25 @@ export default async function TeamsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params = await searchParams;
+  const [params, sport] = await Promise.all([searchParams, getServerSport()]);
+  const isBasketball = sport === "BASKETBALL";
 
   const leagueParam = typeof params.league === "string" ? params.league : undefined;
   const competitionId = await queryCompetitionIdForLeague(leagueParam);
 
   return (
-    <DashboardShell subtitle="Clubs">
+    <DashboardShell subtitle={isBasketball ? "Franquias" : "Clubs"}>
       <div className="space-y-6">
         <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-8">
           <h1 className="mt-2 font-display text-xl font-bold text-foreground md:text-3xl">
-            Club Hub · European Leagues
+            {isBasketball ? "Franquias · NBA & NCAA" : "Club Hub · European Leagues"}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Filter by competition to explore clubs from the top five leagues and Brasileirão — live
-            standings via{" "}
-            {isDbSource() ? `Supabase + ESPN (${CURRENT_SEASON})` : "StatsBomb Open Data (demo mode)"}.
+            {isBasketball
+              ? `Explore franquias profissionais e programas universitários do ecossistema ${sportLabel(sport)}.`
+              : `Filter by competition to explore clubs from the top five leagues and Brasileirão — live standings via ${
+                  isDbSource() ? `Supabase + ESPN (${CURRENT_SEASON})` : "StatsBomb Open Data (demo mode)"
+                }.`}
           </p>
         </div>
 
@@ -75,10 +81,10 @@ export default async function TeamsPage({
           <TeamsToolbar leagueParam={leagueParam} />
         </Suspense>
 
-        {leagueParam === "brasileirao" ? <BrasileiraoSeasonNotice /> : null}
+        {!isBasketball && leagueParam === "brasileirao" ? <BrasileiraoSeasonNotice /> : null}
 
         <Suspense key={competitionId ?? "all"} fallback={<TeamsGridSkeleton />}>
-          <TeamsGrid competitionId={competitionId} />
+          <TeamsGrid competitionId={competitionId} sport={sport} />
         </Suspense>
       </div>
     </DashboardShell>

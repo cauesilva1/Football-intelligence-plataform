@@ -13,7 +13,15 @@ import {
 import { chartTheme, chartTooltipStyle } from "@/lib/chart-theme";
 import type { SeasonTimelinePoint } from "@/features/scouting/lib/season-history";
 
-export function PlayerSeasonChart({ data }: { data: SeasonTimelinePoint[] }) {
+export function PlayerSeasonChart({
+  data,
+  sport = "SOCCER",
+}: {
+  data: SeasonTimelinePoint[];
+  sport?: "SOCCER" | "BASKETBALL";
+}) {
+  const isBasketball = sport === "BASKETBALL";
+
   return (
     <ResponsiveContainer width="100%" height={260}>
       <LineChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
@@ -51,21 +59,23 @@ export function PlayerSeasonChart({ data }: { data: SeasonTimelinePoint[] }) {
           yAxisId="per90"
           type="monotone"
           dataKey="goalsPer90"
-          name="Gols/90"
+          name={isBasketball ? "Pts/Game" : "Gols/90"}
           stroke={chartTheme.series.primary}
           strokeWidth={2}
           dot={{ r: 3, fill: chartTheme.series.primary }}
         />
-        <Line
-          yAxisId="per90"
-          type="monotone"
-          dataKey="xGPer90"
-          name="xG/90"
-          stroke={chartTheme.series.negative}
-          strokeWidth={2}
-          strokeDasharray="4 4"
-          dot={{ r: 3, fill: chartTheme.series.negative }}
-        />
+        {!isBasketball ? (
+          <Line
+            yAxisId="per90"
+            type="monotone"
+            dataKey="xGPer90"
+            name="xG/90"
+            stroke={chartTheme.series.negative}
+            strokeWidth={2}
+            strokeDasharray="4 4"
+            dot={{ r: 3, fill: chartTheme.series.negative }}
+          />
+        ) : null}
       </LineChart>
     </ResponsiveContainer>
   );

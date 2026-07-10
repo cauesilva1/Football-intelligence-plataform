@@ -1,4 +1,5 @@
 import type { PlayerFilters } from "@/types";
+import type { Sport } from "@/lib/sport";
 import { getFilterDefaults, type ScoutingRoute } from "./filter-defaults";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -21,6 +22,8 @@ const SORT_KEYS: PlayerFilters["sortBy"][] = [
   "assistsPer90",
   "goalsPer90",
   "xGPer90",
+  "points",
+  "rebounds",
   "age",
   "marketValue",
   "name",
@@ -28,15 +31,21 @@ const SORT_KEYS: PlayerFilters["sortBy"][] = [
   "club",
 ];
 
+const ARCHETYPE_KEYS: NonNullable<PlayerFilters["archetype"]>[] = ["three-and-d", "rim-protector"];
+
 export function parsePlayerFilters(
   searchParams: SearchParams,
-  route: ScoutingRoute = "players"
+  route: ScoutingRoute = "players",
+  defaultSport: Sport = "SOCCER"
 ): PlayerFilters {
   const defaults = getFilterDefaults(route);
   const sortByParam = param(searchParams.sortBy) as PlayerFilters["sortBy"];
   const sortDir = param(searchParams.sortDir) as PlayerFilters["sortDir"];
+  const sportParam = param(searchParams.sport);
+  const archetypeParam = param(searchParams.archetype) as PlayerFilters["archetype"];
 
   return {
+    sport: sportParam === "BASKETBALL" || sportParam === "SOCCER" ? sportParam : defaultSport,
     search: param(searchParams.search) ?? "",
     position: param(searchParams.position),
     league: param(searchParams.league),
@@ -47,6 +56,13 @@ export function parsePlayerFilters(
     minMinutes: num(param(searchParams.minMinutes)),
     minGoalsPer90: num(param(searchParams.minGoalsPer90)),
     minXGPer90: num(param(searchParams.minXGPer90)),
+    minPoints: num(param(searchParams.minPoints)),
+    minRebounds: num(param(searchParams.minRebounds)),
+    minAssists: num(param(searchParams.minAssists)),
+    minThreePointsPercent: num(param(searchParams.minThreePointsPercent)),
+    minSteals: num(param(searchParams.minSteals)),
+    minBlocks: num(param(searchParams.minBlocks)),
+    archetype: archetypeParam && ARCHETYPE_KEYS.includes(archetypeParam) ? archetypeParam : undefined,
     sortBy: sortByParam && SORT_KEYS.includes(sortByParam) ? sortByParam : defaults.sortBy,
     sortDir: sortDir === "asc" || sortDir === "desc" ? sortDir : defaults.sortDir,
     page: num(param(searchParams.page)) ?? 1,
@@ -75,6 +91,15 @@ export function filtersToSearchParams(
   if (typeof filters.minMinutes === "number") params.set("minMinutes", String(filters.minMinutes));
   if (typeof filters.minGoalsPer90 === "number") params.set("minGoalsPer90", String(filters.minGoalsPer90));
   if (typeof filters.minXGPer90 === "number") params.set("minXGPer90", String(filters.minXGPer90));
+  if (typeof filters.minPoints === "number") params.set("minPoints", String(filters.minPoints));
+  if (typeof filters.minRebounds === "number") params.set("minRebounds", String(filters.minRebounds));
+  if (typeof filters.minAssists === "number") params.set("minAssists", String(filters.minAssists));
+  if (typeof filters.minThreePointsPercent === "number") {
+    params.set("minThreePointsPercent", String(filters.minThreePointsPercent));
+  }
+  if (typeof filters.minSteals === "number") params.set("minSteals", String(filters.minSteals));
+  if (typeof filters.minBlocks === "number") params.set("minBlocks", String(filters.minBlocks));
+  if (filters.archetype) params.set("archetype", filters.archetype);
   if (typeof filters.maxMarketValue === "number") params.set("maxMarketValue", String(filters.maxMarketValue));
   if (filters.sortBy && filters.sortBy !== (defaults.sortBy ?? "rating")) {
     params.set("sortBy", filters.sortBy);
@@ -101,6 +126,13 @@ export function hasActiveFilters(filters: PlayerFilters): boolean {
       typeof filters.minRating === "number" ||
       typeof filters.minMinutes === "number" ||
       typeof filters.minGoalsPer90 === "number" ||
-      typeof filters.minXGPer90 === "number"
+      typeof filters.minXGPer90 === "number" ||
+      typeof filters.minPoints === "number" ||
+      typeof filters.minRebounds === "number" ||
+      typeof filters.minAssists === "number" ||
+      typeof filters.minThreePointsPercent === "number" ||
+      typeof filters.minSteals === "number" ||
+      typeof filters.minBlocks === "number" ||
+      filters.archetype
   );
 }

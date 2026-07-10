@@ -1,12 +1,14 @@
 import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { parsePlayerFilters } from "@/features/scouting/lib/parse-filters";
+import { getServerSport } from "@/lib/sport-server";
+import { APP_NAME } from "@/lib/config";
 import { ScoutingFiltersPanelLoader } from "@/features/scouting/components/scouting-filters-panel-loader";
 import { ScoutingDatabaseView } from "@/features/scouting/components/scouting-database-view";
 import { ScoutingTableSkeleton } from "@/features/scouting/components/scouting-table-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const metadata = { title: "Scouting · Football Intelligence Platform" };
+export const metadata = { title: `Scouting · ${APP_NAME}` };
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -22,7 +24,8 @@ export default async function ScoutingPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const filters = parsePlayerFilters(params, "scouting");
+  const sport = await getServerSport();
+  const filters = parsePlayerFilters(params, "scouting", sport);
 
   return (
     <DashboardShell subtitle="Scouting">

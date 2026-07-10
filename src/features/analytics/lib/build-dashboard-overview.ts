@@ -1,8 +1,10 @@
 import { SEASONS } from "@/lib/data/generators";
 import { computeXGPer90 } from "@/features/scouting/lib/filter-players";
+import { pickBasketballDisplayStats, statPoints } from "@/lib/metrics/basketball-display";
+import { BASKETBALL_POSITIONS, type Sport } from "@/lib/sport";
 import type { Competition, DashboardInsight, DashboardOverview, Player, Team } from "@/types";
 
-const POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"];
+const SOCCER_POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"];
 
 const U23_MAX_AGE = 23;
 const PROSPECT_MIN_RATING = 7;
@@ -10,8 +12,16 @@ const OPPORTUNITY_MAX_AGE = 25;
 const OPPORTUNITY_MIN_RATING = 7.2;
 const OPPORTUNITY_MAX_VALUE = 8_000_000;
 
+function playerScoringRate(player: Player, sport: Sport): number {
+  if (sport === "BASKETBALL") {
+    return statPoints(pickBasketballDisplayStats(player));
+  }
+  return player.currentSeasonStats.per90.goals;
+}
+
 function buildInsights(
   players: Player[],
+  sport: Sport,
   overview: Pick<
     DashboardOverview,
     "topProspectsCount" | "marketOpportunitiesCount" | "avgRating" | "ratingChange" | "topScorers"
@@ -62,29 +72,35 @@ function buildInsights(
 
   const topScorer = overview.topScorers[0];
   if (topScorer) {
+    const scoringLabel =
+      sport === "BASKETBALL"
+        ? `${playerScoringRate(topScorer, sport).toFixed(1)} pts/jogo`
+        : `${topScorer.currentSeasonStats.per90.goals.toFixed(2)} goals/90`;
     insights.push({
       id: "top-scorer",
       type: "alert",
-      title: `Top Scorer: ${topScorer.knownAs}`,
-      description: `${topScorer.currentSeasonStats.per90.goals.toFixed(2)} goals/90 · ${topScorer.teamShortName ?? "—"}`,
+      title: sport === "BASKETBALL" ? `Top Scorer: ${topScorer.knownAs}` : `Top Scorer: ${topScorer.knownAs}`,
+      description: `${scoringLabel} · ${topScorer.teamShortName ?? "—"}`,
       href: `/players/${topScorer.id}`,
     });
   }
 
-  const highXgLowGoals = players.filter((p) => {
-    const s = p.currentSeasonStats;
-    const xg90 = computeXGPer90(s.minutesPlayed, s.xG);
-    return xg90 >= 0.35 && s.per90.goals < xg90 * 0.65 && s.minutesPlayed >= 600;
-  });
-
-  if (highXgLowGoals.length > 0) {
-    insights.push({
-      id: "underperform",
-      type: "opportunity",
-      title: `${highXgLowGoals.length} finishers underperforming xG`,
-      description: "Players creating chances above average conversion — positive regression potential.",
-      href: "/scouting?minXGPer90=0.35&minMinutes=600",
+  if (sport === "SOCCER") {
+    const highXgLowGoals = players.filter((p) => {
+      const s = p.currentSeasonStats;
+      const xg90 = computeXGPer90(s.minutesPlayed, s.xG);
+      return xg90 >= 0.35 && s.per90.goals < xg90 * 0.65 && s.minutesPlayed >= 600;
     });
+
+    if (highXgLowGoals.length > 0) {
+      insights.push({
+        id: "underperform",
+        type: "opportunity",
+        title: `${highXgLowGoals.length} finishers underperforming xG`,
+        description: "Players creating chances above average conversion — positive regression potential.",
+        href: "/scouting?minXGPer90=0.35&minMinutes=600",
+      });
+    }
   }
 
   return insights.slice(0, 5);
@@ -93,12 +109,21 @@ function buildInsights(
 export function buildDashboardOverview(
   players: Player[],
   teams: Team[],
-  competitions: Competition[]
+  competitions: Competition[],
+  sport: Sport = "SOCCER"
 ): DashboardOverview {
   const totalPlayers = players.length;
   const avgAge = Number((players.reduce((s, p) => s + p.age, 0) / Math.max(totalPlayers, 1)).toFixed(1));
-  const totalGoals = players.reduce((s, p) => s + p.currentSeasonStats.goals, 0);
-  const totalAssists = players.reduce((s, p) => s + p.currentSeasonStats.assists, 0);
+  const totalGoals =
+    sport === "BASKETBALL"
+      ? players.reduce((sum, player) => sum + statPoints(pickBasketballDisplayStats(player)), 0)
+      : players.reduce((sum, player) => sum + player.currentSeasonStats.goals, 0);
+  const totalAssists = players.reduce((sum, player) => {
+    if (sport === "BASKETBALL") {
+      return sum + (player.currentSeasonStats.perGame?.assists ?? player.currentSeasonStats.assists ?? 0);
+    }
+    return sum + player.currentSeasonStats.assists;
+  }, 0);
   const avgRating = Number(
     (players.reduce((s, p) => s + p.currentSeasonStats.rating, 0) / Math.max(totalPlayers, 1)).toFixed(2)
   );
@@ -140,16 +165,22 @@ export function buildDashboardOverview(
   ).length;
 
   const topScorers = [...players]
-    .sort((a, b) => b.currentSeasonStats.per90.goals - a.currentSeasonStats.per90.goals)
+    .sort((a, b) => playerScoringRate(b, sport) - playerScoringRate(a, sport))
     .slice(0, 5);
 
   const topRated = bestPerformers;
 
-  const goalsByPosition = POSITIONS.map((position) => ({
+  const positions = sport === "BASKETBALL" ? [...BASKETBALL_POSITIONS] : SOCCER_POSITIONS;
+  const goalsByPosition = positions.map((position) => ({
     position,
     goals: players
-      .filter((p) => p.position === position)
-      .reduce((s, p) => s + p.currentSeasonStats.goals, 0),
+      .filter((player) => player.position === position)
+      .reduce((sum, player) => {
+        if (sport === "BASKETBALL") {
+          return sum + statPoints(pickBasketballDisplayStats(player));
+        }
+        return sum + player.currentSeasonStats.goals;
+      }, 0),
   }));
 
   const ratingTrend = SEASONS.map((season) => {
@@ -191,6 +222,6 @@ export function buildDashboardOverview(
 
   return {
     ...base,
-    insights: buildInsights(players, base),
+    insights: buildInsights(players, sport, base),
   };
 }
