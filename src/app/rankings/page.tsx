@@ -2,7 +2,9 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { RankingsHub } from "@/features/rankings/components/rankings-hub";
 
-export const metadata = { title: "Rankings · Football Intelligence Platform" };
+import { APP_NAME } from "@/lib/config";
+
+export const metadata = { title: `Rankings · ${APP_NAME}` };
 
 export default async function RankingsPage() {
   return (

@@ -12,8 +12,10 @@ import {
   Trophy,
   Bookmark,
   BarChart3,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { APP_NAME } from "@/lib/config";
 
 export const NAV_ITEMS = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -68,11 +70,11 @@ export function SidebarLogo() {
   return (
     <Link href="/dashboard" className="mb-8 flex items-center gap-2 px-2">
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-        <Trophy className="h-4 w-4" />
+        <Sparkles className="h-4 w-4" />
       </div>
       <div className="leading-tight">
-        <p className="font-display text-sm font-bold text-foreground">Football Intel</p>
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Platform</p>
+        <p className="font-display text-sm font-bold text-foreground">{APP_NAME}</p>
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Multi-Sport</p>
       </div>
     </Link>
   );

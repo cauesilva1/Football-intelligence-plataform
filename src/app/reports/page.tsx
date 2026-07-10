@@ -1,8 +1,9 @@
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ReportGenerator } from "@/features/ai-report/components/report-generator";
 import { queryAllPlayersLite } from "@/features/scouting/queries/players";
+import { APP_NAME } from "@/lib/config";
 
-export const metadata = { title: "AI Reports · Football Intelligence Platform" };
+export const metadata = { title: `AI Reports · ${APP_NAME}` };
 
 export default async function ReportsPage({
   searchParams,

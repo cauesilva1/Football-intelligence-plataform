@@ -3,6 +3,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { queryPlayerById } from "@/features/scouting/queries/players";
 import { PlayerProfileView } from "@/features/scouting/components/player-profile-view";
 import { PlayerProfileSkeleton } from "@/features/scouting/components/player-profile-skeleton";
+import { APP_NAME } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -11,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const player = await queryPlayerById(id);
   return {
-    title: player ? `${player.knownAs} · Football Intelligence Platform` : "Player Profile · Football Intelligence Platform",
+    title: player ? `${player.knownAs} · ${APP_NAME}` : `Player Profile · ${APP_NAME}`,
   };
 }
 

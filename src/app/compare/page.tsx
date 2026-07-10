@@ -7,8 +7,9 @@ import { parseCompareParams } from "@/features/comparison/lib/parse-compare-para
 import { CompareSelectorForm } from "@/features/comparison/components/compare-selector-form";
 import { ComparisonResult } from "@/features/comparison/components/comparison-result";
 import { ComparisonResultSkeleton } from "@/features/comparison/components/comparison-result-skeleton";
+import { APP_NAME } from "@/lib/config";
 
-export const metadata = { title: "Compare · Football Intelligence Platform" };
+export const metadata = { title: `Compare · ${APP_NAME}` };
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
