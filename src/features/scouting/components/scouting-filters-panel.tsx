@@ -56,7 +56,7 @@ export function ScoutingFiltersPanel({
   const [isPending, startTransition] = useTransition();
   const { currentSport } = useSport();
   const isBasketball = currentSport === "BASKETBALL";
-  const defaults = getFilterDefaults(route);
+  const defaults = getFilterDefaults(route, currentSport);
 
   const filters = useMemo(
     () => parsePlayerFilters(Object.fromEntries(searchParams.entries()), route, currentSport),
@@ -261,11 +261,16 @@ export function ScoutingFiltersPanel({
       </div>
     ) : null;
 
+  const isScoutingRoute = route === "scouting";
+  const showBasketballScoutingTools = isBasketball && isScoutingRoute;
+
   const advancedFields = isBasketball ? (
-    <>
-      {basketballAdvancedFields}
-      {clearButton(hasActiveBasketballFilters(filters))}
-    </>
+    showBasketballScoutingTools ? (
+      <>
+        {basketballAdvancedFields}
+        {clearButton(hasActiveBasketballFilters(filters))}
+      </>
+    ) : null
   ) : (
     <>
       {soccerAdvancedFields}
@@ -275,7 +280,7 @@ export function ScoutingFiltersPanel({
 
   const positionOptions = isBasketball ? BASKETBALL_POSITIONS : POSITIONS;
 
-  const archetypeBar = isBasketball ? (
+  const archetypeBar = showBasketballScoutingTools ? (
     <div className="mb-3 flex flex-wrap gap-2">
       <Button
         type="button"
@@ -296,13 +301,26 @@ export function ScoutingFiltersPanel({
     </div>
   ) : null;
 
+  const hasBasicBasketballFilters = Boolean(
+    filters.search ||
+      filters.position ||
+      filters.league ||
+      filters.teamId
+  );
+
+  const playersClearButton =
+    isBasketball && !isScoutingRoute && hasBasicBasketballFilters ? (
+      <div className="mt-3 flex justify-end">
+        <Button type="button" variant="outline" size="sm" onClick={clearFilters}>
+          <X className="h-3.5 w-3.5" /> Limpar filtros
+        </Button>
+      </div>
+    ) : null;
+
   return (
     <div>
       {archetypeBar}
-      <FilterBar
-        pending={isPending}
-        footer={route === "players" ? advancedFields : undefined}
-      >
+      <FilterBar pending={isPending} footer={!isBasketball && route === "players" ? advancedFields : undefined}>
         <FilterField label="Search" className="min-w-[220px] flex-[2]">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -349,8 +367,9 @@ export function ScoutingFiltersPanel({
             ))}
           </Select>
         </FilterField>
-        {route === "scouting" && advancedFields}
+        {isScoutingRoute && advancedFields}
       </FilterBar>
+      {playersClearButton}
     </div>
   );
 }

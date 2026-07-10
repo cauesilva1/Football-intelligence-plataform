@@ -63,6 +63,7 @@ export function parsePlayerFilters(
     minSteals: num(param(searchParams.minSteals)),
     minBlocks: num(param(searchParams.minBlocks)),
     archetype: archetypeParam && ARCHETYPE_KEYS.includes(archetypeParam) ? archetypeParam : undefined,
+    route,
     sortBy: sortByParam && SORT_KEYS.includes(sortByParam) ? sortByParam : defaults.sortBy,
     sortDir: sortDir === "asc" || sortDir === "desc" ? sortDir : defaults.sortDir,
     page: num(param(searchParams.page)) ?? 1,

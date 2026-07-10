@@ -178,6 +178,8 @@ export interface PlayerFilters {
   minSteals?: number;
   minBlocks?: number;
   archetype?: "three-and-d" | "rim-protector";
+  /** Origem da listagem — players = elenco; scouting = inteligência de mercado. */
+  route?: "players" | "scouting";
   sortBy?:
     | "rating"
     | "goals"

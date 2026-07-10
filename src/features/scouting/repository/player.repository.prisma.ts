@@ -301,14 +301,15 @@ function buildBasketballSeasonStatsWhere(filters: PlayerFilters): Prisma.PlayerS
 }
 
 function buildBasketballPlayerWhere(filters: PlayerFilters): Prisma.PlayerWhereInput {
-  const effective = applyArchetypeFilters(filters);
+  const isRosterBrowse = filters.route === "players";
+  const effective = isRosterBrowse ? filters : applyArchetypeFilters(filters);
   const where = buildPlayerWhere({ ...effective, sport: "BASKETBALL" });
 
-  if (effective.archetype === "rim-protector") {
-    where.position = { in: ["Pivô", "Ala-Pivô"] };
+  if (!isRosterBrowse && effective.archetype === "rim-protector") {
+    where.position = { in: ["PF", "C", "Ala-Pivô", "Pivô"] };
   }
 
-  if (hasBasketballStatFilters(effective)) {
+  if (!isRosterBrowse && hasBasketballStatFilters(effective)) {
     where.stats = { some: buildBasketballSeasonStatsWhere(effective) };
   }
 
@@ -354,6 +355,7 @@ export const prismaPlayerRepository: PlayerRepository & {
 
     if (sport === "BASKETBALL") {
       const { page = 1, pageSize = 25 } = filters;
+      const isRosterBrowse = filters.route === "players";
       const where = buildBasketballPlayerWhere(filters);
 
       const records = await getPrisma().player.findMany({
@@ -372,9 +374,11 @@ export const prismaPlayerRepository: PlayerRepository & {
         );
       }
 
-      const sorted = filterAndSortPlayers(items, applyArchetypeFilters(filters), {
-        prismaPrefiltered: true,
-      });
+      const sorted = filterAndSortPlayers(
+        items,
+        isRosterBrowse ? filters : applyArchetypeFilters(filters),
+        { prismaPrefiltered: true, rosterBrowse: isRosterBrowse }
+      );
       return paginatePlayers(sorted, page, pageSize);
     }
 

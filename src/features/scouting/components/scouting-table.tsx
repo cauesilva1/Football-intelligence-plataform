@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Eye } from "lucide-react";
 import { PlayerAvatar } from "@/components/players/player-avatar";
 import { GlossaryTooltip, METRIC_GLOSSARY, POSITION_GLOSSARY } from "@/components/common/glossary-tooltip";
+import { getPositionGlossaryDescription } from "@/lib/positions";
 import {
   Table,
   TableHeader,
@@ -28,6 +29,81 @@ function basketballRebounds(player: Player): number {
 
 function basketballAssists(player: Player): number {
   return player.currentSeasonStats.perGame?.assists ?? player.currentSeasonStats.assists ?? 0;
+}
+
+function BasketballRosterTable({
+  players,
+  filters,
+  basePath,
+  route,
+}: {
+  players: Player[];
+  filters: PlayerFilters;
+  basePath: string;
+  route: ScoutingRoute;
+}) {
+  return (
+    <Table density="dense" stickyHeader>
+      <TableHeader>
+        <TableRow>
+          <TableHead sticky>
+            <SortableTableHead label="Player" sortKey="name" filters={filters} basePath={basePath} route={route} />
+          </TableHead>
+          <TableHead sticky>
+            <SortableTableHead label="Age" sortKey="age" filters={filters} basePath={basePath} route={route} />
+          </TableHead>
+          <TableHead sticky>
+            <SortableTableHead label="Franchise" sortKey="club" filters={filters} basePath={basePath} route={route} />
+          </TableHead>
+          <TableHead sticky>
+            <SortableTableHead label="Pos." sortKey="position" filters={filters} basePath={basePath} route={route} />
+          </TableHead>
+          <TableHead sticky className="text-right">
+            Actions
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {players.map((player) => (
+          <TableRow key={player.id}>
+            <TableCell>
+              <div className="flex items-center gap-3">
+                <PlayerAvatar
+                  name={player.knownAs}
+                  fullName={player.fullName}
+                  position={player.position}
+                  competitionName={player.competitionName}
+                  teamName={player.teamName}
+                  photoUrl={player.photoUrl}
+                  apiSportsPlayerId={player.apiSportsId}
+                  size="sm"
+                />
+                <div className="min-w-0">
+                  <Link href={`/players/${player.id}`} className="truncate font-medium text-foreground hover:text-primary">
+                    {player.knownAs}
+                  </Link>
+                  <p className="truncate text-2xs text-muted-foreground">{player.nationality}</p>
+                </div>
+              </div>
+            </TableCell>
+            <TableCell className="tabular-nums">{player.age}</TableCell>
+            <TableCell className="text-muted-foreground">{player.teamName ?? player.teamShortName ?? "—"}</TableCell>
+            <TableCell>
+              <GlossaryTooltip
+                label={<Badge variant="neutral">{player.position}</Badge>}
+                description={getPositionGlossaryDescription(player.position, "BASKETBALL")}
+              />
+            </TableCell>
+            <TableCell className="text-right">
+              <Link href={`/players/${player.id}`} className={buttonVariants({ variant: "ghost", size: "xs" })}>
+                <Eye className="h-3.5 w-3.5" /> Profile
+              </Link>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
 }
 
 function BasketballScoutingTable({
@@ -108,7 +184,10 @@ function BasketballScoutingTable({
               <TableCell className="tabular-nums">{player.age}</TableCell>
               <TableCell className="text-muted-foreground">{player.teamShortName ?? "—"}</TableCell>
               <TableCell>
-                <Badge variant="neutral">{player.position}</Badge>
+                <GlossaryTooltip
+                  label={<Badge variant="neutral">{player.position}</Badge>}
+                  description={getPositionGlossaryDescription(player.position, "BASKETBALL")}
+                />
               </TableCell>
               <TableCell className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
                 {stats.rating.toFixed(1)}
@@ -249,6 +328,9 @@ export function ScoutingTable({
   const isBasketball = filters.sport === "BASKETBALL";
 
   if (isBasketball) {
+    if (route === "players") {
+      return <BasketballRosterTable players={players} filters={filters} basePath={basePath} route={route} />;
+    }
     return <BasketballScoutingTable players={players} filters={filters} basePath={basePath} route={route} />;
   }
 

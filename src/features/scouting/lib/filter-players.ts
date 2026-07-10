@@ -4,6 +4,8 @@ import type { Player, PlayerFilters } from "@/types";
 export type FilterPlayersOptions = {
   /** SQL/Prisma already applied search, position, league, team and age/rating/minutes filters */
   prismaPrefiltered?: boolean;
+  /** Basquete /players — ignora filtros de métricas já aplicados no Prisma */
+  rosterBrowse?: boolean;
 };
 
 export function computeXGPer90(minutesPlayed: number, xG: number): number {
