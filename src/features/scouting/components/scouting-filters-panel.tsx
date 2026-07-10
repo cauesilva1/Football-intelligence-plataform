@@ -40,6 +40,41 @@ function nearestOption(options: readonly number[], value: number | undefined): n
   );
 }
 
+function BasketballMetricSlider({
+  label,
+  options,
+  value,
+  formatValue,
+  onCommit,
+}: {
+  label: string;
+  options: readonly number[];
+  value: number | undefined;
+  formatValue: (value: number) => string;
+  onCommit: (value: number | undefined) => void;
+}) {
+  const committed = nearestOption(options, value);
+  const [draft, setDraft] = useState(committed);
+
+  useEffect(() => {
+    setDraft(committed);
+  }, [committed]);
+
+  return (
+    <FilterField label={label}>
+      <Slider
+        min={options[0]}
+        max={options[options.length - 1]}
+        step={1}
+        value={draft}
+        formatValue={formatValue}
+        onValueChange={setDraft}
+        onValueCommit={(next) => onCommit(next > 0 ? next : undefined)}
+      />
+    </FilterField>
+  );
+}
+
 export function ScoutingFiltersPanel({
   basePath,
   route,
@@ -201,54 +236,34 @@ export function ScoutingFiltersPanel({
 
   const basketballAdvancedFields = (
     <>
-      <FilterField label="PTS (mín.)">
-        <Slider
-          min={MIN_POINTS_OPTIONS[0]}
-          max={MIN_POINTS_OPTIONS[MIN_POINTS_OPTIONS.length - 1]}
-          step={1}
-          value={nearestOption(MIN_POINTS_OPTIONS, filters.minPoints)}
-          formatValue={(value) => (value > 0 ? `${value}+ PPG` : "Sem mínimo")}
-          onValueChange={(value) =>
-            pushFilters({ minPoints: value > 0 ? value : undefined, page: 1 })
-          }
-        />
-      </FilterField>
-      <FilterField label="REB (mín.)">
-        <Slider
-          min={MIN_REBOUNDS_OPTIONS[0]}
-          max={MIN_REBOUNDS_OPTIONS[MIN_REBOUNDS_OPTIONS.length - 1]}
-          step={1}
-          value={nearestOption(MIN_REBOUNDS_OPTIONS, filters.minRebounds)}
-          formatValue={(value) => (value > 0 ? `${value}+ RPG` : "Sem mínimo")}
-          onValueChange={(value) =>
-            pushFilters({ minRebounds: value > 0 ? value : undefined, page: 1 })
-          }
-        />
-      </FilterField>
-      <FilterField label="AST (mín.)">
-        <Slider
-          min={MIN_ASSISTS_OPTIONS[0]}
-          max={MIN_ASSISTS_OPTIONS[MIN_ASSISTS_OPTIONS.length - 1]}
-          step={1}
-          value={nearestOption(MIN_ASSISTS_OPTIONS, filters.minAssists)}
-          formatValue={(value) => (value > 0 ? `${value}+ APG` : "Sem mínimo")}
-          onValueChange={(value) =>
-            pushFilters({ minAssists: value > 0 ? value : undefined, page: 1 })
-          }
-        />
-      </FilterField>
-      <FilterField label="3P% (mín.)">
-        <Slider
-          min={MIN_THREE_PT_PCT_OPTIONS[0]}
-          max={MIN_THREE_PT_PCT_OPTIONS[MIN_THREE_PT_PCT_OPTIONS.length - 1]}
-          step={1}
-          value={nearestOption(MIN_THREE_PT_PCT_OPTIONS, filters.minThreePointsPercent)}
-          formatValue={(value) => (value > 0 ? `${value}%+` : "Sem mínimo")}
-          onValueChange={(value) =>
-            pushFilters({ minThreePointsPercent: value > 0 ? value : undefined, page: 1 })
-          }
-        />
-      </FilterField>
+      <BasketballMetricSlider
+        label="PTS (mín.)"
+        options={MIN_POINTS_OPTIONS}
+        value={filters.minPoints}
+        formatValue={(value) => (value > 0 ? `${value}+ PPG` : "Sem mínimo")}
+        onCommit={(value) => pushFilters({ minPoints: value, page: 1 })}
+      />
+      <BasketballMetricSlider
+        label="REB (mín.)"
+        options={MIN_REBOUNDS_OPTIONS}
+        value={filters.minRebounds}
+        formatValue={(value) => (value > 0 ? `${value}+ RPG` : "Sem mínimo")}
+        onCommit={(value) => pushFilters({ minRebounds: value, page: 1 })}
+      />
+      <BasketballMetricSlider
+        label="AST (mín.)"
+        options={MIN_ASSISTS_OPTIONS}
+        value={filters.minAssists}
+        formatValue={(value) => (value > 0 ? `${value}+ APG` : "Sem mínimo")}
+        onCommit={(value) => pushFilters({ minAssists: value, page: 1 })}
+      />
+      <BasketballMetricSlider
+        label="3P% (mín.)"
+        options={MIN_THREE_PT_PCT_OPTIONS}
+        value={filters.minThreePointsPercent}
+        formatValue={(value) => (value > 0 ? `${value}%+` : "Sem mínimo")}
+        onCommit={(value) => pushFilters({ minThreePointsPercent: value, page: 1 })}
+      />
     </>
   );
 
