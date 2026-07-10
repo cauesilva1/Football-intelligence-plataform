@@ -1,10 +1,10 @@
 import type { PlayerSeasonStats } from "@prisma/client";
 import { toPlayerStatistic, type StatisticInput } from "@/lib/metrics/map-statistic";
-import type { PlayerStatistic } from "@/types";
+import type { PlayerMetricPer90, PlayerStatistic } from "@/types";
 
 const CALENDAR_SEASONS = new Set(["2025", "2026"]);
 
-function estimateSeasonRating(stat: {
+function estimateSoccerSeasonRating(stat: {
   goals: number;
   assists: number;
   minutesPlayed: number;
@@ -16,7 +16,41 @@ function estimateSeasonRating(stat: {
   return Number(Math.min(10, Math.max(5, rating)).toFixed(2));
 }
 
-export function mapSeasonStatsRow(
+function estimateBasketballSeasonRating(stat: {
+  points: number;
+  rebounds: number;
+  assists: number;
+  steals: number;
+  blocks: number;
+}): number {
+  const rating =
+    6 +
+    stat.points * 0.08 +
+    stat.rebounds * 0.04 +
+    stat.assists * 0.05 +
+    stat.steals * 0.15 +
+    stat.blocks * 0.12;
+  return Number(Math.min(10, Math.max(5, rating)).toFixed(2));
+}
+
+/** Basquete: stats no banco são médias por jogo; normaliza para taxa por 48 min (padrão NBA). */
+function computeBasketballPer48(stat: PlayerSeasonStats): PlayerMetricPer90 {
+  const games = stat.matchesPlayed > 0 ? stat.matchesPlayed : 1;
+  const minutes = stat.minutesPlayed > 0 ? stat.minutesPlayed : games * 24;
+  const per48 = (value: number) => Number(((value * games) / minutes * 48).toFixed(2));
+
+  return {
+    goals: per48(stat.points),
+    assists: per48(stat.rebounds),
+    shots: per48(stat.steals),
+    keyPasses: per48(stat.blocks),
+    dribbles: per48(stat.assists),
+    tackles: stat.fieldGoalsPercent,
+    interceptions: stat.threePointsPercent,
+  };
+}
+
+function mapSoccerSeasonStatsRow(
   stat: PlayerSeasonStats,
   team?: { id: string; name: string; shortName: string }
 ): PlayerStatistic {
@@ -44,10 +78,71 @@ export function mapSeasonStatsRow(
     duelsWonPct: 0,
     yellowCards: 0,
     redCards: 0,
-    rating: estimateSeasonRating(stat),
+    rating: estimateSoccerSeasonRating(stat),
   };
 
-  return toPlayerStatistic(input);
+  return { ...toPlayerStatistic(input), sport: "SOCCER" };
+}
+
+function mapBasketballSeasonStatsRow(
+  stat: PlayerSeasonStats,
+  team?: { id: string; name: string; shortName: string }
+): PlayerStatistic {
+  const per90 = computeBasketballPer48(stat);
+
+  return {
+    id: stat.id,
+    playerId: stat.playerId,
+    teamId: team?.id ?? "",
+    teamName: team?.name,
+    teamShortName: team?.shortName,
+    season: String(stat.season),
+    sport: "BASKETBALL",
+    appearances: stat.matchesPlayed,
+    minutesPlayed: stat.minutesPlayed,
+    goals: 0,
+    assists: stat.assists,
+    xG: 0,
+    xA: 0,
+    shots: 0,
+    shotsOnTarget: 0,
+    passes: 0,
+    passAccuracy: 0,
+    keyPasses: 0,
+    dribblesCompleted: 0,
+    tacklesWon: 0,
+    interceptions: 0,
+    duelsWonPct: 0,
+    yellowCards: 0,
+    redCards: 0,
+    rating: estimateBasketballSeasonRating(stat),
+    points: stat.points,
+    rebounds: stat.rebounds,
+    steals: stat.steals,
+    blocks: stat.blocks,
+    fieldGoalsPercent: stat.fieldGoalsPercent,
+    threePointsPercent: stat.threePointsPercent,
+    per90,
+    perGame: {
+      points: stat.points,
+      rebounds: stat.rebounds,
+      steals: stat.steals,
+      blocks: stat.blocks,
+      assists: stat.assists,
+    },
+  };
+}
+
+export function mapSeasonStatsRow(
+  stat: PlayerSeasonStats,
+  sport: string = "SOCCER",
+  team?: { id: string; name: string; shortName: string }
+): PlayerStatistic {
+  if (sport === "BASKETBALL") {
+    return mapBasketballSeasonStatsRow(stat, team);
+  }
+
+  return mapSoccerSeasonStatsRow(stat, team);
 }
 
 export function isCalendarSeasonLabel(season: string): boolean {
