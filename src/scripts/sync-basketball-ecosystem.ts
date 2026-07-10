@@ -407,6 +407,7 @@ async function upsertTeam(
 
   const existing = await prisma.team.findFirst({
     where: {
+      competitionId,
       OR: [{ name: espnTeam.displayName }, { apiSportsId: espnTeamId }],
     },
     select: { id: true },

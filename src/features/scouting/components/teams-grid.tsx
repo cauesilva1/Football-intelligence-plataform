@@ -60,11 +60,19 @@ export async function TeamsGrid({
                   </p>
 
                   {isBasketball ? (
-                    <div className="mt-4 rounded-lg border border-border bg-surface-muted/30 px-3 py-3 text-center">
-                      <p className="font-display text-lg font-bold text-primary">{team.squadSize ?? 0}</p>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                        Jogadores no elenco
-                      </p>
+                    <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <p className="font-display text-sm font-bold text-primary">{team.stats?.wins ?? "—"}</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">Vitórias</p>
+                      </div>
+                      <div>
+                        <p className="font-display text-sm font-bold text-foreground">{team.stats?.losses ?? "—"}</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">Derrotas</p>
+                      </div>
+                      <div>
+                        <p className="font-display text-sm font-bold text-foreground">{team.squadSize ?? 0}</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">Elenco</p>
+                      </div>
                     </div>
                   ) : (
                     <div className="mt-4 grid grid-cols-4 gap-2 text-center">

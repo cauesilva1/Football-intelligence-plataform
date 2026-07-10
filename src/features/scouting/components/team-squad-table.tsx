@@ -16,8 +16,9 @@ import {
 } from "@/components/ui/table";
 import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
 import { getPositionGlossaryDescription } from "@/lib/positions";
-import { ratingColor } from "@/lib/utils";
+import { formatCapHit, ratingColor } from "@/lib/utils";
 import type { Player } from "@/types";
+import type { Sport } from "@/lib/sport";
 
 const PAGE_SIZE = 12;
 
@@ -25,12 +26,16 @@ export function TeamSquadTable({
   squad,
   competitionName,
   teamName,
+  sport = "SOCCER",
 }: {
   squad: Player[];
   competitionName?: string;
   teamName: string;
+  sport?: Sport;
 }) {
   const [page, setPage] = useState(1);
+  const isBasketball = sport === "BASKETBALL";
+  const isNba = competitionName === "NBA";
 
   const totalPages = Math.max(1, Math.ceil(squad.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -47,14 +52,30 @@ export function TeamSquadTable({
           <TableRow>
             <TableHead>Jogador</TableHead>
             <TableHead>Pos.</TableHead>
-            <TableHead>Rating</TableHead>
-            <TableHead className="text-right">Gols</TableHead>
-            <TableHead className="text-right">Minutos</TableHead>
+            {isBasketball ? (
+              <>
+                <TableHead className="text-right">Idade</TableHead>
+                {isNba ? (
+                  <TableHead className="text-right">Cap Hit</TableHead>
+                ) : null}
+                <TableHead className="text-right">PTS</TableHead>
+                <TableHead className="text-right">REB</TableHead>
+                <TableHead className="text-right">AST</TableHead>
+              </>
+            ) : (
+              <>
+                <TableHead>Rating</TableHead>
+                <TableHead className="text-right">Gols</TableHead>
+                <TableHead className="text-right">Minutos</TableHead>
+              </>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
           {pageRows.map((player) => {
             const stats = player.currentSeasonStats;
+            const perGame = stats.perGame;
+
             return (
               <TableRow key={player.id}>
                 <TableCell>
@@ -75,16 +96,38 @@ export function TeamSquadTable({
                 <TableCell>
                   <GlossaryTooltip
                     label={<Badge variant="neutral">{player.position}</Badge>}
-                    description={getPositionGlossaryDescription(player.position, player.sport ?? "SOCCER")}
+                    description={getPositionGlossaryDescription(player.position, sport)}
                   />
                 </TableCell>
-                <TableCell className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
-                  {stats.rating.toFixed(1)}
-                </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">{stats.goals}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
-                  {stats.minutesPlayed.toLocaleString("pt-BR")}
-                </TableCell>
+                {isBasketball ? (
+                  <>
+                    <TableCell className="text-right font-mono tabular-nums">{player.age}</TableCell>
+                    {isNba ? (
+                      <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+                        {formatCapHit(player.capHit ?? 0)}
+                      </TableCell>
+                    ) : null}
+                    <TableCell className="text-right font-mono tabular-nums">
+                      {perGame?.points?.toFixed(1) ?? stats.points?.toFixed(1) ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">
+                      {perGame?.rebounds?.toFixed(1) ?? stats.rebounds?.toFixed(1) ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+                      {perGame?.assists?.toFixed(1) ?? stats.assists?.toFixed(1) ?? "—"}
+                    </TableCell>
+                  </>
+                ) : (
+                  <>
+                    <TableCell className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
+                      {stats.rating.toFixed(1)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">{stats.goals}</TableCell>
+                    <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+                      {stats.minutesPlayed.toLocaleString("pt-BR")}
+                    </TableCell>
+                  </>
+                )}
               </TableRow>
             );
           })}

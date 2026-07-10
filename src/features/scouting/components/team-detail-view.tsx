@@ -9,8 +9,44 @@ import { TeamBackLink } from "@/features/scouting/components/team-back-link";
 import { queryTeamById } from "@/features/scouting/queries/teams";
 import { isDbSource } from "@/lib/data-source";
 import { isBrazilianLeague } from "@/lib/seasons";
+import {
+  isBasketballTeamCompetition,
+  resolveBasketballLeagueFromCompetition,
+} from "@/lib/basketball/team-league";
 import { getTeamTheme } from "@/lib/team-theme";
 import { notFound } from "next/navigation";
+
+function buildStatCards(
+  isBasketball: boolean,
+  teamStats: { wins: number; draws: number; losses: number } | undefined,
+  sb: { wins: number; draws: number; losses: number; goalBalance: number } | undefined,
+  theme: ReturnType<typeof getTeamTheme>,
+  squadSize: number
+) {
+  if (isBasketball) {
+    const wins = teamStats?.wins ?? 0;
+    const losses = teamStats?.losses ?? 0;
+    const games = wins + losses;
+    const winPct = games > 0 ? `${((wins / games) * 100).toFixed(1)}%` : "—";
+
+    return [
+      { label: "Vitórias", value: games > 0 ? wins : "—", accent: theme.primaryColor },
+      { label: "Derrotas", value: games > 0 ? losses : "—", accent: "#f87171" },
+      { label: "Win %", value: winPct, accent: theme.secondaryColor },
+      { label: "Elenco", value: squadSize, accent: theme.primaryColor },
+    ];
+  }
+
+  const goalBalance = sb?.goalBalance ?? 0;
+  const balanceLabel = goalBalance > 0 ? `+${goalBalance}` : String(goalBalance);
+
+  return [
+    { label: "Wins", value: sb?.wins ?? "—", accent: theme.primaryColor },
+    { label: "Draws", value: sb?.draws ?? "—", accent: "#94a3b8" },
+    { label: "Losses", value: sb?.losses ?? "—", accent: "#f87171" },
+    { label: "Goal difference", value: sb ? balanceLabel : "—", accent: goalBalance >= 0 ? theme.secondaryColor : "#f87171" },
+  ];
+}
 
 export async function TeamDetailView({ teamId }: { teamId: string }) {
   const team = await queryTeamById(teamId);
@@ -19,15 +55,10 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
   const sb = team.statsBomb;
   const theme = getTeamTheme(team.competition?.name, team.name);
   const isBrasileirao = isBrazilianLeague(team.competition?.name);
-  const goalBalance = sb?.goalBalance ?? 0;
-  const balanceLabel = goalBalance > 0 ? `+${goalBalance}` : String(goalBalance);
-
-  const statCards = [
-    { label: "Wins", value: sb?.wins ?? "—", accent: theme.primaryColor },
-    { label: "Draws", value: sb?.draws ?? "—", accent: "#94a3b8" },
-    { label: "Losses", value: sb?.losses ?? "—", accent: "#f87171" },
-    { label: "Goal difference", value: sb ? balanceLabel : "—", accent: goalBalance >= 0 ? theme.secondaryColor : "#f87171" },
-  ];
+  const isBasketball = isBasketballTeamCompetition(team.competition?.name);
+  const basketballLeague = resolveBasketballLeagueFromCompetition(team.competition?.name);
+  const squad = team.squad ?? [];
+  const statCards = buildStatCards(isBasketball, team.stats, sb, theme, squad.length);
 
   return (
     <div className="space-y-6">
@@ -59,7 +90,7 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
                 <span className="inline-flex items-center gap-1.5 font-medium text-white/90">
                   <Trophy className="h-4 w-4" style={{ color: theme.secondaryColor }} />
                   {team.competition.name}
-                  {sb ? ` · ${sb.seasonLabel}` : ""}
+                  {!isBasketball && sb ? ` · ${sb.seasonLabel}` : ""}
                 </span>
               ) : null}
               {team.stadium ? (
@@ -69,7 +100,11 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
                 </span>
               ) : null}
             </div>
-            {sb ? (
+            {isBasketball ? (
+              <p className="text-xs text-white/50">
+                {squad.length} jogadores no elenco · temporada 2026/27
+              </p>
+            ) : sb ? (
               <p className="text-xs text-white/50">
                 {sb.matchesPlayed} matches · {sb.goalsFor} goals scored · {sb.goalsAgainst} conceded ·{" "}
                 {sb.statsBombCompetitionName}
@@ -79,7 +114,7 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
         {statCards.map((card) => (
           <Card key={card.label} className="border-border/80 bg-card/80">
             <CardContent className="p-5">
@@ -99,18 +134,31 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
 
       <Card>
         <CardHeader className="border-b border-border/60 pb-4">
-          <CardTitle className="font-display text-lg">Squad · {(team.squad ?? []).length} players</CardTitle>
+          <CardTitle className="font-display text-lg">
+            {isBasketball ? "Elenco" : "Squad"} · {squad.length} {isBasketball ? "jogadores" : "players"}
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
-          <TeamSquadTable
-            squad={team.squad ?? []}
-            competitionName={team.competition?.name}
-            teamName={team.name}
-          />
+          {squad.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
+              {basketballLeague === "NCAA"
+                ? "Elenco universitário ainda não sincronizado para este programa."
+                : isBasketball
+                  ? "Nenhum jogador vinculado a esta franquia no momento."
+                  : "No players in this squad."}
+            </p>
+          ) : (
+            <TeamSquadTable
+              squad={squad}
+              competitionName={team.competition?.name}
+              teamName={team.name}
+              sport={isBasketball ? "BASKETBALL" : "SOCCER"}
+            />
+          )}
         </CardContent>
       </Card>
 
-      {!isDbSource() ? <StatsBombAttribution /> : null}
+      {!isDbSource() && !isBasketball ? <StatsBombAttribution /> : null}
     </div>
   );
 }

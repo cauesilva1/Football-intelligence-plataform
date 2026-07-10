@@ -2,6 +2,10 @@ import { getPrisma } from "@/lib/prisma";
 import { CURRENT_SEASON } from "@/lib/seasons";
 import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
 import { isDbSource } from "@/lib/data-source";
+import {
+  isBasketballTeamCompetition,
+  resolveBasketballLeagueFromCompetition,
+} from "@/lib/basketball/team-league";
 import type { TeamRepository } from "./types";
 import { playerInclude, prismaPlayerRepository } from "./player.repository.prisma";
 
@@ -14,9 +18,49 @@ export const prismaTeamRepository: TeamRepository = {
         statistics: { where: { season: CURRENT_SEASON } },
         _count: { select: { players: true } },
       },
+      orderBy: { name: "asc" },
     });
 
-    return teams.map((team) => ({
+    const nbaTeamIds: string[] = [];
+    const ncaaTeamIds: string[] = [];
+
+    for (const team of teams) {
+      const league = resolveBasketballLeagueFromCompetition(team.competition?.name);
+      if (league === "NBA") nbaTeamIds.push(team.id);
+      else if (league === "NCAA") ncaaTeamIds.push(team.id);
+    }
+
+    const prisma = getPrisma();
+    const [nbaCounts, ncaaCounts] = await Promise.all([
+      nbaTeamIds.length
+        ? prisma.player.groupBy({
+            by: ["teamId"],
+            where: { teamId: { in: nbaTeamIds }, sport: "BASKETBALL", league: "NBA" },
+            _count: { _all: true },
+          })
+        : Promise.resolve([]),
+      ncaaTeamIds.length
+        ? prisma.player.groupBy({
+            by: ["teamId"],
+            where: { teamId: { in: ncaaTeamIds }, sport: "BASKETBALL", league: "NCAA" },
+            _count: { _all: true },
+          })
+        : Promise.resolve([]),
+    ]);
+
+    const squadSizeByTeamId = new Map<string, number>();
+    for (const row of [...nbaCounts, ...ncaaCounts]) {
+      if (row.teamId) squadSizeByTeamId.set(row.teamId, row._count._all);
+    }
+
+    return teams.map((team) => {
+      const expectedLeague = resolveBasketballLeagueFromCompetition(team.competition?.name);
+      const squadSize =
+        expectedLeague != null
+          ? (squadSizeByTeamId.get(team.id) ?? 0)
+          : team._count.players;
+
+      return {
       id: team.id,
       name: team.name,
       shortName: team.shortName,
@@ -55,8 +99,9 @@ export const prismaTeamRepository: TeamRepository = {
             defenseRating: team.statistics[0].defenseRating,
           }
         : undefined,
-      squadSize: team._count.players,
-    }));
+      squadSize,
+      };
+    });
   },
 
   async findById(id) {
@@ -69,7 +114,10 @@ export const prismaTeamRepository: TeamRepository = {
     });
     if (!team) return null;
 
-    if (isDbSource()) {
+    const isBasketball = isBasketballTeamCompetition(team.competition?.name);
+    const expectedLeague = resolveBasketballLeagueFromCompetition(team.competition?.name);
+
+    if (isDbSource() && !isBasketball) {
       try {
         await clubRepository.ensureClubPersisted(team);
         team =
@@ -86,8 +134,14 @@ export const prismaTeamRepository: TeamRepository = {
     }
 
     const squadRecords = await getPrisma().player.findMany({
-      where: { teamId: id },
+      where: {
+        teamId: id,
+        ...(isBasketball && expectedLeague
+          ? { sport: "BASKETBALL", league: expectedLeague }
+          : {}),
+      },
       include: playerInclude,
+      orderBy: [{ knownAs: "asc" }],
     });
 
     const squad = squadRecords.map((record) => prismaPlayerRepository.mapFromRecord(record));
