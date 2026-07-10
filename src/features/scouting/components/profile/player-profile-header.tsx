@@ -10,7 +10,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { PlayerAvatar } from "@/components/players/player-avatar";
-import { GlossaryTooltip, POSITION_GLOSSARY } from "@/components/common/glossary-tooltip";
+import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
+import { getPositionGlossaryDescription } from "@/lib/positions";
 import { ShortlistButton } from "@/features/shortlist/components/shortlist-button";
 import { derivePlayerStatus } from "@/features/scouting/lib/player-status";
 import { NationalTeamCrest } from "@/features/tournaments/components/national-team-crest";
@@ -24,6 +25,8 @@ export function PlayerProfileHeader({
   player: Player;
 }) {
   const stats = player.currentSeasonStats;
+  const isBasketball = player.sport === "BASKETBALL";
+  const positionSport = isBasketball ? "BASKETBALL" : "SOCCER";
   const status = derivePlayerStatus(stats);
   const theme = getTeamTheme(player.competitionName, player.teamName);
 
@@ -77,12 +80,12 @@ export function PlayerProfileHeader({
             <div className="flex flex-wrap items-center gap-2">
               <GlossaryTooltip
                 label={<Badge variant="neutral">{player.position}</Badge>}
-                description={POSITION_GLOSSARY[player.position] ?? POSITION_GLOSSARY.MF}
+                description={getPositionGlossaryDescription(player.position, positionSport)}
               />
               {player.secondaryPosition && (
                 <GlossaryTooltip
                   label={<Badge variant="secondary">{player.secondaryPosition}</Badge>}
-                  description={POSITION_GLOSSARY[player.secondaryPosition] ?? POSITION_GLOSSARY.MF}
+                  description={getPositionGlossaryDescription(player.secondaryPosition, positionSport)}
                 />
               )}
               <span className="inline-flex items-center gap-1.5 text-xs text-white/70">
@@ -108,9 +111,11 @@ export function PlayerProfileHeader({
                   <Weight className="h-3.5 w-3.5" /> {weightLabel}
                 </span>
               )}
-              <span className="inline-flex items-center gap-1">
-                <Footprints className="h-3.5 w-3.5" /> {formatPreferredFoot(player.preferredFoot)}
-              </span>
+              {!isBasketball && (
+                <span className="inline-flex items-center gap-1">
+                  <Footprints className="h-3.5 w-3.5" /> {formatPreferredFoot(player.preferredFoot)}
+                </span>
+              )}
             </div>
             <div className="text-2xs text-white/60">{status.description}</div>
           </div>
@@ -124,12 +129,14 @@ export function PlayerProfileHeader({
                 {stats.rating.toFixed(1)}
               </div>
             </div>
-            <div>
-              <div className="text-2xs font-medium uppercase tracking-wider text-white/60">Market Value</div>
-              <div className="font-display text-2xl font-bold tabular-nums text-white">
-                {formatMarketValue(player.marketValue)}
+            {!isBasketball && (
+              <div>
+                <div className="text-2xs font-medium uppercase tracking-wider text-white/60">Market Value</div>
+                <div className="font-display text-2xl font-bold tabular-nums text-white">
+                  {formatMarketValue(player.marketValue)}
+                </div>
               </div>
-            </div>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             <ShortlistButton playerId={player.id} />

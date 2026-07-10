@@ -31,7 +31,8 @@ export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
                   <Badge variant="neutral">{player.position}</Badge>
                 </div>
                 <p className="mt-1 truncate text-2xs text-muted-foreground">
-                  {player.teamShortName ?? "—"} · {player.age} years old · {formatMarketValue(player.marketValue)}
+                  {player.teamShortName ?? "—"} · {player.age} years old
+                  {player.sport !== "BASKETBALL" ? ` · ${formatMarketValue(player.marketValue)}` : ""}
                 </p>
               </div>
               <div className="shrink-0 text-right">

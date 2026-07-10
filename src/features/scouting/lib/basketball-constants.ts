@@ -1,4 +1,6 @@
-export const BASKETBALL_POSITIONS = ["Armador", "Ala-Armador", "Ala", "Ala-Pivô", "Pivô"] as const;
+import { BASKETBALL_POSITIONS } from "@/lib/positions";
+
+export { BASKETBALL_POSITIONS };
 
 export const MIN_POINTS_OPTIONS = [0, 5, 10, 15, 20, 25, 30] as const;
 export const MIN_REBOUNDS_OPTIONS = [0, 3, 5, 7, 10, 12] as const;

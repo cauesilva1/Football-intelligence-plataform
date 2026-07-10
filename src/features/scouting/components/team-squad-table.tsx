@@ -14,7 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { GlossaryTooltip, POSITION_GLOSSARY } from "@/components/common/glossary-tooltip";
+import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
+import { getPositionGlossaryDescription } from "@/lib/positions";
 import { ratingColor } from "@/lib/utils";
 import type { Player } from "@/types";
 
@@ -74,7 +75,7 @@ export function TeamSquadTable({
                 <TableCell>
                   <GlossaryTooltip
                     label={<Badge variant="neutral">{player.position}</Badge>}
-                    description={POSITION_GLOSSARY[player.position] ?? POSITION_GLOSSARY.MF}
+                    description={getPositionGlossaryDescription(player.position, player.sport ?? "SOCCER")}
                   />
                 </TableCell>
                 <TableCell className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>

@@ -108,15 +108,15 @@ function mapNbaPosition(raw?: string): string {
   const value = (raw ?? "").trim().toLowerCase();
   if (!value) return "Ala";
 
-  if (value.includes("point guard") || value === "pg" || value === "guard") return "Armador";
-  if (value.includes("shooting guard") || value === "sg") return "Ala-Armador";
-  if (value.includes("small forward") || value === "sf") return "Ala";
-  if (value.includes("power forward") || value === "pf") return "Ala-Pivô";
-  if (value.includes("center") || value === "c" || value === "centro") return "Pivô";
-  if (value.includes("forward")) return "Ala";
-  if (value.includes("guard")) return "Armador";
+  if (value.includes("point guard") || value === "pg" || value === "guard") return "PG";
+  if (value.includes("shooting guard") || value === "sg") return "SG";
+  if (value.includes("small forward") || value === "sf") return "SF";
+  if (value.includes("power forward") || value === "pf") return "PF";
+  if (value.includes("center") || value === "c" || value === "centro") return "C";
+  if (value.includes("forward")) return "SF";
+  if (value.includes("guard")) return "PG";
 
-  return "Ala";
+  return "SF";
 }
 
 function parsePosition(athlete: EspnAthlete): string {
