@@ -22,6 +22,9 @@
     "data:sync-nba-teste": "tsx src/scripts/sync-nba-only-history.ts",
     "data:sync-boxscore-basquete": "tsx src/scripts/sync-basketball-boxscores.ts",
     "data:cron-basquete": "tsx src/scripts/cron-basketball-sync.ts",
+    "data:sync-nba-elencos": "tsx src/scripts/sync-nba-teams-players.ts",
+    "data:sync-ncaa-teams": "tsx src/scripts/sync-ncaa-teams.ts",
+    "data:sync-ncaa-rosters": "tsx src/scripts/sync-ncaa-rosters.ts",
     "fetch:wc2026": "node scripts/fetch-wc2026.js"
   },
   "dependencies": {

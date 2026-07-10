@@ -10,7 +10,6 @@ import {
   queryTeams,
 } from "@/features/scouting/queries/teams";
 import { getServerSport } from "@/lib/sport-server";
-import { sportLabel } from "@/lib/sport";
 import { APP_NAME } from "@/lib/config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isDbSource } from "@/lib/data-source";
@@ -66,11 +65,11 @@ export default async function TeamsPage({
       <div className="space-y-6">
         <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-8">
           <h1 className="mt-2 font-display text-xl font-bold text-foreground md:text-3xl">
-            {isBasketball ? "Franquias · NBA & NCAA" : "Club Hub · European Leagues"}
+            {isBasketball ? "Franquias & Universidades" : "Club Hub · European Leagues"}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             {isBasketball
-              ? `Explore franquias profissionais e programas universitários do ecossistema ${sportLabel(sport)}.`
+              ? "Explore franquias da NBA e programas da NCAA. Elencos, estatísticas e scouting em um só lugar."
               : `Filter by competition to explore clubs from the top five leagues and Brasileirão — live standings via ${
                   isDbSource() ? `Supabase + ESPN (${CURRENT_SEASON})` : "StatsBomb Open Data (demo mode)"
                 }.`}

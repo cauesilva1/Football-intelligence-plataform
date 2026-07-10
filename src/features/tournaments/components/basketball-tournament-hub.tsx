@@ -10,7 +10,7 @@ const BASKETBALL_TOURNAMENTS = [
     id: "nba",
     name: "NBA",
     subtitle: "National Basketball Association",
-    description: "30 franquias profissionais · elencos e histórico de temporada.",
+    description: "30 franquias · elencos, cap hit e histórico de temporada.",
     href: "/teams?league=nba",
     icon: CircleDot,
     badge: "Pro League",
@@ -19,7 +19,7 @@ const BASKETBALL_TOURNAMENTS = [
     id: "ncaa",
     name: "NCAA",
     subtitle: "College Basketball",
-    description: "Circuito universitário · scouting de prospects para o draft.",
+    description: "Programas universitários · prospects e scouting para o draft.",
     href: "/teams?league=ncaa",
     icon: GraduationCap,
     badge: "College",
@@ -48,8 +48,8 @@ export async function BasketballTournamentHub() {
           Competições de Basquete
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          NBA e NCAA isolados do ecossistema de futebol. Selecione uma liga para explorar franquias e
-          elencos.
+          Explore as principais ligas. Acompanhe jogos em tempo real, resultados históricos e
+          estatísticas de franquias e universidades.
         </p>
       </div>
 

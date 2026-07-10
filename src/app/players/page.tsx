@@ -29,8 +29,16 @@ export default async function PlayersPage({
   const suspenseKey = JSON.stringify(filters);
 
   return (
-    <DashboardShell subtitle="Players">
+    <DashboardShell subtitle={sport === "BASKETBALL" ? "Elenco & Prospects" : "Players"}>
       <div className="space-y-4">
+        {sport === "BASKETBALL" ? (
+          <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
+            <h1 className="font-display text-lg font-bold text-foreground md:text-xl">Elenco de Basquete</h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Busque atletas da NBA e da NCAA. Filtre por franquia, posição e temporada.
+            </p>
+          </div>
+        ) : null}
         <Suspense fallback={<FiltersSkeleton />}>
           <ScoutingFiltersPanelLoader basePath="/players" route="players" />
         </Suspense>
