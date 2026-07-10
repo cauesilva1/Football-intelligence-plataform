@@ -8,7 +8,12 @@ import {
   resolveSelectedSeasonStats,
 } from "@/lib/metrics/map-season-stats";
 import { calcAge } from "@/lib/utils";
-import { filterAndSortPlayers } from "@/features/scouting/lib/filter-players";
+import { filterAndSortPlayers, paginatePlayers } from "@/features/scouting/lib/filter-players";
+import {
+  applyArchetypeFilters,
+  hasBasketballStatFilters,
+} from "@/features/scouting/lib/basketball-filters";
+import { BASKETBALL_SCOUTING_SEASONS } from "@/features/scouting/lib/basketball-constants";
 import { resolvePlayerPhotoUrl } from "@/lib/player-media";
 import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
 import { isDbSource } from "@/lib/data-source";
@@ -168,6 +173,7 @@ function mapPlayer(record: PrismaPlayerWithStats, options?: { season?: string })
   const seasonStatsHistory = record.stats.map((stat) =>
     mapSeasonStatsRow(
       stat,
+      record.sport,
       record.team
         ? { id: record.team.id, name: record.team.name, shortName: record.team.shortName }
         : undefined
@@ -195,6 +201,8 @@ function mapPlayer(record: PrismaPlayerWithStats, options?: { season?: string })
       apiSportsId: record.apiSportsId,
     }),
     apiSportsId: record.apiSportsId ?? undefined,
+    sport: (record.sport as Player["sport"]) ?? "SOCCER",
+    league: record.league,
     teamId: record.teamId ?? "",
     teamName: record.team?.name,
     teamShortName: record.team?.shortName,
@@ -209,8 +217,10 @@ function mapPlayer(record: PrismaPlayerWithStats, options?: { season?: string })
 }
 
 function buildPlayerWhere(filters: PlayerFilters): Prisma.PlayerWhereInput {
-  const { search, position, league, teamId, minAge, maxAge } = filters;
-  const where: Prisma.PlayerWhereInput = {};
+  const { search, position, league, teamId, minAge, maxAge, sport } = filters;
+  const where: Prisma.PlayerWhereInput = {
+    sport: sport ?? "SOCCER",
+  };
 
   if (search?.trim()) {
     where.OR = [
@@ -272,6 +282,39 @@ function buildStatWhere(filters: PlayerFilters): Prisma.PlayerStatisticWhereInpu
   return where;
 }
 
+function buildBasketballSeasonStatsWhere(filters: PlayerFilters): Prisma.PlayerSeasonStatsWhereInput {
+  const effective = applyArchetypeFilters(filters);
+  const where: Prisma.PlayerSeasonStatsWhereInput = {
+    season: { in: [...BASKETBALL_SCOUTING_SEASONS] },
+  };
+
+  if (typeof effective.minPoints === "number") where.points = { gte: effective.minPoints };
+  if (typeof effective.minRebounds === "number") where.rebounds = { gte: effective.minRebounds };
+  if (typeof effective.minAssists === "number") where.assists = { gte: effective.minAssists };
+  if (typeof effective.minThreePointsPercent === "number") {
+    where.threePointsPercent = { gte: effective.minThreePointsPercent };
+  }
+  if (typeof effective.minSteals === "number") where.steals = { gte: effective.minSteals };
+  if (typeof effective.minBlocks === "number") where.blocks = { gte: effective.minBlocks };
+
+  return where;
+}
+
+function buildBasketballPlayerWhere(filters: PlayerFilters): Prisma.PlayerWhereInput {
+  const effective = applyArchetypeFilters(filters);
+  const where = buildPlayerWhere({ ...effective, sport: "BASKETBALL" });
+
+  if (effective.archetype === "rim-protector") {
+    where.position = { in: ["Pivô", "Ala-Pivô"] };
+  }
+
+  if (hasBasketballStatFilters(effective)) {
+    where.stats = { some: buildBasketballSeasonStatsWhere(effective) };
+  }
+
+  return where;
+}
+
 function buildStatOrderBy(filters: PlayerFilters): Prisma.PlayerStatisticOrderByWithRelationInput {
   const dir = filters.sortDir ?? "desc";
 
@@ -284,6 +327,9 @@ function buildStatOrderBy(filters: PlayerFilters): Prisma.PlayerStatisticOrderBy
       return { assists: dir };
     case "xGPer90":
       return { xG: dir };
+    case "points":
+    case "rebounds":
+      return { rating: dir };
     case "name":
       return { player: { fullName: dir } };
     case "age":
@@ -304,6 +350,34 @@ export const prismaPlayerRepository: PlayerRepository & {
   mapFromRecord(record: PrismaPlayerWithStats): Player;
 } = {
   async findMany(filters) {
+    const sport = filters.sport ?? "SOCCER";
+
+    if (sport === "BASKETBALL") {
+      const { page = 1, pageSize = 25 } = filters;
+      const where = buildBasketballPlayerWhere(filters);
+
+      const records = await getPrisma().player.findMany({
+        where,
+        include: playerInclude,
+      });
+
+      let items = records.map((record) => mapPlayer(record));
+
+      if (typeof filters.minRating === "number") {
+        items = items.filter((player) => player.currentSeasonStats.rating >= filters.minRating!);
+      }
+      if (typeof filters.minMinutes === "number") {
+        items = items.filter(
+          (player) => player.currentSeasonStats.minutesPlayed >= filters.minMinutes!
+        );
+      }
+
+      const sorted = filterAndSortPlayers(items, applyArchetypeFilters(filters), {
+        prismaPrefiltered: true,
+      });
+      return paginatePlayers(sorted, page, pageSize);
+    }
+
     const { page = 1, pageSize = 25 } = filters;
     const where = buildStatWhere(filters);
     const orderBy = buildStatOrderBy(filters);
@@ -361,8 +435,9 @@ export const prismaPlayerRepository: PlayerRepository & {
     return mapPlayer(record, options);
   },
 
-  async findLite() {
+  async findLite(sport: PlayerFilters["sport"] = "SOCCER") {
     const records = await getPrisma().player.findMany({
+      where: { sport: sport ?? "SOCCER" },
       select: {
         id: true,
         fullName: true,
@@ -389,8 +464,11 @@ export const prismaPlayerRepository: PlayerRepository & {
     return [a, b];
   },
 
-  async getAll() {
-    const records = await getPrisma().player.findMany({ include: playerInclude });
+  async getAll(sport: PlayerFilters["sport"] = "SOCCER") {
+    const records = await getPrisma().player.findMany({
+      where: { sport: sport ?? "SOCCER" },
+      include: playerInclude,
+    });
     return records.map((record) => mapPlayer(record));
   },
 };

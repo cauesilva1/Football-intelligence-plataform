@@ -96,6 +96,14 @@ export function filterAndSortPlayers(
         diff =
           computeXGPer90(sa.minutesPlayed, sa.xG) - computeXGPer90(sb.minutesPlayed, sb.xG);
         break;
+      case "points":
+        diff =
+          (sa.points ?? sa.perGame?.points ?? 0) - (sb.points ?? sb.perGame?.points ?? 0);
+        break;
+      case "rebounds":
+        diff =
+          (sa.rebounds ?? sa.perGame?.rebounds ?? 0) - (sb.rebounds ?? sb.perGame?.rebounds ?? 0);
+        break;
       case "age":
         diff = a.age - b.age;
         break;

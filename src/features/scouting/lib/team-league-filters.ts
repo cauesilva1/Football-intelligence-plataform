@@ -1,4 +1,5 @@
 import type { Competition } from "@/types";
+import { isBasketballCompetition, type Sport } from "@/lib/sport";
 
 export interface TeamLeagueTab {
   key: string;
@@ -6,7 +7,7 @@ export interface TeamLeagueTab {
   competitionId?: string;
 }
 
-const TAB_DEFINITIONS = [
+const SOCCER_TAB_DEFINITIONS = [
   { key: "all", label: "All" },
   {
     key: "premier-league",
@@ -43,8 +44,25 @@ const TAB_DEFINITIONS = [
   },
 ] as const;
 
-export function resolveTeamLeagueTabs(competitions: Competition[]): TeamLeagueTab[] {
-  return TAB_DEFINITIONS.map((tab) => {
+const BASKETBALL_TAB_DEFINITIONS = [
+  { key: "all", label: "All" },
+  {
+    key: "nba",
+    label: "NBA",
+    match: (name: string) => name === "nba",
+  },
+  {
+    key: "ncaa",
+    label: "NCAA",
+    match: (name: string) => name.includes("ncaa"),
+  },
+] as const;
+
+function buildTabs(
+  competitions: Competition[],
+  definitions: ReadonlyArray<{ key: string; label: string; match?: (name: string) => boolean }>
+): TeamLeagueTab[] {
+  return definitions.map((tab) => {
     if (tab.key === "all") {
       return { key: tab.key, label: tab.label };
     }
@@ -58,6 +76,16 @@ export function resolveTeamLeagueTabs(competitions: Competition[]): TeamLeagueTa
       competitionId: competition?.id,
     };
   });
+}
+
+export function resolveTeamLeagueTabs(competitions: Competition[], sport: Sport = "SOCCER"): TeamLeagueTab[] {
+  if (sport === "BASKETBALL") {
+    const basketballCompetitions = competitions.filter((c) => isBasketballCompetition(c.name));
+    return buildTabs(basketballCompetitions, BASKETBALL_TAB_DEFINITIONS);
+  }
+
+  const soccerCompetitions = competitions.filter((c) => !isBasketballCompetition(c.name));
+  return buildTabs(soccerCompetitions, SOCCER_TAB_DEFINITIONS);
 }
 
 export function resolveCompetitionIdFromLeagueParam(

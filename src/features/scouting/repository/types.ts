@@ -8,13 +8,14 @@ import type {
   TeamStatistic,
   Competition,
 } from "@/types";
+import type { Sport } from "@/lib/sport";
 
 export interface PlayerRepository {
   findMany(filters: PlayerFilters): Promise<PaginatedResult<Player>>;
   findById(id: string, options?: { season?: string }): Promise<Player | null>;
-  findLite(): Promise<PlayerLite[]>;
+  findLite(sport?: Sport): Promise<PlayerLite[]>;
   findForComparison(idA: string, idB: string): Promise<[Player, Player] | null>;
-  getAll(): Promise<Player[]>;
+  getAll(sport?: Sport): Promise<Player[]>;
 }
 
 export interface TeamRepository {
@@ -37,5 +38,5 @@ export interface TeamRepository {
 }
 
 export interface DashboardRepository {
-  getOverview(): Promise<DashboardOverview>;
+  getOverview(sport?: Sport): Promise<DashboardOverview>;
 }

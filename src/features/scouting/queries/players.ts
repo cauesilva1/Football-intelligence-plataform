@@ -2,6 +2,7 @@ import { cache } from "react";
 import { getPlayerRepository } from "@/features/scouting/repository";
 import { logSupabaseError } from "@/lib/db-errors";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
+import { getServerSport } from "@/lib/sport-server";
 import type { PlayerFilters } from "@/types";
 
 async function withSupabaseErrorLog<T>(context: string, fn: () => Promise<T>): Promise<T> {
@@ -28,5 +29,6 @@ export const queryPlayerById = cache(async (id: string, season?: string) => {
 
 export const queryAllPlayersLite = cache(async () => {
   await ensureRuntimeDataSource();
-  return withSupabaseErrorLog("queryAllPlayersLite", () => getPlayerRepository().findLite());
+  const sport = await getServerSport();
+  return withSupabaseErrorLog("queryAllPlayersLite", () => getPlayerRepository().findLite(sport));
 });
