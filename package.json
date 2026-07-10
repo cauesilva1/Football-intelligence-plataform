@@ -18,6 +18,10 @@
     "data:sync-br2025-db": "tsx src/scripts/sync-brasileirao-2025-db.ts",
     "data:sync-match-2026": "tsx src/scripts/sync-match-stats-2026.ts",
     "data:cron-sync-2026": "tsx src/scripts/auto-sync-completed-matches-2026.ts",
+    "data:sync-basquete": "tsx src/scripts/sync-basketball-ecosystem.ts",
+    "data:sync-nba-teste": "tsx src/scripts/sync-nba-only-history.ts",
+    "data:sync-boxscore-basquete": "tsx src/scripts/sync-basketball-boxscores.ts",
+    "data:cron-basquete": "tsx src/scripts/cron-basketball-sync.ts",
     "fetch:wc2026": "node scripts/fetch-wc2026.js"
   },
   "dependencies": {

@@ -1,12 +1,13 @@
 /**
- * Cron engine — descobre partidas finalizadas do Brasileirão 2026 na ESPN
- * e dispara processMatchBoxScore2026 para cada jogo ainda não processado.
+ * Cron engine NBA — varre jogos finalizados do dia anterior e do dia corrente,
+ * acumulando box scores na temporada 202627 (mesmo fluxo do Brasileirão 2026).
  *
- * Uso: npm run data:cron-sync-2026
+ * Uso: npm run data:cron-basquete
+ *      npm run data:cron-basquete -- --force
  */
 import fs from "fs";
 import path from "path";
-import { runSoccerDailySync } from "@/lib/cron/soccer-daily-sync";
+import { runBasketballDailySync } from "@/lib/cron/basketball-daily-sync";
 import { getPrisma } from "@/lib/prisma";
 
 function loadDotEnv(): void {
@@ -33,9 +34,11 @@ function loadDotEnv(): void {
 
 loadDotEnv();
 
-runSoccerDailySync()
+const force = process.argv.includes("--force");
+
+runBasketballDailySync({ force })
   .catch((error: unknown) => {
-    console.error("[cron-sync-2026] Erro fatal:", error);
+    console.error("[BASKETBALL-CRON] Erro fatal:", error);
     process.exit(1);
   })
   .finally(async () => {
