@@ -35,6 +35,14 @@ export interface PlayerMetricPer90 {
   interceptions: number;
 }
 
+export interface PlayerMetricPerGame {
+  points: number;
+  rebounds: number;
+  steals: number;
+  blocks: number;
+  assists: number;
+}
+
 export interface PlayerStatistic {
   id: string;
   playerId: string;
@@ -42,6 +50,7 @@ export interface PlayerStatistic {
   teamName?: string;
   teamShortName?: string;
   season: string;
+  sport?: "SOCCER" | "BASKETBALL";
   appearances: number;
   minutesPlayed: number;
   goals: number;
@@ -60,7 +69,16 @@ export interface PlayerStatistic {
   yellowCards: number;
   redCards: number;
   rating: number;
+  /** Métricas de basquete (médias por jogo). */
+  points?: number;
+  rebounds?: number;
+  steals?: number;
+  blocks?: number;
+  fieldGoalsPercent?: number;
+  threePointsPercent?: number;
   per90: PlayerMetricPer90;
+  /** Basquete: médias por jogo da temporada. */
+  perGame?: PlayerMetricPerGame;
 }
 
 export interface Player {
@@ -78,6 +96,8 @@ export interface Player {
   marketValue: number;
   photoUrl?: string;
   apiSportsId?: number;
+  sport?: "SOCCER" | "BASKETBALL";
+  league?: string;
   teamId: string;
   teamName?: string;
   teamShortName?: string;
@@ -138,6 +158,7 @@ export interface ScoutingReport {
 }
 
 export interface PlayerFilters {
+  sport?: "SOCCER" | "BASKETBALL";
   search?: string;
   position?: string;
   league?: string;
@@ -149,6 +170,14 @@ export interface PlayerFilters {
   minGoalsPer90?: number;
   minXGPer90?: number;
   maxMarketValue?: number;
+  /** Basquete — mínimos em PlayerSeasonStats (médias por jogo). */
+  minPoints?: number;
+  minRebounds?: number;
+  minAssists?: number;
+  minThreePointsPercent?: number;
+  minSteals?: number;
+  minBlocks?: number;
+  archetype?: "three-and-d" | "rim-protector";
   sortBy?:
     | "rating"
     | "goals"
@@ -156,6 +185,8 @@ export interface PlayerFilters {
     | "assistsPer90"
     | "goalsPer90"
     | "xGPer90"
+    | "points"
+    | "rebounds"
     | "age"
     | "marketValue"
     | "name"

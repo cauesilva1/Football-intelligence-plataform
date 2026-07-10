@@ -97,6 +97,8 @@ model Player {
   transfermarktId   Int?
   dataSyncedAt      DateTime?
   dataSyncedSeason  String?
+  sport             String            @default("SOCCER")
+  league            String            @default("Série A")
   teamId            String?
   team              Team?             @relation(fields: [teamId], references: [id])
   statistics        PlayerStatistic[]
@@ -109,6 +111,8 @@ model Player {
 
   @@index([teamId])
   @@index([position])
+  @@index([sport])
+  @@index([league])
   @@index([apiSportsId])
   @@index([transfermarktId])
   @@map("players")
@@ -185,8 +189,14 @@ model PlayerSeasonStats {
   tackles         Float  @default(0.0)
   interceptions   Float  @default(0.0)
   passingAccuracy Float  @default(0.0)
-  minutesPlayed   Int    @default(0)
-  matchesPlayed   Int    @default(0)
+  minutesPlayed      Int    @default(0)
+  matchesPlayed      Int    @default(0)
+  points             Int    @default(0)
+  rebounds           Int    @default(0)
+  steals             Int    @default(0)
+  blocks             Int    @default(0)
+  fieldGoalsPercent  Float  @default(0.0)
+  threePointsPercent Float  @default(0.0)
 
   @@unique([playerId, season])
   @@index([playerId])
