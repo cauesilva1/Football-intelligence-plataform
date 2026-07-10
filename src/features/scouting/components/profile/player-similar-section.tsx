@@ -3,7 +3,7 @@ import { Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataPanel } from "@/components/data/data-panel";
 import { querySimilarPlayers } from "@/features/scouting/queries/similar-players";
-import { formatMarketValue, ratingColor } from "@/lib/utils";
+import { formatCapHit, formatMarketValue, ratingColor } from "@/lib/utils";
 
 export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
   const similar = await querySimilarPlayers(playerId, 4);
@@ -32,7 +32,11 @@ export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
                 </div>
                 <p className="mt-1 truncate text-2xs text-muted-foreground">
                   {player.teamShortName ?? "—"} · {player.age} years old
-                  {player.sport !== "BASKETBALL" ? ` · ${formatMarketValue(player.marketValue)}` : ""}
+                  {player.sport === "BASKETBALL"
+                    ? player.capHit
+                      ? ` · ${formatCapHit(player.capHit)}`
+                      : ""
+                    : ` · ${formatMarketValue(player.marketValue)}`}
                 </p>
               </div>
               <div className="shrink-0 text-right">

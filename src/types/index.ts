@@ -94,6 +94,9 @@ export interface Player {
   weight: number;
   preferredFoot: Foot;
   marketValue: number;
+  /** NBA — cap hit anual em USD. */
+  capHit?: number;
+  summerLeague2026?: boolean;
   photoUrl?: string;
   apiSportsId?: number;
   sport?: "SOCCER" | "BASKETBALL";

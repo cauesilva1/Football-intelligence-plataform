@@ -16,7 +16,7 @@ import { ShortlistButton } from "@/features/shortlist/components/shortlist-butto
 import { derivePlayerStatus } from "@/features/scouting/lib/player-status";
 import { NationalTeamCrest } from "@/features/tournaments/components/national-team-crest";
 import { getTeamTheme } from "@/lib/team-theme";
-import { cn, formatMarketValue, formatPhysicalMetric, formatPreferredFoot, ratingColor } from "@/lib/utils";
+import { cn, formatCapHit, formatMarketValue, formatPhysicalMetric, formatPreferredFoot, ratingColor } from "@/lib/utils";
 import type { Player } from "@/types";
 
 export function PlayerProfileHeader({
@@ -76,6 +76,11 @@ export function PlayerProfileHeader({
                 {player.fullName}
               </h1>
               <Badge variant={statusVariant}>{status.label}</Badge>
+              {isBasketball && player.summerLeague2026 ? (
+                <Badge className="border-amber-500/40 bg-amber-500/15 text-amber-300">
+                  🔥 Summer League Roster
+                </Badge>
+              ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <GlossaryTooltip
@@ -129,11 +134,18 @@ export function PlayerProfileHeader({
                 {stats.rating.toFixed(1)}
               </div>
             </div>
-            {!isBasketball && (
+            {!isBasketball ? (
               <div>
                 <div className="text-2xs font-medium uppercase tracking-wider text-white/60">Market Value</div>
                 <div className="font-display text-2xl font-bold tabular-nums text-white">
                   {formatMarketValue(player.marketValue)}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="text-2xs font-medium uppercase tracking-wider text-white/60">Cap Hit</div>
+                <div className="font-display text-2xl font-bold tabular-nums text-white">
+                  {formatCapHit(player.capHit ?? 0)}
                 </div>
               </div>
             )}

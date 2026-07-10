@@ -7,6 +7,7 @@
 import fs from "fs";
 import path from "path";
 import { PrismaClient } from "@prisma/client";
+import { parseCapHitFromAthlete } from "@/lib/api/nba-salaries";
 
 const NBA_TEAMS_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams";
 const NBA_ROSTER_URL = (teamId: string) =>
@@ -61,6 +62,11 @@ interface EspnAthlete {
     type?: string;
     name?: string;
     abbreviation?: string;
+  };
+  contract?: {
+    salary?: number;
+    incomingTradeValue?: number;
+    outgoingTradeValue?: number;
   };
 }
 
@@ -205,7 +211,11 @@ async function upsertNbaTeam(
 
   const existing = await prisma.team.findFirst({
     where: {
-      OR: [{ name: espnTeam.displayName }, { apiSportsId: espnTeamId }],
+      competitionId,
+      OR: [
+        { name: espnTeam.displayName },
+        ...(Number.isFinite(espnTeamId) ? [{ apiSportsId: espnTeamId }] : []),
+      ],
     },
     select: { id: true },
   });
@@ -285,6 +295,7 @@ async function upsertNbaPlayer(
     weight: lbsToKg(athlete.weight),
     photoUrl: athlete.headshot?.href ?? null,
     apiSportsId: Number.isFinite(espnAthleteId) ? espnAthleteId : null,
+    capHit: parseCapHitFromAthlete(athlete),
     sport: SPORT,
     league: LEAGUE,
     teamId,

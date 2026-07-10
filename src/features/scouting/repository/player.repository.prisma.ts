@@ -196,6 +196,8 @@ function mapPlayer(record: PrismaPlayerWithStats, options?: { season?: string })
     weight: record.weight,
     preferredFoot: record.preferredFoot as Foot,
     marketValue: record.marketValue,
+    capHit: record.capHit > 0 ? record.capHit : undefined,
+    summerLeague2026: record.summerLeague2026 || undefined,
     photoUrl: resolvePlayerPhotoUrl({
       photoUrl: record.photoUrl,
       apiSportsId: record.apiSportsId,

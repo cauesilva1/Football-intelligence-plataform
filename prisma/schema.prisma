@@ -92,6 +92,9 @@ model Player {
   weight            Int
   preferredFoot     Foot              @default(RIGHT)
   marketValue       Int               @default(0)
+  // NBA — cap hit anual em USD (salário/impacto no teto).
+  capHit            Int               @default(0)
+  summerLeague2026  Boolean           @default(false)
   photoUrl          String?
   apiSportsId       Int?
   transfermarktId   Int?
