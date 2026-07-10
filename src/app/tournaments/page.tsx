@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { TournamentView } from "@/features/tournaments/components/tournament-view";
 import { BasketballTournamentHub } from "@/features/tournaments/components/basketball-tournament-hub";
+import SoccerTournaments from "@/features/tournaments/components/soccer-tournaments-view";
 import { fetchStatsBombMatches } from "@/lib/statsbomb/fetch-matches";
 import { TOURNAMENTS } from "@/lib/statsbomb/constants";
 import { loadWorldCup2026Matches } from "@/lib/tournaments/world-cup-2026";
@@ -20,7 +20,7 @@ export const metadata = { title: `Tournaments · ${APP_NAME}` };
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-async function SoccerTournamentData() {
+async function loadSoccerRounds(): Promise<Record<string, TournamentRound[]>> {
   const roundsByTournament: Record<string, TournamentRound[]> = {};
 
   await Promise.all(
@@ -47,7 +47,7 @@ async function SoccerTournamentData() {
     })
   );
 
-  return <TournamentView roundsByTournament={roundsByTournament} />;
+  return roundsByTournament;
 }
 
 function TournamentSkeleton() {
@@ -67,6 +67,7 @@ function TournamentSkeleton() {
 
 export default async function TournamentsPage() {
   const sport = await getServerSport();
+  const soccerRounds = sport === "SOCCER" ? await loadSoccerRounds() : null;
 
   return (
     <DashboardShell subtitle="Tournaments">
@@ -74,7 +75,7 @@ export default async function TournamentsPage() {
         <BasketballTournamentHub />
       ) : (
         <Suspense fallback={<TournamentSkeleton />}>
-          <SoccerTournamentData />
+          <SoccerTournaments roundsByTournament={soccerRounds ?? {}} />
         </Suspense>
       )}
     </DashboardShell>

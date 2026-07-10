@@ -4,11 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { appConfig } from "@/lib/config";
 import { useSport } from "@/context/sport-context";
 import { sportLabel } from "@/lib/sport";
+import { useIsMounted } from "@/hooks/use-is-mounted";
 import { SportSwitcher } from "./sport-switcher";
 import { SidebarLogo } from "./mobile-nav";
 
 export function Header({ subtitle }: { subtitle?: string }) {
   const { currentSport } = useSport();
+  const mounted = useIsMounted();
 
   return (
     <header className="relative sticky top-0 z-10 flex shrink-0 items-center border-b border-border bg-background/80 px-4 py-3 backdrop-blur-md md:px-8 md:py-4">
@@ -24,16 +26,9 @@ export function Header({ subtitle }: { subtitle?: string }) {
             <Badge variant="outline" className="hidden sm:inline-flex capitalize">
               {sportLabel(currentSport)}
             </Badge>
-            {appConfig.dataSource === "mock" && (
-              <Badge variant="secondary" className="hidden sm:inline-flex">
-                Demo
-              </Badge>
-            )}
-            {appConfig.dataSource === "db" && (
-              <Badge variant="secondary" className="hidden sm:inline-flex">
-                Supabase
-              </Badge>
-            )}
+            <Badge variant="secondary" className="hidden sm:inline-flex">
+              {mounted ? (appConfig.dataSource === "mock" ? "Demo" : "Supabase") : "—"}
+            </Badge>
           </div>
           <p className="truncate text-xs text-muted-foreground">
             {appConfig.name} · {sportLabel(currentSport)} · Season {appConfig.season}
