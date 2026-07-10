@@ -1,11 +1,26 @@
 import { getPrisma } from "@/lib/prisma";
 
 export const NBA_BOXSCORE_SEASON = 202627;
-const ESPN_LEAGUE = "nba";
-const BOXSCORE_CACHE_PREFIX = `espn:basketball:${ESPN_LEAGUE}:boxscore:${NBA_BOXSCORE_SEASON}:`;
+export type BasketballLeagueSlug = "nba" | "nba-summer";
 
-const SCOREBOARD_URL = `https://site.api.espn.com/apis/site/v2/sports/basketball/${ESPN_LEAGUE}/scoreboard`;
-const SUMMARY_URL = `https://site.api.espn.com/apis/site/v2/sports/basketball/${ESPN_LEAGUE}/summary`;
+const SUMMER_LEAGUE_CACHE_PREFIX = "espn:basketball:nba-summer:roster:2026:";
+
+function scoreboardUrl(league: BasketballLeagueSlug): string {
+  return `https://site.api.espn.com/apis/site/v2/sports/basketball/${league}/scoreboard`;
+}
+
+function summaryUrl(league: BasketballLeagueSlug): string {
+  return `https://site.api.espn.com/apis/site/v2/sports/basketball/${league}/summary`;
+}
+
+function boxscoreCachePrefix(league: BasketballLeagueSlug): string {
+  return `espn:basketball:${league}:boxscore:${NBA_BOXSCORE_SEASON}:`;
+}
+
+const ESPN_LEAGUE: BasketballLeagueSlug = "nba";
+const BOXSCORE_CACHE_PREFIX = boxscoreCachePrefix(ESPN_LEAGUE);
+const SCOREBOARD_URL = scoreboardUrl(ESPN_LEAGUE);
+const SUMMARY_URL = summaryUrl(ESPN_LEAGUE);
 
 const STAT_INDEX = {
   minutes: 0,
@@ -34,6 +49,13 @@ export interface BasketballPlayerBoxScore {
   fieldGoalsAttempted: number;
   threePointsMade: number;
   threePointsAttempted: number;
+}
+
+export interface ProcessSummerLeagueBoxScoreResult {
+  eventId: string;
+  playersMarked: number;
+  skipped: number;
+  alreadyProcessed: boolean;
 }
 
 export interface ProcessBasketballBoxScoreResult {
@@ -194,8 +216,11 @@ export function formatEspnDate(date: Date): string {
   return `${y}${m}${d}`;
 }
 
-export async function fetchNbaScoreboard(date = new Date()): Promise<EspnScoreboardEvent[]> {
-  const url = `${SCOREBOARD_URL}?dates=${formatEspnDate(date)}`;
+export async function fetchBasketballScoreboard(
+  league: BasketballLeagueSlug = "nba",
+  date = new Date()
+): Promise<EspnScoreboardEvent[]> {
+  const url = `${scoreboardUrl(league)}?dates=${formatEspnDate(date)}`;
   const response = await fetch(url, {
     headers: {
       "User-Agent": "football-intelligence-platform/1.0 (basketball-boxscore-sync)",
@@ -205,11 +230,15 @@ export async function fetchNbaScoreboard(date = new Date()): Promise<EspnScorebo
   });
 
   if (!response.ok) {
-    throw new Error(`ESPN scoreboard HTTP ${response.status}`);
+    throw new Error(`ESPN scoreboard HTTP ${response.status} (${league})`);
   }
 
   const payload = (await response.json()) as EspnScoreboardResponse;
   return payload.events ?? [];
+}
+
+export async function fetchNbaScoreboard(date = new Date()): Promise<EspnScoreboardEvent[]> {
+  return fetchBasketballScoreboard("nba", date);
 }
 
 export function isFinalNbaEvent(event: EspnScoreboardEvent): boolean {
@@ -223,8 +252,11 @@ export function isFinalNbaEvent(event: EspnScoreboardEvent): boolean {
   );
 }
 
-async function fetchMatchSummary(eventId: string): Promise<EspnSummaryResponse> {
-  const url = `${SUMMARY_URL}?event=${eventId}`;
+async function fetchMatchSummary(
+  eventId: string,
+  league: BasketballLeagueSlug = "nba"
+): Promise<EspnSummaryResponse> {
+  const url = `${summaryUrl(league)}?event=${eventId}`;
   const response = await fetch(url, {
     headers: {
       "User-Agent": "football-intelligence-platform/1.0 (basketball-boxscore-sync)",
@@ -323,14 +355,91 @@ async function accumulateSeasonStats(
 }
 
 /**
+ * Marca jogadores que apareceram no box score da Summer League 2026.
+ */
+export async function processSummerLeagueBoxScore(
+  eventId: string,
+  options: { force?: boolean } = {}
+): Promise<ProcessSummerLeagueBoxScoreResult> {
+  const prisma = getPrisma();
+  const cacheKey = `${SUMMER_LEAGUE_CACHE_PREFIX}${eventId}`;
+
+  if (!options.force) {
+    const cached = await prisma.systemCache.findUnique({ where: { key: cacheKey } });
+    if (cached) {
+      return { eventId, playersMarked: 0, skipped: 0, alreadyProcessed: true };
+    }
+  }
+
+  const summary = await fetchMatchSummary(eventId, "nba-summer");
+  if (!isMatchFinished(summary)) {
+    return { eventId, playersMarked: 0, skipped: 0, alreadyProcessed: false };
+  }
+
+  const boxScores = extractPlayerBoxScores(summary);
+  let playersMarked = 0;
+  let skipped = 0;
+
+  for (const boxScore of boxScores) {
+    const playerId = await resolvePlayerId(boxScore.espnAthleteId);
+    if (!playerId) {
+      skipped += 1;
+      continue;
+    }
+
+    await prisma.player.update({
+      where: { id: playerId },
+      data: { summerLeague2026: true },
+    });
+    playersMarked += 1;
+  }
+
+  await prisma.systemCache.upsert({
+    where: { key: cacheKey },
+    create: {
+      key: cacheKey,
+      json: {
+        eventId,
+        processedAt: new Date().toISOString(),
+        playersMarked,
+        skipped,
+      },
+    },
+    update: {
+      json: {
+        eventId,
+        processedAt: new Date().toISOString(),
+        playersMarked,
+        skipped,
+      },
+    },
+  });
+
+  return { eventId, playersMarked, skipped, alreadyProcessed: false };
+}
+
+/**
  * Processa o box score NBA de um evento finalizado e acumula médias na temporada 202627.
  */
 export async function processBasketballBoxScore(
   eventId: string,
-  options: { force?: boolean } = {}
+  options: { force?: boolean; league?: BasketballLeagueSlug } = {}
 ): Promise<ProcessBasketballBoxScoreResult> {
+  const league = options.league ?? "nba";
+  if (league === "nba-summer") {
+    const summer = await processSummerLeagueBoxScore(eventId, options);
+    return {
+      eventId,
+      playersProcessed: summer.playersMarked + summer.skipped,
+      statsUpdated: summer.playersMarked,
+      skipped: summer.skipped,
+      failed: 0,
+      alreadyProcessed: summer.alreadyProcessed,
+    };
+  }
+
   const prisma = getPrisma();
-  const cacheKey = `${BOXSCORE_CACHE_PREFIX}${eventId}`;
+  const cacheKey = `${boxscoreCachePrefix(league)}${eventId}`;
 
   if (!options.force) {
     const cached = await prisma.systemCache.findUnique({ where: { key: cacheKey } });
@@ -346,7 +455,7 @@ export async function processBasketballBoxScore(
     }
   }
 
-  const summary = await fetchMatchSummary(eventId);
+  const summary = await fetchMatchSummary(eventId, league);
   if (!isMatchFinished(summary)) {
     throw new Error(`Partida ${eventId} ainda não finalizada na ESPN.`);
   }
@@ -414,6 +523,26 @@ export async function processBasketballBoxScore(
   };
 }
 
+export async function syncTodaysSummerLeagueRosterFlags(
+  date = new Date(),
+  options: { force?: boolean } = {}
+): Promise<{ date: string; finalEvents: number; processed: ProcessSummerLeagueBoxScoreResult[] }> {
+  const events = await fetchBasketballScoreboard("nba-summer", date);
+  const finalEvents = events.filter(isFinalNbaEvent);
+  const processed: ProcessSummerLeagueBoxScoreResult[] = [];
+
+  for (const event of finalEvents) {
+    const result = await processSummerLeagueBoxScore(event.id, options);
+    processed.push(result);
+  }
+
+  return {
+    date: formatEspnDate(date),
+    finalEvents: finalEvents.length,
+    processed,
+  };
+}
+
 /**
  * Varre o scoreboard do dia e processa todos os jogos finalizados.
  */
@@ -430,10 +559,22 @@ export async function syncTodaysBasketballBoxScores(
     processed.push(result);
   }
 
+  const summer = await syncTodaysSummerLeagueRosterFlags(date, options);
+  for (const result of summer.processed) {
+    processed.push({
+      eventId: result.eventId,
+      playersProcessed: result.playersMarked + result.skipped,
+      statsUpdated: result.playersMarked,
+      skipped: result.skipped,
+      failed: 0,
+      alreadyProcessed: result.alreadyProcessed,
+    });
+  }
+
   return {
     date: formatEspnDate(date),
-    eventsFound: events.length,
-    finalEvents: finalEvents.length,
+    eventsFound: events.length + summer.finalEvents,
+    finalEvents: finalEvents.length + summer.finalEvents,
     processed,
   };
 }

@@ -90,7 +90,7 @@ function GameCard({
     }
 
     startTransition(async () => {
-      const result = await fetchNbaGameLeaders(game.id);
+      const result = await fetchNbaGameLeaders(game.id, game.competition);
       setLeaders(result);
       setExpanded(true);
     });
@@ -104,7 +104,12 @@ function GameCard({
             <Calendar className="h-3 w-3" />
             {localDate}
           </span>
-          <GameStatusBadge game={game} />
+          <div className="flex items-center gap-2">
+            {game.competition === "summer" ? (
+              <Badge className="border-amber-500/40 bg-amber-500/15 text-amber-400">Summer League</Badge>
+            ) : null}
+            <GameStatusBadge game={game} />
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -202,9 +207,9 @@ export function BasketballGamesHub({ schedule }: { schedule: NbaScheduleBundle }
     <section className="space-y-4">
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Game Center</p>
-        <h2 className="mt-1 font-display text-xl font-bold text-foreground">NBA Schedule</h2>
+        <h2 className="mt-1 font-display text-xl font-bold text-foreground">Agenda NBA</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Live, finalizados e próximos jogos via ESPN — horários no seu fuso local.
+          Jogos ao vivo, resultados recentes e próximos confrontos — atualizados em tempo real.
         </p>
       </div>
 
