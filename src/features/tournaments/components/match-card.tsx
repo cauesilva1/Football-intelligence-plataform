@@ -1,7 +1,10 @@
+"use client";
+
 import { MapPin, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { NationalTeamCrest } from "@/features/tournaments/components/national-team-crest";
+import { useIsMounted } from "@/hooks/use-is-mounted";
 import { cn } from "@/lib/utils";
 import type { TournamentMatch } from "@/lib/tournaments/types";
 
@@ -51,6 +54,7 @@ function StatusBadge({ match }: { match: TournamentMatch }) {
 }
 
 export function MatchCard({ match }: { match: TournamentMatch }) {
+  const mounted = useIsMounted();
   const hasScore = match.homeScore != null && match.awayScore != null;
   const homeWon = hasScore && match.homeScore! > match.awayScore!;
   const awayWon = hasScore && match.awayScore! > match.homeScore!;
@@ -61,7 +65,7 @@ export function MatchCard({ match }: { match: TournamentMatch }) {
         <div className="mb-3 flex items-center justify-between gap-2">
           <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
             <Calendar className="h-3 w-3" />
-            {formatDisplayDate(match)}
+            {mounted ? formatDisplayDate(match) : match.date}
           </span>
           <div className="flex items-center gap-2">
             {match.matchWeek != null && match.stageKey === "group" ? (

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { CircleDot, GraduationCap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { BasketballGamesHub } from "@/features/tournaments/components/basketball-games-hub";
+import { fetchNbaScheduleBundle, type NbaScheduleBundle } from "@/lib/api/espn-nba-schedule";
 
 const BASKETBALL_TOURNAMENTS = [
   {
@@ -24,9 +26,22 @@ const BASKETBALL_TOURNAMENTS = [
   },
 ] as const;
 
-export function BasketballTournamentHub() {
+export async function BasketballTournamentHub() {
+  let schedule: NbaScheduleBundle = {
+    live: [],
+    past: [],
+    scheduled: [],
+    fetchedAt: new Date().toISOString(),
+  };
+
+  try {
+    schedule = await fetchNbaScheduleBundle();
+  } catch (error) {
+    console.warn("[basketball-tournament-hub] Falha ao carregar agenda NBA:", error);
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-8">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Basketball Hub</p>
         <h1 className="mt-2 font-display text-xl font-bold text-foreground md:text-3xl">
@@ -60,6 +75,8 @@ export function BasketballTournamentHub() {
           );
         })}
       </div>
+
+      <BasketballGamesHub schedule={schedule} />
     </div>
   );
 }
