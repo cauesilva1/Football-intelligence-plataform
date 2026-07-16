@@ -46,29 +46,31 @@ export function TournamentView({
     <div className="space-y-6">
       <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-8">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Tournament Hub</p>
-        <h1 className="mt-2 font-display text-xl font-bold text-foreground md:text-3xl">
+        <h1 className="mt-1.5 font-display text-xl font-bold text-foreground md:mt-2 md:text-3xl">
           International Competitions
         </h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+        <p className="mt-1.5 hidden max-w-2xl text-sm text-muted-foreground sm:mt-2 sm:block">
           World Cup 2026 via ESPN scraper (local JSON) and StatsBomb historical archive — filter by phase
           and search by nation instantly.
         </p>
 
-        <div className="mt-6 flex flex-wrap gap-2">
+        <div className="-mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-1 md:mt-6 md:flex-wrap md:overflow-visible">
           {TOURNAMENTS.map((tournament) => (
             <button
               key={tournament.id}
               type="button"
               onClick={() => handleTabChange(tournament.id)}
               className={cn(
-                "rounded-lg border px-4 py-2 text-left transition-colors",
+                "shrink-0 rounded-lg border px-3 py-2 text-left transition-colors md:px-4",
                 activeId === tournament.id
                   ? "border-primary/50 bg-primary/10 text-foreground"
                   : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:text-foreground"
               )}
             >
               <span className="block text-sm font-semibold">{tournament.label}</span>
-              <span className="block text-[11px] opacity-80">{tournament.description}</span>
+              <span className="mt-0.5 hidden max-w-[14rem] text-[11px] opacity-80 sm:block">
+                {tournament.description}
+              </span>
             </button>
           ))}
         </div>

@@ -44,10 +44,10 @@ export async function BasketballTournamentHub() {
     <div className="space-y-8">
       <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-8">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Basketball Hub</p>
-        <h1 className="mt-2 font-display text-xl font-bold text-foreground md:text-3xl">
+        <h1 className="mt-1.5 font-display text-xl font-bold text-foreground md:mt-2 md:text-3xl">
           Competições de Basquete
         </h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+        <p className="mt-1.5 hidden max-w-2xl text-sm text-muted-foreground sm:mt-2 sm:block">
           Explore as principais ligas. Acompanhe jogos em tempo real, resultados históricos e
           estatísticas de franquias e universidades.
         </p>

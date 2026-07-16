@@ -32,17 +32,17 @@ export const NAV_ITEMS = [
 export function MobileNav() {
   const pathname = usePathname();
 
+  // Keep primary destinations in the bar; full list stays in the header menu.
   const mobileItems = [
-    NAV_ITEMS[0],
-    NAV_ITEMS[1],
-    NAV_ITEMS[2],
-    NAV_ITEMS[4],
-    NAV_ITEMS[3],
-    NAV_ITEMS[6],
+    NAV_ITEMS[0], // Overview
+    NAV_ITEMS[1], // Players
+    NAV_ITEMS[2], // Scouting
+    NAV_ITEMS[6], // Clubs
+    NAV_ITEMS[7], // Tournaments
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 px-1 py-1.5 backdrop-blur-md md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 px-1 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] backdrop-blur-md md:hidden">
       <div className="flex items-center justify-around">
         {mobileItems.map((item) => {
           const Icon = item.icon;

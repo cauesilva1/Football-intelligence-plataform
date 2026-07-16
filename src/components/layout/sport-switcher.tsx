@@ -17,7 +17,7 @@ export function SportSwitcher({ compact = false }: { compact?: boolean }) {
     <div
       className={cn(
         "flex rounded-xl border border-border bg-card/80 p-1",
-        compact ? "w-full" : "w-full"
+        compact ? "w-auto" : "w-full"
       )}
       role="tablist"
       aria-label="Alternar esporte"
@@ -32,7 +32,8 @@ export function SportSwitcher({ compact = false }: { compact?: boolean }) {
             aria-selected={active}
             onClick={() => setSport(value)}
             className={cn(
-              "flex flex-1 items-center justify-center gap-2 rounded-lg px-2 py-2 text-xs font-medium transition-all",
+              "flex items-center justify-center gap-2 rounded-lg text-xs font-medium transition-all",
+              compact ? "h-8 w-8 px-0" : "flex-1 px-2 py-2",
               active
                 ? "bg-primary/15 text-primary shadow-sm"
                 : "text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -40,7 +41,7 @@ export function SportSwitcher({ compact = false }: { compact?: boolean }) {
           >
             <Icon className="h-3.5 w-3.5 shrink-0" />
             {!compact && <span>{label}</span>}
-            {compact && <span className="sr-only sm:not-sr-only sm:inline">{label}</span>}
+            {compact && <span className="sr-only">{label}</span>}
           </button>
         );
       })}

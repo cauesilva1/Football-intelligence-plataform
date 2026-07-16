@@ -31,7 +31,10 @@ export function MobileHeaderMenu() {
             className="fixed inset-0 z-40 bg-black/50"
             onClick={() => setOpen(false)}
           />
-          <nav className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-border bg-background p-2 shadow-panel">
+          <nav className="absolute right-0 top-full z-[60] mt-2 max-h-[70vh] w-64 overflow-y-auto rounded-xl border border-border bg-background p-2 shadow-panel">
+            <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Navegação
+            </p>
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
