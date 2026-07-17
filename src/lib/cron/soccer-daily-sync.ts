@@ -79,6 +79,21 @@ export async function runSoccerDailySync(date = new Date()): Promise<SoccerCronR
     throw new Error("DATABASE_URL ausente. Configure .env antes de executar o cron.");
   }
 
+  try {
+    const { syncBrasileiraoHistoricalMatches, syncWorldCup2026Matches } = await import(
+      "@/lib/api/espn-matches"
+    );
+    const [braSaved, wcSaved] = await Promise.all([
+      syncBrasileiraoHistoricalMatches(),
+      syncWorldCup2026Matches(),
+    ]);
+    console.log(
+      `${LOG_PREFIX} Fixtures sync — Brasileirão: ${braSaved} · World Cup: ${wcSaved}`
+    );
+  } catch (error) {
+    console.warn(`${LOG_PREFIX} Fixtures sync failed (continuing boxscores):`, error);
+  }
+
   console.log(`${LOG_PREFIX} Buscando placares do dia na ESPN...`);
   const events = await fetchScoreboard(date);
   const finished = events.filter(isFinalEvent);

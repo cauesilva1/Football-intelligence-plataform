@@ -1,9 +1,10 @@
-import { connection } from "next/server";
 import { isDbSource } from "@/lib/data-source";
 
-/** Opt out of static generation when the live database is the data source. */
+/**
+ * Marker for routes that read live data.
+ * Avoid `connection()` here — it forces dynamic rendering and defeats `revalidate`.
+ * Repositories already guard with `canUseDatabase()` / `isDbSource()`.
+ */
 export async function ensureRuntimeDataSource(): Promise<void> {
-  if (isDbSource()) {
-    await connection();
-  }
+  void isDbSource();
 }

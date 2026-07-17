@@ -38,4 +38,12 @@ export interface StatsBombMatch {
     season_id: number;
     season_name: string;
   };
+  metadata?: {
+    source?: string;
+    espn_event_id?: string | number;
+    fetched_at?: string;
+    status_detail?: string;
+    live_merged_at?: string;
+    [key: string]: unknown;
+  };
 }

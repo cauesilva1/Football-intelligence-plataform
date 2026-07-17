@@ -2,7 +2,9 @@ import {
   API_FOOTBALL_EUROPEAN_SEASON_YEAR,
   CURRENT_SEASON,
   isBrazilianLeague,
+  isMlsLeague,
   TRANSFERMARKT_BRAZIL_SEASON_ID,
+  TRANSFERMARKT_MLS_SEASON_ID,
 } from "@/lib/seasons";
 import { namesLikelyMatch, normalizeNameForMatch } from "@/lib/sync/data-staleness";
 
@@ -77,10 +79,43 @@ function resolveTransfermarktSeasonId(competitionName?: string | null): number {
   if (isBrazilianLeague(competitionName)) {
     return TRANSFERMARKT_BRAZIL_SEASON_ID;
   }
+  if (isMlsLeague(competitionName)) {
+    return TRANSFERMARKT_MLS_SEASON_ID;
+  }
   return API_FOOTBALL_EUROPEAN_SEASON_YEAR;
 }
 
+/** Public Transfermarkt proxy (fly.dev) is often down — trip after a few failures. */
+const TM_CIRCUIT_FAIL_THRESHOLD = 3;
+const TM_CIRCUIT_COOLDOWN_MS = 15 * 60 * 1000;
+let tmConsecutiveFailures = 0;
+let tmCircuitOpenUntil = 0;
+
+export function isTransfermarktAvailable(): boolean {
+  return Date.now() >= tmCircuitOpenUntil;
+}
+
+function noteTmSuccess() {
+  tmConsecutiveFailures = 0;
+}
+
+function noteTmFailure(path: string, detail: string) {
+  tmConsecutiveFailures += 1;
+  if (tmConsecutiveFailures >= TM_CIRCUIT_FAIL_THRESHOLD && Date.now() >= tmCircuitOpenUntil) {
+    tmCircuitOpenUntil = Date.now() + TM_CIRCUIT_COOLDOWN_MS;
+    console.warn(
+      `[transfermarkt] Circuit open for ${TM_CIRCUIT_COOLDOWN_MS / 60_000}m after repeated failures (last: ${detail} on ${path})`
+    );
+  } else {
+    console.warn(`[transfermarkt] ${detail} on ${path}`);
+  }
+}
+
 async function tmFetch<T>(path: string): Promise<T | null> {
+  if (!isTransfermarktAvailable()) {
+    return null;
+  }
+
   try {
     const response = await fetch(`${TM_API_BASE}${path}`, {
       headers: { "User-Agent": "football-intelligence-platform/1.0" },
@@ -88,12 +123,14 @@ async function tmFetch<T>(path: string): Promise<T | null> {
     });
 
     if (!response.ok) {
-      console.warn(`[transfermarkt] HTTP ${response.status} on ${path}`);
+      noteTmFailure(path, `HTTP ${response.status}`);
       return null;
     }
 
+    noteTmSuccess();
     return (await response.json()) as T;
   } catch (error) {
+    noteTmFailure(path, "Fetch failed");
     console.warn("[transfermarkt] Fetch failed:", path, error);
     return null;
   }
@@ -163,11 +200,19 @@ export async function fetchClubSquad(
   clubId: number,
   competitionName?: string | null
 ): Promise<TransfermarktSquadPlayer[]> {
-  const seasonId = resolveTransfermarktSeasonId(competitionName);
-  const data = await tmFetch<{ players?: TransfermarktSquadPlayer[] }>(
-    `/clubs/${clubId}/players?season_id=${seasonId}`
+  const primary = resolveTransfermarktSeasonId(competitionName);
+  const seasonCandidates = [primary, primary - 1, primary - 2, 2024].filter(
+    (year, index, arr) => year > 2000 && arr.indexOf(year) === index
   );
-  return data?.players ?? [];
+
+  for (const seasonId of seasonCandidates) {
+    const data = await tmFetch<{ players?: TransfermarktSquadPlayer[] }>(
+      `/clubs/${clubId}/players?season_id=${seasonId}`
+    );
+    if (data?.players?.length) return data.players;
+  }
+
+  return [];
 }
 
 /** Fetch and normalize club data for the active season (25/26 EU, 2025 BR histórico). */
@@ -197,4 +242,4 @@ export function parseFoundedYear(foundedOn?: string): number | undefined {
   return Number.isFinite(year) ? year : undefined;
 }
 
-export { CURRENT_SEASON, isBrazilianLeague, TRANSFERMARKT_BRAZIL_SEASON_ID };
+export { CURRENT_SEASON, isBrazilianLeague, isMlsLeague, TRANSFERMARKT_BRAZIL_SEASON_ID };

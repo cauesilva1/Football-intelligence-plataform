@@ -11,6 +11,8 @@ export interface AggregatedTeamStats {
   goalBalance: number;
   points?: number;
   crestUrl?: string;
+  /** Supabase team id when resolved — enables links to `/teams/[id]`. */
+  teamId?: string;
   seasonLabel: string;
   statsBombCompetitionName: string;
 }

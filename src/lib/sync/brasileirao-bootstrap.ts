@@ -2,6 +2,7 @@ import { getPrisma } from "@/lib/prisma";
 import { canUseDatabase } from "@/lib/system-cache";
 import { BRAZIL_SEASON_LABEL, ESPN_BRAZIL_SEASON_YEAR } from "@/lib/seasons";
 import { syncBrasileiraoHistoricalMatches } from "@/lib/api/espn-matches";
+import { isStale, MATCH_SYNC_TTL_MS, needsMatchSync } from "@/lib/sync/data-staleness";
 
 const ESPN_BASE = "https://site.api.espn.com/apis/v2/sports/soccer";
 const BRASILEIRAO_NAME = "Brasileirão Série A";
@@ -56,8 +57,8 @@ async function fetchEspnStandingsTeams(seasonYear: number): Promise<
 }
 
 /**
- * Ensures Brasileirão competition exists with espnSlug and seeds teams from ESPN season 2025.
- * Ingests finished fixtures from the 2025 campaign to unlock `/teams` with stable historical data.
+ * Ensures Brasileirão competition exists with espnSlug and seeds teams from ESPN season 2026.
+ * Ingests fixtures from the 2026 campaign to unlock `/teams` with live standings data.
  */
 export async function ensureBrasileiraoCompetition(): Promise<void> {
   if (!canUseDatabase()) return;
@@ -109,11 +110,25 @@ export async function ensureBrasileiraoCompetition(): Promise<void> {
   if (needsTeamBootstrap) {
     const espnTeams = await fetchEspnStandingsTeams(ESPN_BRAZIL_SEASON_YEAR);
     if (espnTeams.length) {
-      for (const espnTeam of espnTeams) {
-        const existing = await prisma.team.findFirst({
-          where: { name: { equals: espnTeam.name, mode: "insensitive" } },
-        });
+      const existingTeams = await prisma.team.findMany({
+        select: { id: true, name: true, crestUrl: true },
+      });
+      const byName = new Map(
+        existingTeams.map((team) => [team.name.toLowerCase(), team] as const)
+      );
 
+      const toCreate: Array<{
+        name: string;
+        shortName: string;
+        country: string;
+        crestUrl?: string;
+        competitionId: string;
+        dataSyncedSeason: string;
+        dataSyncedAt: Date;
+      }> = [];
+
+      for (const espnTeam of espnTeams) {
+        const existing = byName.get(espnTeam.name.toLowerCase());
         if (existing) {
           await prisma.team.update({
             where: { id: existing.id },
@@ -128,17 +143,19 @@ export async function ensureBrasileiraoCompetition(): Promise<void> {
           continue;
         }
 
-        await prisma.team.create({
-          data: {
-            name: espnTeam.name,
-            shortName: teamShortName(espnTeam.name),
-            country: "Brazil",
-            crestUrl: espnTeam.crestUrl,
-            competitionId: competition.id,
-            dataSyncedSeason: BRAZIL_SEASON_LABEL,
-            dataSyncedAt: new Date(),
-          },
+        toCreate.push({
+          name: espnTeam.name,
+          shortName: teamShortName(espnTeam.name),
+          country: "Brazil",
+          crestUrl: espnTeam.crestUrl,
+          competitionId: competition.id,
+          dataSyncedSeason: BRAZIL_SEASON_LABEL,
+          dataSyncedAt: new Date(),
         });
+      }
+
+      if (toCreate.length > 0) {
+        await prisma.team.createMany({ data: toCreate, skipDuplicates: true });
       }
     }
   }
@@ -151,7 +168,36 @@ export async function ensureBrasileiraoCompetition(): Promise<void> {
     },
   });
 
-  if (finishedMatches < 20) {
+  const latestMatch = await prisma.match.findFirst({
+    where: {
+      competitionId: competition.id,
+      seasonLabel: BRAZIL_SEASON_LABEL,
+    },
+    orderBy: { updatedAt: "desc" },
+    select: { seasonLabel: true, updatedAt: true },
+  });
+
+  const staleScheduled = await prisma.match.findFirst({
+    where: {
+      competitionId: competition.id,
+      seasonLabel: BRAZIL_SEASON_LABEL,
+      status: { not: "finished" },
+      matchDate: { lt: new Date(Date.now() - 2 * 60 * 60 * 1000) },
+    },
+    select: { id: true },
+  });
+
+  const shouldSyncFixtures =
+    finishedMatches < 20 ||
+    needsMatchSync(
+      latestMatch?.seasonLabel ?? null,
+      BRASILEIRAO_NAME,
+      latestMatch?.updatedAt,
+      Boolean(staleScheduled)
+    ) ||
+    isStale(latestMatch?.updatedAt, MATCH_SYNC_TTL_MS);
+
+  if (shouldSyncFixtures) {
     await syncBrasileiraoHistoricalMatches();
   }
 }

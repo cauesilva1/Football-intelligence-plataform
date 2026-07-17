@@ -26,7 +26,7 @@ export function parseSeasonStartYear(seasonLabel?: string | null): number | null
 
 /**
  * Validates cached data against the active campaign:
- * Europe ≥ 2025 (25/26), Brasileirão travado em 2025 (histórico finalizado).
+ * Europe ≥ 2025 (25/26), Brasileirão 2026 ao vivo.
  */
 export function isSeasonCurrentForCompetition(
   seasonLabel: string | null | undefined,
