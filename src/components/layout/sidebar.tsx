@@ -3,54 +3,56 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { appConfig } from "@/lib/config";
 import { useSport } from "@/context/sport-context";
-import { sportLabel } from "@/lib/sport";
 import { SportSwitcher } from "./sport-switcher";
-import { NAV_ITEMS, SidebarLogo } from "./mobile-nav";
+import { NAV_GROUPS, SidebarLogo, navLabel, type NavItem } from "./mobile-nav";
+
+function NavLink({ item, active }: { item: NavItem; active: boolean }) {
+  const { currentSport } = useSport();
+  const Icon = item.icon;
+
+  return (
+    <Link
+      href={item.href}
+      className={cn(
+        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-colors",
+        active
+          ? "bg-primary/12 text-primary"
+          : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
+      )}
+    >
+      <Icon className={cn("h-[18px] w-[18px] shrink-0", active ? "text-primary" : "opacity-70")} />
+      <span className="truncate">{navLabel(item, currentSport)}</span>
+    </Link>
+  );
+}
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { currentSport } = useSport();
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-border bg-background/60 px-3 py-5 md:flex">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border/60 bg-background/40 px-4 py-6 backdrop-blur-sm md:flex">
       <SidebarLogo />
 
-      <div className="mb-4 mt-2">
-        <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Plataforma
-        </p>
+      <div className="mb-8">
         <SportSwitcher />
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const active = pathname === item.href || pathname?.startsWith(item.href + "/");
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
-                active
-                  ? "border-primary/20 bg-primary/10 text-primary"
-                  : "border-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav className="flex flex-1 flex-col gap-8 overflow-y-auto pr-0.5">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.id} className="space-y-1.5">
+            <p className="px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
+              {group.label}
+            </p>
+            <div className="flex flex-col gap-0.5">
+              {group.items.map((item) => {
+                const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+                return <NavLink key={item.href} item={item} active={Boolean(active)} />;
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
-
-      <div className="rounded-xl border border-border bg-card p-3">
-        <p className="text-[11px] font-medium text-muted-foreground">Contexto ativo</p>
-        <p className="font-display text-sm font-semibold text-primary">{sportLabel(currentSport)}</p>
-        <p className="mt-0.5 text-[11px] text-muted-foreground">Temporada {appConfig.season}</p>
-      </div>
     </aside>
   );
 }
