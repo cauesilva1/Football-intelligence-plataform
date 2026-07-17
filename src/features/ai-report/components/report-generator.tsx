@@ -22,16 +22,27 @@ export function ReportGenerator({
   const [playerId, setPlayerId] = useState(initialPlayerId ?? "");
   const [report, setReport] = useState<ScoutingReport | null>(null);
   const [status, setStatus] = useState<"idle" | "generating" | "error">("idle");
+  const [errorHint, setErrorHint] = useState<string | null>(null);
 
   const generate = useCallback(async () => {
     if (!playerId) return;
     setStatus("generating");
     setReport(null);
+    setErrorHint(null);
     try {
       const r = await createScoutingReport(playerId);
       setReport(r);
       setStatus("idle");
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (message.startsWith("RATE_LIMITED:")) {
+        const sec = message.split(":")[1] ?? "60";
+        setErrorHint(`Rate limit reached. Try again in ~${sec}s.`);
+      } else if (message === "REPORTS_DISABLED") {
+        setErrorHint("Report generation is temporarily disabled.");
+      } else {
+        setErrorHint(null);
+      }
       setStatus("error");
     }
   }, [playerId]);
@@ -110,7 +121,12 @@ export function ReportGenerator({
         </div>
       </DataPanel>
 
-      {status === "error" && <ErrorState onRetry={generate} />}
+      {status === "error" && (
+        <ErrorState
+          onRetry={generate}
+          description={errorHint ?? undefined}
+        />
+      )}
 
       {status === "idle" && !report && (
         <EmptyState

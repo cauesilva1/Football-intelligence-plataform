@@ -71,9 +71,16 @@ export function parsePlayerFilters(
     route,
     sortBy: sortByParam && SORT_KEYS.includes(sortByParam) ? sortByParam : defaults.sortBy,
     sortDir: sortDir === "asc" || sortDir === "desc" ? sortDir : defaults.sortDir,
-    page: num(param(searchParams.page)) ?? 1,
-    pageSize: num(param(searchParams.pageSize)) ?? defaults.pageSize,
+    page: Math.max(1, num(param(searchParams.page)) ?? 1),
+    pageSize: clampPageSize(num(param(searchParams.pageSize)) ?? defaults.pageSize),
   };
+}
+
+const MAX_PAGE_SIZE = 50;
+
+function clampPageSize(value: number | undefined): number {
+  const n = typeof value === "number" && Number.isFinite(value) ? Math.floor(value) : 10;
+  return Math.min(MAX_PAGE_SIZE, Math.max(1, n));
 }
 
 /** @deprecated Use parsePlayerFilters(params, "scouting") */

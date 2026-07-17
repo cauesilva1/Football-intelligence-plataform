@@ -402,7 +402,8 @@ async function findManyPaginatedOnPlayer(
   pageSize: number;
   totalPages: number;
 }> {
-  const { page = 1, pageSize = 25 } = filters;
+  const page = Math.max(1, filters.page ?? 1);
+  const pageSize = Math.min(50, Math.max(1, filters.pageSize ?? 25));
   const skip = (page - 1) * pageSize;
   const orderBy = buildPlayerOrderBy(filters);
 
@@ -440,7 +441,8 @@ async function findManyCappedThenPage(
   pageSize: number;
   totalPages: number;
 }> {
-  const { page = 1, pageSize = 25 } = filters;
+  const page = Math.max(1, filters.page ?? 1);
+  const pageSize = Math.min(50, Math.max(1, filters.pageSize ?? 25));
   const records = await getPrisma().player.findMany({
     where,
     include: playerListInclude,
@@ -533,7 +535,8 @@ export const prismaPlayerRepository: PlayerRepository & {
       });
     }
 
-    const { page = 1, pageSize = 25 } = filters;
+    const page = Math.max(1, filters.page ?? 1);
+    const pageSize = Math.min(50, Math.max(1, filters.pageSize ?? 25));
     const where = buildStatWhere(filters);
     const orderBy = buildStatOrderBy(filters);
     const skip = (page - 1) * pageSize;

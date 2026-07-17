@@ -235,7 +235,7 @@ async function fetchMatchSummary(
       "User-Agent": "football-intelligence-platform/1.0 (brasileirao-boxscore)",
       Accept: "application/json",
     },
-    signal: AbortSignal.timeout(45_000),
+    signal: AbortSignal.timeout(12_000),
   });
 
   if (!response.ok) {

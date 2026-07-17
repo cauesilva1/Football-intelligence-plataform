@@ -3,15 +3,24 @@
 import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/prisma";
 import { canUseDatabase } from "@/lib/system-cache";
+import { enforceActionRateLimit } from "@/lib/action-guard";
 import { resolveAmericanFootballLeagueCode } from "@/lib/american-football/team-league";
 import { resolveFootballHubSeasonYears } from "@/lib/api/espn-football-seasons";
 import { ensureAmericanFootballPlayerSeasons } from "@/lib/sync/american-football-roster";
 
 export async function enrichAmericanFootballPlayerSeasonsAction(
   playerId: string
-): Promise<{ ok: boolean; refreshed: boolean }> {
+): Promise<{ ok: boolean; refreshed: boolean; error?: string }> {
   if (!canUseDatabase() || !playerId) {
     return { ok: false, refreshed: false };
+  }
+
+  try {
+    // ESPN + DB writes — keep abuse bounded (12 / hour / IP).
+    await enforceActionRateLimit("af-enrich", { limit: 12, windowMs: 60 * 60_000 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "RATE_LIMITED";
+    return { ok: false, refreshed: false, error: message };
   }
 
   const prisma = getPrisma();

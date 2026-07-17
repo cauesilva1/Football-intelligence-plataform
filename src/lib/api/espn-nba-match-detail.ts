@@ -315,7 +315,7 @@ async function fetchScoreboardEvent(
             Accept: "application/json",
           },
           next: { revalidate: 60 },
-          signal: AbortSignal.timeout(45_000),
+          signal: AbortSignal.timeout(12_000),
         }
       );
       if (!response.ok) continue;
@@ -356,7 +356,7 @@ export async function fetchNbaMatchDetail(
         Accept: "application/json",
       },
       next: { revalidate: 120 },
-      signal: AbortSignal.timeout(45_000),
+      signal: AbortSignal.timeout(12_000),
     });
 
     if (response.ok) {

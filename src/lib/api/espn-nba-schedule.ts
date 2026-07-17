@@ -163,7 +163,7 @@ async function fetchScoreboardEvents(
         Accept: "application/json",
       },
       next: { revalidate: 120 },
-      signal: AbortSignal.timeout(45_000),
+      signal: AbortSignal.timeout(12_000),
     });
     if (!response.ok) return [];
     const payload = (await response.json()) as { events?: EspnScoreboardEvent[] };
@@ -296,7 +296,7 @@ export async function fetchNbaGameLeaders(
       "User-Agent": "football-intelligence-platform/1.0 (nba-schedule-ui)",
       Accept: "application/json",
     },
-    signal: AbortSignal.timeout(45_000),
+    signal: AbortSignal.timeout(12_000),
   });
 
   if (!response.ok) return undefined;
