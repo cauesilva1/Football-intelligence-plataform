@@ -13,11 +13,17 @@ export interface LeagueOption {
   name: string;
 }
 
+/** Soft cap when no league is selected — avoids shipping every NCAA/CFB program. */
+const UNFILTERED_TEAM_CAP = 80;
+
 function filterLeaguesBySport<T extends { name: string }>(items: T[], sport: Sport): T[] {
   return items.filter((item) => competitionBelongsToSport(item.name, sport));
 }
 
-export async function queryScoutingFilterOptions(sport: Sport = "SOCCER"): Promise<{
+export async function queryScoutingFilterOptions(
+  sport: Sport = "SOCCER",
+  options?: { leagueId?: string }
+): Promise<{
   leagues: LeagueOption[];
   teams: TeamOption[];
 }> {
@@ -27,32 +33,40 @@ export async function queryScoutingFilterOptions(sport: Sport = "SOCCER"): Promi
       sport
     );
     const leagueIds = new Set<string>(leagues.map((league) => league.id));
-    return {
-      leagues,
-      teams: TEAM_OPTIONS.filter((team) => leagueIds.has(team.leagueId)),
-    };
+    let teams = TEAM_OPTIONS.filter((team) => leagueIds.has(team.leagueId));
+    if (options?.leagueId) {
+      teams = teams.filter((team) => team.leagueId === options.leagueId);
+    } else {
+      teams = teams.slice(0, UNFILTERED_TEAM_CAP);
+    }
+    return { leagues, teams };
   }
 
   await ensureRuntimeDataSource();
   const repo = getTeamRepository();
-  const [competitions, teams] = await Promise.all([repo.getCompetitions(), repo.findAll()]);
-
+  const competitions = await repo.getCompetitions();
   const leagues = filterLeaguesBySport(
     competitions.map((c) => ({ id: c.id, name: c.name })),
     sport
   );
-  const leagueIds = new Set<string>(leagues.map((league) => league.id));
+  const leagueIds = leagues.map((league) => league.id);
+  const selectedLeague =
+    options?.leagueId && leagueIds.includes(options.leagueId) ? options.leagueId : undefined;
+
+  const { items: teams } = await repo.findDirectory({
+    competitionIds: selectedLeague ? [selectedLeague] : leagueIds,
+    includeStats: false,
+    take: selectedLeague ? 120 : UNFILTERED_TEAM_CAP,
+  });
 
   return {
     leagues,
-    teams: teams
-      .filter((team) => leagueIds.has(team.competitionId))
-      .map((t) => ({
-        id: t.id,
-        name: t.name,
-        shortName: t.shortName,
-        leagueId: t.competitionId,
-      })),
+    teams: teams.map((t) => ({
+      id: t.id,
+      name: t.name,
+      shortName: t.shortName,
+      leagueId: t.competitionId,
+    })),
   };
 }
 

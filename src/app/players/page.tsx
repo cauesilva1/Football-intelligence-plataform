@@ -57,7 +57,11 @@ export default async function PlayersPage({
           </div>
         ) : null}
         <Suspense fallback={<FiltersSkeleton />}>
-          <ScoutingFiltersPanelLoader basePath="/players" route="players" />
+          <ScoutingFiltersPanelLoader
+            basePath="/players"
+            route="players"
+            leagueId={filters.league}
+          />
         </Suspense>
         <Suspense key={suspenseKey} fallback={<ScoutingTableSkeleton rows={10} />}>
           <ScoutingDatabaseView filters={filters} basePath="/players" route="players" />

@@ -54,7 +54,11 @@ export default async function ScoutingPage({
           </div>
         ) : null}
         <Suspense fallback={<FiltersSkeleton />}>
-          <ScoutingFiltersPanelLoader basePath="/scouting" route="scouting" />
+          <ScoutingFiltersPanelLoader
+            basePath="/scouting"
+            route="scouting"
+            leagueId={filters.league}
+          />
         </Suspense>
         <Suspense key={JSON.stringify(filters)} fallback={<ScoutingTableSkeleton rows={20} />}>
           <ScoutingDatabaseView filters={filters} basePath="/scouting" route="scouting" />
