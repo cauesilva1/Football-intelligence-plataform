@@ -14,10 +14,9 @@ export default async function ReportsPage({
   const raw = params.playerId;
   const playerId = Array.isArray(raw) ? raw[0] : raw;
 
-  const players = await queryAllPlayersLite({
-    take: 400,
-    ensureIds: playerId ? [playerId] : undefined,
-  });
+  const players = playerId
+    ? await queryAllPlayersLite({ take: 1, ensureIds: [playerId] })
+    : [];
 
   const validPlayerId = playerId && players.some((p) => p.id === playerId) ? playerId : undefined;
 

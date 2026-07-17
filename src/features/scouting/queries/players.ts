@@ -28,7 +28,7 @@ export const queryPlayerById = cache(async (id: string, season?: string) => {
 });
 
 export const queryAllPlayersLite = cache(
-  async (options?: { take?: number; ensureIds?: string[] }) => {
+  async (options?: { take?: number; ensureIds?: string[]; search?: string }) => {
     await ensureRuntimeDataSource();
     const sport = await getServerSport();
     return withSupabaseErrorLog("queryAllPlayersLite", () =>
@@ -36,3 +36,20 @@ export const queryAllPlayersLite = cache(
     );
   }
 );
+
+/** Autocomplete search for compare/reports — bounded, sport-scoped. */
+export async function searchPlayersLite(options?: {
+  search?: string;
+  take?: number;
+  ensureIds?: string[];
+}) {
+  await ensureRuntimeDataSource();
+  const sport = await getServerSport();
+  return withSupabaseErrorLog("searchPlayersLite", () =>
+    getPlayerRepository().findLite(sport, {
+      take: options?.take ?? 30,
+      search: options?.search,
+      ensureIds: options?.ensureIds,
+    })
+  );
+}

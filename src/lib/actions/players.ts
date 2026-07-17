@@ -1,8 +1,13 @@
 "use server";
 
-import { queryPlayers, queryPlayerById, queryAllPlayersLite } from "@/features/scouting/queries/players";
+import {
+  queryPlayers,
+  queryPlayerById,
+  queryAllPlayersLite,
+  searchPlayersLite,
+} from "@/features/scouting/queries/players";
 import { queryPlayersForComparison } from "@/features/comparison/queries/compare";
-import type { Player, PlayerFilters, PaginatedResult } from "@/types";
+import type { Player, PlayerFilters, PaginatedResult, PlayerLite } from "@/types";
 
 async function simulateLatency(ms = 350) {
   if (process.env.DATA_SOURCE !== "db") {
@@ -32,5 +37,18 @@ export async function getPlayersForComparison(idA: string, idB: string): Promise
 
 export async function getAllPlayersLite() {
   await simulateLatency(150);
-  return queryAllPlayersLite();
+  return queryAllPlayersLite({ take: 30 });
+}
+
+export async function searchPlayersLiteAction(input: {
+  search?: string;
+  take?: number;
+  ensureIds?: string[];
+}): Promise<PlayerLite[]> {
+  const take = Math.min(Math.max(input.take ?? 30, 1), 50);
+  return searchPlayersLite({
+    search: input.search?.slice(0, 80),
+    take,
+    ensureIds: (input.ensureIds ?? []).slice(0, 10),
+  });
 }

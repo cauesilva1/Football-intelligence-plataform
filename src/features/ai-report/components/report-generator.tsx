@@ -7,7 +7,7 @@ import { ErrorState } from "@/components/common/error-state";
 import { DataPanel } from "@/components/data/data-panel";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
+import { PlayerSearchCombobox } from "@/features/comparison/components/player-search-combobox";
 import { ReportView } from "@/features/ai-report/components/report-view";
 import { createScoutingReport } from "@/lib/actions/reports";
 import type { PlayerLite, ScoutingReport } from "@/types";
@@ -20,6 +20,7 @@ export function ReportGenerator({
   initialPlayerId?: string;
 }) {
   const [playerId, setPlayerId] = useState(initialPlayerId ?? "");
+  const [knownPlayers, setKnownPlayers] = useState<PlayerLite[]>(players);
   const [report, setReport] = useState<ScoutingReport | null>(null);
   const [status, setStatus] = useState<"idle" | "generating" | "error">("idle");
   const [errorHint, setErrorHint] = useState<string | null>(null);
@@ -47,7 +48,7 @@ export function ReportGenerator({
     }
   }, [playerId]);
 
-  const selectedPlayer = players.find((p) => p.id === playerId);
+  const selectedPlayer = knownPlayers.find((p) => p.id === playerId);
 
   const exportReport = useCallback(() => {
     if (!report || !selectedPlayer) return;
@@ -100,20 +101,28 @@ export function ReportGenerator({
 
       <DataPanel
         title="Generate report"
-        description="Select a player and start the analysis."
+        description="Search for a player and start the analysis."
         density="dense"
       >
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[260px] flex-1">
-            <label className="mb-1 block text-xs text-muted-foreground">Player</label>
-            <Select value={playerId} onChange={(e) => setPlayerId(e.target.value)}>
-              <option value="">Select a player</option>
-              {players.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.fullName} · {p.position}
-                </option>
-              ))}
-            </Select>
+            <PlayerSearchCombobox
+              label="Player"
+              initialPlayers={knownPlayers}
+              value={playerId}
+              onChange={(id, player) => {
+                setPlayerId(id);
+                setReport(null);
+                setStatus("idle");
+                if (player) {
+                  setKnownPlayers((prev) => {
+                    if (prev.some((p) => p.id === player.id)) return prev;
+                    return [...prev, player];
+                  });
+                }
+              }}
+              disabled={status === "generating"}
+            />
           </div>
           <Button onClick={generate} disabled={!playerId || status === "generating"}>
             {status === "generating" ? "Generating report..." : "Generate report"}
@@ -122,10 +131,7 @@ export function ReportGenerator({
       </DataPanel>
 
       {status === "error" && (
-        <ErrorState
-          onRetry={generate}
-          description={errorHint ?? undefined}
-        />
+        <ErrorState onRetry={generate} description={errorHint ?? undefined} />
       )}
 
       {status === "idle" && !report && (

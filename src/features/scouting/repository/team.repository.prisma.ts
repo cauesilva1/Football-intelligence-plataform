@@ -21,6 +21,11 @@ import { playerListInclude, prismaPlayerRepository } from "./player.repository.p
 
 const TEAM_STAT_SEASONS = [CURRENT_SEASON, BRAZIL_SEASON_LABEL, FIFA_WORLD_CUP_SEASON_LABEL] as const;
 
+async function listAllCompetitionIds(): Promise<string[]> {
+  const rows = await getPrisma().competition.findMany({ select: { id: true } });
+  return rows.map((row) => row.id);
+}
+
 function pickTeamStatistic<T extends { season: string }>(
   statistics: T[],
   competitionName?: string | null
@@ -32,15 +37,41 @@ function pickTeamStatistic<T extends { season: string }>(
 
 export const prismaTeamRepository: TeamRepository = {
   async findAll(competitionId?: string) {
-    const teams = await getPrisma().team.findMany({
-      where: competitionId ? { competitionId } : undefined,
-      include: {
-        competition: true,
-        statistics: { where: { season: { in: [...TEAM_STAT_SEASONS] } } },
-        _count: { select: { players: true } },
-      },
-      orderBy: { name: "asc" },
+    const { items } = await this.findDirectory({
+      competitionIds: competitionId ? [competitionId] : await listAllCompetitionIds(),
+      includeStats: true,
     });
+    return items;
+  },
+
+  async findDirectory(options) {
+    const competitionIds = [...new Set(options.competitionIds.filter(Boolean))];
+    if (competitionIds.length === 0) {
+      return { items: [], total: 0 };
+    }
+
+    const take = options.take != null ? Math.min(Math.max(options.take, 1), 100) : undefined;
+    const skip = options.skip != null ? Math.max(options.skip, 0) : undefined;
+    const includeStats = options.includeStats !== false;
+    const where = { competitionId: { in: competitionIds } };
+    const prisma = getPrisma();
+
+    const [total, teams] = await Promise.all([
+      prisma.team.count({ where }),
+      prisma.team.findMany({
+        where,
+        include: {
+          competition: true,
+          ...(includeStats
+            ? { statistics: { where: { season: { in: [...TEAM_STAT_SEASONS] } } } }
+            : {}),
+          _count: { select: { players: true } },
+        },
+        orderBy: { name: "asc" },
+        ...(take != null ? { take } : {}),
+        ...(skip != null ? { skip } : {}),
+      }),
+    ]);
 
     const nbaTeamIds: string[] = [];
     const ncaaTeamIds: string[] = [];
@@ -51,7 +82,6 @@ export const prismaTeamRepository: TeamRepository = {
       else if (league === "NCAA") ncaaTeamIds.push(team.id);
     }
 
-    const prisma = getPrisma();
     const [nbaCounts, ncaaCounts] = await Promise.all([
       nbaTeamIds.length
         ? prisma.player.groupBy({
@@ -74,56 +104,62 @@ export const prismaTeamRepository: TeamRepository = {
       if (row.teamId) squadSizeByTeamId.set(row.teamId, row._count._all);
     }
 
-    return teams.map((team) => {
+    const items = teams.map((team) => {
       const expectedLeague = resolveBasketballLeagueFromCompetition(team.competition?.name);
       const squadSize =
         expectedLeague != null
           ? (squadSizeByTeamId.get(team.id) ?? 0)
           : team._count.players;
-      const selectedStats = pickTeamStatistic(team.statistics, team.competition?.name);
+      const statistics =
+        "statistics" in team && Array.isArray(team.statistics) ? team.statistics : [];
+      const selectedStats = includeStats
+        ? pickTeamStatistic(statistics, team.competition?.name)
+        : undefined;
 
       return {
-      id: team.id,
-      name: team.name,
-      shortName: team.shortName,
-      country: team.country,
-      crestUrl: team.crestUrl ?? undefined,
-      apiSportsId: team.apiSportsId ?? undefined,
-      foundedYear: team.foundedYear ?? 0,
-      stadium: team.stadium ?? "",
-      competitionId: team.competitionId ?? "",
-      competition: team.competition
-        ? {
-            id: team.competition.id,
-            name: team.competition.name,
-            country: team.competition.country,
-            tier: team.competition.tier,
-            logoUrl: team.competition.logoUrl ?? undefined,
-          }
-        : undefined,
-      stats: selectedStats
-        ? {
-            id: selectedStats.id,
-            teamId: selectedStats.teamId,
-            season: selectedStats.season,
-            matchesPlayed: selectedStats.matchesPlayed,
-            wins: selectedStats.wins,
-            draws: selectedStats.draws,
-            losses: selectedStats.losses,
-            goalsFor: selectedStats.goalsFor,
-            goalsAgainst: selectedStats.goalsAgainst,
-            xG: selectedStats.xG,
-            xGA: selectedStats.xGA,
-            possessionPct: selectedStats.possessionPct,
-            passAccuracyPct: selectedStats.passAccuracyPct,
-            pressuresPer90: selectedStats.pressuresPer90,
-            attackRating: selectedStats.attackRating,
-            defenseRating: selectedStats.defenseRating,
-          }
-        : undefined,
-      squadSize,
+        id: team.id,
+        name: team.name,
+        shortName: team.shortName,
+        country: team.country,
+        crestUrl: team.crestUrl ?? undefined,
+        apiSportsId: team.apiSportsId ?? undefined,
+        foundedYear: team.foundedYear ?? 0,
+        stadium: team.stadium ?? "",
+        competitionId: team.competitionId ?? "",
+        competition: team.competition
+          ? {
+              id: team.competition.id,
+              name: team.competition.name,
+              country: team.competition.country,
+              tier: team.competition.tier,
+              logoUrl: team.competition.logoUrl ?? undefined,
+            }
+          : undefined,
+        stats: selectedStats
+          ? {
+              id: selectedStats.id,
+              teamId: selectedStats.teamId,
+              season: selectedStats.season,
+              matchesPlayed: selectedStats.matchesPlayed,
+              wins: selectedStats.wins,
+              draws: selectedStats.draws,
+              losses: selectedStats.losses,
+              goalsFor: selectedStats.goalsFor,
+              goalsAgainst: selectedStats.goalsAgainst,
+              xG: selectedStats.xG,
+              xGA: selectedStats.xGA,
+              possessionPct: selectedStats.possessionPct,
+              passAccuracyPct: selectedStats.passAccuracyPct,
+              pressuresPer90: selectedStats.pressuresPer90,
+              attackRating: selectedStats.attackRating,
+              defenseRating: selectedStats.defenseRating,
+            }
+          : undefined,
+        squadSize,
       };
     });
+
+    return { items, total };
   },
 
   async findById(id) {

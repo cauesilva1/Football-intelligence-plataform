@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TeamCrest } from "@/components/teams/team-crest";
 import { StatsBombAttribution } from "@/features/scouting/components/statsbomb-attribution";
-import { queryTeams, type TeamWithStatsBomb } from "@/features/scouting/queries/teams";
+import { queryTeamsDirectory, type TeamWithStatsBomb } from "@/features/scouting/queries/teams";
 import { isDbSource } from "@/lib/data-source";
 import { CURRENT_SEASON } from "@/lib/seasons";
 import type { Sport } from "@/lib/sport";
@@ -30,14 +30,15 @@ export async function TeamsGrid({
   sport?: Sport;
   page?: number;
 }) {
-  const allTeams: TeamWithStatsBomb[] = await queryTeams(competitionId, leagueKey, {
+  const directory = await queryTeamsDirectory(competitionId, leagueKey, {
     enrich: false,
+    page,
+    pageSize: PAGE_SIZE,
   });
-  const safePage = Math.max(1, page);
-  const totalPages = Math.max(1, Math.ceil(allTeams.length / PAGE_SIZE));
-  const currentPage = Math.min(safePage, totalPages);
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const teams = allTeams.slice(start, start + PAGE_SIZE);
+  const teams: TeamWithStatsBomb[] = directory.items;
+  const total = directory.total;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
 
   const isBasketball = sport === "BASKETBALL";
   const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
@@ -48,7 +49,7 @@ export async function TeamsGrid({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          {allTeams.length} {entityPlural}
+          {total} {entityPlural}
           {totalPages > 1 ? (
             <>
               {" · "}
@@ -119,15 +120,21 @@ export async function TeamsGrid({
                   {isFranchiseSport ? (
                     <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                       <div>
-                        <p className="font-display text-sm font-bold text-primary">{team.stats?.wins ?? "—"}</p>
+                        <p className="font-display text-sm font-bold text-primary">
+                          {team.stats?.wins ?? "—"}
+                        </p>
                         <p className="text-[10px] uppercase text-muted-foreground">Wins</p>
                       </div>
                       <div>
-                        <p className="font-display text-sm font-bold text-foreground">{team.stats?.losses ?? "—"}</p>
+                        <p className="font-display text-sm font-bold text-foreground">
+                          {team.stats?.losses ?? "—"}
+                        </p>
                         <p className="text-[10px] uppercase text-muted-foreground">Losses</p>
                       </div>
                       <div>
-                        <p className="font-display text-sm font-bold text-foreground">{team.squadSize ?? 0}</p>
+                        <p className="font-display text-sm font-bold text-foreground">
+                          {team.squadSize ?? 0}
+                        </p>
                         <p className="text-[10px] uppercase text-muted-foreground">Roster</p>
                       </div>
                     </div>
@@ -138,15 +145,21 @@ export async function TeamsGrid({
                         <p className="text-[10px] uppercase text-muted-foreground">V</p>
                       </div>
                       <div>
-                        <p className="font-display text-sm font-bold text-foreground">{sb?.draws ?? "—"}</p>
+                        <p className="font-display text-sm font-bold text-foreground">
+                          {sb?.draws ?? "—"}
+                        </p>
                         <p className="text-[10px] uppercase text-muted-foreground">E</p>
                       </div>
                       <div>
-                        <p className="font-display text-sm font-bold text-foreground">{sb?.losses ?? "—"}</p>
+                        <p className="font-display text-sm font-bold text-foreground">
+                          {sb?.losses ?? "—"}
+                        </p>
                         <p className="text-[10px] uppercase text-muted-foreground">D</p>
                       </div>
                       <div>
-                        <p className="font-display text-sm font-bold text-foreground">{sb ? balanceLabel : "—"}</p>
+                        <p className="font-display text-sm font-bold text-foreground">
+                          {sb ? balanceLabel : "—"}
+                        </p>
                         <p className="text-[10px] uppercase text-muted-foreground">SG</p>
                       </div>
                     </div>
@@ -156,7 +169,9 @@ export async function TeamsGrid({
                     <span className="inline-flex items-center gap-1">
                       <Users className="h-3 w-3" /> {team.squadSize ?? 0} players
                     </span>
-                    {!isFranchiseSport && sb ? <span className="text-primary/80">{sb.seasonLabel}</span> : null}
+                    {!isFranchiseSport && sb ? (
+                      <span className="text-primary/80">{sb.seasonLabel}</span>
+                    ) : null}
                   </div>
                 </CardContent>
               </Card>

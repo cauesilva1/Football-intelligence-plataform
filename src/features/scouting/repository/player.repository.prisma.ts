@@ -594,36 +594,43 @@ export const prismaPlayerRepository: PlayerRepository & {
 
   async findLite(
     sport: PlayerFilters["sport"] = "SOCCER",
-    options?: { take?: number; ensureIds?: string[] }
+    options?: { take?: number; ensureIds?: string[]; search?: string }
   ) {
-    const take = Math.min(Math.max(options?.take ?? 400, 1), 500);
+    const take = Math.min(Math.max(options?.take ?? 30, 1), 100);
     const ensureIds = [...new Set((options?.ensureIds ?? []).filter(Boolean))];
+    const search = options?.search?.trim() ?? "";
+    const liteSelect = {
+      id: true,
+      fullName: true,
+      knownAs: true,
+      position: true,
+      teamId: true,
+      team: { select: { shortName: true, name: true } },
+    } as const;
+
+    const where = {
+      sport: sport ?? "SOCCER",
+      ...(search
+        ? {
+            OR: [
+              { fullName: { contains: search, mode: "insensitive" as const } },
+              { knownAs: { contains: search, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
+    };
 
     const [records, ensured] = await Promise.all([
       getPrisma().player.findMany({
-        where: { sport: sport ?? "SOCCER" },
-        select: {
-          id: true,
-          fullName: true,
-          knownAs: true,
-          position: true,
-          teamId: true,
-          team: { select: { shortName: true, name: true } },
-        },
+        where,
+        select: liteSelect,
         orderBy: { fullName: "asc" },
         take,
       }),
       ensureIds.length
         ? getPrisma().player.findMany({
             where: { id: { in: ensureIds }, sport: sport ?? "SOCCER" },
-            select: {
-              id: true,
-              fullName: true,
-              knownAs: true,
-              position: true,
-              teamId: true,
-              team: { select: { shortName: true, name: true } },
-            },
+            select: liteSelect,
           })
         : Promise.resolve([]),
     ]);

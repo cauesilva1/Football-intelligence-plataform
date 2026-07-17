@@ -39,10 +39,21 @@ export const mockPlayerRepository: PlayerRepository = {
     };
   },
 
-  async findLite(sport: Sport = "SOCCER", options?: { take?: number; ensureIds?: string[] }) {
-    const take = Math.min(Math.max(options?.take ?? 400, 1), 500);
+  async findLite(
+    sport: Sport = "SOCCER",
+    options?: { take?: number; ensureIds?: string[]; search?: string }
+  ) {
+    const take = Math.min(Math.max(options?.take ?? 30, 1), 100);
     const ensureIds = new Set((options?.ensureIds ?? []).filter(Boolean));
-    const scoped = filterBySport(players, sport);
+    const search = options?.search?.trim().toLowerCase() ?? "";
+    let scoped = filterBySport(players, sport);
+    if (search) {
+      scoped = scoped.filter(
+        (p) =>
+          p.fullName.toLowerCase().includes(search) ||
+          p.knownAs.toLowerCase().includes(search)
+      );
+    }
     const primary = scoped.slice(0, take);
     const extras = scoped.filter((p) => ensureIds.has(p.id) && !primary.some((x) => x.id === p.id));
     return [...primary, ...extras].map(

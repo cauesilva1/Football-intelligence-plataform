@@ -15,7 +15,7 @@ export interface PlayerRepository {
   findById(id: string, options?: { season?: string }): Promise<Player | null>;
   findLite(
     sport?: Sport,
-    options?: { take?: number; ensureIds?: string[] }
+    options?: { take?: number; ensureIds?: string[]; search?: string }
   ): Promise<PlayerLite[]>;
   findForComparison(idA: string, idB: string): Promise<[Player, Player] | null>;
   /** Bounded sample for dashboards / similarity — never full-table hydrate. */
@@ -26,14 +26,21 @@ export interface PlayerRepository {
   getAll(sport?: Sport): Promise<Player[]>;
 }
 
+export type TeamDirectoryRow = Team & {
+  competition?: Competition;
+  stats?: TeamStatistic;
+  squadSize: number;
+};
+
 export interface TeamRepository {
-  findAll(competitionId?: string): Promise<
-    (Team & {
-      competition?: Competition;
-      stats?: TeamStatistic;
-      squadSize: number;
-    })[]
-  >;
+  findAll(competitionId?: string): Promise<TeamDirectoryRow[]>;
+  /** Sport/league-scoped directory page — avoids hydrating every franchise. */
+  findDirectory(options: {
+    competitionIds: string[];
+    take?: number;
+    skip?: number;
+    includeStats?: boolean;
+  }): Promise<{ items: TeamDirectoryRow[]; total: number }>;
   findById(id: string): Promise<
     | (Team & {
         competition?: Competition;

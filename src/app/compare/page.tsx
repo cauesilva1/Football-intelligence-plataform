@@ -21,11 +21,12 @@ export default async function ComparePage({
   const params = await searchParams;
   const { playerA, playerB } = parseCompareParams(params);
   const bothSelected = Boolean(playerA && playerB);
+  const selectedIds = [playerA, playerB].filter(Boolean);
 
-  const playersLite = await queryAllPlayersLite({
-    take: 400,
-    ensureIds: [playerA, playerB].filter(Boolean),
-  });
+  // Only hydrate selected players on the server — search is remote autocomplete.
+  const playersLite = selectedIds.length
+    ? await queryAllPlayersLite({ take: 1, ensureIds: selectedIds })
+    : [];
 
   return (
     <DashboardShell subtitle="Player comparison">

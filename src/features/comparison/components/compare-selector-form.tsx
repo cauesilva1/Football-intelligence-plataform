@@ -33,7 +33,7 @@ export function CompareSelectorForm({
       <CardContent className="grid gap-4 p-5 md:grid-cols-2">
         <PlayerSearchCombobox
           label="Player A"
-          players={players}
+          initialPlayers={players}
           value={playerA}
           excludeId={playerB}
           onChange={(id) => pushSelection(id, playerB)}
@@ -41,7 +41,7 @@ export function CompareSelectorForm({
         />
         <PlayerSearchCombobox
           label="Player B"
-          players={players}
+          initialPlayers={players}
           value={playerB}
           excludeId={playerA}
           onChange={(id) => pushSelection(playerA, id)}

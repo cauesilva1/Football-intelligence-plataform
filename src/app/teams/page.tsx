@@ -9,7 +9,7 @@ import { BrasileiraoSeasonNotice } from "@/features/scouting/components/brasilei
 import {
   queryCompetitionIdForLeague,
   queryTeamLeagueTabs,
-  queryTeams,
+  queryTeamsDirectory,
 } from "@/features/scouting/queries/teams";
 import { getServerSport } from "@/lib/sport-server";
 import { sportTheme } from "@/lib/sport-theme";
@@ -34,13 +34,16 @@ async function TeamsToolbar({
   competitionId?: string;
   entityLabel: string;
 }) {
-  const [tabs, filteredTeams] = await Promise.all([
+  const [tabs, directory] = await Promise.all([
     queryTeamLeagueTabs(),
-    queryTeams(competitionId, leagueParam, { enrich: false }),
+    queryTeamsDirectory(competitionId, leagueParam, {
+      enrich: false,
+      page: 1,
+      pageSize: 1,
+    }),
   ]);
 
-  // Avoid a second full-directory fetch just for "X of Y" — show filtered size only.
-  const count = filteredTeams.length;
+  const count = directory.total;
 
   return (
     <TeamsLeagueFilter
