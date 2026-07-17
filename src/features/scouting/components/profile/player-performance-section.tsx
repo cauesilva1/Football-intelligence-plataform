@@ -95,14 +95,22 @@ function SoccerPerformanceSection({
             { label: "Appearances", value: String(s.appearances) },
             { label: "Goals", value: String(s.goals) },
             { label: "Assists", value: String(s.assists) },
+            { label: "Shots", value: String(s.shots) },
+            { label: "Shots on Target", value: String(s.shotsOnTarget) },
             { label: "Shots / 90", value: s.per90.shots.toFixed(2) },
+            { label: "Key Passes", value: String(s.keyPasses) },
             { label: "Key Passes / 90", value: s.per90.keyPasses.toFixed(2) },
+            { label: "Passes", value: String(s.passes) },
+            { label: "Pass Accuracy", value: `${s.passAccuracy.toFixed(0)}%` },
+            { label: "Dribbles Completed", value: String(s.dribblesCompleted) },
+            { label: "Dribbles / 90", value: s.per90.dribbles.toFixed(2) },
             { label: "xG total", value: s.xG.toFixed(2), glossary: METRIC_GLOSSARY.xG },
             { label: "xA total", value: s.xA.toFixed(2), glossary: METRIC_GLOSSARY.xA },
-            { label: "Pass Accuracy", value: `${s.passAccuracy.toFixed(0)}%` },
             { label: "Duels Won", value: `${s.duelsWonPct.toFixed(0)}%` },
             { label: "Tackles Won / 90", value: s.per90.tackles.toFixed(2) },
             { label: "Interceptions / 90", value: s.per90.interceptions.toFixed(2) },
+            { label: "Yellow Cards", value: String(s.yellowCards) },
+            { label: "Red Cards", value: String(s.redCards) },
           ].map((item) => (
             <div
               key={item.label}
