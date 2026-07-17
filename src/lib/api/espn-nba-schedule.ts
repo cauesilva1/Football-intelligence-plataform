@@ -1,5 +1,8 @@
+import { readSystemCache, writeSystemCache } from "@/lib/system-cache";
+import { isStale } from "@/lib/sync/data-staleness";
+
 export type NbaGameStatus = "live" | "final" | "scheduled";
-export type NbaCompetition = "nba" | "summer";
+export type NbaCompetition = "nba" | "summer" | "ncaa";
 
 export interface NbaGameLeader {
   name: string;
@@ -36,6 +39,7 @@ export interface NbaScheduleBundle {
   past: NbaScheduleGame[];
   scheduled: NbaScheduleGame[];
   fetchedAt: string;
+  notice?: string;
 }
 
 interface EspnCompetitor {
@@ -63,12 +67,22 @@ interface EspnScoreboardEvent {
   }>;
 }
 
-const LEAGUE_SLUGS = ["nba", "nba-summer"] as const;
-type BasketballLeagueSlug = (typeof LEAGUE_SLUGS)[number];
+const NBA_LEAGUE_SLUGS = ["nba", "nba-summer"] as const;
+const NCAA_ESPN_SLUG = "mens-college-basketball";
+const SCHEDULE_TTL_MS = 2 * 60 * 1000;
 
 function summaryUrl(competition: NbaCompetition): string {
-  const league: BasketballLeagueSlug = competition === "summer" ? "nba-summer" : "nba";
+  const league =
+    competition === "summer"
+      ? "nba-summer"
+      : competition === "ncaa"
+        ? NCAA_ESPN_SLUG
+        : "nba";
   return `https://site.api.espn.com/apis/site/v2/sports/basketball/${league}/summary`;
+}
+
+function scoreboardUrl(espnSlug: string): string {
+  return `https://site.api.espn.com/apis/site/v2/sports/basketball/${espnSlug}/scoreboard`;
 }
 
 function parseScore(value?: string): number {
@@ -85,9 +99,9 @@ function mapGameStatus(
     return { status: "final", label: "Final" };
   }
   if (state === "in" || name === "STATUS_IN_PROGRESS") {
-    return { status: "live", label: "Live" };
+    return { status: "live", label: "Ao vivo" };
   }
-  return { status: "scheduled", label: "Scheduled" };
+  return { status: "scheduled", label: "Agendado" };
 }
 
 function parseEvent(event: EspnScoreboardEvent, competition: NbaCompetition): NbaScheduleGame | null {
@@ -130,51 +144,147 @@ function shiftDate(base: Date, days: number): Date {
   return date;
 }
 
-async function fetchEventsForLeagueAndDate(
-  league: BasketballLeagueSlug,
-  date: Date
-): Promise<EspnScoreboardEvent[]> {
-  const { fetchBasketballScoreboard } = await import("@/lib/api/espn-basketball-boxscore");
-  const events = await fetchBasketballScoreboard(league, date);
-  return events as EspnScoreboardEvent[];
+function formatEspnDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}${m}${d}`;
 }
 
-/** Leitura pura da ESPN — sem escrita no banco (sync fica no cron). */
-export async function fetchNbaScheduleBundle(now = new Date()): Promise<NbaScheduleBundle> {
-  const { formatEspnDate } = await import("@/lib/api/espn-basketball-boxscore");
-  const dates = [shiftDate(now, -2), shiftDate(now, -1), now, shiftDate(now, 1)];
-  const uniqueDates = [...new Set(dates.map((date) => formatEspnDate(date)))];
-
-  const eventsByKey = new Map<string, NbaScheduleGame>();
-
-  for (const league of LEAGUE_SLUGS) {
-    const competition: NbaCompetition = league === "nba-summer" ? "summer" : "nba";
-
-    for (const dateKey of uniqueDates) {
-      const year = Number.parseInt(dateKey.slice(0, 4), 10);
-      const month = Number.parseInt(dateKey.slice(4, 6), 10) - 1;
-      const day = Number.parseInt(dateKey.slice(6, 8), 10);
-      const events = await fetchEventsForLeagueAndDate(league, new Date(year, month, day));
-
-      for (const event of events) {
-        const parsed = parseEvent(event, competition);
-        if (parsed) eventsByKey.set(`${competition}:${parsed.id}`, parsed);
-      }
-    }
+async function fetchScoreboardEvents(
+  espnSlug: string,
+  date: Date
+): Promise<EspnScoreboardEvent[]> {
+  const url = `${scoreboardUrl(espnSlug)}?dates=${formatEspnDate(date)}`;
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "football-intelligence-platform/1.0 (basketball-schedule)",
+        Accept: "application/json",
+      },
+      next: { revalidate: 120 },
+      signal: AbortSignal.timeout(45_000),
+    });
+    if (!response.ok) return [];
+    const payload = (await response.json()) as { events?: EspnScoreboardEvent[] };
+    return payload.events ?? [];
+  } catch {
+    return [];
   }
+}
 
-  const all = [...eventsByKey.values()].sort(
+function bundleFromGames(
+  games: NbaScheduleGame[],
+  fetchedAt: string,
+  notice?: string
+): NbaScheduleBundle {
+  const all = [...games].sort(
     (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
   );
-
   return {
     live: all.filter((game) => game.status === "live"),
     past: all.filter((game) => game.status === "final"),
     scheduled: all
       .filter((game) => game.status === "scheduled")
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()),
-    fetchedAt: now.toISOString(),
+    fetchedAt,
+    notice,
   };
+}
+
+function windowDateKeys(now: Date): string[] {
+  const dates = [shiftDate(now, -2), shiftDate(now, -1), now, shiftDate(now, 1)];
+  return [...new Set(dates.map((date) => formatEspnDate(date)))];
+}
+
+function dateFromKey(dateKey: string): Date {
+  const year = Number.parseInt(dateKey.slice(0, 4), 10);
+  const month = Number.parseInt(dateKey.slice(4, 6), 10) - 1;
+  const day = Number.parseInt(dateKey.slice(6, 8), 10);
+  return new Date(year, month, day);
+}
+
+/** Leitura pura da ESPN — sem escrita no banco (sync fica no cron). */
+export async function fetchNbaScheduleBundle(now = new Date()): Promise<NbaScheduleBundle> {
+  const dayKey = formatEspnDate(now);
+  const cacheKey = `espn:schedule:nba:${dayKey}`;
+
+  const cached = await readSystemCache<NbaScheduleBundle>(cacheKey);
+  if (cached?.fetchedAt && !isStale(new Date(cached.fetchedAt), SCHEDULE_TTL_MS)) {
+    return cached;
+  }
+
+  const dateKeys = windowDateKeys(now);
+  const tasks = NBA_LEAGUE_SLUGS.flatMap((league) =>
+    dateKeys.map(async (dateKey) => {
+      const competition: NbaCompetition = league === "nba-summer" ? "summer" : "nba";
+      const events = await fetchScoreboardEvents(league, dateFromKey(dateKey));
+      return events
+        .map((event) => parseEvent(event, competition))
+        .filter((g): g is NbaScheduleGame => g != null)
+        .map((g) => [`${competition}:${g.id}`, g] as const);
+    })
+  );
+
+  const chunks = await Promise.all(tasks);
+  const eventsByKey = new Map<string, NbaScheduleGame>();
+  for (const pairs of chunks) {
+    for (const [key, game] of pairs) eventsByKey.set(key, game);
+  }
+
+  const bundle = bundleFromGames([...eventsByKey.values()], now.toISOString());
+  await writeSystemCache(cacheKey, bundle as object);
+  return bundle;
+}
+
+/**
+ * Agenda NCAA men's basketball.
+ * No offseason, se a janela atual estiver vazia, carrega 1 dia showcase de março.
+ */
+export async function fetchNcaaScheduleBundle(now = new Date()): Promise<NbaScheduleBundle> {
+  const ncaaStarted = now >= new Date(Date.UTC(2026, 10, 1));
+  const dayKey = formatEspnDate(now);
+  const cacheKey = `espn:schedule:ncaa:${dayKey}`;
+
+  const cached = await readSystemCache<NbaScheduleBundle>(cacheKey);
+  if (cached?.fetchedAt && !isStale(new Date(cached.fetchedAt), SCHEDULE_TTL_MS)) {
+    return cached;
+  }
+
+  const dateKeys = windowDateKeys(now);
+  const chunks = await Promise.all(
+    dateKeys.map(async (dateKey) => {
+      const events = await fetchScoreboardEvents(NCAA_ESPN_SLUG, dateFromKey(dateKey));
+      return events
+        .map((event) => parseEvent(event, "ncaa"))
+        .filter((g): g is NbaScheduleGame => g != null)
+        .map((g) => [`ncaa:${g.id}`, g] as const);
+    })
+  );
+
+  const eventsByKey = new Map<string, NbaScheduleGame>();
+  for (const pairs of chunks) {
+    for (const [key, game] of pairs) eventsByKey.set(key, game);
+  }
+
+  let notice: string | undefined;
+  if (eventsByKey.size === 0 && !ncaaStarted) {
+    const seasonEndYear = now.getMonth() < 9 ? now.getFullYear() : now.getFullYear() + 1;
+    // Single showcase day (March 15) — enough for offseason demo without 4 round-trips
+    const showcaseKey = formatEspnDate(new Date(Date.UTC(seasonEndYear, 2, 15)));
+    const events = await fetchScoreboardEvents(NCAA_ESPN_SLUG, dateFromKey(showcaseKey));
+    for (const event of events) {
+      const parsed = parseEvent(event, "ncaa");
+      if (parsed) eventsByKey.set(`ncaa:${parsed.id}`, parsed);
+    }
+    if (eventsByKey.size > 0) {
+      notice = `Offseason · amostra de jogos de março ${seasonEndYear - 1}/${String(seasonEndYear).slice(-2)}`;
+    }
+  }
+
+  const bundle = bundleFromGames([...eventsByKey.values()], now.toISOString(), notice);
+  await writeSystemCache(cacheKey, bundle as object);
+  return bundle;
 }
 
 export async function fetchNbaGameLeaders(

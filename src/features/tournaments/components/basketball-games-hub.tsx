@@ -1,19 +1,20 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import Image from "next/image";
-import { Calendar, ChevronDown, Radio } from "lucide-react";
+import { Calendar, ChevronRight, Radio } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useIsMounted } from "@/hooks/use-is-mounted";
+import { SummerLeagueBadge } from "@/components/ui/summer-league-badge";
 import {
-  fetchNbaGameLeaders,
   formatNbaGameDate,
   type NbaScheduleBundle,
   type NbaScheduleGame,
 } from "@/lib/api/espn-nba-schedule";
+import { basketballMatchExternalKey } from "@/lib/api/espn-nba-match-detail";
 
 function GameStatusBadge({ game }: { game: NbaScheduleGame }) {
   if (game.status === "live") {
@@ -67,117 +68,82 @@ function TeamLine({
   );
 }
 
-function GameCard({
-  game,
-  showLeaders,
-}: {
-  game: NbaScheduleGame;
-  showLeaders?: boolean;
-}) {
-  const mounted = useIsMounted();
-  const [expanded, setExpanded] = useState(false);
-  const [leaders, setLeaders] = useState(game.leaders);
-  const [isPending, startTransition] = useTransition();
+function matchHref(game: NbaScheduleGame): string {
+  const competition =
+    game.competition === "summer"
+      ? "nba-summer"
+      : game.competition === "ncaa"
+        ? "ncaa"
+        : "nba";
+  return `/matches/${encodeURIComponent(basketballMatchExternalKey(competition, game.id))}`;
+}
 
+function GameCard({ game }: { game: NbaScheduleGame }) {
+  const mounted = useIsMounted();
   const homeWon = game.status === "final" && game.homeScore > game.awayScore;
   const awayWon = game.status === "final" && game.awayScore > game.homeScore;
   const localDate = mounted ? formatNbaGameDate(game.startTime) : "—";
-
-  const loadLeaders = () => {
-    if (!showLeaders || leaders) {
-      setExpanded((value) => !value);
-      return;
-    }
-
-    startTransition(async () => {
-      const result = await fetchNbaGameLeaders(game.id, game.competition);
-      setLeaders(result);
-      setExpanded(true);
-    });
-  };
+  const isSummer = game.competition === "summer";
+  const isNcaa = game.competition === "ncaa";
 
   return (
-    <Card className="border-border/70 bg-card/90 transition-all hover:border-primary/30">
-      <CardContent className="p-4">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Calendar className="h-3 w-3" />
-            {localDate}
-          </span>
-          <div className="flex items-center gap-2">
-            {game.competition === "summer" ? (
-              <Badge className="border-amber-500/40 bg-amber-500/15 text-amber-400">Summer League</Badge>
-            ) : null}
-            <GameStatusBadge game={game} />
+    <Link href={matchHref(game)} className="block">
+      <Card
+        className={cn(
+          "border-border/70 bg-card/90 transition-all hover:border-primary/30 hover:shadow-panel",
+          game.status === "live" && "border-emerald-500/30 shadow-sm shadow-emerald-500/10"
+        )}
+      >
+        <CardContent className="p-4">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Calendar className="h-3 w-3" />
+              {localDate}
+            </span>
+            <div className="flex items-center gap-2">
+              {isSummer ? <SummerLeagueBadge /> : null}
+              {isNcaa ? (
+                <Badge variant="outline" className="border-border text-[10px] text-muted-foreground">
+                  NCAA
+                </Badge>
+              ) : null}
+              <GameStatusBadge game={game} />
+            </div>
           </div>
-        </div>
 
-        <div className="space-y-3">
-          <TeamLine
-            name={game.awayTeam}
-            abbreviation={game.awayAbbreviation}
-            logo={game.awayLogo}
-            score={game.awayScore}
-            won={awayWon}
-          />
-          <TeamLine
-            name={game.homeTeam}
-            abbreviation={game.homeAbbreviation}
-            logo={game.homeLogo}
-            score={game.homeScore}
-            won={homeWon}
-          />
-        </div>
-
-        {showLeaders ? (
-          <button
-            type="button"
-            onClick={loadLeaders}
-            className="mt-4 flex w-full items-center justify-center gap-1 text-xs text-primary hover:underline"
-          >
-            {isPending ? "Carregando líderes..." : expanded ? "Ocultar líderes" : "Ver líderes da partida"}
-            <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")} />
-          </button>
-        ) : null}
-
-        {expanded && leaders ? (
-          <div className="mt-3 grid gap-3 border-t border-border pt-3 sm:grid-cols-2">
-            {(["away", "home"] as const).map((side) => (
-              <div key={side}>
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {side === "home" ? game.homeAbbreviation : game.awayAbbreviation} Leaders
-                </p>
-                <div className="space-y-1.5">
-                  {leaders[side].length ? (
-                    leaders[side].map((leader) => (
-                      <div key={leader.name} className="flex justify-between text-xs">
-                        <span className="truncate text-foreground">{leader.name}</span>
-                        <span className="font-mono text-muted-foreground">
-                          {leader.points}P · {leader.rebounds}R · {leader.assists}A
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-xs text-muted-foreground">Sem dados</p>
-                  )}
-                </div>
-              </div>
-            ))}
+          <div className="space-y-3">
+            <TeamLine
+              name={game.awayTeam}
+              abbreviation={game.awayAbbreviation}
+              logo={game.awayLogo}
+              score={game.awayScore}
+              won={awayWon}
+            />
+            <TeamLine
+              name={game.homeTeam}
+              abbreviation={game.homeAbbreviation}
+              logo={game.homeLogo}
+              score={game.homeScore}
+              won={homeWon}
+            />
           </div>
-        ) : null}
-      </CardContent>
-    </Card>
+
+          <div className="mt-4 flex items-center justify-center gap-1 text-xs text-primary">
+            Ver ficha do jogo
+            <ChevronRight className="h-3.5 w-3.5" />
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 
 function GamesGrid({
   games,
   emptyLabel,
-  showLeaders = false,
 }: {
   games: NbaScheduleGame[];
   emptyLabel: string;
-  showLeaders?: boolean;
 }) {
   if (!games.length) {
     return (
@@ -190,32 +156,49 @@ function GamesGrid({
   return (
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
       {games.map((game) => (
-        <GameCard key={game.id} game={game} showLeaders={showLeaders} />
+        <GameCard key={`${game.competition}:${game.id}`} game={game} />
       ))}
     </div>
   );
 }
 
-export function BasketballGamesHub({ schedule }: { schedule: NbaScheduleBundle }) {
-  const defaultTab = useMemo(() => {
-    if (schedule.live.length) return "live";
-    if (schedule.scheduled.length) return "scheduled";
-    return "past";
-  }, [schedule]);
+export function BasketballGamesHub({
+  schedule,
+  compact = false,
+  title = "Agenda NBA",
+  subtitle = "Ao vivo, resultados e próximos jogos — abre a ficha para o box score completo.",
+}: {
+  schedule: NbaScheduleBundle;
+  compact?: boolean;
+  title?: string;
+  subtitle?: string;
+}) {
+  const defaultTab = schedule.live.length
+    ? "live"
+    : schedule.scheduled.length
+      ? "scheduled"
+      : "past";
 
   return (
     <section className="space-y-4">
-      <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Game Center</p>
-        <h2 className="mt-1 font-display text-xl font-bold text-foreground">Agenda NBA</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Jogos ao vivo, resultados recentes e próximos confrontos — atualizados em tempo real.
-        </p>
-      </div>
+      {!compact ? (
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+            Central de jogos
+          </p>
+          <h2 className="mt-1 font-display text-xl font-bold text-foreground">{title}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+          {schedule.notice ? (
+            <p className="mt-2 text-xs font-medium text-primary">{schedule.notice}</p>
+          ) : null}
+        </div>
+      ) : schedule.notice ? (
+        <p className="text-xs font-medium text-primary">{schedule.notice}</p>
+      ) : null}
 
       <Tabs defaultValue={defaultTab}>
         <TabsList>
-          <TabsTrigger value="live">Live ({schedule.live.length})</TabsTrigger>
+          <TabsTrigger value="live">Ao vivo ({schedule.live.length})</TabsTrigger>
           <TabsTrigger value="past">Passados ({schedule.past.length})</TabsTrigger>
           <TabsTrigger value="scheduled">Agendados ({schedule.scheduled.length})</TabsTrigger>
         </TabsList>
@@ -224,10 +207,13 @@ export function BasketballGamesHub({ schedule }: { schedule: NbaScheduleBundle }
           <GamesGrid games={schedule.live} emptyLabel="Nenhum jogo ao vivo no momento." />
         </TabsContent>
         <TabsContent value="past" className="mt-4">
-          <GamesGrid games={schedule.past} emptyLabel="Nenhum jogo finalizado recente." showLeaders />
+          <GamesGrid games={schedule.past} emptyLabel="Nenhum jogo finalizado recente." />
         </TabsContent>
         <TabsContent value="scheduled" className="mt-4">
-          <GamesGrid games={schedule.scheduled} emptyLabel="Nenhum jogo agendado nos próximos dias." />
+          <GamesGrid
+            games={schedule.scheduled}
+            emptyLabel="Nenhum jogo agendado nos próximos dias."
+          />
         </TabsContent>
       </Tabs>
     </section>
