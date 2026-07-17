@@ -6,8 +6,10 @@ import {
   toComparisonProfile,
 } from "@/features/comparison/lib/categories";
 import { ComparisonPlayerCards } from "@/features/comparison/components/comparison-player-cards";
-import { ComparisonBarChart } from "@/components/charts/comparison-bar-chart";
-import { StatRadarChart } from "@/components/charts/stat-radar-chart";
+import {
+  LazyComparisonBarChart,
+  LazyComparisonRadarChart,
+} from "@/features/comparison/components/lazy-comparison-charts";
 import { DataPanel } from "@/components/data/data-panel";
 import { Badge } from "@/components/ui/badge";
 import { chartTheme } from "@/lib/chart-theme";
@@ -67,7 +69,7 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
           }
           density="dense"
         >
-          <ComparisonBarChart
+          <LazyComparisonBarChart
             categories={[...categories]}
             playerAName={a.knownAs}
             playerBName={b.knownAs}
@@ -87,7 +89,7 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
           }
           density="dense"
         >
-          <StatRadarChart
+          <LazyComparisonRadarChart
             metrics={radarMetrics}
             series={[
               {

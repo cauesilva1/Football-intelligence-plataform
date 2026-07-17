@@ -28,8 +28,14 @@ export function TeamsLeagueFilter({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-muted-foreground">
           Showing{" "}
-          <span className="font-semibold text-foreground">{visibleCount}</span> de{" "}
-          <span className="font-semibold text-foreground">{totalCount}</span> {entityLabel}
+          <span className="font-semibold text-foreground">{visibleCount}</span>
+          {visibleCount !== totalCount ? (
+            <>
+              {" "}
+              of <span className="font-semibold text-foreground">{totalCount}</span>
+            </>
+          ) : null}{" "}
+          {entityLabel}
         </p>
       </div>
 

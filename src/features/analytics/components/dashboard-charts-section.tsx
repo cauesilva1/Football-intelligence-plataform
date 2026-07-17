@@ -1,7 +1,9 @@
 import { queryDashboardOverview } from "@/features/analytics/queries/dashboard";
 import { DataPanel } from "@/components/data/data-panel";
-import { GoalsBarChart } from "@/components/charts/goals-bar-chart";
-import { RatingTrendChart } from "@/components/charts/rating-trend-chart";
+import {
+  LazyGoalsBarChart,
+  LazyRatingTrendChart,
+} from "@/features/analytics/components/lazy-dashboard-charts";
 import { getServerSport } from "@/lib/sport-server";
 
 export async function DashboardChartsSection() {
@@ -31,7 +33,7 @@ export async function DashboardChartsSection() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <DataPanel title={chartTitle} description={chartDescription} density="dense">
-        <GoalsBarChart data={overview.goalsByPosition} valueLabel={valueLabel} />
+        <LazyGoalsBarChart data={overview.goalsByPosition} valueLabel={valueLabel} />
       </DataPanel>
       <DataPanel
         title={
@@ -40,7 +42,7 @@ export async function DashboardChartsSection() {
         description={`${latest?.season ?? "—"} · ${latest?.avgRating.toFixed(2)} (${changeLabel})`}
         density="dense"
       >
-        <RatingTrendChart data={overview.ratingTrend} />
+        <LazyRatingTrendChart data={overview.ratingTrend} />
       </DataPanel>
     </div>
   );

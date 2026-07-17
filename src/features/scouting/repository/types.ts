@@ -13,7 +13,10 @@ import type { Sport } from "@/lib/sport";
 export interface PlayerRepository {
   findMany(filters: PlayerFilters): Promise<PaginatedResult<Player>>;
   findById(id: string, options?: { season?: string }): Promise<Player | null>;
-  findLite(sport?: Sport): Promise<PlayerLite[]>;
+  findLite(
+    sport?: Sport,
+    options?: { take?: number; ensureIds?: string[] }
+  ): Promise<PlayerLite[]>;
   findForComparison(idA: string, idB: string): Promise<[Player, Player] | null>;
   /** Bounded sample for dashboards / similarity — never full-table hydrate. */
   findSample(

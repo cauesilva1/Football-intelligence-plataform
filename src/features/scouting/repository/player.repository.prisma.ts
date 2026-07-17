@@ -592,27 +592,56 @@ export const prismaPlayerRepository: PlayerRepository & {
     return mapPlayer(record, options);
   },
 
-  async findLite(sport: PlayerFilters["sport"] = "SOCCER") {
-    const records = await getPrisma().player.findMany({
-      where: { sport: sport ?? "SOCCER" },
-      select: {
-        id: true,
-        fullName: true,
-        knownAs: true,
-        position: true,
-        teamId: true,
-        team: { select: { shortName: true, name: true } },
-      },
-    });
-    return records.map((r) => ({
-      id: r.id,
-      fullName: r.fullName,
-      knownAs: r.knownAs,
-      position: r.position,
-      teamId: r.teamId ?? "",
-      teamShortName: r.team?.shortName,
-      teamName: r.team?.name,
-    }));
+  async findLite(
+    sport: PlayerFilters["sport"] = "SOCCER",
+    options?: { take?: number; ensureIds?: string[] }
+  ) {
+    const take = Math.min(Math.max(options?.take ?? 400, 1), 500);
+    const ensureIds = [...new Set((options?.ensureIds ?? []).filter(Boolean))];
+
+    const [records, ensured] = await Promise.all([
+      getPrisma().player.findMany({
+        where: { sport: sport ?? "SOCCER" },
+        select: {
+          id: true,
+          fullName: true,
+          knownAs: true,
+          position: true,
+          teamId: true,
+          team: { select: { shortName: true, name: true } },
+        },
+        orderBy: { fullName: "asc" },
+        take,
+      }),
+      ensureIds.length
+        ? getPrisma().player.findMany({
+            where: { id: { in: ensureIds }, sport: sport ?? "SOCCER" },
+            select: {
+              id: true,
+              fullName: true,
+              knownAs: true,
+              position: true,
+              teamId: true,
+              team: { select: { shortName: true, name: true } },
+            },
+          })
+        : Promise.resolve([]),
+    ]);
+
+    const byId = new Map<string, (typeof records)[number]>();
+    for (const row of [...records, ...ensured]) byId.set(row.id, row);
+
+    return [...byId.values()]
+      .sort((a, b) => a.fullName.localeCompare(b.fullName))
+      .map((r) => ({
+        id: r.id,
+        fullName: r.fullName,
+        knownAs: r.knownAs,
+        position: r.position,
+        teamId: r.teamId ?? "",
+        teamShortName: r.team?.shortName,
+        teamName: r.team?.name,
+      }));
   },
 
   async findForComparison(idA, idB) {

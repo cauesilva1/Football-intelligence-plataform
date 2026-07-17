@@ -39,17 +39,14 @@ async function TeamsToolbar({
     queryTeams(competitionId, leagueParam, { enrich: false }),
   ]);
 
-  const needsTotal =
-    typeof leagueParam === "string" && leagueParam.length > 0 && leagueParam !== "all";
-  const totalCount = needsTotal
-    ? (await queryTeams(undefined, "all", { enrich: false })).length
-    : filteredTeams.length;
+  // Avoid a second full-directory fetch just for "X of Y" — show filtered size only.
+  const count = filteredTeams.length;
 
   return (
     <TeamsLeagueFilter
       tabs={tabs}
-      totalCount={totalCount}
-      visibleCount={filteredTeams.length}
+      totalCount={count}
+      visibleCount={count}
       entityLabel={entityLabel}
     />
   );
@@ -67,8 +64,10 @@ export default async function TeamsPage({
   const isFranchiseSport = isBasketball || isAmericanFootball;
 
   const leagueParam = typeof params.league === "string" ? params.league : undefined;
+  const pageRaw = typeof params.page === "string" ? Number(params.page) : 1;
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
   const competitionId = await queryCompetitionIdForLeague(leagueParam);
-  const gridKey = leagueParam ?? competitionId ?? "all";
+  const gridKey = `${leagueParam ?? competitionId ?? "all"}-p${page}`;
 
   const subtitle = isBasketball
     ? "Franchises"
@@ -171,7 +170,12 @@ export default async function TeamsPage({
         {!isFranchiseSport && leagueParam === "brasileirao" ? <BrasileiraoSeasonNotice /> : null}
 
         <Suspense key={gridKey} fallback={<TeamsGridSkeleton />}>
-          <TeamsGrid competitionId={competitionId} leagueKey={leagueParam} sport={sport} />
+          <TeamsGrid
+            competitionId={competitionId}
+            leagueKey={leagueParam}
+            sport={sport}
+            page={page}
+          />
         </Suspense>
       </div>
     </DashboardShell>

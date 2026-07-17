@@ -18,10 +18,14 @@ export default async function ComparePage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [params, playersLite] = await Promise.all([searchParams, queryAllPlayersLite()]);
-
+  const params = await searchParams;
   const { playerA, playerB } = parseCompareParams(params);
   const bothSelected = Boolean(playerA && playerB);
+
+  const playersLite = await queryAllPlayersLite({
+    take: 400,
+    ensureIds: [playerA, playerB].filter(Boolean),
+  });
 
   return (
     <DashboardShell subtitle="Player comparison">

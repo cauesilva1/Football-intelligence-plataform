@@ -10,10 +10,15 @@ export default async function ReportsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [players, params] = await Promise.all([queryAllPlayersLite(), searchParams]);
-
+  const params = await searchParams;
   const raw = params.playerId;
   const playerId = Array.isArray(raw) ? raw[0] : raw;
+
+  const players = await queryAllPlayersLite({
+    take: 400,
+    ensureIds: playerId ? [playerId] : undefined,
+  });
+
   const validPlayerId = playerId && players.some((p) => p.id === playerId) ? playerId : undefined;
 
   return (

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TeamCrest } from "@/components/teams/team-crest";
@@ -9,18 +9,36 @@ import { isDbSource } from "@/lib/data-source";
 import { CURRENT_SEASON } from "@/lib/seasons";
 import type { Sport } from "@/lib/sport";
 
+const PAGE_SIZE = 48;
+
+function buildPageHref(leagueKey: string | undefined, page: number) {
+  const params = new URLSearchParams();
+  if (leagueKey && leagueKey !== "all") params.set("league", leagueKey);
+  if (page > 1) params.set("page", String(page));
+  const qs = params.toString();
+  return qs ? `/teams?${qs}` : "/teams";
+}
+
 export async function TeamsGrid({
   competitionId,
   leagueKey,
   sport = "SOCCER",
+  page = 1,
 }: {
   competitionId?: string;
   leagueKey?: string;
   sport?: Sport;
+  page?: number;
 }) {
-  const teams: TeamWithStatsBomb[] = await queryTeams(competitionId, leagueKey, {
+  const allTeams: TeamWithStatsBomb[] = await queryTeams(competitionId, leagueKey, {
     enrich: false,
   });
+  const safePage = Math.max(1, page);
+  const totalPages = Math.max(1, Math.ceil(allTeams.length / PAGE_SIZE));
+  const currentPage = Math.min(safePage, totalPages);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const teams = allTeams.slice(start, start + PAGE_SIZE);
+
   const isBasketball = sport === "BASKETBALL";
   const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
   const isFranchiseSport = isBasketball || isAmericanFootball;
@@ -28,17 +46,49 @@ export async function TeamsGrid({
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-muted-foreground">
-        {teams.length} {entityPlural}
-        {!isFranchiseSport && (
-          <>
-            {" · "}
-            {isDbSource()
-              ? `Cached data (${teams[0]?.stats?.season ?? CURRENT_SEASON})`
-              : `Demo (${teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`}
-          </>
-        )}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {allTeams.length} {entityPlural}
+          {totalPages > 1 ? (
+            <>
+              {" · "}
+              page {currentPage} of {totalPages}
+            </>
+          ) : null}
+          {!isFranchiseSport && (
+            <>
+              {" · "}
+              {isDbSource()
+                ? `Cached data (${teams[0]?.stats?.season ?? CURRENT_SEASON})`
+                : `Demo (${teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`}
+            </>
+          )}
+        </p>
+        {totalPages > 1 ? (
+          <div className="flex items-center gap-2">
+            {currentPage > 1 ? (
+              <Link
+                href={buildPageHref(leagueKey, currentPage - 1)}
+                prefetch={false}
+                className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+                Previous
+              </Link>
+            ) : null}
+            {currentPage < totalPages ? (
+              <Link
+                href={buildPageHref(leagueKey, currentPage + 1)}
+                prefetch={false}
+                className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground"
+              >
+                Next
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {teams.map((team) => {
           const sb = team.statsBomb;
