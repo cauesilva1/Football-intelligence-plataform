@@ -4,18 +4,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TeamCrest } from "@/components/teams/team-crest";
 import { DataPanel } from "@/components/data/data-panel";
-import { queryTeams } from "@/features/scouting/queries/teams";
+import {
+  queryCompetitionIdForLeague,
+  queryTeams,
+} from "@/features/scouting/queries/teams";
 import { getServerSport } from "@/lib/sport-server";
-import { isBasketballCompetition } from "@/lib/sport";
 
 export async function DashboardClubsSection() {
   const sport = await getServerSport();
   if (sport !== "BASKETBALL") return null;
 
-  const allTeams = await queryTeams();
-  const nbaTeams = allTeams
-    .filter((team) => isBasketballCompetition(team.competition?.name ?? ""))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  let nbaTeams: Awaited<ReturnType<typeof queryTeams>> = [];
+  try {
+    const nbaCompetitionId = await queryCompetitionIdForLeague("nba");
+    nbaTeams = await queryTeams(nbaCompetitionId);
+    nbaTeams = [...nbaTeams].sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error) {
+    console.warn("[dashboard] Franquias NBA indisponíveis:", error);
+    return null;
+  }
+
+  if (!nbaTeams.length) return null;
 
   return (
     <DataPanel

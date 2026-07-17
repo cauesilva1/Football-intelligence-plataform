@@ -1,8 +1,7 @@
 import { isDbSource } from "@/lib/data-source";
 import { logSupabaseError } from "@/lib/db-errors";
 import { getEspnStatsForTeam, preloadEspnLeague } from "@/lib/crests/espn-standings";
-import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
-import { CURRENT_SEASON } from "@/lib/seasons";
+import { resolvePersistedSeasonLabel } from "@/lib/seasons";
 import {
   getStatsBombStatsForTeam,
   preloadStatsBombLeague,
@@ -56,53 +55,34 @@ export function toDisplayStatsFromAggregated(sb: AggregatedTeamStats): TeamStati
 }
 
 async function resolveDbModeTeamStats(
-  teamId: string | undefined,
   teamName: string,
   competitionName: string | undefined,
   dbStats?: TeamStatistic
 ): Promise<AggregatedTeamStats | null> {
-  if (dbStats?.season === CURRENT_SEASON && hasMeaningfulStats(dbStats)) {
-    return dbStatsToAggregated(teamName, dbStats, competitionName);
-  }
+  const expectedSeason = resolvePersistedSeasonLabel(competitionName);
 
+  // Read-only on list/detail pages — never upsert here (saturates Supabase pool).
   try {
     const espnStats = await getEspnStatsForTeam(teamName, competitionName);
     if (hasMeaningfulStats(espnStats)) {
-      const persistTeamId = teamId ?? dbStats?.teamId;
-      if (isDbSource() && persistTeamId) {
-        try {
-          await clubRepository.upsertTeamSeasonStats(persistTeamId, {
-            matchesPlayed: espnStats!.matchesPlayed,
-            wins: espnStats!.wins,
-            draws: espnStats!.draws,
-            losses: espnStats!.losses,
-            goalsFor: espnStats!.goalsFor,
-            goalsAgainst: espnStats!.goalsAgainst,
-          });
-        } catch (error) {
-          logSupabaseError(`upsertTeamSeasonStats:${teamName}`, error);
-        }
-      }
-
-      return espnStats
-        ? {
-            ...espnStats,
-            statsBombCompetitionName: `${espnStats.statsBombCompetitionName} · ESPN`,
-          }
-        : null;
+      return {
+        ...espnStats!,
+        seasonLabel: espnStats!.seasonLabel || expectedSeason,
+        statsBombCompetitionName: `${espnStats!.statsBombCompetitionName} · ESPN`,
+      };
     }
   } catch (error) {
     logSupabaseError(`getEspnStatsForTeam:${teamName}`, error);
   }
 
-  if (dbStats) {
+  if (dbStats && hasMeaningfulStats(dbStats)) {
     return dbStatsToAggregated(teamName, dbStats, competitionName);
   }
 
   return null;
 }
 
-/** Attaches live standings — Supabase + ESPN in db mode; StatsBomb only in mock/demo mode. */
+/** Attaches live standings for display only (no DB writes). */
 export async function attachTeamLiveStats<
   T extends { id?: string; name: string; competition?: Competition; stats?: TeamStatistic },
 >(teams: T[]): Promise<(T & { statsBomb?: AggregatedTeamStats; stats?: TeamStatistic })[]> {
@@ -113,10 +93,10 @@ export async function attachTeamLiveStats<
   if (isDbSource()) {
     await Promise.all([...leagues].map((name) => preloadEspnLeague(name)));
 
+    // Sequential map would be too slow; ESPN lookups are memory-cached after preload.
     return Promise.all(
       teams.map(async (team) => {
         const statsBomb = await resolveDbModeTeamStats(
-          team.id,
           team.name,
           team.competition?.name,
           team.stats

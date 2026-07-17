@@ -182,15 +182,52 @@ export function mergeSeasonHistories(
   return sortSeasonLabels([...merged.keys()]).map((season) => merged.get(season)!);
 }
 
-export function resolveSelectedSeasonStats(
+function basketballSeasonHasSignal(stat: PlayerStatistic): boolean {
+  const points = stat.points ?? stat.perGame?.points ?? 0;
+  const rebounds = stat.rebounds ?? stat.perGame?.rebounds ?? 0;
+  const assists = stat.perGame?.assists ?? stat.assists ?? 0;
+  return points > 0 || rebounds > 0 || assists > 0 || (stat.rating ?? 0) > 6.05;
+}
+
+/** Prefer a season with real production over empty upcoming stubs (e.g. 202627). */
+function pickBestBasketballSeason(
   history: PlayerStatistic[],
   preferredSeason?: string
+): string | undefined {
+  if (preferredSeason) {
+    const preferred = history.find((row) => row.season === preferredSeason);
+    if (preferred && basketballSeasonHasSignal(preferred)) return preferredSeason;
+  }
+
+  const withSignal = [...history]
+    .filter(basketballSeasonHasSignal)
+    .sort((a, b) => {
+      const yearA = Number.parseInt(a.season.replace(/\D/g, "").slice(0, 4) || "0", 10);
+      const yearB = Number.parseInt(b.season.replace(/\D/g, "").slice(0, 4) || "0", 10);
+      return yearB - yearA;
+    });
+
+  if (withSignal[0]) return withSignal[0].season;
+  return pickDefaultSeason(history.map((row) => row.season));
+}
+
+export function resolveSelectedSeasonStats(
+  history: PlayerStatistic[],
+  preferredSeason?: string,
+  sport?: string
 ): { selectedSeason: string; currentSeasonStats: PlayerStatistic } {
   const availableSeasons = sortSeasonLabels(history.map((row) => row.season));
+
   const selectedSeason =
-    (preferredSeason && availableSeasons.includes(preferredSeason)
-      ? preferredSeason
-      : pickDefaultSeason(availableSeasons)) ?? preferredSeason ?? "2025";
+    sport === "BASKETBALL"
+      ? pickBestBasketballSeason(history, preferredSeason) ??
+        preferredSeason ??
+        "202526"
+      : (preferredSeason && availableSeasons.includes(preferredSeason)
+          ? preferredSeason
+          : pickDefaultSeason(availableSeasons)) ??
+        preferredSeason ??
+        "2025";
 
   const currentSeasonStats =
     history.find((row) => row.season === selectedSeason) ??

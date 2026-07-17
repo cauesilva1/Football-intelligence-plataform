@@ -19,8 +19,7 @@ import {
 
 export const metadata = { title: `Overview · ${APP_NAME}` };
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
 export const maxDuration = 60;
 
 export default async function DashboardPage() {

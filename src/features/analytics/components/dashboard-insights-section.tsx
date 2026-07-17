@@ -4,9 +4,13 @@ import { queryDashboardOverview } from "@/features/analytics/queries/dashboard";
 import { DataPanel } from "@/components/data/data-panel";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { getServerSport } from "@/lib/sport-server";
 import type { DashboardInsight } from "@/types";
 
-const insightStyles: Record<DashboardInsight["type"], { icon: typeof AlertTriangle; badge: "amber" | "azure" | "rose" }> = {
+const insightStyles: Record<
+  DashboardInsight["type"],
+  { icon: typeof AlertTriangle; badge: "amber" | "azure" | "rose" }
+> = {
   alert: { icon: AlertTriangle, badge: "amber" },
   opportunity: { icon: Lightbulb, badge: "azure" },
   trend: { icon: TrendingUp, badge: "rose" },
@@ -27,7 +31,11 @@ function InsightRow({ insight }: { insight: DashboardInsight }) {
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm font-medium text-foreground">{insight.title}</p>
             <Badge variant={badge} className="capitalize">
-              {insight.type === "alert" ? "Alert" : insight.type === "opportunity" ? "Opportunity" : "Trend"}
+              {insight.type === "alert"
+                ? "Alert"
+                : insight.type === "opportunity"
+                  ? "Opportunity"
+                  : "Trend"}
             </Badge>
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">{insight.description}</p>
@@ -44,19 +52,36 @@ function InsightRow({ insight }: { insight: DashboardInsight }) {
 }
 
 export async function DashboardInsightsSection() {
-  const overview = await queryDashboardOverview();
+  const [overview, sport] = await Promise.all([queryDashboardOverview(), getServerSport()]);
+
+  const emptyHint =
+    sport === "AMERICAN_FOOTBALL"
+      ? "Sem alertas ainda — sincronize elencos abrindo franquias NFL/CFB."
+      : sport === "BASKETBALL"
+        ? "Sem alertas ainda — prospects e performers aparecem quando houver jogadores com rating no banco."
+        : "Alerts and opportunities generated from the monitored database.";
 
   return (
     <DataPanel
       title="Executive Insights"
-      description="Alerts and opportunities generated from the monitored database."
+      description={
+        overview.insights.length > 0
+          ? "Alertas e oportunidades a partir da base monitorada."
+          : emptyHint
+      }
       density="dense"
     >
-      <div className="grid gap-2 lg:grid-cols-2">
-        {overview.insights.map((insight) => (
-          <InsightRow key={insight.id} insight={insight} />
-        ))}
-      </div>
+      {overview.insights.length > 0 ? (
+        <div className="grid gap-2 lg:grid-cols-2">
+          {overview.insights.map((insight) => (
+            <InsightRow key={insight.id} insight={insight} />
+          ))}
+        </div>
+      ) : (
+        <p className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+          {emptyHint}
+        </p>
+      )}
     </DataPanel>
   );
 }

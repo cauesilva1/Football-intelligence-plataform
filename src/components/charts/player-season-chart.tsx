@@ -12,13 +12,14 @@ import {
 } from "recharts";
 import { chartTheme, chartTooltipStyle } from "@/lib/chart-theme";
 import type { SeasonTimelinePoint } from "@/features/scouting/lib/season-history";
+import type { Sport } from "@/lib/sport";
 
 export function PlayerSeasonChart({
   data,
   sport = "SOCCER",
 }: {
   data: SeasonTimelinePoint[];
-  sport?: "SOCCER" | "BASKETBALL";
+  sport?: Sport;
 }) {
   const isBasketball = sport === "BASKETBALL";
 
