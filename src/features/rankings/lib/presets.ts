@@ -1,6 +1,18 @@
 import type { PlayerFilters } from "@/types";
+import type { Sport } from "@/lib/sport";
 
-export type RankingSlug = "u23" | "finishers" | "creators" | "hidden-gems";
+export type SoccerRankingSlug = "u23" | "finishers" | "creators" | "hidden-gems";
+export type BasketballRankingSlug = "u23" | "scorers" | "playmakers" | "rebounders" | "bargains";
+export type AmericanFootballRankingSlug =
+  | "u23"
+  | "quarterbacks"
+  | "skill"
+  | "defense"
+  | "bargains";
+export type RankingSlug =
+  | SoccerRankingSlug
+  | BasketballRankingSlug
+  | AmericanFootballRankingSlug;
 
 export interface RankingPreset {
   slug: RankingSlug;
@@ -10,7 +22,7 @@ export interface RankingPreset {
   filters: PlayerFilters;
 }
 
-export const RANKING_PRESETS: RankingPreset[] = [
+const SOCCER_PRESETS: RankingPreset[] = [
   {
     slug: "u23",
     title: "Best U23 Players",
@@ -56,6 +68,196 @@ export const RANKING_PRESETS: RankingPreset[] = [
   },
 ];
 
-export function getRankingPreset(slug: string): RankingPreset | undefined {
-  return RANKING_PRESETS.find((p) => p.slug === slug);
+const BASKETBALL_PRESETS: RankingPreset[] = [
+  {
+    slug: "u23",
+    title: "Prospects U23",
+    description: "Jovens com alto rating — upside para draft e desenvolvimento.",
+    href: "/rankings/u23",
+    filters: {
+      sport: "BASKETBALL",
+      maxAge: 23,
+      minRating: 7,
+      sortBy: "rating",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+  {
+    slug: "scorers",
+    title: "Melhores pontuadores",
+    description: "Líderes em pontos por jogo (PPG).",
+    href: "/rankings/scorers",
+    filters: {
+      sport: "BASKETBALL",
+      minPoints: 10,
+      minMinutes: 200,
+      sortBy: "points",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+  {
+    slug: "playmakers",
+    title: "Melhores armadores",
+    description: "Líderes em assistências por jogo (APG).",
+    href: "/rankings/playmakers",
+    filters: {
+      sport: "BASKETBALL",
+      minAssists: 3,
+      minMinutes: 200,
+      sortBy: "assists",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+  {
+    slug: "rebounders",
+    title: "Melhores reboteiros",
+    description: "Líderes em rebotes por jogo (RPG).",
+    href: "/rankings/rebounders",
+    filters: {
+      sport: "BASKETBALL",
+      minRebounds: 5,
+      minMinutes: 200,
+      sortBy: "rebounds",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+  {
+    slug: "bargains",
+    title: "Bargains (cap hit)",
+    description: "Bom rating com salário relativamente acessível.",
+    href: "/rankings/bargains",
+    filters: {
+      sport: "BASKETBALL",
+      maxAge: 28,
+      minRating: 7,
+      maxCapHit: 12_000_000,
+      sortBy: "rating",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+];
+
+const AMERICAN_FOOTBALL_PRESETS: RankingPreset[] = [
+  {
+    slug: "u23",
+    title: "Prospects U23",
+    description: "Jovens com alto rating — upside para draft e desenvolvimento.",
+    href: "/rankings/u23",
+    filters: {
+      sport: "AMERICAN_FOOTBALL",
+      maxAge: 23,
+      minRating: 7,
+      sortBy: "rating",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+  {
+    slug: "quarterbacks",
+    title: "Quarterbacks",
+    description: "QBs ordenados por rating no elenco sincronizado.",
+    href: "/rankings/quarterbacks",
+    filters: {
+      sport: "AMERICAN_FOOTBALL",
+      position: "QB",
+      sortBy: "rating",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+  {
+    slug: "skill",
+    title: "Skill positions",
+    description: "RB / WR / TE com melhor rating no banco.",
+    href: "/rankings/skill",
+    filters: {
+      sport: "AMERICAN_FOOTBALL",
+      position: "RB,WR,TE,HB,FB",
+      minRating: 6.5,
+      sortBy: "rating",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+  {
+    slug: "defense",
+    title: "Defesa",
+    description: "LB / CB / S / DL com rating alto.",
+    href: "/rankings/defense",
+    filters: {
+      sport: "AMERICAN_FOOTBALL",
+      position: "LB,ILB,OLB,MLB,CB,S,SS,FS,DL,DE,DT,NT",
+      minRating: 6.5,
+      sortBy: "rating",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+  {
+    slug: "bargains",
+    title: "Cap bargains",
+    description: "Bom rating com Cap Hit acessível (quando disponível).",
+    href: "/rankings/bargains",
+    filters: {
+      sport: "AMERICAN_FOOTBALL",
+      maxAge: 28,
+      minRating: 7,
+      sortBy: "rating",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+];
+
+/** @deprecated Prefer getRankingPresets(sport) */
+export const RANKING_PRESETS = SOCCER_PRESETS;
+
+export function getRankingPresets(sport: Sport = "SOCCER"): RankingPreset[] {
+  if (sport === "BASKETBALL") return BASKETBALL_PRESETS;
+  if (sport === "AMERICAN_FOOTBALL") return AMERICAN_FOOTBALL_PRESETS;
+  return SOCCER_PRESETS;
+}
+
+export function getRankingPreset(
+  slug: string,
+  sport: Sport = "SOCCER"
+): RankingPreset | undefined {
+  return getRankingPresets(sport).find((p) => p.slug === slug);
+}
+
+export function allRankingSlugs(): RankingSlug[] {
+  const set = new Set<RankingSlug>();
+  for (const p of [
+    ...SOCCER_PRESETS,
+    ...BASKETBALL_PRESETS,
+    ...AMERICAN_FOOTBALL_PRESETS,
+  ]) {
+    set.add(p.slug);
+  }
+  return [...set];
 }

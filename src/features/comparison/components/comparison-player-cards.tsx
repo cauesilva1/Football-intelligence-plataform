@@ -4,16 +4,67 @@ import { buttonVariants } from "@/components/ui/button";
 import { PlayerAvatar } from "@/components/players/player-avatar";
 import { computeXGPer90 } from "@/features/scouting/lib/filter-players";
 import { getTeamTheme } from "@/lib/team-theme";
-import { cn, formatMarketValue, ratingColor } from "@/lib/utils";
+import { cn, formatCapHit, formatMarketValue, ratingColor } from "@/lib/utils";
 import type { Player } from "@/types";
+
+function SoccerStatStrip({ player }: { player: Player }) {
+  const s = player.currentSeasonStats;
+  const xg90 = computeXGPer90(s.minutesPlayed, s.xG);
+  return (
+    <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/15 pt-3 text-center">
+      <div>
+        <p className="font-mono text-sm font-semibold tabular-nums text-white">
+          {s.per90.goals.toFixed(2)}
+        </p>
+        <p className="text-2xs text-white/60">Goals/90</p>
+      </div>
+      <div>
+        <p className="font-mono text-sm font-semibold tabular-nums text-white">
+          {s.per90.assists.toFixed(2)}
+        </p>
+        <p className="text-2xs text-white/60">Ast/90</p>
+      </div>
+      <div>
+        <p className="font-mono text-sm font-semibold tabular-nums text-white">{xg90.toFixed(2)}</p>
+        <p className="text-2xs text-white/60">xG/90</p>
+      </div>
+    </div>
+  );
+}
+
+function BasketballStatStrip({ player }: { player: Player }) {
+  const s = player.currentSeasonStats;
+  const pts = s.perGame?.points ?? s.points ?? 0;
+  const reb = s.perGame?.rebounds ?? s.rebounds ?? 0;
+  const ast = s.perGame?.assists ?? s.assists ?? 0;
+  return (
+    <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/15 pt-3 text-center">
+      <div>
+        <p className="font-mono text-sm font-semibold tabular-nums text-white">{pts.toFixed(1)}</p>
+        <p className="text-2xs text-white/60">PPG</p>
+      </div>
+      <div>
+        <p className="font-mono text-sm font-semibold tabular-nums text-white">{reb.toFixed(1)}</p>
+        <p className="text-2xs text-white/60">RPG</p>
+      </div>
+      <div>
+        <p className="font-mono text-sm font-semibold tabular-nums text-white">{ast.toFixed(1)}</p>
+        <p className="text-2xs text-white/60">APG</p>
+      </div>
+    </div>
+  );
+}
 
 export function ComparisonPlayerCards({ players }: { players: [Player, Player] }) {
   return (
     <div className="grid gap-3 md:grid-cols-2">
       {players.map((p, index) => {
         const s = p.currentSeasonStats;
-        const xg90 = computeXGPer90(s.minutesPlayed, s.xG);
+        const isBasketball = p.sport === "BASKETBALL" || s.sport === "BASKETBALL";
         const theme = getTeamTheme(p.competitionName, p.teamName);
+        const valueLabel = isBasketball
+          ? formatCapHit(p.capHit ?? 0)
+          : formatMarketValue(p.marketValue);
 
         return (
           <div
@@ -28,8 +79,11 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
               <Badge variant={index === 0 ? "default" : "azure"}>
                 Player {index === 0 ? "A" : "B"}
               </Badge>
-              <Link href={`/players/${p.id}`} className={buttonVariants({ variant: "ghost", size: "xs" })}>
-                View profile
+              <Link
+                href={`/players/${p.id}`}
+                className={buttonVariants({ variant: "ghost", size: "xs" })}
+              >
+                Ver perfil
               </Link>
             </div>
             <div className="flex items-start justify-between gap-4">
@@ -46,34 +100,25 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
                   className="ring-2 ring-white/20"
                 />
                 <div className="min-w-0">
-                  <p className="truncate font-display text-base font-semibold text-white">{p.fullName}</p>
-                  <p className="text-xs text-white/75">
-                    {p.position} · {p.nationality} · {p.age} years old
+                  <p className="truncate font-display text-base font-semibold text-white">
+                    {p.fullName}
                   </p>
-                  <p className="truncate text-2xs text-white/60">{p.teamName ?? "No club"}</p>
+                  <p className="text-xs text-white/75">
+                    {p.position} · {p.nationality} · {p.age} anos
+                  </p>
+                  <p className="truncate text-2xs text-white/60">{p.teamName ?? "Sem time"}</p>
                 </div>
               </div>
               <div className="shrink-0 text-right">
-                <p className={`font-display text-2xl font-bold tabular-nums ${ratingColor(s.rating)}`}>
+                <p
+                  className={`font-display text-2xl font-bold tabular-nums ${ratingColor(s.rating)}`}
+                >
                   {s.rating.toFixed(1)}
                 </p>
-                <p className="text-2xs text-white/60">{formatMarketValue(p.marketValue)}</p>
+                <p className="text-2xs text-white/60">{valueLabel}</p>
               </div>
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/15 pt-3 text-center">
-              <div>
-                <p className="font-mono text-sm font-semibold tabular-nums text-white">{s.per90.goals.toFixed(2)}</p>
-                <p className="text-2xs text-white/60">Goals/90</p>
-              </div>
-              <div>
-                <p className="font-mono text-sm font-semibold tabular-nums text-white">{s.per90.assists.toFixed(2)}</p>
-                <p className="text-2xs text-white/60">Ast/90</p>
-              </div>
-              <div>
-                <p className="font-mono text-sm font-semibold tabular-nums text-white">{xg90.toFixed(2)}</p>
-                <p className="text-2xs text-white/60">xG/90</p>
-              </div>
-            </div>
+            {isBasketball ? <BasketballStatStrip player={p} /> : <SoccerStatStrip player={p} />}
           </div>
         );
       })}

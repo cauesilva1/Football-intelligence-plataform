@@ -11,8 +11,7 @@ import { APP_NAME } from "@/lib/config";
 
 export const metadata = { title: `Compare · ${APP_NAME}` };
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
 
 export default async function ComparePage({
   searchParams,

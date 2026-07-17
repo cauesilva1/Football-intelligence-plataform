@@ -1,7 +1,10 @@
-import { GitCompareArrows, Lightbulb, Trophy } from "lucide-react";
+import { Lightbulb, Trophy } from "lucide-react";
 import { queryPlayersForComparison } from "@/features/comparison/queries/compare";
 import { buildComparisonReport } from "@/features/comparison/lib/analysis";
-import { COMPARISON_CATEGORIES, toComparisonProfile } from "@/features/comparison/lib/categories";
+import {
+  comparisonCategoriesFor,
+  toComparisonProfile,
+} from "@/features/comparison/lib/categories";
 import { ComparisonPlayerCards } from "@/features/comparison/components/comparison-player-cards";
 import { ComparisonBarChart } from "@/components/charts/comparison-bar-chart";
 import { StatRadarChart } from "@/components/charts/stat-radar-chart";
@@ -9,15 +12,20 @@ import { DataPanel } from "@/components/data/data-panel";
 import { Badge } from "@/components/ui/badge";
 import { chartTheme } from "@/lib/chart-theme";
 import { toRadarProfile } from "@/lib/normalize";
+import { getSportConfig } from "@/lib/sport-registry";
 import { notFound } from "next/navigation";
-
-const RADAR_METRICS = ["Finishing", "Creation", "Passing", "Dribbling", "Defense", "Physical"];
 
 export async function ComparisonResult({ playerA, playerB }: { playerA: string; playerB: string }) {
   const pair = await queryPlayersForComparison(playerA, playerB);
   if (!pair) notFound();
 
   const [a, b] = pair;
+  const isBasketball =
+    a.sport === "BASKETBALL" || a.currentSeasonStats.sport === "BASKETBALL";
+  const sport = isBasketball ? "BASKETBALL" : "SOCCER";
+  const ui = getSportConfig(sport).ui;
+  const categories = comparisonCategoriesFor(sport);
+  const radarMetrics = [...ui.radarMetrics];
   const report = buildComparisonReport(a, b);
   const profileA = toComparisonProfile(a.currentSeasonStats);
   const profileB = toComparisonProfile(b.currentSeasonStats);
@@ -27,14 +35,16 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
       <ComparisonPlayerCards players={[a, b]} />
 
       <DataPanel
-        title="Comparison Summary"
+        title={isBasketball ? "Resumo da comparação" : "Comparison Summary"}
         description={report.summary}
         density="dense"
       >
         <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
           <div className="mb-1 flex items-center gap-2">
             <Trophy className="h-4 w-4 text-primary" />
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Recommendation</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+              {isBasketball ? "Recomendação" : "Recommendation"}
+            </p>
           </div>
           <p className="text-sm text-foreground">{report.recommendation}</p>
         </div>
@@ -42,12 +52,16 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
 
       <div className="grid gap-4 lg:grid-cols-2">
         <DataPanel
-          title="Category Comparison"
-          description="Attack, creativity, finishing, passing, physical, and defense (0–100 index)."
+          title={isBasketball ? "Categorias" : "Category Comparison"}
+          description={
+            isBasketball
+              ? "Scoring, rebounding, playmaking, defense, shooting e efficiency (índice 0–100)."
+              : "Attack, creativity, finishing, passing, physical, and defense (0–100 index)."
+          }
           density="dense"
         >
           <ComparisonBarChart
-            categories={[...COMPARISON_CATEGORIES]}
+            categories={[...categories]}
             playerAName={a.knownAs}
             playerBName={b.knownAs}
             valuesA={profileA}
@@ -55,19 +69,42 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
           />
         </DataPanel>
 
-        <DataPanel title="Radar Profile" description="Normalized multidimensional view per 90." density="dense">
+        <DataPanel
+          title={isBasketball ? "Radar" : "Radar Profile"}
+          description={
+            isBasketball
+              ? "Visão multidimensional normalizada por jogo."
+              : "Normalized multidimensional view per 90."
+          }
+          density="dense"
+        >
           <StatRadarChart
-            metrics={RADAR_METRICS}
+            metrics={radarMetrics}
             series={[
-              { name: a.knownAs, color: chartTheme.series.primary, values: toRadarProfile(a.currentSeasonStats) },
-              { name: b.knownAs, color: chartTheme.series.secondary, values: toRadarProfile(b.currentSeasonStats) },
+              {
+                name: a.knownAs,
+                color: chartTheme.series.primary,
+                values: toRadarProfile(a.currentSeasonStats),
+              },
+              {
+                name: b.knownAs,
+                color: chartTheme.series.secondary,
+                values: toRadarProfile(b.currentSeasonStats),
+              },
             ]}
           />
         </DataPanel>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <DataPanel title={`Competitive Advantages — ${a.knownAs}`} density="dense">
+        <DataPanel
+          title={
+            isBasketball
+              ? `Vantagens — ${a.knownAs}`
+              : `Competitive Advantages — ${a.knownAs}`
+          }
+          density="dense"
+        >
           <ul className="space-y-2">
             {report.advantagesA.map((item) => (
               <li
@@ -81,13 +118,22 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
           {report.categoryWinsA.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {report.categoryWinsA.map((c) => (
-                <Badge key={c} variant="default">{c}</Badge>
+                <Badge key={c} variant="default">
+                  {c}
+                </Badge>
               ))}
             </div>
           )}
         </DataPanel>
 
-        <DataPanel title={`Competitive Advantages — ${b.knownAs}`} density="dense">
+        <DataPanel
+          title={
+            isBasketball
+              ? `Vantagens — ${b.knownAs}`
+              : `Competitive Advantages — ${b.knownAs}`
+          }
+          density="dense"
+        >
           <ul className="space-y-2">
             {report.advantagesB.map((item) => (
               <li
@@ -101,7 +147,9 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
           {report.categoryWinsB.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {report.categoryWinsB.map((c) => (
-                <Badge key={c} variant="azure">{c}</Badge>
+                <Badge key={c} variant="azure">
+                  {c}
+                </Badge>
               ))}
             </div>
           )}
@@ -109,8 +157,12 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
       </div>
 
       <DataPanel
-        title="Automated Insights"
-        description="Quantitative analysis for the current season."
+        title={isBasketball ? "Insights automáticos" : "Automated Insights"}
+        description={
+          isBasketball
+            ? "Análise quantitativa da temporada atual."
+            : "Quantitative analysis for the current season."
+        }
         density="dense"
       >
         <div className="space-y-2">
