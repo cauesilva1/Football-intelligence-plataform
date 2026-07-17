@@ -1,83 +1,20 @@
-import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { BasketballTournamentHub } from "@/features/tournaments/components/basketball-tournament-hub";
-import SoccerTournaments from "@/features/tournaments/components/soccer-tournaments-view";
-import { fetchStatsBombMatches } from "@/lib/statsbomb/fetch-matches";
-import { TOURNAMENTS } from "@/lib/statsbomb/constants";
-import { loadWorldCup2026Matches } from "@/lib/tournaments/world-cup-2026";
-import {
-  fromStatsBombMatch,
-  groupTournamentMatches,
-} from "@/lib/tournaments/match-normalizer";
-import { enrichTournamentRoundsWithCrests } from "@/lib/tournaments/enrich-crests";
+import { renderTournamentsIndex } from "@/features/tournaments/sport-hub-dispatch";
 import { getServerSport } from "@/lib/sport-server";
+import { getSportConfig } from "@/lib/sport-registry";
 import { APP_NAME } from "@/lib/config";
-import type { TournamentRound } from "@/lib/tournaments/types";
-import { Skeleton } from "@/components/ui/skeleton";
 
-export const metadata = { title: `Tournaments · ${APP_NAME}` };
+export const metadata = { title: `Torneios · ${APP_NAME}` };
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
-async function loadSoccerRounds(): Promise<Record<string, TournamentRound[]>> {
-  const roundsByTournament: Record<string, TournamentRound[]> = {};
-
-  await Promise.all(
-    TOURNAMENTS.map(async (tournament) => {
-      try {
-        if (tournament.source === "scraped") {
-          const raw = await loadWorldCup2026Matches();
-          const matches = raw.map((m) => fromStatsBombMatch(m, "scraped"));
-          const rounds = groupTournamentMatches(matches);
-          roundsByTournament[tournament.id] = await enrichTournamentRoundsWithCrests(rounds);
-          return;
-        }
-
-        if (tournament.competitionId != null && tournament.seasonId != null) {
-          const raw = await fetchStatsBombMatches(tournament.competitionId, tournament.seasonId);
-          const matches = raw.map((m) => fromStatsBombMatch(m));
-          const rounds = groupTournamentMatches(matches);
-          roundsByTournament[tournament.id] = await enrichTournamentRoundsWithCrests(rounds);
-        }
-      } catch (error) {
-        console.warn(`[tournaments] Falha ao carregar ${tournament.id}:`, error);
-        roundsByTournament[tournament.id] = [];
-      }
-    })
-  );
-
-  return roundsByTournament;
-}
-
-function TournamentSkeleton() {
-  return (
-    <div className="space-y-6">
-      <Skeleton className="h-40 w-full rounded-2xl" />
-      <Skeleton className="h-16 w-full rounded-xl" />
-      <Skeleton className="h-8 w-48" />
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-32 rounded-xl" />
-        ))}
-      </div>
-    </div>
-  );
-}
+export const revalidate = 300;
 
 export default async function TournamentsPage() {
   const sport = await getServerSport();
-  const soccerRounds = sport === "SOCCER" ? await loadSoccerRounds() : null;
+  const { ui } = getSportConfig(sport);
 
   return (
-    <DashboardShell subtitle="Tournaments">
-      {sport === "BASKETBALL" ? (
-        <BasketballTournamentHub />
-      ) : (
-        <Suspense fallback={<TournamentSkeleton />}>
-          <SoccerTournaments roundsByTournament={soccerRounds ?? {}} />
-        </Suspense>
-      )}
+    <DashboardShell subtitle={ui.tournamentsSubtitle}>
+      {renderTournamentsIndex(sport)}
     </DashboardShell>
   );
 }

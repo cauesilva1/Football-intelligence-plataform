@@ -5,8 +5,6 @@ const SEASON = 2026;
 const ESPN_SLUG = "bra.1";
 const BOXSCORE_CACHE_PREFIX = `espn:${ESPN_SLUG}:boxscore:${SEASON}:`;
 
-const SUMMARY_URL = `https://site.api.espn.com/apis/site/v2/sports/soccer/${ESPN_SLUG}/summary`;
-
 export interface MatchPlayerBoxScore {
   espnAthleteId: string;
   fullName: string;
@@ -227,8 +225,11 @@ function combinePassingAccuracy(
   return (currentAccuracy * currentMatches + matchAccuracy) / (currentMatches + 1);
 }
 
-async function fetchMatchSummary(matchId: string): Promise<EspnSummaryResponse> {
-  const url = `${SUMMARY_URL}?event=${encodeURIComponent(matchId)}`;
+async function fetchMatchSummary(
+  matchId: string,
+  espnSlug: string = ESPN_SLUG
+): Promise<EspnSummaryResponse> {
+  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${espnSlug}/summary?event=${encodeURIComponent(matchId)}`;
   const response = await fetch(url, {
     headers: {
       "User-Agent": "football-intelligence-platform/1.0 (brasileirao-boxscore)",
@@ -242,6 +243,20 @@ async function fetchMatchSummary(matchId: string): Promise<EspnSummaryResponse> 
   }
 
   return (await response.json()) as EspnSummaryResponse;
+}
+
+/** Public read of per-match player stats from ESPN summary (no DB write). */
+export async function fetchEspnMatchBoxScores(
+  espnSlug: string,
+  eventId: string
+): Promise<MatchPlayerBoxScore[]> {
+  try {
+    const summary = await fetchMatchSummary(eventId, espnSlug);
+    return extractMatchPlayerBoxScores(summary);
+  } catch (error) {
+    console.warn(`[boxscore] fetch failed ${espnSlug}/${eventId}:`, error);
+    return [];
+  }
 }
 
 async function findTeamIdByName(teamName: string): Promise<string | null> {

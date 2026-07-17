@@ -8,17 +8,43 @@ import {
   FIFA_WORLD_CUP_SEASON_LABEL,
   FIFA_WORLD_CUP_SEASON_YEAR,
   FIFA_WORLD_CUP_SLUG,
+  MLS_SEASON_LABEL,
+  isMlsLeague,
   isWorldCupCompetition,
   resolveEspnSeasonYear,
+  resolvePersistedSeasonLabel,
 } from "@/lib/seasons";
 import type { StatsBombMatch } from "@/lib/statsbomb/types";
 import { isBrazilianLeague } from "@/lib/api/transfermarkt";
-import { matchNeedsScoreRefresh, namesLikelyMatch } from "@/lib/sync/data-staleness";
+import {
+  isStale,
+  MATCH_SYNC_TTL_MS,
+  matchNeedsScoreRefresh,
+  namesLikelyMatch,
+  needsMatchSync,
+} from "@/lib/sync/data-staleness";
 import { resolveEspnLeague } from "@/lib/crests/espn-standings";
 
 const ESPN_SCOREBOARD_BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer";
 const EUROPEAN_MATCH_WINDOW_DAYS = 21;
 const WORLD_CUP_MATCH_WINDOW_DAYS = 35;
+const BRAZIL_LIVE_MATCH_WINDOW_DAYS = 45;
+const ESPN_FETCH_TIMEOUT_MS = 12_000;
+
+/** Dedup concurrent syncs for the same ESPN slug (dev HMR / parallel RSC). */
+const syncInFlight = new Map<string, Promise<number>>();
+/** After a sync attempt (success or fail), skip re-sync for a while. */
+const lastSyncAttemptAt = new Map<string, number>();
+const SYNC_ATTEMPT_COOLDOWN_MS = 15 * 60 * 1000;
+
+function markSyncAttempt(key: string) {
+  lastSyncAttemptAt.set(key, Date.now());
+}
+
+function recentlyAttemptedSync(key: string): boolean {
+  const at = lastSyncAttemptAt.get(key);
+  return at != null && Date.now() - at < SYNC_ATTEMPT_COOLDOWN_MS;
+}
 
 export interface EspnScoreboardEvent {
   externalKey: string;
@@ -116,6 +142,7 @@ export function brasileiraoHistoricalFetchDates(): Date[] {
 function resolveSeasonLabel(competitionLabel: string, override?: string): string {
   if (override) return override;
   if (isWorldCupCompetition(competitionLabel)) return FIFA_WORLD_CUP_SEASON_LABEL;
+  if (isMlsLeague(competitionLabel)) return MLS_SEASON_LABEL;
   return isBrazilianLeague(competitionLabel) ? BRAZIL_SEASON_LABEL : CURRENT_SEASON;
 }
 
@@ -218,58 +245,90 @@ export async function fetchEspnScoreboard(
   if (options.date) params.set("dates", formatEspnDate(options.date));
 
   const url = `${ESPN_SCOREBOARD_BASE}/${slug}/scoreboard?${params.toString()}`;
-  const response = await fetch(url, {
-    headers: { "User-Agent": "football-intelligence-platform/1.0 (espn-matches)" },
-    next: { revalidate: 0 },
-  });
+  try {
+    const response = await fetch(url, {
+      headers: { "User-Agent": "football-intelligence-platform/1.0 (espn-matches)" },
+      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(ESPN_FETCH_TIMEOUT_MS),
+    });
 
-  if (!response.ok) {
-    console.warn(`[espn-matches] HTTP ${response.status} on ${slug} season=${seasonYear}`);
+    if (!response.ok) {
+      console.warn(`[espn-matches] HTTP ${response.status} on ${slug} season=${seasonYear}`);
+      return [];
+    }
+
+    const data = (await response.json()) as EspnScoreboardResponse;
+    const seasonLabel = resolveSeasonLabel(competitionLabel, options.seasonLabel);
+
+    return (data.events ?? [])
+      .map((event) => {
+        const competition = event.competitions?.[0];
+        const home = competition?.competitors?.find((c) => c.homeAway === "home");
+        const away = competition?.competitors?.find((c) => c.homeAway === "away");
+        const homeName = home?.team?.displayName ?? home?.team?.name ?? "";
+        const awayName = away?.team?.displayName ?? away?.team?.name ?? "";
+        if (!homeName || !awayName) return null;
+
+        const row: EspnScoreboardEvent = {
+          externalKey: `espn:${slug}:${event.id}`,
+          homeTeamName: homeName,
+          awayTeamName: awayName,
+          homeScore: parseCompetitorScore(home),
+          awayScore: parseCompetitorScore(away),
+          matchDate: new Date(event.date),
+          round: competition?.notes?.[0]?.headline,
+          status: mapEventStatus(
+            event.status?.type?.state,
+            event.status?.type?.name,
+            event.status?.type?.completed
+          ),
+          seasonLabel,
+          espnSlug: slug,
+          competitionLabel,
+        };
+        return row;
+      })
+      .filter((row): row is EspnScoreboardEvent => row != null);
+  } catch (error) {
+    console.warn(`[espn-matches] fetch failed on ${slug}:`, error);
     return [];
   }
-
-  const data = (await response.json()) as EspnScoreboardResponse;
-  const seasonLabel = resolveSeasonLabel(competitionLabel, options.seasonLabel);
-
-  return (data.events ?? [])
-    .map((event) => {
-      const competition = event.competitions?.[0];
-      const home = competition?.competitors?.find((c) => c.homeAway === "home");
-      const away = competition?.competitors?.find((c) => c.homeAway === "away");
-      const homeName = home?.team?.displayName ?? home?.team?.name ?? "";
-      const awayName = away?.team?.displayName ?? away?.team?.name ?? "";
-      if (!homeName || !awayName) return null;
-
-      const row: EspnScoreboardEvent = {
-        externalKey: `espn:${slug}:${event.id}`,
-        homeTeamName: homeName,
-        awayTeamName: awayName,
-        homeScore: parseCompetitorScore(home),
-        awayScore: parseCompetitorScore(away),
-        matchDate: new Date(event.date),
-        round: competition?.notes?.[0]?.headline,
-        status: mapEventStatus(
-          event.status?.type?.state,
-          event.status?.type?.name,
-          event.status?.type?.completed
-        ),
-        seasonLabel,
-        espnSlug: slug,
-        competitionLabel,
-      };
-      return row;
-    })
-    .filter((row): row is EspnScoreboardEvent => row != null);
 }
 
-async function resolveTeamIdByName(name: string): Promise<string | null> {
+async function resolveTeamIdByName(
+  name: string,
+  competitionId?: string | null
+): Promise<string | null> {
   const prisma = getPrisma();
   const teams = await prisma.team.findMany({ select: { id: true, name: true, shortName: true } });
 
   const match = teams.find(
     (team) => namesLikelyMatch(team.name, name) || namesLikelyMatch(team.shortName, name)
   );
-  return match?.id ?? null;
+  if (match) return match.id;
+
+  if (!competitionId) return null;
+
+  const words = name.split(/\s+/).filter(Boolean);
+  const shortName =
+    words.length === 1
+      ? words[0].slice(0, 3).toUpperCase()
+      : words
+          .map((w) => w[0])
+          .join("")
+          .slice(0, 3)
+          .toUpperCase();
+
+  const created = await prisma.team.create({
+    data: {
+      name,
+      shortName,
+      country: "International",
+      competitionId,
+    },
+    select: { id: true },
+  });
+  return created.id;
 }
 
 async function resolveCompetitionId(
@@ -296,7 +355,15 @@ async function resolveCompetitionId(
     return competition.id;
   }
 
-  return null;
+  const created = await prisma.competition.create({
+    data: {
+      name: competitionName,
+      country: espnSlug.startsWith("uefa") || espnSlug.startsWith("fifa") ? "International" : "Unknown",
+      tier: 1,
+      espnSlug,
+    },
+  });
+  return created.id;
 }
 
 function shouldApplyEspnUpdate(
@@ -328,22 +395,22 @@ export async function persistEspnMatches(events: EspnScoreboardEvent[]): Promise
     const isWorldCup = event.espnSlug === FIFA_WORLD_CUP_SLUG;
     const worldCupCompetitionId = isWorldCup ? await ensureWorldCupCompetitionId() : null;
 
+    const config = resolveEspnLeague(event.competitionLabel);
+    const competitionId =
+      worldCupCompetitionId ??
+      (config ? await resolveCompetitionId(config.competitionLabel, config.slug) : null);
+
     const [homeTeamId, awayTeamId] = isWorldCup
       ? await Promise.all([
           resolveNationalTeamId(event.homeTeamName, worldCupCompetitionId!),
           resolveNationalTeamId(event.awayTeamName, worldCupCompetitionId!),
         ])
       : await Promise.all([
-          resolveTeamIdByName(event.homeTeamName),
-          resolveTeamIdByName(event.awayTeamName),
+          resolveTeamIdByName(event.homeTeamName, competitionId),
+          resolveTeamIdByName(event.awayTeamName, competitionId),
         ]);
 
     if (!homeTeamId || !awayTeamId) continue;
-
-    const config = resolveEspnLeague(event.competitionLabel);
-    const competitionId =
-      worldCupCompetitionId ??
-      (config ? await resolveCompetitionId(config.competitionLabel, config.slug) : null);
 
     const existing = await prisma.match.findUnique({
       where: { externalKey: event.externalKey },
@@ -390,7 +457,6 @@ export async function refreshStaleEspnMatches(
   teamIds?: string[]
 ): Promise<number> {
   if (!canUseDatabase()) return 0;
-  if (isBrazilianLeague(competitionName)) return 0;
 
   if (isWorldCupCompetition(competitionName) || competitionName === FIFA_WORLD_CUP_LABEL) {
     return refreshStaleWorldCupMatches();
@@ -401,12 +467,13 @@ export async function refreshStaleEspnMatches(
   if (!config) return 0;
 
   const seasonYear = resolveEspnSeasonYear(competitionName);
+  const seasonLabel = resolvePersistedSeasonLabel(competitionName);
 
   const staleMatches = await prisma.match.findMany({
     where: {
       source: "espn",
       externalKey: { startsWith: `espn:${config.slug}:` },
-      seasonLabel: CURRENT_SEASON,
+      seasonLabel,
       ...(teamIds?.length
         ? { OR: [{ homeTeamId: { in: teamIds } }, { awayTeamId: { in: teamIds } }] }
         : {}),
@@ -483,6 +550,10 @@ function alignScoresToMatch(
   return { homeScore: event.awayScore, awayScore: event.homeScore };
 }
 
+function isPlaceholderTeamName(name: string): boolean {
+  return /winner|loser|quarterfinal|semifinal|round of|tbd/i.test(name);
+}
+
 /** Merge live ESPN World Cup scores into cached tournament fixtures. */
 export function mergeWorldCupLiveScores(
   cached: StatsBombMatch[],
@@ -491,7 +562,12 @@ export function mergeWorldCupLiveScores(
   if (!live.length) return cached;
 
   return cached.map((match) => {
+    const espnEventId = String(
+      (match.metadata as { espn_event_id?: string | number } | undefined)?.espn_event_id ?? ""
+    );
+
     const liveEvent = live.find((event) => {
+      if (espnEventId && event.externalKey.endsWith(`:${espnEventId}`)) return true;
       const eventDate = event.matchDate.toISOString().slice(0, 10);
       if (eventDate !== match.match_date) return false;
       return teamsMatchPair(
@@ -506,14 +582,38 @@ export function mergeWorldCupLiveScores(
 
     const { homeScore, awayScore } = alignScoresToMatch(match, liveEvent);
     const finished = liveEvent.status === "finished";
+    const replaceHome = isPlaceholderTeamName(match.home_team.home_team_name);
+    const replaceAway = isPlaceholderTeamName(match.away_team.away_team_name);
+    const homeAligned = namesLikelyMatch(match.home_team.home_team_name, liveEvent.homeTeamName);
 
     return {
       ...match,
+      home_team: {
+        ...match.home_team,
+        home_team_name: replaceHome
+          ? homeAligned || replaceAway
+            ? liveEvent.homeTeamName
+            : liveEvent.awayTeamName
+          : match.home_team.home_team_name,
+      },
+      away_team: {
+        ...match.away_team,
+        away_team_name: replaceAway
+          ? homeAligned || replaceHome
+            ? liveEvent.awayTeamName
+            : liveEvent.homeTeamName
+          : match.away_team.away_team_name,
+      },
       home_score: homeScore,
       away_score: awayScore,
       home_score_regular: homeScore,
       away_score_regular: awayScore,
       match_status: finished ? "available" : match.match_status,
+      metadata: {
+        ...(match.metadata ?? {}),
+        espn_event_id: espnEventId || liveEvent.externalKey.split(":").pop(),
+        live_merged_at: new Date().toISOString(),
+      },
     };
   });
 }
@@ -631,43 +731,128 @@ export async function syncWorldCup2026Matches(): Promise<number> {
   }
 }
 
-/** Ingest finished Brasileirão fixtures from ESPN season 2025 (historical, stable). */
+/** Ingest Brasileirão fixtures from ESPN season 2026 (live window). */
 export async function syncBrasileiraoHistoricalMatches(): Promise<number> {
-  const config = resolveEspnLeague("Brasileirão Série A");
-  if (!config) return 0;
+  const key = "bra.1";
+  if (recentlyAttemptedSync(key)) return 0;
 
-  try {
-    const dateFetches = brasileiraoHistoricalFetchDates().map((date) =>
-      fetchEspnScoreboard(config.slug, config.competitionLabel, {
-        date,
-        seasonYear: ESPN_BRAZIL_SEASON_YEAR,
-        seasonLabel: BRAZIL_SEASON_LABEL,
-      })
-    );
+  const existing = syncInFlight.get(key);
+  if (existing) return existing;
 
-    const batches = await Promise.all(dateFetches);
-    const merged = new Map<string, EspnScoreboardEvent>();
-    for (const batch of batches) {
-      for (const event of batch) {
-        if (event.status === "finished") {
+  markSyncAttempt(key);
+
+  const promise = (async () => {
+    const config = resolveEspnLeague("Brasileirão Série A");
+    if (!config) return 0;
+
+    try {
+      const dateFetches = recentEuropeanMatchDates(BRAZIL_LIVE_MATCH_WINDOW_DAYS).map((date) =>
+        fetchEspnScoreboard(config.slug, config.competitionLabel, {
+          date,
+          seasonYear: ESPN_BRAZIL_SEASON_YEAR,
+          seasonLabel: BRAZIL_SEASON_LABEL,
+        })
+      );
+
+      const [seasonBoard, ...datedBatches] = await Promise.all([
+        fetchEspnScoreboard(config.slug, config.competitionLabel, {
+          seasonYear: ESPN_BRAZIL_SEASON_YEAR,
+          seasonLabel: BRAZIL_SEASON_LABEL,
+        }),
+        ...dateFetches,
+      ]);
+
+      const merged = new Map<string, EspnScoreboardEvent>();
+      for (const batch of [seasonBoard, ...datedBatches]) {
+        for (const event of batch) {
           merged.set(event.externalKey, event);
         }
       }
-    }
 
-    return persistEspnMatches([...merged.values()]);
-  } catch (error) {
-    console.warn("[espn-matches] Brasileirão 2025 historical sync failed:", error);
-    return 0;
-  }
+      const saved = await persistEspnMatches([...merged.values()]);
+      const refreshed = await refreshStaleEspnMatches("Brasileirão Série A");
+      return saved + refreshed;
+    } catch (error) {
+      console.warn("[espn-matches] Brasileirão 2026 sync failed:", error);
+      return 0;
+    }
+  })().finally(() => {
+    syncInFlight.delete(key);
+  });
+
+  syncInFlight.set(key, promise);
+  return promise;
 }
 
-/** Sync recent fixtures for a competition (European live board or Brasileirão 2025 archive). */
+async function competitionNeedsEspnMatchSync(
+  competitionName?: string | null
+): Promise<boolean> {
+  if (!canUseDatabase()) return false;
+
+  const config = resolveEspnLeague(competitionName);
+  if (!config) return false;
+
+  const prisma = getPrisma();
+  const competition = await prisma.competition.findFirst({
+    where: { espnSlug: config.slug },
+    select: { id: true },
+  });
+  if (!competition) return true;
+
+  const seasonLabel = resolvePersistedSeasonLabel(competitionName);
+  const minFinished =
+    isBrazilianLeague(competitionName) || isMlsLeague(competitionName) || config.slug === "usa.1"
+      ? 20
+      : 10;
+
+  const finishedMatches = await prisma.match.count({
+    where: {
+      competitionId: competition.id,
+      status: "finished",
+      seasonLabel,
+    },
+  });
+  if (finishedMatches < minFinished) return true;
+
+  const latestMatch = await prisma.match.findFirst({
+    where: {
+      competitionId: competition.id,
+      seasonLabel,
+    },
+    orderBy: { updatedAt: "desc" },
+    select: { seasonLabel: true, updatedAt: true },
+  });
+
+  const staleScheduled = await prisma.match.findFirst({
+    where: {
+      competitionId: competition.id,
+      seasonLabel,
+      status: { not: "finished" },
+      matchDate: { lt: new Date(Date.now() - 2 * 60 * 60 * 1000) },
+    },
+    select: { id: true },
+  });
+
+  return (
+    needsMatchSync(
+      latestMatch?.seasonLabel ?? null,
+      competitionName,
+      latestMatch?.updatedAt,
+      Boolean(staleScheduled)
+    ) || isStale(latestMatch?.updatedAt, MATCH_SYNC_TTL_MS)
+  );
+}
+
+/** Sync recent fixtures for a competition (European / Brasileirão live board). */
 export async function syncEspnMatchesForCompetition(
   competitionName?: string | null
 ): Promise<number> {
   const config = resolveEspnLeague(competitionName);
   if (!config) return 0;
+
+  if (!(await competitionNeedsEspnMatchSync(competitionName))) {
+    return 0;
+  }
 
   if (isWorldCupCompetition(competitionName) || config.slug === FIFA_WORLD_CUP_SLUG) {
     return syncWorldCup2026Matches();
@@ -677,36 +862,56 @@ export async function syncEspnMatchesForCompetition(
     return syncBrasileiraoHistoricalMatches();
   }
 
-  const seasonYear = resolveEspnSeasonYear(competitionName);
+  const key = config.slug;
+  if (recentlyAttemptedSync(key)) return 0;
 
-  try {
-    const dateFetches = recentEuropeanMatchDates().map((date) =>
-      fetchEspnScoreboard(config.slug, config.competitionLabel, {
-        date,
-        seasonYear,
-        seasonLabel: CURRENT_SEASON,
-      })
-    );
-    const [recentEvents, ...datedEvents] = await Promise.all([
-      fetchEspnScoreboard(config.slug, config.competitionLabel, {
-        seasonYear,
-        seasonLabel: CURRENT_SEASON,
-      }),
-      ...dateFetches,
-    ]);
+  const existing = syncInFlight.get(key);
+  if (existing) return existing;
 
-    const merged = new Map<string, EspnScoreboardEvent>();
-    for (const event of [...recentEvents, ...datedEvents.flat()]) {
-      merged.set(event.externalKey, event);
+  markSyncAttempt(key);
+
+  const promise = (async () => {
+    const seasonYear = resolveEspnSeasonYear(competitionName);
+    const seasonLabel = resolvePersistedSeasonLabel(competitionName);
+    const windowDays =
+      isMlsLeague(competitionName) || config.slug === "usa.1"
+        ? BRAZIL_LIVE_MATCH_WINDOW_DAYS
+        : EUROPEAN_MATCH_WINDOW_DAYS;
+
+    try {
+      const dateFetches = recentEuropeanMatchDates(windowDays).map((date) =>
+        fetchEspnScoreboard(config.slug, config.competitionLabel, {
+          date,
+          seasonYear,
+          seasonLabel,
+        })
+      );
+      const [recentEvents, ...datedEvents] = await Promise.all([
+        fetchEspnScoreboard(config.slug, config.competitionLabel, {
+          seasonYear,
+          seasonLabel,
+        }),
+        ...dateFetches,
+      ]);
+
+      const merged = new Map<string, EspnScoreboardEvent>();
+      for (const event of [...recentEvents, ...datedEvents.flat()]) {
+        merged.set(event.externalKey, event);
+      }
+
+      const saved = await persistEspnMatches([...merged.values()]);
+      const refreshed = await refreshStaleEspnMatches(competitionName);
+      return saved + refreshed;
+    } catch (error) {
+      console.warn("[espn-matches] Sync failed for", competitionName, error);
+      return 0;
     }
+  })().finally(() => {
+    syncInFlight.delete(key);
+  });
 
-    const saved = await persistEspnMatches([...merged.values()]);
-    const refreshed = await refreshStaleEspnMatches(competitionName);
-    return saved + refreshed;
-  } catch (error) {
-    console.warn("[espn-matches] Sync failed for", competitionName, error);
-    return 0;
-  }
+  syncInFlight.set(key, promise);
+  return promise;
 }
 
 export {

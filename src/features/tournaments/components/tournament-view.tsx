@@ -17,15 +17,25 @@ function formatStageLabel(stageName: string): string {
 
 export function TournamentView({
   roundsByTournament,
+  tournamentIds,
+  compact = false,
 }: {
   roundsByTournament: Record<string, TournamentRound[]>;
+  /** Restrict tabs to these tournament ids (e.g. only WC or only Euro). */
+  tournamentIds?: string[];
+  /** Hide the large hero when embedded inside a competition hub. */
+  compact?: boolean;
 }) {
-  const [activeId, setActiveId] = useState(TOURNAMENTS[0]?.id ?? "wc-2026");
+  const catalog = tournamentIds?.length
+    ? TOURNAMENTS.filter((t) => tournamentIds.includes(t.id))
+    : TOURNAMENTS;
+
+  const [activeId, setActiveId] = useState(catalog[0]?.id ?? "wc-2026");
   const [phase, setPhase] = useState<PhaseFilterKey>("all");
   const [search, setSearch] = useState("");
   const mounted = useIsMounted();
 
-  const active = TOURNAMENTS.find((t) => t.id === activeId) ?? TOURNAMENTS[0];
+  const active = catalog.find((t) => t.id === activeId) ?? catalog[0];
   const allRounds = roundsByTournament[activeId] ?? [];
 
   const filteredRounds = useMemo(
@@ -44,37 +54,57 @@ export function TournamentView({
 
   return (
     <div className="space-y-6">
-      <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Tournament Hub</p>
-        <h1 className="mt-1.5 font-display text-xl font-bold text-foreground md:mt-2 md:text-3xl">
-          International Competitions
-        </h1>
-        <p className="mt-1.5 hidden max-w-2xl text-sm text-muted-foreground sm:mt-2 sm:block">
-          World Cup 2026 via ESPN scraper (local JSON) and StatsBomb historical archive — filter by phase
-          and search by nation instantly.
-        </p>
+      {!compact ? (
+        <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-8">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Tournament Hub</p>
+          <h1 className="mt-1.5 font-display text-xl font-bold text-foreground md:mt-2 md:text-3xl">
+            International Competitions
+          </h1>
+          <p className="mt-1.5 hidden max-w-2xl text-sm text-muted-foreground sm:mt-2 sm:block">
+            World Cup 2026 via ESPN scraper (local JSON) and StatsBomb historical archive — filter by phase
+            and search by nation instantly.
+          </p>
 
-        <div className="-mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-1 md:mt-6 md:flex-wrap md:overflow-visible">
-          {TOURNAMENTS.map((tournament) => (
+          <div className="-mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-1 md:mt-6 md:flex-wrap md:overflow-visible">
+            {catalog.map((tournament) => (
+              <button
+                key={tournament.id}
+                type="button"
+                onClick={() => handleTabChange(tournament.id)}
+                className={cn(
+                  "shrink-0 rounded-lg border px-3 py-2 text-left transition-colors md:px-4",
+                  activeId === tournament.id
+                    ? "border-primary/50 bg-primary/10 text-foreground"
+                    : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                )}
+              >
+                <span className="block text-sm font-semibold">{tournament.label}</span>
+                <span className="mt-0.5 hidden max-w-[14rem] text-[11px] opacity-80 sm:block">
+                  {tournament.description}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          {catalog.map((tournament) => (
             <button
               key={tournament.id}
               type="button"
               onClick={() => handleTabChange(tournament.id)}
               className={cn(
-                "shrink-0 rounded-lg border px-3 py-2 text-left transition-colors md:px-4",
+                "shrink-0 rounded-lg border px-3 py-2 text-left transition-colors",
                 activeId === tournament.id
                   ? "border-primary/50 bg-primary/10 text-foreground"
                   : "border-border bg-card/40 text-muted-foreground hover:border-primary/30 hover:text-foreground"
               )}
             >
               <span className="block text-sm font-semibold">{tournament.label}</span>
-              <span className="mt-0.5 hidden max-w-[14rem] text-[11px] opacity-80 sm:block">
-                {tournament.description}
-              </span>
             </button>
           ))}
         </div>
-      </div>
+      )}
 
       {mounted ? (
         <>

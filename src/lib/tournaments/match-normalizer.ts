@@ -5,12 +5,12 @@ import type { MatchStatus, PhaseFilterKey, TournamentMatch } from "./types";
 export function resolvePhaseKey(stageName: string): PhaseFilterKey {
   const n = stageName.toLowerCase();
   if (n.includes("group")) return "group";
-  if (n.includes("round of 32")) return "r16";
+  if (n.includes("round of 32")) return "r16"; // WC 2026 first knockout wave
   if (n.includes("round of 16") || n.includes("oitavas")) return "r16";
   if (n.includes("quarter")) return "quarter";
   if (n.includes("semi")) return "semi";
-  if (n.includes("final") && !n.includes("semi") && !n.includes("quarter")) return "final";
   if (n.includes("third")) return "final";
+  if (n.includes("final") && !n.includes("semi") && !n.includes("quarter")) return "final";
   return "group";
 }
 
@@ -47,9 +47,14 @@ function mapStatsBombStatus(match: StatsBombMatch): { status: MatchStatus; statu
 export function fromStatsBombMatch(match: StatsBombMatch, source: TournamentMatch["source"] = "statsbomb"): TournamentMatch {
   const stageName = match.competition_stage?.name ?? "Outros";
   const { status, statusLabel } = mapStatsBombStatus(match);
+  const espnEventId = match.metadata?.espn_event_id;
+  const id =
+    espnEventId != null && String(espnEventId).length > 0
+      ? `espn:fifa.world:${espnEventId}`
+      : `sb-${match.match_id}`;
 
   return {
-    id: `sb-${match.match_id}`,
+    id,
     source,
     date: match.match_date,
     kickOff: match.kick_off,
@@ -124,6 +129,56 @@ export function fromApiSportsFixture(item: ApiSportsFixtureItem): TournamentMatc
     stageOrder: STAGE_ORDER[stageName] ?? 99,
     stadium: item.fixture.venue?.name ?? "TBD",
     stadiumCountry: item.fixture.venue?.city ?? undefined,
+    status,
+    statusLabel,
+  };
+}
+
+/** Map a persisted / live ESPN scoreboard row into TournamentMatch. */
+export function fromEspnScoreboardEvent(
+  event: {
+    externalKey: string;
+    homeTeamName: string;
+    awayTeamName: string;
+    homeScore: number;
+    awayScore: number;
+    matchDate: Date | string;
+    round?: string | null;
+    status: string;
+  },
+  source: TournamentMatch["source"] = "scraped"
+): TournamentMatch {
+  const matchDate = event.matchDate instanceof Date ? event.matchDate : new Date(event.matchDate);
+  const stageName = normalizeApiSportsRound(event.round) || event.round || "Rodada";
+  const status = (["finished", "live", "scheduled", "postponed"].includes(event.status)
+    ? event.status
+    : "scheduled") as MatchStatus;
+  const statusLabel =
+    status === "live"
+      ? "Ao vivo"
+      : status === "finished"
+        ? "Encerrado"
+        : status === "postponed"
+          ? "Adiado"
+          : "Agendado";
+
+  return {
+    id: event.externalKey,
+    source,
+    date: matchDate.toISOString().slice(0, 10),
+    kickOff: matchDate.toISOString(),
+    homeTeam: event.homeTeamName,
+    awayTeam: event.awayTeamName,
+    homeScore: status === "scheduled" && event.homeScore === 0 && event.awayScore === 0
+      ? null
+      : event.homeScore,
+    awayScore: status === "scheduled" && event.homeScore === 0 && event.awayScore === 0
+      ? null
+      : event.awayScore,
+    stageName,
+    stageKey: resolvePhaseKey(stageName),
+    stageOrder: STAGE_ORDER[stageName] ?? 50,
+    stadium: "—",
     status,
     statusLabel,
   };
