@@ -3,14 +3,15 @@ import { getTeamRepository } from "@/features/scouting/repository";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
 import { logSupabaseError } from "@/lib/db-errors";
 import {
+  competitionMatchesLeagueKey,
   resolveCompetitionIdFromLeagueParam,
   resolveTeamLeagueTabs,
 } from "@/features/scouting/lib/team-league-filters";
 import { attachTeamLiveStats } from "@/lib/team-live-stats";
+import { attachBasketballTeamLiveStats } from "@/lib/basketball/team-live-stats";
 import { resolveClubCrestUrlSync } from "@/lib/crests/club-crests";
-import { ensureBrasileiraoCompetition } from "@/lib/sync/brasileirao-bootstrap";
 import { getServerSport } from "@/lib/sport-server";
-import { isBasketballCompetition } from "@/lib/sport";
+import { competitionBelongsToSport, getSportConfig } from "@/lib/sport-registry";
 import type { AggregatedTeamStats } from "@/lib/statsbomb/aggregate-team-stats";
 import type { Competition, Player, Team, TeamStatistic } from "@/types";
 
@@ -39,14 +40,12 @@ export const queryCompetitions = cache(async () => {
 export const queryTeamLeagueTabs = cache(async () => {
   await ensureRuntimeDataSource();
   const sport = await getServerSport();
+  const config = getSportConfig(sport);
 
-  if (sport === "SOCCER") {
-    try {
-      await ensureBrasileiraoCompetition();
-    } catch (error) {
-      console.warn("[teams] Brasileirão bootstrap skipped:", error);
-    }
-  }
+  // Bootstrap in background — never block the directory.
+  void config.runBootstrap().catch((error) => {
+    console.warn(`[teams] ${sport} bootstrap skipped:`, error);
+  });
 
   const competitions = await withSupabaseErrorLog("queryTeamLeagueTabs", () =>
     getTeamRepository().getCompetitions()
@@ -65,26 +64,78 @@ export const queryCompetitionIdForLeague = cache(async (leagueParam?: string) =>
   if (sport === "BASKETBALL" && leagueParam === "ncaa") {
     return tabs.find((tab) => tab.key === "ncaa")?.competitionId;
   }
+  if (sport === "AMERICAN_FOOTBALL" && leagueParam === "nfl") {
+    return tabs.find((tab) => tab.key === "nfl")?.competitionId;
+  }
+  if (sport === "AMERICAN_FOOTBALL" && (leagueParam === "cfb" || leagueParam === "college-football")) {
+    return tabs.find((tab) => tab.key === "cfb")?.competitionId;
+  }
 
   return resolveCompetitionIdFromLeagueParam(leagueParam, tabs);
 });
 
-export const queryTeams = cache(async (competitionId?: string) => {
+export const queryTeams = cache(
+  async (competitionId?: string, leagueKey?: string, options?: { enrich?: boolean }) => {
   await ensureRuntimeDataSource();
   const sport = await getServerSport();
+  const shouldEnrich = options?.enrich === true;
+
   let teams = await withSupabaseErrorLog("queryTeams", () =>
     getTeamRepository().findAll(competitionId)
   );
 
-  if (sport === "BASKETBALL") {
-    teams = teams.filter((team) => isBasketballCompetition(team.competition?.name ?? ""));
-  } else {
-    teams = teams.filter((team) => !isBasketballCompetition(team.competition?.name ?? ""));
+  teams = teams.filter((team) =>
+    competitionBelongsToSport(team.competition?.name ?? "", sport)
+  );
+
+  if (leagueKey && leagueKey !== "all") {
+    teams = teams.filter((team) =>
+      competitionMatchesLeagueKey(team.competition?.name, leagueKey, sport)
+    );
   }
 
-  const enriched = sport === "BASKETBALL" ? teams : await attachTeamLiveStats(teams);
-  return enriched.map((team) => {
-    const withLive = team as TeamWithStatsBomb;
+  if (!shouldEnrich) {
+    return teams.map((team) => ({
+      ...team,
+      crestUrl:
+        resolveClubCrestUrlSync(team.name, team.crestUrl, team.apiSportsId) ?? team.crestUrl,
+    }));
+  }
+
+  if (sport === "BASKETBALL") {
+    const needsCap = (!leagueKey || leagueKey === "all") && !competitionId && teams.length > 40;
+    const forLive = needsCap ? teams.slice(0, 40) : teams;
+    const enriched = await attachBasketballTeamLiveStats(forLive);
+    const enrichedById = new Map(enriched.map((t) => [t.id, t]));
+
+    return teams.map((team) => {
+      const withLive = (enrichedById.get(team.id) ?? team) as TeamWithStatsBomb;
+      return {
+        ...withLive,
+        crestUrl:
+          resolveClubCrestUrlSync(withLive.name, withLive.crestUrl, withLive.apiSportsId) ??
+          withLive.crestUrl,
+      };
+    });
+  }
+
+  if (sport === "AMERICAN_FOOTBALL") {
+    return teams.map((team) => ({
+      ...team,
+      crestUrl:
+        resolveClubCrestUrlSync(team.name, team.crestUrl, team.apiSportsId) ?? team.crestUrl,
+    }));
+  }
+
+  // Cap live enrichment only on the unfiltered list — filtered leagues are ~20 clubs.
+  const needsCap = (!leagueKey || leagueKey === "all") && !competitionId && teams.length > 40;
+  const forLive = needsCap ? teams.slice(0, 40) : teams;
+  const enriched = await attachTeamLiveStats(forLive);
+
+  const enrichedById = new Map(enriched.map((t) => [t.id, t]));
+
+  return teams.map((team) => {
+    const withLive = (enrichedById.get(team.id) ?? team) as TeamWithStatsBomb;
     return {
       ...withLive,
       crestUrl:
@@ -104,7 +155,11 @@ export const queryTeamById = cache(async (id: string) => {
   if (!team) return null;
 
   const [enriched] =
-    sport === "BASKETBALL" ? [team] : await attachTeamLiveStats([team]);
+    sport === "BASKETBALL"
+      ? await attachBasketballTeamLiveStats([team])
+      : sport === "AMERICAN_FOOTBALL"
+        ? [team]
+        : await attachTeamLiveStats([team]);
   if (!enriched) return null;
 
   return {

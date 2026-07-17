@@ -4,16 +4,23 @@ import { queryPlayerById } from "@/features/scouting/queries/players";
 import { PlayerProfileView } from "@/features/scouting/components/player-profile-view";
 import { PlayerProfileSkeleton } from "@/features/scouting/components/player-profile-skeleton";
 import { APP_NAME } from "@/lib/config";
+import { getPrisma } from "@/lib/prisma";
+import { canUseDatabase } from "@/lib/system-cache";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const player = await queryPlayerById(id);
-  return {
-    title: player ? `${player.knownAs} · ${APP_NAME}` : `Player Profile · ${APP_NAME}`,
-  };
+  if (canUseDatabase()) {
+    const row = await getPrisma().player.findUnique({
+      where: { id },
+      select: { knownAs: true },
+    });
+    if (row?.knownAs) {
+      return { title: `${row.knownAs} · ${APP_NAME}` };
+    }
+  }
+  return { title: `Player Profile · ${APP_NAME}` };
 }
 
 export default async function PlayerDetailPage({

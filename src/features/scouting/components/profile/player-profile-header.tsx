@@ -15,6 +15,7 @@ import { getPositionGlossaryDescription } from "@/lib/positions";
 import { ShortlistButton } from "@/features/shortlist/components/shortlist-button";
 import { derivePlayerStatus } from "@/features/scouting/lib/player-status";
 import { NationalTeamCrest } from "@/features/tournaments/components/national-team-crest";
+import { SummerLeagueBadge } from "@/components/ui/summer-league-badge";
 import { getTeamTheme } from "@/lib/team-theme";
 import { cn, formatCapHit, formatMarketValue, formatPhysicalMetric, formatPreferredFoot, ratingColor } from "@/lib/utils";
 import type { Player } from "@/types";
@@ -77,9 +78,7 @@ export function PlayerProfileHeader({
               </h1>
               <Badge variant={statusVariant}>{status.label}</Badge>
               {isBasketball && player.summerLeague2026 ? (
-                <Badge className="border-amber-500/40 bg-amber-500/15 text-amber-300">
-                  🔥 Summer League Roster
-                </Badge>
+                <SummerLeagueBadge label="Summer League Roster" className="normal-case tracking-wide" />
               ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-2">

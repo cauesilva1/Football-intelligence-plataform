@@ -1,5 +1,6 @@
 import { SEASONS } from "@/lib/data/generators";
 import type { PlayerStatistic } from "@/types";
+import type { Sport } from "@/lib/sport";
 
 export interface SeasonTimelinePoint {
   season: string;
@@ -21,7 +22,7 @@ function sortSeasonLabels(seasons: string[]): string[] {
 /** Aggregates multi-club records into one point per season (minutes-weighted). */
 export function aggregateSeasonTimeline(
   history: PlayerStatistic[],
-  sport: "SOCCER" | "BASKETBALL" = "SOCCER"
+  sport: Sport = "SOCCER"
 ): SeasonTimelinePoint[] {
   const bySeason = new Map<string, PlayerStatistic[]>();
 

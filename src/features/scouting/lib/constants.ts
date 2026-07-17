@@ -7,6 +7,7 @@ export const LEAGUES = [
   { id: "comp-04", name: "Bundesliga" },
   { id: "comp-05", name: "Ligue 1" },
   { id: "comp-06", name: "Brasileirão Série A" },
+  { id: "comp-07", name: "MLS" },
 ] as const;
 
 export const MAX_AGE_OPTIONS = [21, 23, 25, 28, 32] as const;

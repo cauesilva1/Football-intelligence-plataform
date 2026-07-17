@@ -180,7 +180,11 @@ function mapPlayer(record: PrismaPlayerWithStats, options?: { season?: string })
     )
   );
   const history = mergeSeasonHistories(legacyHistory, seasonStatsHistory);
-  const { selectedSeason, currentSeasonStats } = resolveSelectedSeasonStats(history, options?.season);
+  const { selectedSeason, currentSeasonStats } = resolveSelectedSeasonStats(
+    history,
+    options?.season,
+    record.sport
+  );
   const dob = record.dateOfBirth.toISOString();
 
   return {
@@ -230,7 +234,13 @@ function buildPlayerWhere(filters: PlayerFilters): Prisma.PlayerWhereInput {
       { knownAs: { contains: search.trim(), mode: "insensitive" } },
     ];
   }
-  if (position) where.position = position;
+  if (position) {
+    const parts = position
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
+    where.position = parts.length > 1 ? { in: parts } : parts[0];
+  }
   if (teamId) {
     where.teamId = teamId;
   } else if (league) {
@@ -384,6 +394,21 @@ export const prismaPlayerRepository: PlayerRepository & {
       return paginatePlayers(sorted, page, pageSize);
     }
 
+    if (sport === "AMERICAN_FOOTBALL") {
+      const { page = 1, pageSize = 25 } = filters;
+      const where = buildPlayerWhere({ ...filters, sport: "AMERICAN_FOOTBALL" });
+      const records = await getPrisma().player.findMany({
+        where,
+        include: playerInclude,
+      });
+      const items = records.map((record) => mapPlayer(record));
+      const sorted = filterAndSortPlayers(items, filters, {
+        prismaPrefiltered: true,
+        rosterBrowse: true,
+      });
+      return paginatePlayers(sorted, page, pageSize);
+    }
+
     const { page = 1, pageSize = 25 } = filters;
     const where = buildStatWhere(filters);
     const orderBy = buildStatOrderBy(filters);
@@ -425,13 +450,10 @@ export const prismaPlayerRepository: PlayerRepository & {
     if (!record) return null;
 
     if (isDbSource()) {
-      try {
-        await clubRepository.ensurePlayerPersisted(record);
-        record =
-          (await getPrisma().player.findUnique({ where: { id }, include: playerInclude })) ?? record;
-      } catch (error) {
-        console.warn("[player-repo] Sync skipped — returning cached Supabase row:", id, error);
-      }
+      // Never block the profile on Transfermarkt/FBref — refresh in background.
+      void clubRepository.ensurePlayerPersisted(record).catch((error) => {
+        console.warn("[player-repo] Background sync failed:", id, error);
+      });
     }
 
     return mapPlayer(record, options);

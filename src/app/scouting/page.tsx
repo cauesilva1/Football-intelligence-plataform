@@ -10,8 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const metadata = { title: `Scouting · ${APP_NAME}` };
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
 export const maxDuration = 60;
 
 function FiltersSkeleton() {

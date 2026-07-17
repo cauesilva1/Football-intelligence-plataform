@@ -1,16 +1,18 @@
 import type { Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { canUseDatabase } from "@/lib/system-cache";
-import { BRAZIL_SEASON_LABEL, CURRENT_SEASON } from "@/lib/seasons";
+import { BRAZIL_SEASON_LABEL, CURRENT_SEASON, resolvePersistedSeasonLabel } from "@/lib/seasons";
 import {
   resolveSeasonYearFromLabel,
   upsertPlayerSeasonStats,
 } from "@/lib/metrics/upsert-player-season-stats";
 import { syncEspnMatchesForCompetition } from "@/lib/api/espn-matches";
+import { fetchEspnClubRoster, type EspnRosterPlayer } from "@/lib/api/espn-roster";
 import { findFbrefPlayerRecord } from "@/lib/api/csv-parser";
 import type { TransformedRecord } from "@/etl/transform/transformer";
 import {
   fetchPlayerProfile,
+  isTransfermarktAvailable,
   parseFoundedYear,
   resolveTransfermarktClubId,
   searchTransfermarktClub,
@@ -25,6 +27,7 @@ import {
 } from "@/lib/api/transfermarkt";
 import { namesLikelyMatch, needsMatchSync, needsPlayerSync, needsTeamSync } from "@/lib/sync/data-staleness";
 import { resolvePlayerPhotoUrl } from "@/lib/player-media";
+import { isBasketballCompetition } from "@/lib/sport";
 
 type DbPlayer = Prisma.PlayerGetPayload<{
   include: {
@@ -250,7 +253,7 @@ export async function persistSquadFromTransfermarkt(
   if (!canUseDatabase() || squad.length === 0) return;
 
   const prisma = getPrisma();
-  const seasonLabel = isBrazilianLeague(competitionName) ? BRAZIL_SEASON_LABEL : CURRENT_SEASON;
+  const seasonLabel = resolvePersistedSeasonLabel(competitionName);
   const dbPlayers = await prisma.player.findMany({ where: { teamId: dbTeamId } });
 
   for (const tmPlayer of squad) {
@@ -312,6 +315,92 @@ export async function persistSquadFromTransfermarkt(
   }
 }
 
+/** Persist roster from ESPN when Transfermarkt is down or empty. */
+export async function persistSquadFromEspn(
+  dbTeamId: string,
+  squad: EspnRosterPlayer[],
+  competitionName?: string | null
+): Promise<number> {
+  if (!canUseDatabase() || squad.length === 0) return 0;
+
+  const prisma = getPrisma();
+  const seasonLabel = resolvePersistedSeasonLabel(competitionName);
+  const seasonYear = resolveSeasonYearFromLabel(seasonLabel);
+  const dbPlayers = await prisma.player.findMany({ where: { teamId: dbTeamId } });
+  let saved = 0;
+
+  for (const athlete of squad) {
+    const knownAs = athlete.fullName.split(" ").pop() ?? athlete.fullName;
+    const existing = dbPlayers.find(
+      (player) =>
+        namesLikelyMatch(player.fullName, athlete.fullName) ||
+        namesLikelyMatch(player.knownAs, athlete.fullName)
+    );
+
+    let playerId: string;
+
+    if (existing) {
+      await prisma.player.update({
+        where: { id: existing.id },
+        data: {
+          teamId: dbTeamId,
+          photoUrl: resolvePlayerPhotoUrl({
+            photoUrl: athlete.photoUrl ?? existing.photoUrl,
+            externalPhoto: athlete.photoUrl,
+          }),
+          nationality:
+            athlete.nationality !== "UNK" ? athlete.nationality : existing.nationality,
+          position: athlete.position || existing.position,
+          dataSyncedAt: new Date(),
+          dataSyncedSeason: seasonLabel,
+        },
+      });
+      playerId = existing.id;
+      saved += 1;
+    } else {
+      const created = await prisma.player.create({
+        data: {
+          fullName: athlete.fullName,
+          knownAs,
+          dateOfBirth: parseSquadDateOfBirth(athlete.dateOfBirth),
+          nationality: athlete.nationality || "UNK",
+          position: athlete.position || "CM",
+          height: 180,
+          weight: 75,
+          marketValue: 0,
+          photoUrl: resolvePlayerPhotoUrl({
+            photoUrl: athlete.photoUrl,
+            externalPhoto: athlete.photoUrl,
+          }),
+          teamId: dbTeamId,
+          strengths: [],
+          weaknesses: [],
+          dataSyncedAt: new Date(),
+          dataSyncedSeason: seasonLabel,
+          league: competitionName ?? "Soccer",
+        },
+      });
+      playerId = created.id;
+      saved += 1;
+    }
+
+    const season = athlete.seasonStats;
+    if (season && (season.appearances > 0 || season.goals > 0 || season.assists > 0)) {
+      await upsertPlayerSeasonStats(prisma, playerId, seasonYear, {
+        goals: season.goals,
+        assists: season.assists,
+        tackles: 0,
+        interceptions: 0,
+        passingAccuracy: 0,
+        minutesPlayed: season.minutesPlayed,
+        matchesPlayed: season.appearances,
+      });
+    }
+  }
+
+  return saved;
+}
+
 /** Ensure player has fresh Transfermarkt + FBref data; falls back to DB cache on API failure. */
 export async function ensurePlayerPersisted(player: DbPlayer): Promise<void> {
   if (!canUseDatabase()) return;
@@ -335,8 +424,9 @@ export async function ensurePlayerPersisted(player: DbPlayer): Promise<void> {
   }
 
   try {
-    let tmId = player.transfermarktId;
-    if (!tmId) {
+    const tmOk = isTransfermarktAvailable();
+    let tmId = tmOk ? player.transfermarktId : null;
+    if (tmOk && !tmId) {
       tmId =
         (await searchTransfermarktPlayer(
           player.knownAs || player.fullName,
@@ -345,7 +435,7 @@ export async function ensurePlayerPersisted(player: DbPlayer): Promise<void> {
     }
 
     const [profile, fbref] = await Promise.all([
-      tmId ? fetchPlayerProfile(tmId) : Promise.resolve(null),
+      tmOk && tmId ? fetchPlayerProfile(tmId) : Promise.resolve(null),
       findFbrefPlayerRecord(
         player.fullName,
         player.knownAs,
@@ -367,7 +457,9 @@ export async function ensureClubPersisted(team: DbTeam): Promise<void> {
   if (!canUseDatabase()) return;
 
   const prisma = getPrisma();
-  const currentTeamStat = team.statistics?.find((s) => s.season === CURRENT_SEASON);
+  const currentTeamStat =
+    team.statistics?.find((s) => s.season === resolvePersistedSeasonLabel(team.competition?.name)) ??
+    team.statistics?.find((s) => s.season === CURRENT_SEASON);
   const latestMatch = await prisma.match.findFirst({
     where: {
       OR: [{ homeTeamId: team.id }, { awayTeamId: team.id }],
@@ -402,26 +494,68 @@ export async function ensureClubPersisted(team: DbTeam): Promise<void> {
   );
 
   const squadCount = await prisma.player.count({ where: { teamId: team.id } });
-  const isBrazil = isBrazilianLeague(team.competition?.name);
-  const shouldSyncSquad = isBrazil && squadCount < 8;
+  const competitionName = team.competition?.name;
+  const isBasketball = isBasketballCompetition(competitionName ?? "");
+  const seasonLabel = resolvePersistedSeasonLabel(competitionName);
+  const seasonYear = resolveSeasonYearFromLabel(seasonLabel);
+
+  const playersWithSeasonStats = await prisma.player.count({
+    where: {
+      teamId: team.id,
+      stats: {
+        some: {
+          season: seasonYear,
+          OR: [{ matchesPlayed: { gt: 0 } }, { goals: { gt: 0 } }, { assists: { gt: 0 } }],
+        },
+      },
+    },
+  });
+
+  const needsEspnStatsEnrichment =
+    !isBasketball &&
+    squadCount >= 8 &&
+    playersWithSeasonStats < Math.max(3, Math.floor(squadCount * 0.25));
+
+  const shouldSyncSquad = !isBasketball && (squadCount < 8 || needsEspnStatsEnrichment);
 
   try {
-    if (shouldSyncTeam || shouldSyncSquad) {
-      let tmId = resolveTransfermarktClubId(team.name, team.transfermarktId);
-      if (!tmId) {
-        tmId = await searchTransfermarktClub(team.name);
-      }
-      if (tmId) {
-        const { profile, squad } = await syncClub(tmId, team.competition?.name);
-        if (profile) {
-          await upsertClubFromTransfermarkt(team.id, profile, team.competition?.name);
+    if ((shouldSyncTeam || shouldSyncSquad) && !isBasketball) {
+      let tmSquadSaved = false;
+      const tmOk = isTransfermarktAvailable();
+
+      if (tmOk && !needsEspnStatsEnrichment) {
+        let tmId = resolveTransfermarktClubId(team.name, team.transfermarktId);
+        if (!tmId) {
+          tmId = await searchTransfermarktClub(team.name);
         }
-        await persistSquadFromTransfermarkt(team.id, squad, team.competition?.name);
+        if (tmId) {
+          const { profile, squad } = await syncClub(tmId, competitionName);
+          if (profile) {
+            await upsertClubFromTransfermarkt(team.id, profile, competitionName);
+          }
+          if (squad.length > 0) {
+            await persistSquadFromTransfermarkt(team.id, squad, competitionName);
+            tmSquadSaved = true;
+          }
+        }
+      }
+
+      if (shouldSyncSquad && (!tmSquadSaved || needsEspnStatsEnrichment)) {
+        const espnSquad = await fetchEspnClubRoster(team.name, competitionName);
+        if (espnSquad.length > 0) {
+          const saved = await persistSquadFromEspn(team.id, espnSquad, competitionName);
+          console.info(
+            `[club-repo] ESPN roster synced for ${team.name}: ${saved} players` +
+              (needsEspnStatsEnrichment ? " (stats enrichment)" : " (Transfermarkt unavailable)")
+          );
+        } else {
+          console.warn(`[club-repo] No ESPN roster found for ${team.name} (${competitionName})`);
+        }
       }
     }
 
-    if (shouldSyncMatches) {
-      await syncEspnMatchesForCompetition(team.competition?.name);
+    if (shouldSyncMatches && !isBasketball) {
+      await syncEspnMatchesForCompetition(competitionName);
     }
   } catch (error) {
     console.warn("[club-repo] External sync failed — using DB cache:", team.id, error);
@@ -438,15 +572,19 @@ export async function upsertTeamSeasonStats(
     losses: number;
     goalsFor: number;
     goalsAgainst: number;
-  }
+  },
+  competitionName?: string | null
 ): Promise<void> {
   if (!canUseDatabase()) return;
 
+  const { resolvePersistedSeasonLabel } = await import("@/lib/seasons");
+  const season = resolvePersistedSeasonLabel(competitionName);
+
   await getPrisma().teamStatistic.upsert({
-    where: { teamId_season: { teamId, season: CURRENT_SEASON } },
+    where: { teamId_season: { teamId, season } },
     create: {
       teamId,
-      season: CURRENT_SEASON,
+      season,
       matchesPlayed: stats.matchesPlayed,
       wins: stats.wins,
       draws: stats.draws,
@@ -481,6 +619,7 @@ export const clubRepository = {
   upsertPlayerHybrid,
   upsertClubFromTransfermarkt,
   persistSquadFromTransfermarkt,
+  persistSquadFromEspn,
   upsertTeamSeasonStats,
   ensurePlayerPersisted,
   ensureClubPersisted,

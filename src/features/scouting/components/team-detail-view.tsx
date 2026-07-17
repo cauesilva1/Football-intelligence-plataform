@@ -13,19 +13,21 @@ import {
   isBasketballTeamCompetition,
   resolveBasketballLeagueFromCompetition,
 } from "@/lib/basketball/team-league";
+import { isAmericanFootballTeamCompetition } from "@/lib/american-football/team-league";
 import { getTeamTheme } from "@/lib/team-theme";
 import { notFound } from "next/navigation";
 
 function buildStatCards(
   isBasketball: boolean,
+  isAmericanFootball: boolean,
   teamStats: { wins: number; draws: number; losses: number } | undefined,
   sb: { wins: number; draws: number; losses: number; goalBalance: number } | undefined,
   theme: ReturnType<typeof getTeamTheme>,
   squadSize: number
 ) {
-  if (isBasketball) {
-    const wins = teamStats?.wins ?? 0;
-    const losses = teamStats?.losses ?? 0;
+  if (isBasketball || isAmericanFootball) {
+    const wins = sb?.wins ?? teamStats?.wins ?? 0;
+    const losses = sb?.losses ?? teamStats?.losses ?? 0;
     const games = wins + losses;
     const winPct = games > 0 ? `${((wins / games) * 100).toFixed(1)}%` : "—";
 
@@ -56,9 +58,17 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
   const theme = getTeamTheme(team.competition?.name, team.name);
   const isBrasileirao = isBrazilianLeague(team.competition?.name);
   const isBasketball = isBasketballTeamCompetition(team.competition?.name);
+  const isAmericanFootball = isAmericanFootballTeamCompetition(team.competition?.name);
   const basketballLeague = resolveBasketballLeagueFromCompetition(team.competition?.name);
   const squad = team.squad ?? [];
-  const statCards = buildStatCards(isBasketball, team.stats, sb, theme, squad.length);
+  const statCards = buildStatCards(
+    isBasketball,
+    isAmericanFootball,
+    team.stats,
+    sb,
+    theme,
+    squad.length
+  );
 
   return (
     <div className="space-y-6">
@@ -90,7 +100,7 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
                 <span className="inline-flex items-center gap-1.5 font-medium text-white/90">
                   <Trophy className="h-4 w-4" style={{ color: theme.secondaryColor }} />
                   {team.competition.name}
-                  {!isBasketball && sb ? ` · ${sb.seasonLabel}` : ""}
+                  {sb ? ` · ${sb.seasonLabel}` : ""}
                 </span>
               ) : null}
               {team.stadium ? (
@@ -100,9 +110,12 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
                 </span>
               ) : null}
             </div>
-            {isBasketball ? (
+            {isBasketball || isAmericanFootball ? (
               <p className="text-xs text-white/50">
-                {squad.length} jogadores no elenco · temporada 2026/27
+                {squad.length} jogadores no elenco
+                {sb
+                  ? ` · ${sb.wins}V–${sb.losses}D · ${sb.seasonLabel} (${sb.statsBombCompetitionName})`
+                  : ""}
               </p>
             ) : sb ? (
               <p className="text-xs text-white/50">
@@ -135,7 +148,8 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
       <Card>
         <CardHeader className="border-b border-border/60 pb-4">
           <CardTitle className="font-display text-lg">
-            {isBasketball ? "Elenco" : "Squad"} · {squad.length} {isBasketball ? "jogadores" : "players"}
+            {isBasketball || isAmericanFootball ? "Elenco" : "Squad"} · {squad.length}{" "}
+            {isBasketball || isAmericanFootball ? "jogadores" : "players"}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
@@ -143,22 +157,30 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
             <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
               {basketballLeague === "NCAA"
                 ? "Elenco universitário ainda não sincronizado para este programa."
-                : isBasketball
-                  ? "Nenhum jogador vinculado a esta franquia no momento."
-                  : "No players in this squad."}
+                : isAmericanFootball
+                  ? "Elenco ainda vazio — o sync sob demanda da ESPN roda ao abrir esta página."
+                  : isBasketball
+                    ? "Nenhum jogador vinculado a esta franquia no momento."
+                    : "Elenco ainda vazio — recarregue a página para sincronizar via ESPN."}
             </p>
           ) : (
             <TeamSquadTable
               squad={squad}
               competitionName={team.competition?.name}
               teamName={team.name}
-              sport={isBasketball ? "BASKETBALL" : "SOCCER"}
+              sport={
+                isBasketball
+                  ? "BASKETBALL"
+                  : isAmericanFootball
+                    ? "AMERICAN_FOOTBALL"
+                    : "SOCCER"
+              }
             />
           )}
         </CardContent>
       </Card>
 
-      {!isDbSource() && !isBasketball ? <StatsBombAttribution /> : null}
+      {!isDbSource() && !isBasketball && !isAmericanFootball ? <StatsBombAttribution /> : null}
     </div>
   );
 }

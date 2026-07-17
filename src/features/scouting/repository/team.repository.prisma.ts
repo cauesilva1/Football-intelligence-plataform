@@ -1,13 +1,34 @@
 import { getPrisma } from "@/lib/prisma";
-import { CURRENT_SEASON } from "@/lib/seasons";
+import {
+  BRAZIL_SEASON_LABEL,
+  CURRENT_SEASON,
+  FIFA_WORLD_CUP_SEASON_LABEL,
+  resolvePersistedSeasonLabel,
+} from "@/lib/seasons";
 import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
 import { isDbSource } from "@/lib/data-source";
 import {
   isBasketballTeamCompetition,
   resolveBasketballLeagueFromCompetition,
 } from "@/lib/basketball/team-league";
+import {
+  isAmericanFootballTeamCompetition,
+  resolveAmericanFootballLeagueFromCompetition,
+} from "@/lib/american-football/team-league";
+import { ensureAmericanFootballTeamRoster } from "@/lib/sync/american-football-roster";
 import type { TeamRepository } from "./types";
 import { playerInclude, prismaPlayerRepository } from "./player.repository.prisma";
+
+const TEAM_STAT_SEASONS = [CURRENT_SEASON, BRAZIL_SEASON_LABEL, FIFA_WORLD_CUP_SEASON_LABEL] as const;
+
+function pickTeamStatistic<T extends { season: string }>(
+  statistics: T[],
+  competitionName?: string | null
+): T | undefined {
+  if (!statistics.length) return undefined;
+  const expected = resolvePersistedSeasonLabel(competitionName);
+  return statistics.find((row) => row.season === expected) ?? statistics[0];
+}
 
 export const prismaTeamRepository: TeamRepository = {
   async findAll(competitionId?: string) {
@@ -15,7 +36,7 @@ export const prismaTeamRepository: TeamRepository = {
       where: competitionId ? { competitionId } : undefined,
       include: {
         competition: true,
-        statistics: { where: { season: CURRENT_SEASON } },
+        statistics: { where: { season: { in: [...TEAM_STAT_SEASONS] } } },
         _count: { select: { players: true } },
       },
       orderBy: { name: "asc" },
@@ -59,6 +80,7 @@ export const prismaTeamRepository: TeamRepository = {
         expectedLeague != null
           ? (squadSizeByTeamId.get(team.id) ?? 0)
           : team._count.players;
+      const selectedStats = pickTeamStatistic(team.statistics, team.competition?.name);
 
       return {
       id: team.id,
@@ -79,24 +101,24 @@ export const prismaTeamRepository: TeamRepository = {
             logoUrl: team.competition.logoUrl ?? undefined,
           }
         : undefined,
-      stats: team.statistics[0]
+      stats: selectedStats
         ? {
-            id: team.statistics[0].id,
-            teamId: team.statistics[0].teamId,
-            season: team.statistics[0].season,
-            matchesPlayed: team.statistics[0].matchesPlayed,
-            wins: team.statistics[0].wins,
-            draws: team.statistics[0].draws,
-            losses: team.statistics[0].losses,
-            goalsFor: team.statistics[0].goalsFor,
-            goalsAgainst: team.statistics[0].goalsAgainst,
-            xG: team.statistics[0].xG,
-            xGA: team.statistics[0].xGA,
-            possessionPct: team.statistics[0].possessionPct,
-            passAccuracyPct: team.statistics[0].passAccuracyPct,
-            pressuresPer90: team.statistics[0].pressuresPer90,
-            attackRating: team.statistics[0].attackRating,
-            defenseRating: team.statistics[0].defenseRating,
+            id: selectedStats.id,
+            teamId: selectedStats.teamId,
+            season: selectedStats.season,
+            matchesPlayed: selectedStats.matchesPlayed,
+            wins: selectedStats.wins,
+            draws: selectedStats.draws,
+            losses: selectedStats.losses,
+            goalsFor: selectedStats.goalsFor,
+            goalsAgainst: selectedStats.goalsAgainst,
+            xG: selectedStats.xG,
+            xGA: selectedStats.xGA,
+            possessionPct: selectedStats.possessionPct,
+            passAccuracyPct: selectedStats.passAccuracyPct,
+            pressuresPer90: selectedStats.pressuresPer90,
+            attackRating: selectedStats.attackRating,
+            defenseRating: selectedStats.defenseRating,
           }
         : undefined,
       squadSize,
@@ -109,27 +131,57 @@ export const prismaTeamRepository: TeamRepository = {
       where: { id },
       include: {
         competition: true,
-        statistics: { where: { season: CURRENT_SEASON } },
+        statistics: { where: { season: { in: [...TEAM_STAT_SEASONS] } } },
       },
     });
     if (!team) return null;
 
     const isBasketball = isBasketballTeamCompetition(team.competition?.name);
+    const isAmericanFootball = isAmericanFootballTeamCompetition(team.competition?.name);
     const expectedLeague = resolveBasketballLeagueFromCompetition(team.competition?.name);
+    const afLeague = resolveAmericanFootballLeagueFromCompetition(team.competition?.name);
 
-    if (isDbSource() && !isBasketball) {
-      try {
-        await clubRepository.ensureClubPersisted(team);
-        team =
-          (await getPrisma().team.findUnique({
-            where: { id },
-            include: {
-              competition: true,
-              statistics: { where: { season: CURRENT_SEASON } },
-            },
-          })) ?? team;
-      } catch (error) {
-        console.warn("[team-repo] Sync skipped — returning cached Supabase row:", id, error);
+    if (isDbSource() && isAmericanFootball) {
+      const squadCount = await getPrisma().player.count({
+        where: {
+          teamId: id,
+          sport: "AMERICAN_FOOTBALL",
+          ...(afLeague ? { league: afLeague } : {}),
+        },
+      });
+      if (squadCount < 20) {
+        try {
+          await ensureAmericanFootballTeamRoster({
+            teamId: id,
+            competitionName: team.competition?.name,
+            espnTeamId: team.apiSportsId,
+            minPlayers: 20,
+          });
+        } catch (error) {
+          console.warn("[team-repo] AF roster sync skipped:", id, error);
+        }
+      }
+    } else if (isDbSource() && !isBasketball) {
+      const squadCount = await getPrisma().player.count({ where: { teamId: id } });
+      // Thin squads need sync before render; otherwise refresh in background.
+      if (squadCount < 8) {
+        try {
+          await clubRepository.ensureClubPersisted(team);
+          team =
+            (await getPrisma().team.findUnique({
+              where: { id },
+              include: {
+                competition: true,
+                statistics: { where: { season: { in: [...TEAM_STAT_SEASONS] } } },
+              },
+            })) ?? team;
+        } catch (error) {
+          console.warn("[team-repo] Sync skipped — returning cached Supabase row:", id, error);
+        }
+      } else {
+        void clubRepository.ensureClubPersisted(team).catch((error) => {
+          console.warn("[team-repo] Background sync failed:", id, error);
+        });
       }
     }
 
@@ -139,12 +191,16 @@ export const prismaTeamRepository: TeamRepository = {
         ...(isBasketball && expectedLeague
           ? { sport: "BASKETBALL", league: expectedLeague }
           : {}),
+        ...(isAmericanFootball && afLeague
+          ? { sport: "AMERICAN_FOOTBALL", league: afLeague }
+          : {}),
       },
       include: playerInclude,
       orderBy: [{ knownAs: "asc" }],
     });
 
     const squad = squadRecords.map((record) => prismaPlayerRepository.mapFromRecord(record));
+    const selectedStats = pickTeamStatistic(team.statistics, team.competition?.name);
 
     return {
       id: team.id,
@@ -165,24 +221,24 @@ export const prismaTeamRepository: TeamRepository = {
             logoUrl: team.competition.logoUrl ?? undefined,
           }
         : undefined,
-      stats: team.statistics[0]
+      stats: selectedStats
         ? {
-            id: team.statistics[0].id,
-            teamId: team.statistics[0].teamId,
-            season: team.statistics[0].season,
-            matchesPlayed: team.statistics[0].matchesPlayed,
-            wins: team.statistics[0].wins,
-            draws: team.statistics[0].draws,
-            losses: team.statistics[0].losses,
-            goalsFor: team.statistics[0].goalsFor,
-            goalsAgainst: team.statistics[0].goalsAgainst,
-            xG: team.statistics[0].xG,
-            xGA: team.statistics[0].xGA,
-            possessionPct: team.statistics[0].possessionPct,
-            passAccuracyPct: team.statistics[0].passAccuracyPct,
-            pressuresPer90: team.statistics[0].pressuresPer90,
-            attackRating: team.statistics[0].attackRating,
-            defenseRating: team.statistics[0].defenseRating,
+            id: selectedStats.id,
+            teamId: selectedStats.teamId,
+            season: selectedStats.season,
+            matchesPlayed: selectedStats.matchesPlayed,
+            wins: selectedStats.wins,
+            draws: selectedStats.draws,
+            losses: selectedStats.losses,
+            goalsFor: selectedStats.goalsFor,
+            goalsAgainst: selectedStats.goalsAgainst,
+            xG: selectedStats.xG,
+            xGA: selectedStats.xGA,
+            possessionPct: selectedStats.possessionPct,
+            passAccuracyPct: selectedStats.passAccuracyPct,
+            pressuresPer90: selectedStats.pressuresPer90,
+            attackRating: selectedStats.attackRating,
+            defenseRating: selectedStats.defenseRating,
           }
         : undefined,
       squad,

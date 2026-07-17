@@ -2,7 +2,11 @@ import { getTeamRepository, isDbSource } from "@/features/scouting/repository";
 import { LEAGUES } from "@/features/scouting/lib/constants";
 import { TEAM_OPTIONS, type TeamOption } from "@/features/scouting/lib/teams-options";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
-import { BASKETBALL_COMPETITION_NAMES, isBasketballCompetition, type Sport } from "@/lib/sport";
+import {
+  BASKETBALL_COMPETITION_NAMES,
+  competitionBelongsToSport,
+  type Sport,
+} from "@/lib/sport";
 
 export interface LeagueOption {
   id: string;
@@ -10,10 +14,7 @@ export interface LeagueOption {
 }
 
 function filterLeaguesBySport<T extends { name: string }>(items: T[], sport: Sport): T[] {
-  if (sport === "BASKETBALL") {
-    return items.filter((item) => isBasketballCompetition(item.name));
-  }
-  return items.filter((item) => !isBasketballCompetition(item.name));
+  return items.filter((item) => competitionBelongsToSport(item.name, sport));
 }
 
 export async function queryScoutingFilterOptions(sport: Sport = "SOCCER"): Promise<{

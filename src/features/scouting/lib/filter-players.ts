@@ -30,6 +30,7 @@ export function filterAndSortPlayers(
     minGoalsPer90,
     minXGPer90,
     maxMarketValue,
+    maxCapHit,
     sortBy = "rating",
     sortDir = "desc",
   } = filters;
@@ -72,6 +73,11 @@ export function filterAndSortPlayers(
   if (typeof maxMarketValue === "number") {
     result = result.filter((p) => p.marketValue <= maxMarketValue);
   }
+  if (typeof maxCapHit === "number") {
+    result = result.filter(
+      (p) => typeof p.capHit === "number" && p.capHit > 0 && p.capHit <= maxCapHit
+    );
+  }
 
   result.sort((a, b) => {
     const sa = a.currentSeasonStats;
@@ -86,7 +92,8 @@ export function filterAndSortPlayers(
         diff = sa.goals - sb.goals;
         break;
       case "assists":
-        diff = sa.assists - sb.assists;
+        diff =
+          (sa.assists || sa.perGame?.assists || 0) - (sb.assists || sb.perGame?.assists || 0);
         break;
       case "assistsPer90":
         diff = sa.per90.assists - sb.per90.assists;

@@ -11,24 +11,28 @@ import type { Sport } from "@/lib/sport";
 
 export async function TeamsGrid({
   competitionId,
+  leagueKey,
   sport = "SOCCER",
 }: {
   competitionId?: string;
+  leagueKey?: string;
   sport?: Sport;
 }) {
-  const teams: TeamWithStatsBomb[] = await queryTeams(competitionId);
+  const teams: TeamWithStatsBomb[] = await queryTeams(competitionId, leagueKey, {
+    enrich: false,
+  });
   const isBasketball = sport === "BASKETBALL";
 
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        {teams.length} {isBasketball ? "franquias" : "clubs"}
+        {teams.length} {isBasketball ? "franquias" : "clubes"}
         {!isBasketball && (
           <>
             {" · "}
             {isDbSource()
-              ? `Supabase + ESPN live (${teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`
-              : `StatsBomb, ESPN, or local data (${teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`}
+              ? `Dados em cache (${teams[0]?.stats?.season ?? CURRENT_SEASON})`
+              : `Demo (${teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`}
           </>
         )}
       </p>
@@ -78,26 +82,26 @@ export async function TeamsGrid({
                     <div className="mt-4 grid grid-cols-4 gap-2 text-center">
                       <div>
                         <p className="font-display text-sm font-bold text-primary">{sb?.wins ?? "—"}</p>
-                        <p className="text-[10px] uppercase text-muted-foreground">Wins</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">V</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">{sb?.draws ?? "—"}</p>
-                        <p className="text-[10px] uppercase text-muted-foreground">Draws</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">E</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">{sb?.losses ?? "—"}</p>
-                        <p className="text-[10px] uppercase text-muted-foreground">Losses</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">D</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">{sb ? balanceLabel : "—"}</p>
-                        <p className="text-[10px] uppercase text-muted-foreground">GD</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">SG</p>
                       </div>
                     </div>
                   )}
 
                   <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
-                      <Users className="h-3 w-3" /> {team.squadSize ?? 0} players
+                      <Users className="h-3 w-3" /> {team.squadSize ?? 0} jogadores
                     </span>
                     {!isBasketball && sb ? <span className="text-primary/80">{sb.seasonLabel}</span> : null}
                   </div>
@@ -109,7 +113,8 @@ export async function TeamsGrid({
       </div>
       {teams.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-          {isBasketball ? "Nenhuma franquia encontrada para este filtro." : "No clubs found for this filter."}
+          Nenhum clube encontrado para este filtro.
+          {!isBasketball ? " Confira Torneios para tabelas ao vivo das ligas." : null}
         </p>
       ) : null}
       {!isDbSource() && !isBasketball ? <StatsBombAttribution /> : null}

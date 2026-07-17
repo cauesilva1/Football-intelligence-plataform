@@ -8,10 +8,8 @@ import { aggregateSeasonTimeline } from "@/features/scouting/lib/season-history"
 import { PlayerSeasonSelector } from "@/features/scouting/components/profile/player-season-selector";
 import { toRadarProfile } from "@/lib/normalize";
 import { getTeamTheme } from "@/lib/team-theme";
+import { getSportConfig } from "@/lib/sport-registry";
 import type { Player } from "@/types";
-
-const SOCCER_RADAR_METRICS = ["Finishing", "Creation", "Passing", "Dribbling", "Defense", "Physical"] as const;
-const BASKETBALL_RADAR_METRICS = ["Scoring", "Rebounding", "Playmaking", "Defense", "FG%", "3P%"] as const;
 
 function SoccerPerformanceSection({
   player,
@@ -24,6 +22,7 @@ function SoccerPerformanceSection({
   timeline: ReturnType<typeof aggregateSeasonTimeline>;
   theme: ReturnType<typeof getTeamTheme>;
 }) {
+  const radarMetrics = [...getSportConfig("SOCCER").ui.radarMetrics];
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -76,7 +75,7 @@ function SoccerPerformanceSection({
           style={{ borderColor: `${theme.primaryColor}33` }}
         >
           <StatRadarChart
-            metrics={[...SOCCER_RADAR_METRICS]}
+            metrics={radarMetrics}
             series={[{ name: player.knownAs, color: theme.primaryColor, values: toRadarProfile(s) }]}
           />
         </DataPanel>
@@ -145,6 +144,7 @@ function BasketballPerformanceSection({
     blocks: s.blocks ?? 0,
     assists: s.assists ?? 0,
   };
+  const radarMetrics = [...getSportConfig("BASKETBALL").ui.radarMetrics];
 
   return (
     <>
@@ -198,7 +198,7 @@ function BasketballPerformanceSection({
           style={{ borderColor: `${theme.primaryColor}33` }}
         >
           <StatRadarChart
-            metrics={[...BASKETBALL_RADAR_METRICS]}
+            metrics={radarMetrics}
             series={[{ name: player.knownAs, color: theme.primaryColor, values: toRadarProfile(s) }]}
           />
         </DataPanel>

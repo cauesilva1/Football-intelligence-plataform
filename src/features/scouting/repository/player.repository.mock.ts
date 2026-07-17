@@ -8,7 +8,12 @@ function filterBySport<T extends { sport?: Sport }>(items: T[], sport: Sport): T
   if (sport === "BASKETBALL") {
     return items.filter((item) => item.sport === "BASKETBALL");
   }
-  return items.filter((item) => item.sport !== "BASKETBALL");
+  if (sport === "AMERICAN_FOOTBALL") {
+    return items.filter((item) => item.sport === "AMERICAN_FOOTBALL");
+  }
+  return items.filter(
+    (item) => item.sport !== "BASKETBALL" && item.sport !== "AMERICAN_FOOTBALL"
+  );
 }
 
 export const mockPlayerRepository: PlayerRepository = {

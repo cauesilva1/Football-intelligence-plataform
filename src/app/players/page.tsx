@@ -10,8 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const metadata = { title: `Players · ${APP_NAME}` };
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
 export const maxDuration = 60;
 
 function FiltersSkeleton() {
@@ -29,13 +28,31 @@ export default async function PlayersPage({
   const suspenseKey = JSON.stringify(filters);
 
   return (
-    <DashboardShell subtitle={sport === "BASKETBALL" ? "Elenco & Prospects" : "Players"}>
+    <DashboardShell
+      subtitle={
+        sport === "BASKETBALL"
+          ? "Elenco & Prospects"
+          : sport === "AMERICAN_FOOTBALL"
+            ? "Elenco & Prospects"
+            : "Players"
+      }
+    >
       <div className="space-y-4">
         {sport === "BASKETBALL" ? (
           <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
             <h1 className="font-display text-lg font-bold text-foreground md:text-xl">Elenco de Basquete</h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               Busque atletas da NBA e da NCAA. Filtre por franquia, posição e temporada.
+            </p>
+          </div>
+        ) : null}
+        {sport === "AMERICAN_FOOTBALL" ? (
+          <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
+            <h1 className="font-display text-lg font-bold text-foreground md:text-xl">
+              Elenco de Futebol Americano
+            </h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Jogadores entram sob demanda ao abrir uma franquia NFL ou programa CFB elite.
             </p>
           </div>
         ) : null}
