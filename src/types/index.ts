@@ -3,7 +3,10 @@
 // share a stable contract regardless of DATA_SOURCE.
 // ==========================================================
 
+import type { Sport } from "@/lib/sport";
+
 export type Foot = "LEFT" | "RIGHT" | "BOTH";
+export type { Sport };
 
 export interface Competition {
   id: string;
@@ -50,7 +53,7 @@ export interface PlayerStatistic {
   teamName?: string;
   teamShortName?: string;
   season: string;
-  sport?: "SOCCER" | "BASKETBALL";
+  sport?: Sport;
   appearances: number;
   minutesPlayed: number;
   goals: number;
@@ -99,7 +102,7 @@ export interface Player {
   summerLeague2026?: boolean;
   photoUrl?: string;
   apiSportsId?: number;
-  sport?: "SOCCER" | "BASKETBALL";
+  sport?: Sport;
   league?: string;
   teamId: string;
   teamName?: string;
@@ -161,7 +164,7 @@ export interface ScoutingReport {
 }
 
 export interface PlayerFilters {
-  sport?: "SOCCER" | "BASKETBALL";
+  sport?: Sport;
   search?: string;
   position?: string;
   league?: string;
@@ -173,6 +176,8 @@ export interface PlayerFilters {
   minGoalsPer90?: number;
   minXGPer90?: number;
   maxMarketValue?: number;
+  /** Basquete — teto de cap hit anual (USD). */
+  maxCapHit?: number;
   /** Basquete — mínimos em PlayerSeasonStats (médias por jogo). */
   minPoints?: number;
   minRebounds?: number;

@@ -28,16 +28,17 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: APP_NAME,
-  description: `${APP_TAGLINE} — scouting, performance intelligence and data-driven recruitment across soccer and basketball.`,
+  description: `${APP_TAGLINE} — scouting, performance intelligence and data-driven recruitment across soccer, basketball and American football.`,
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const initialSport = await getServerSport();
 
   return (
-    <html lang="en" className="dark">
+    <html lang="pt" className="dark" data-sport={initialSport} suppressHydrationWarning>
       <body
         className={`${interDisplay.variable} ${interBody.variable} ${jetbrainsMono.variable} bg-background font-body text-sm text-foreground antialiased`}
+        suppressHydrationWarning
       >
         <SportProviderWrapper initialSport={initialSport}>{children}</SportProviderWrapper>
       </body>
