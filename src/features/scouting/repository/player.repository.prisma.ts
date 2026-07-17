@@ -579,47 +579,7 @@ export const prismaPlayerRepository: PlayerRepository & {
         console.warn("[player-repo] Background sync failed:", id, error);
       });
 
-      // AF: never block TTFB on ESPN — enrich past season in the background.
-      if (record.sport === "AMERICAN_FOOTBALL") {
-        void (async () => {
-          try {
-            const { resolveAmericanFootballLeagueCode } = await import(
-              "@/lib/american-football/team-league"
-            );
-            const { resolveFootballHubSeasonYears } = await import(
-              "@/lib/api/espn-football-seasons"
-            );
-            const { ensureAmericanFootballPlayerSeasons } = await import(
-              "@/lib/sync/american-football-roster"
-            );
-            const league = resolveAmericanFootballLeagueCode(
-              record.league,
-              record.team?.competition?.name
-            );
-            const { pastYear, currentYear } = resolveFootballHubSeasonYears();
-            const pastRow = record.stats.find((s) => s.season === pastYear);
-            const hasCurrentStub = record.stats.some((s) => s.season === currentYear);
-            const pastHasSignal =
-              !!pastRow &&
-              (pastRow.points > 0 ||
-                pastRow.goals > 0 ||
-                pastRow.tackles > 0 ||
-                pastRow.steals > 0);
-            const needsWork = !hasCurrentStub || !pastRow || !pastHasSignal;
-            if (!league || !needsWork) return;
-
-            await ensureAmericanFootballPlayerSeasons({
-              playerId: record.id,
-              espnAthleteId: record.apiSportsId,
-              league,
-              fetchPastStats: !pastHasSignal,
-              timeoutMs: 10_000,
-            });
-          } catch (error) {
-            console.warn("[player-repo] AF season enrich failed:", id, error);
-          }
-        })();
-      }
+      // AF ESPN enrich is client-triggered (sessionStorage) via AfProfileSeasonEnricher.
     }
 
     return mapPlayer(record, options);

@@ -3,67 +3,16 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { buttonVariants } from "@/components/ui/button";
 import { BasketballStandingsTable } from "@/features/tournaments/basketball-standings-table";
 import { BasketballFranchisesBoard } from "@/features/tournaments/basketball-franchises-board";
 import { AmericanFootballLeadersBoard } from "@/features/tournaments/american-football-leaders-board";
 import { AmericanFootballGamesHub } from "@/features/tournaments/components/american-football-games-hub";
+import {
+  HubSeasonRestore,
+  HubSeasonToggle,
+} from "@/features/tournaments/components/hub-season-toggle";
 import type { AmericanFootballCompetitionConfig } from "@/lib/tournaments/american-football-competitions";
 import type { FootballCompetitionHubData } from "@/lib/tournaments/american-football-hub-data";
-import { cn } from "@/lib/utils";
-
-function SeasonToggle({
-  slug,
-  slices,
-  selectedSeasonYear,
-}: {
-  slug: string;
-  slices: FootballCompetitionHubData["seasonSlices"];
-  selectedSeasonYear: number;
-}) {
-  if (slices.length <= 1) return null;
-
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Temporada
-      </span>
-      {slices.map((slice) => {
-        const active = slice.seasonYear === selectedSeasonYear;
-        const suffix =
-          slice.kind === "current"
-            ? slice.hasStandings || slice.hasLeaders
-              ? "atual"
-              : "atual · sem dados"
-            : "passada";
-        return (
-          <Link
-            key={slice.seasonYear}
-            href={`/tournaments/${slug}?season=${slice.seasonYear}`}
-            className={cn(
-              buttonVariants({
-                variant: active ? "default" : "outline",
-                size: "sm",
-              }),
-              "h-8 px-3 text-xs"
-            )}
-            scroll={false}
-          >
-            {slice.seasonLabel}
-            <span
-              className={cn(
-                "ml-1.5 font-normal",
-                active ? "opacity-80" : "text-muted-foreground"
-              )}
-            >
-              · {suffix}
-            </span>
-          </Link>
-        );
-      })}
-    </div>
-  );
-}
 
 export function AmericanFootballCompetitionHub({
   competition,
@@ -100,6 +49,7 @@ export function AmericanFootballCompetitionHub({
 
   return (
     <div className="space-y-6">
+      <HubSeasonRestore slug={competition.slug} />
       <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-5 shadow-panel md:p-8">
         <Link
           href="/tournaments"
@@ -123,7 +73,7 @@ export function AmericanFootballCompetitionHub({
 
         {data.seasonSlices.length > 0 ? (
           <div className="mt-4">
-            <SeasonToggle
+            <HubSeasonToggle
               slug={competition.slug}
               slices={data.seasonSlices}
               selectedSeasonYear={data.selectedSeasonYear}

@@ -5,12 +5,13 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { SPORT_COOKIE, type Sport } from "@/lib/sport";
+import { parseSport, SPORT_COOKIE, type Sport } from "@/lib/sport";
 import { applySportToDocument } from "@/lib/sport-theme";
 import { isBasketballCompetitionSlug } from "@/lib/tournaments/basketball-competitions";
 import { isAmericanFootballCompetitionSlug } from "@/lib/tournaments/american-football-competitions";
@@ -25,6 +26,12 @@ const SportContext = createContext<SportContextValue | null>(null);
 
 function persistSportCookie(sport: Sport): void {
   document.cookie = `${SPORT_COOKIE}=${sport};path=/;max-age=31536000;SameSite=Lax`;
+}
+
+function readSportCookie(): Sport {
+  if (typeof document === "undefined") return "SOCCER";
+  const match = document.cookie.match(new RegExp(`(?:^|; )${SPORT_COOKIE}=([^;]*)`));
+  return parseSport(match?.[1] ? decodeURIComponent(match[1]) : null);
 }
 
 function competitionSlugBelongsToSport(slug: string, sport: Sport): boolean {
@@ -43,20 +50,27 @@ function resolveSportSwitchHref(pathname: string | null, nextSport: Sport): stri
   return "/tournaments";
 }
 
-export function SportProvider({
-  children,
-  initialSport,
-}: {
-  children: ReactNode;
-  initialSport: Sport;
-}) {
+/**
+ * Sport for shell/nav is client-driven (cookie). Server pages that need sport-scoped
+ * data still call getServerSport() — keeping cookies() out of the root layout.
+ */
+export function SportProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [currentSport, setCurrentSportState] = useState<Sport>(initialSport);
+  const [currentSport, setCurrentSportState] = useState<Sport>("SOCCER");
+  const [hydrated, setHydrated] = useState(false);
+
+  useLayoutEffect(() => {
+    const fromCookie = readSportCookie();
+    setCurrentSportState(fromCookie);
+    applySportToDocument(fromCookie);
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
     applySportToDocument(currentSport);
-  }, [currentSport]);
+  }, [currentSport, hydrated]);
 
   const setSport = useCallback(
     (sport: Sport) => {

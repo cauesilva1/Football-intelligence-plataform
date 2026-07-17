@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -32,12 +32,53 @@ import {
 } from "@/features/scouting/lib/constants";
 import { useSport } from "@/context/sport-context";
 import type { PlayerFilters } from "@/types";
+import {
+  clearPlayerFilterPrefs,
+  getPlayerFilterPrefs,
+  savePlayerFilterPrefs,
+  type StoredPlayerFilterPrefs,
+} from "@/lib/client/browser-storage";
 
 function nearestOption(options: readonly number[], value: number | undefined): number {
   if (typeof value !== "number") return options[0];
   return options.reduce((prev, curr) =>
     Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
   );
+}
+
+function urlHasMeaningfulParams(searchParams: URLSearchParams): boolean {
+  for (const [key, value] of searchParams.entries()) {
+    if (key === "page" && (value === "1" || value === "")) continue;
+    if (value) return true;
+  }
+  return false;
+}
+
+function prefsFromFilters(filters: PlayerFilters): StoredPlayerFilterPrefs {
+  return {
+    search: filters.search || undefined,
+    position: filters.position,
+    league: filters.league,
+    teamId: filters.teamId,
+    minAge: filters.minAge,
+    maxAge: filters.maxAge,
+    minRating: filters.minRating,
+    minMinutes: filters.minMinutes,
+    minGoalsPer90: filters.minGoalsPer90,
+    minXGPer90: filters.minXGPer90,
+    maxMarketValue: filters.maxMarketValue,
+    maxCapHit: filters.maxCapHit,
+    minPoints: filters.minPoints,
+    minRebounds: filters.minRebounds,
+    minAssists: filters.minAssists,
+    minThreePointsPercent: filters.minThreePointsPercent,
+    minSteals: filters.minSteals,
+    minBlocks: filters.minBlocks,
+    archetype: filters.archetype,
+    sortBy: filters.sortBy,
+    sortDir: filters.sortDir,
+    pageSize: filters.pageSize,
+  };
 }
 
 function BasketballMetricSlider({
@@ -92,6 +133,7 @@ export function ScoutingFiltersPanel({
   const { currentSport } = useSport();
   const isBasketball = currentSport === "BASKETBALL";
   const defaults = getFilterDefaults(route, currentSport);
+  const didRestorePrefs = useRef(false);
 
   const filters = useMemo(
     () => parsePlayerFilters(Object.fromEntries(searchParams.entries()), route, currentSport),
@@ -111,11 +153,30 @@ export function ScoutingFiltersPanel({
   const pushFilters = useCallback(
     (next: Partial<PlayerFilters>) => {
       const merged = { ...filters, ...next, page: next.page ?? 1 };
+      savePlayerFilterPrefs(currentSport, route, prefsFromFilters(merged));
       const url = buildFilterUrl(basePath, merged, defaults);
       startTransition(() => router.push(url, { scroll: false }));
     },
-    [filters, router, basePath, defaults]
+    [filters, router, basePath, defaults, currentSport, route]
   );
+
+  // Restore last filters when landing on a bare list URL.
+  useEffect(() => {
+    if (didRestorePrefs.current) return;
+    if (urlHasMeaningfulParams(new URLSearchParams(searchParams.toString()))) {
+      didRestorePrefs.current = true;
+      return;
+    }
+    const saved = getPlayerFilterPrefs(currentSport, route);
+    if (!saved || Object.keys(saved).length === 0) {
+      didRestorePrefs.current = true;
+      return;
+    }
+    didRestorePrefs.current = true;
+    const merged = { ...filters, ...saved, page: 1 };
+    const url = buildFilterUrl(basePath, merged, defaults);
+    startTransition(() => router.replace(url, { scroll: false }));
+  }, [searchParams, currentSport, route, filters, basePath, defaults, router]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -127,8 +188,9 @@ export function ScoutingFiltersPanel({
   }, [search, filters.search, pushFilters]);
 
   const clearFilters = useCallback(() => {
+    clearPlayerFilterPrefs(currentSport, route);
     startTransition(() => router.push(basePath, { scroll: false }));
-  }, [router, basePath]);
+  }, [router, basePath, currentSport, route]);
 
   const toggleArchetype = useCallback(
     (archetype: NonNullable<PlayerFilters["archetype"]>) => {

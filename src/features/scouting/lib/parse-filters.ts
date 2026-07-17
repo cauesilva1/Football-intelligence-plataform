@@ -45,7 +45,12 @@ export function parsePlayerFilters(
   const archetypeParam = param(searchParams.archetype) as PlayerFilters["archetype"];
 
   return {
-    sport: sportParam === "BASKETBALL" || sportParam === "SOCCER" ? sportParam : defaultSport,
+    sport:
+      sportParam === "BASKETBALL" ||
+      sportParam === "SOCCER" ||
+      sportParam === "AMERICAN_FOOTBALL"
+        ? sportParam
+        : defaultSport,
     search: param(searchParams.search) ?? "",
     position: param(searchParams.position),
     league: param(searchParams.league),
