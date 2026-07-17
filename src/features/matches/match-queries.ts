@@ -58,19 +58,19 @@ async function loadFromDatabase(id: string): Promise<MatchDetailPayload | null> 
     awayTeam: row.awayTeam.name,
     homeScore: status === "scheduled" ? null : row.homeScore,
     awayScore: status === "scheduled" ? null : row.awayScore,
-    stageName: row.round ?? "Partida",
+    stageName: row.round ?? "Match",
     stageKey: "group",
     stageOrder: 1,
     stadium: "—",
     status,
     statusLabel:
       status === "live"
-        ? "Ao vivo"
+        ? "Live"
         : status === "finished"
-          ? "Encerrado"
+          ? "Final"
           : status === "postponed"
-            ? "Adiado"
-            : "Agendado",
+            ? "Postponed"
+            : "Scheduled",
     homeCrestUrl: row.homeTeam.crestUrl ?? undefined,
     awayCrestUrl: row.awayTeam.crestUrl ?? undefined,
   };

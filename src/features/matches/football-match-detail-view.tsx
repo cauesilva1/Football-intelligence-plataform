@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { MatchScoreboardSurface } from "@/features/matches/components/match-scoreboard-surface";
+import { MatchSportExit } from "@/features/matches/components/match-sport-exit";
 import {
   footballBoxColumns,
   type FootballBoxCategory,
@@ -12,11 +14,11 @@ import {
 import { cn } from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<FootballBoxCategory, string> = {
-  passing: "Passe",
-  rushing: "Corrida",
-  receiving: "Recepção",
-  defensive: "Defesa",
-  kicking: "Chute",
+  passing: "Passing",
+  rushing: "Rushing",
+  receiving: "Receiving",
+  defensive: "Defense",
+  kicking: "Kicking",
 };
 
 const CATEGORY_ORDER: FootballBoxCategory[] = [
@@ -176,7 +178,7 @@ function BoxCategoryTable({
             <table className="w-full min-w-[22rem] text-left text-sm">
               <thead className="bg-secondary/50 text-[11px] uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="px-3 py-2 font-medium">Jogador</th>
+                  <th className="px-3 py-2 font-medium">Player</th>
                   {columns.map((col) => (
                     <th key={col} className="px-2 py-2 text-right font-medium">
                       {col}
@@ -218,13 +220,14 @@ export function FootballMatchDetailView({ data }: { data: FootballMatchDetail })
 
   return (
     <div className="space-y-6">
-      <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-5 shadow-panel md:p-8">
+      <MatchSportExit sport="AMERICAN_FOOTBALL" />
+      <MatchScoreboardSurface sport="AMERICAN_FOOTBALL">
         <Link
           href={`/tournaments/${data.competition === "nfl" ? "nfl" : "college-football"}`}
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Voltar ao hub
+          Back to hub
         </Link>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <Badge variant="secondary">{data.competitionName}</Badge>
@@ -239,7 +242,7 @@ export function FootballMatchDetailView({ data }: { data: FootballMatchDetail })
             won={awayWon}
             align="right"
           />
-          <p className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="rounded-xl border border-primary/20 bg-background/70 px-4 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground backdrop-blur-sm">
             @
           </p>
           <TeamBlock
@@ -253,7 +256,7 @@ export function FootballMatchDetailView({ data }: { data: FootballMatchDetail })
         <p className="mt-4 text-center text-xs text-muted-foreground">
           {data.stadium} · {data.date}
         </p>
-      </div>
+      </MatchScoreboardSurface>
 
       {(data.homeTeamStats.length > 0 || data.awayTeamStats.length > 0) && (
         <section className="space-y-3">
@@ -280,7 +283,7 @@ export function FootballMatchDetailView({ data }: { data: FootballMatchDetail })
         </section>
       ) : (
         <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-          Box score ainda não disponível para este jogo (pré-jogo ou ESPN sem estatísticas).
+          Box score is not available for this game yet (pre-game or ESPN has no statistics).
         </p>
       )}
     </div>

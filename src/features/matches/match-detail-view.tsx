@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { NationalTeamCrest } from "@/features/tournaments/components/national-team-crest";
+import { MatchScoreboardSurface } from "@/features/matches/components/match-scoreboard-surface";
+import { MatchSportExit } from "@/features/matches/components/match-sport-exit";
 import type { MatchDetailPayload } from "@/features/matches/match-queries";
 import { cn } from "@/lib/utils";
 
@@ -39,13 +41,14 @@ export function MatchDetailView({ data }: { data: MatchDetailPayload }) {
 
   return (
     <div className="space-y-6">
-      <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-5 shadow-panel md:p-8">
+      <MatchSportExit sport="SOCCER" />
+      <MatchScoreboardSurface sport="SOCCER">
         <Link
           href="/tournaments"
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Torneios
+          Tournaments
         </Link>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -73,7 +76,7 @@ export function MatchDetailView({ data }: { data: MatchDetailPayload }) {
             </span>
           </div>
 
-          <div className="rounded-2xl bg-secondary/70 px-5 py-3 text-center font-display text-3xl font-bold tabular-nums md:text-4xl">
+          <div className="rounded-2xl border border-primary/20 bg-background/70 px-5 py-3 text-center font-display text-3xl font-bold tabular-nums backdrop-blur-sm md:text-4xl">
             {hasScore ? (
               <span>
                 <span className={homeWon ? "text-primary" : ""}>{match.homeScore}</span>
@@ -105,7 +108,7 @@ export function MatchDetailView({ data }: { data: MatchDetailPayload }) {
             {match.stadiumCountry ? `, ${match.stadiumCountry}` : ""}
           </span>
         </div>
-      </div>
+      </MatchScoreboardSurface>
 
       {(homeTeamStats || awayTeamStats) && boxScores.length > 0 ? (
         <section className="grid gap-3 sm:grid-cols-2">
@@ -115,10 +118,10 @@ export function MatchDetailView({ data }: { data: MatchDetailPayload }) {
       ) : null}
 
       <section className="space-y-3">
-        <h2 className="font-display text-lg font-bold text-foreground">Jogadores</h2>
+        <h2 className="font-display text-lg font-bold text-foreground">Players</h2>
         {boxScores.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-            Estatísticas individuais ainda não disponíveis para esta partida.
+            Individual stats are not available for this match yet.
           </p>
         ) : (
           <div className="space-y-6">
@@ -129,7 +132,7 @@ export function MatchDetailView({ data }: { data: MatchDetailPayload }) {
               <PlayerTable title={match.awayTeam} players={awayPlayers} />
             ) : null}
             {unknownTeamPlayers.length > 0 ? (
-              <PlayerTable title="Elenco" players={unknownTeamPlayers} />
+              <PlayerTable title="Squad" players={unknownTeamPlayers} />
             ) : null}
           </div>
         )}
@@ -165,7 +168,7 @@ function TeamStatCard({
           <dd className="font-mono font-semibold tabular-nums">{stats.goals}</dd>
         </div>
         <div>
-          <dt className="text-[11px] text-muted-foreground">Assistências</dt>
+          <dt className="text-[11px] text-muted-foreground">Assists</dt>
           <dd className="font-mono font-semibold tabular-nums">{stats.assists}</dd>
         </div>
         <div>
@@ -199,7 +202,7 @@ function PlayerTable({
         <table className="w-full min-w-[28rem] text-left text-sm">
           <thead className="bg-secondary/50 text-[11px] uppercase tracking-wider text-muted-foreground">
             <tr>
-              <th className="px-3 py-2 font-medium">Jogador</th>
+              <th className="px-3 py-2 font-medium">Player</th>
               <th className="px-2 py-2 text-center font-medium">Min</th>
               <th className="px-2 py-2 text-center font-medium">G</th>
               <th className="px-2 py-2 text-center font-medium">A</th>

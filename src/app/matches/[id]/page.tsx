@@ -3,6 +3,7 @@ import {
   renderSportMatchDetail,
   resolveSportMatchTitle,
 } from "@/features/matches/sport-match-dispatch";
+import { resolveSportFromMatchId } from "@/features/matches/resolve-match-sport";
 import { getServerSport } from "@/lib/sport-server";
 import { APP_NAME } from "@/lib/config";
 
@@ -12,17 +13,17 @@ type PageProps = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params;
-  const sport = await getServerSport();
+  const sport = resolveSportFromMatchId(id) ?? (await getServerSport());
   const title = await resolveSportMatchTitle(sport, id);
   return {
-    title: title ? `${title} · ${APP_NAME}` : `Jogo · ${APP_NAME}`,
+    title: title ? `${title} · ${APP_NAME}` : `Match · ${APP_NAME}`,
   };
 }
 
 export default async function MatchPage({ params }: PageProps) {
-  const sport = await getServerSport();
   const { id } = await params;
+  const sport = resolveSportFromMatchId(id) ?? (await getServerSport());
   const node = await renderSportMatchDetail(sport, id);
 
-  return <DashboardShell subtitle="Partida">{node}</DashboardShell>;
+  return <DashboardShell subtitle="Match">{node}</DashboardShell>;
 }

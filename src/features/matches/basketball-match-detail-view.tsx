@@ -2,6 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { MatchScoreboardSurface } from "@/features/matches/components/match-scoreboard-surface";
+import { MatchSportExit } from "@/features/matches/components/match-sport-exit";
 import type { BasketballMatchDetail } from "@/lib/api/espn-nba-match-detail";
 import { cn } from "@/lib/utils";
 
@@ -83,7 +85,8 @@ export function BasketballMatchDetailView({ data }: { data: BasketballMatchDetai
 
   return (
     <div className="space-y-6">
-      <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-5 shadow-panel md:p-8">
+      <MatchSportExit sport="BASKETBALL" />
+      <MatchScoreboardSurface sport="BASKETBALL">
         <Link
           href={data.competition === "ncaa" ? "/tournaments/ncaa" : "/tournaments/nba"}
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary"
@@ -110,7 +113,7 @@ export function BasketballMatchDetailView({ data }: { data: BasketballMatchDetai
             align="left"
           />
 
-          <div className="rounded-2xl bg-secondary/70 px-5 py-3 text-center font-display text-3xl font-bold tabular-nums md:text-4xl">
+          <div className="rounded-2xl border border-primary/20 bg-background/70 px-5 py-3 text-center font-display text-3xl font-bold tabular-nums backdrop-blur-sm md:text-4xl">
             {hasScore ? (
               <span>
                 <span className={homeWon ? "text-primary" : ""}>{data.homeScore}</span>
@@ -137,7 +140,7 @@ export function BasketballMatchDetailView({ data }: { data: BasketballMatchDetai
             {data.stadiumCountry ? ` · ${data.stadiumCountry}` : ""}
           </span>
         </div>
-      </div>
+      </MatchScoreboardSurface>
 
       {data.players.length > 0 ? (
         <section className="grid gap-3 sm:grid-cols-2">
@@ -150,7 +153,9 @@ export function BasketballMatchDetailView({ data }: { data: BasketballMatchDetai
         <h2 className="font-display text-lg font-bold text-foreground">Box score</h2>
         {data.players.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-            Estatísticas individuais ainda não disponíveis para esta partida.
+            {data.status === "scheduled"
+              ? "This game is scheduled — box score will appear after tip-off."
+              : "Individual statistics are not available for this game yet."}
           </p>
         ) : (
           <div className="space-y-6">
@@ -160,7 +165,7 @@ export function BasketballMatchDetailView({ data }: { data: BasketballMatchDetai
             {awayPlayers.length > 0 ? (
               <PlayerTable title={data.awayTeam} players={awayPlayers} />
             ) : null}
-            {unknown.length > 0 ? <PlayerTable title="Jogadores" players={unknown} /> : null}
+            {unknown.length > 0 ? <PlayerTable title="Players" players={unknown} /> : null}
           </div>
         )}
       </section>
@@ -228,7 +233,7 @@ function PlayerTable({
         <table className="w-full min-w-[40rem] text-left text-sm">
           <thead className="bg-secondary/50 text-[11px] uppercase tracking-wider text-muted-foreground">
             <tr>
-              <th className="px-3 py-2 font-medium">Jogador</th>
+              <th className="px-3 py-2 font-medium">Player</th>
               <th className="px-2 py-2 text-center font-medium">Min</th>
               <th className="px-2 py-2 text-center font-medium">PTS</th>
               <th className="px-2 py-2 text-center font-medium">REB</th>

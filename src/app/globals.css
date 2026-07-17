@@ -22,6 +22,8 @@
     --accent-warning: 42 87% 61%;
     --accent-negative: 350 72% 58%;
     --sport-glow: 142 71% 45%;
+    --sport-glow-soft: 142 40% 18%;
+    --sport-texture-opacity: 0.07;
 
     /* UI chrome */
     --secondary: 215 18% 14%;
@@ -50,30 +52,54 @@
     --chart-cursor: 215 18% 14%;
   }
 
-  /* Basketball — warm court orange brand */
-  html[data-sport="BASKETBALL"] {
-    --primary: 24 95% 53%;
-    --primary-foreground: 220 25% 5%;
-    --ring: 24 95% 53%;
-    --chart-primary: 24 95% 53%;
-    --sport-glow: 24 95% 53%;
-  }
-
   html[data-sport="SOCCER"] {
+    --background: 150 18% 5%;
+    --card: 150 14% 8%;
+    --surface-elevated: 150 12% 10%;
+    --surface-muted: 145 12% 13%;
+    --border: 145 12% 17%;
+    --input: 145 12% 17%;
     --primary: 142 71% 45%;
     --primary-foreground: 220 25% 5%;
     --ring: 142 71% 45%;
     --chart-primary: 142 71% 45%;
     --sport-glow: 142 71% 45%;
+    --sport-glow-soft: 142 35% 14%;
+    --sport-texture-opacity: 0.08;
+  }
+
+  /* Basketball — warm court orange brand */
+  html[data-sport="BASKETBALL"] {
+    --background: 24 14% 5%;
+    --card: 22 12% 8%;
+    --surface-elevated: 22 11% 10%;
+    --surface-muted: 24 10% 13%;
+    --border: 24 10% 18%;
+    --input: 24 10% 18%;
+    --primary: 24 95% 53%;
+    --primary-foreground: 220 25% 5%;
+    --ring: 24 95% 53%;
+    --chart-primary: 24 95% 53%;
+    --sport-glow: 24 95% 53%;
+    --sport-glow-soft: 24 40% 14%;
+    --sport-texture-opacity: 0.09;
   }
 
   /* American football — gridiron navy */
   html[data-sport="AMERICAN_FOOTBALL"] {
+    --background: 218 28% 5%;
+    --card: 216 22% 8%;
+    --surface-elevated: 216 20% 10%;
+    --surface-muted: 215 16% 13%;
+    --border: 214 16% 18%;
+    --input: 214 16% 18%;
     --primary: 214 88% 52%;
     --primary-foreground: 220 25% 5%;
     --ring: 214 88% 52%;
     --chart-primary: 214 88% 52%;
     --sport-glow: 214 88% 52%;
+    --sport-glow-soft: 214 40% 16%;
+    --sport-texture-opacity: 0.1;
   }
 
   html {
@@ -87,6 +113,19 @@
   html,
   body {
     @apply bg-background font-body text-foreground antialiased;
+  }
+
+  /* Smooth sport theme morph on chrome surfaces */
+  html.sport-theme-ready body,
+  html.sport-theme-ready .sport-ambient,
+  html.sport-theme-ready .sport-hero,
+  html.sport-theme-ready header,
+  html.sport-theme-ready aside {
+    transition:
+      background-color 420ms ease,
+      border-color 420ms ease,
+      color 320ms ease,
+      box-shadow 420ms ease;
   }
 
   h1,
@@ -125,6 +164,7 @@
   .sport-ambient {
     position: relative;
     isolation: isolate;
+    background-color: hsl(var(--background));
   }
 
   .sport-ambient::before {
@@ -134,8 +174,10 @@
     inset: 0;
     z-index: 0;
     background:
-      radial-gradient(ellipse 70% 45% at 0% -10%, hsl(var(--sport-glow) / 0.16), transparent 55%),
-      radial-gradient(ellipse 55% 40% at 100% 110%, hsl(var(--sport-glow) / 0.1), transparent 50%);
+      radial-gradient(ellipse 75% 50% at -5% -5%, hsl(var(--sport-glow) / 0.2), transparent 58%),
+      radial-gradient(ellipse 60% 45% at 105% 105%, hsl(var(--sport-glow-soft) / 0.55), transparent 55%),
+      radial-gradient(ellipse 40% 30% at 70% 0%, hsl(var(--sport-glow) / 0.06), transparent 60%);
+    transition: opacity 420ms ease;
   }
 
   .sport-ambient > * {
@@ -144,9 +186,104 @@
   }
 
   .sport-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-color: hsl(var(--primary) / 0.28);
+    box-shadow:
+      0 1px 0 0 hsl(var(--foreground) / 0.03) inset,
+      0 0 0 1px hsl(var(--primary) / 0.06) inset,
+      0 12px 36px -16px hsl(var(--sport-glow) / 0.35);
     background:
-      radial-gradient(ellipse 80% 70% at 0% 0%, hsl(var(--sport-glow) / 0.22), transparent 55%),
-      linear-gradient(135deg, hsl(220 25% 5%) 0%, hsl(220 20% 8%) 45%, hsl(220 25% 4%) 100%);
+      radial-gradient(ellipse 85% 75% at 0% 0%, hsl(var(--sport-glow) / 0.26), transparent 58%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, hsl(var(--sport-glow-soft) / 0.45), transparent 55%),
+      linear-gradient(145deg, hsl(var(--background)) 0%, hsl(var(--card)) 48%, hsl(var(--background)) 100%);
+    animation: motion-hero-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .sport-hero::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: var(--sport-texture-opacity);
+    mix-blend-mode: soft-light;
+  }
+
+  .sport-hero > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Scoreboard court/pitch art must stay absolutely layered behind content. */
+  .sport-hero > .match-scoreboard-art {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  /* Pitch lines */
+  html[data-sport="SOCCER"] .sport-hero::after {
+    background-image:
+      linear-gradient(
+        90deg,
+        transparent 0%,
+        transparent 48.8%,
+        hsl(var(--sport-glow) / 0.9) 49.2%,
+        hsl(var(--sport-glow) / 0.9) 50.8%,
+        transparent 51.2%,
+        transparent 100%
+      ),
+      repeating-linear-gradient(
+        0deg,
+        transparent 0,
+        transparent 27px,
+        hsl(var(--sport-glow) / 0.35) 27px,
+        hsl(var(--sport-glow) / 0.35) 28px
+      );
+    mask-image: radial-gradient(ellipse 90% 80% at 40% 40%, black 20%, transparent 75%);
+  }
+
+  /* Court grain + lane hint */
+  html[data-sport="BASKETBALL"] .sport-hero::after {
+    background-image:
+      repeating-linear-gradient(
+        92deg,
+        hsl(24 60% 40% / 0.25) 0px,
+        transparent 1px,
+        transparent 10px,
+        hsl(24 80% 30% / 0.12) 11px
+      ),
+      radial-gradient(circle at 12% 70%, transparent 8%, hsl(var(--sport-glow) / 0.55) 8.5%, transparent 9%),
+      radial-gradient(circle at 12% 70%, transparent 18%, hsl(var(--sport-glow) / 0.35) 18.5%, transparent 19%);
+    mask-image: linear-gradient(115deg, black 10%, transparent 70%);
+  }
+
+  /* Yard lines */
+  html[data-sport="AMERICAN_FOOTBALL"] .sport-hero::after {
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent 0,
+        transparent 22px,
+        hsl(var(--sport-glow) / 0.55) 22px,
+        hsl(var(--sport-glow) / 0.55) 23px
+      ),
+      linear-gradient(
+        90deg,
+        hsl(var(--sport-glow) / 0.25) 0%,
+        transparent 18%,
+        transparent 82%,
+        hsl(var(--sport-glow) / 0.2) 100%
+      );
+    mask-image: radial-gradient(ellipse 100% 90% at 50% 30%, black 25%, transparent 80%);
+  }
+
+  .sport-mode-pitch,
+  .sport-mode-hoops,
+  .sport-mode-gridiron {
+    /* hooks for future mode-specific chrome; atmosphere lives in data-sport tokens */
   }
 
   .sport-soccer-accent {
@@ -159,6 +296,60 @@
 
   .sport-american-football-accent {
     color: hsl(214 88% 52%);
+  }
+
+  /* ——— Motion (package 3) ——— */
+  @keyframes motion-enter {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes motion-hero-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes sport-icon-pop {
+    0% {
+      transform: scale(1);
+    }
+    40% {
+      transform: scale(1.18);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .motion-enter {
+    animation: motion-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .motion-row {
+    transition:
+      background-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .motion-row:hover {
+    background-color: hsl(var(--primary) / 0.06);
+    box-shadow: inset 3px 0 0 0 hsl(var(--primary) / 0.55);
+  }
+
+  .sport-switcher-icon-active {
+    animation: sport-icon-pop 380ms cubic-bezier(0.34, 1.4, 0.64, 1);
   }
 
   /* Live game expand — opacity/height only, reduced-motion safe */
@@ -177,6 +368,28 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    html.sport-theme-ready body,
+    html.sport-theme-ready .sport-ambient,
+    html.sport-theme-ready .sport-hero,
+    html.sport-theme-ready header,
+    html.sport-theme-ready aside {
+      transition: none;
+    }
+
+    .motion-enter,
+    .sport-hero,
+    .sport-switcher-icon-active {
+      animation: none;
+    }
+
+    .motion-row {
+      transition: background-color 120ms ease;
+    }
+
+    .motion-row:hover {
+      transform: none;
+    }
+
     .game-stats-panel {
       transition: none;
     }

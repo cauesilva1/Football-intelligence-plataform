@@ -46,6 +46,40 @@ interface EspnAthleteEntry {
   stats?: string[];
 }
 
+type EspnStatusType = {
+  state?: string;
+  completed?: boolean;
+  name?: string;
+  description?: string;
+  shortDetail?: string;
+  detail?: string;
+};
+
+type EspnCompetitor = {
+  homeAway?: string;
+  score?: string | number;
+  team?: {
+    displayName?: string;
+    abbreviation?: string;
+    logo?: string;
+    logos?: Array<{ href?: string }>;
+  };
+};
+
+type EspnCompetitionBlock = {
+  date?: string;
+  status?: {
+    type?: EspnStatusType;
+    period?: number;
+    displayClock?: string;
+  };
+  competitors?: EspnCompetitor[];
+  venue?: {
+    fullName?: string;
+    address?: { city?: string; state?: string; country?: string };
+  };
+};
+
 interface EspnSummaryResponse {
   boxscore?: {
     players?: Array<{
@@ -54,30 +88,7 @@ interface EspnSummaryResponse {
     }>;
   };
   header?: {
-    competitions?: Array<{
-      date?: string;
-      status?: {
-        type?: {
-          state?: string;
-          completed?: boolean;
-          name?: string;
-          description?: string;
-          shortDetail?: string;
-          detail?: string;
-        };
-        period?: number;
-        displayClock?: string;
-      };
-      competitors?: Array<{
-        homeAway?: string;
-        score?: string | number;
-        team?: {
-          displayName?: string;
-          abbreviation?: string;
-          logos?: Array<{ href?: string }>;
-        };
-      }>;
-    }>;
+    competitions?: EspnCompetitionBlock[];
   };
   gameInfo?: {
     venue?: {
@@ -85,6 +96,12 @@ interface EspnSummaryResponse {
       address?: { city?: string; state?: string; country?: string };
     };
   };
+}
+
+interface EspnScoreboardEvent {
+  id?: string;
+  date?: string;
+  competitions?: EspnCompetitionBlock[];
 }
 
 const ESPN_PATH: Record<NbaMatchCompetition, string> = {
@@ -116,7 +133,7 @@ function competitionLabel(competition: NbaMatchCompetition): string {
 function stageLabel(competition: NbaMatchCompetition): string {
   if (competition === "nba-summer") return "Summer League";
   if (competition === "ncaa") return "College Basketball";
-  return "Temporada regular";
+  return "Regular season";
 }
 
 function summaryUrl(competition: NbaMatchCompetition): string {
@@ -143,35 +160,6 @@ function parseMinutes(value?: string): number {
 function shotDisplay(value?: string): string {
   if (!value?.trim() || value === "-") return "—";
   return value;
-}
-
-function mapStatus(
-  type:
-    | {
-        state?: string;
-        completed?: boolean;
-        name?: string;
-        description?: string;
-        shortDetail?: string;
-        detail?: string;
-      }
-    | undefined,
-  period?: number,
-  clock?: string
-): { status: MatchStatus; label: string } {
-  if (!type) return { status: "scheduled", label: "Agendado" };
-  if (type.state === "in" || type.name === "STATUS_IN_PROGRESS") {
-    const clockLabel = `Q${period ?? "?"} ${clock ?? ""}`.trim();
-    const label = type.shortDetail ?? type.detail ?? (clockLabel || "Ao vivo");
-    return { status: "live", label };
-  }
-  if (type.completed || type.state === "post" || type.name === "STATUS_FINAL") {
-    return { status: "finished", label: type.description ?? "Encerrado" };
-  }
-  if (type.name === "STATUS_POSTPONED") {
-    return { status: "postponed", label: "Adiado" };
-  }
-  return { status: "scheduled", label: type.description ?? "Agendado" };
 }
 
 function parseScore(value: string | number | undefined): number | null {
@@ -217,6 +205,130 @@ function extractPlayers(summary: EspnSummaryResponse): BasketballMatchPlayerBoxS
   return rows;
 }
 
+function mapStatus(
+  type: EspnStatusType | undefined,
+  period?: number,
+  clock?: string
+): { status: MatchStatus; label: string } {
+  if (!type) return { status: "scheduled", label: "Scheduled" };
+  if (type.state === "in" || type.name === "STATUS_IN_PROGRESS") {
+    const clockLabel = `Q${period ?? "?"} ${clock ?? ""}`.trim();
+    const label = type.shortDetail ?? type.detail ?? (clockLabel || "Live");
+    return { status: "live", label };
+  }
+  if (type.completed || type.state === "post" || type.name === "STATUS_FINAL") {
+    return { status: "finished", label: type.description ?? "Final" };
+  }
+  if (type.name === "STATUS_POSTPONED") {
+    return { status: "postponed", label: "Postponed" };
+  }
+  return {
+    status: "scheduled",
+    label: type.shortDetail ?? type.description ?? "Scheduled",
+  };
+}
+
+function formatEspnDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}${m}${d}`;
+}
+
+function shiftDate(base: Date, days: number): Date {
+  const date = new Date(base);
+  date.setDate(date.getDate() + days);
+  return date;
+}
+
+function teamCrest(team: EspnCompetitor["team"]): string | undefined {
+  return team?.logos?.[0]?.href ?? team?.logo;
+}
+
+function buildDetailFromCompetition(
+  competition: NbaMatchCompetition,
+  eventId: string,
+  competitionBlock: EspnCompetitionBlock,
+  venueFallback?: EspnCompetitionBlock["venue"]
+): BasketballMatchDetail | null {
+  const competitors = competitionBlock.competitors ?? [];
+  const home = competitors.find((c) => c.homeAway === "home");
+  const away = competitors.find((c) => c.homeAway === "away");
+  if (!home?.team?.displayName || !away?.team?.displayName) return null;
+
+  const statusMeta = competitionBlock.status?.type;
+  const mapped = mapStatus(
+    statusMeta,
+    competitionBlock.status?.period,
+    competitionBlock.status?.displayClock
+  );
+
+  const kickOff = competitionBlock.date ?? new Date().toISOString();
+  const venue = venueFallback ?? competitionBlock.venue;
+  const city = venue?.address?.city;
+  const state = venue?.address?.state;
+  const country = venue?.address?.country;
+
+  const homeScore = parseScore(home.score);
+  const awayScore = parseScore(away.score);
+  const showScore = mapped.status === "finished" || mapped.status === "live";
+
+  return {
+    id: basketballMatchExternalKey(competition, eventId),
+    competition,
+    competitionName: competitionLabel(competition),
+    date: kickOff.slice(0, 10),
+    kickOff,
+    homeTeam: home.team.displayName,
+    awayTeam: away.team.displayName,
+    homeScore: showScore ? homeScore : null,
+    awayScore: showScore ? awayScore : null,
+    homeCrestUrl: teamCrest(home.team),
+    awayCrestUrl: teamCrest(away.team),
+    status: mapped.status,
+    statusLabel: mapped.label,
+    stadium: venue?.fullName ?? "—",
+    stadiumCountry: [city, state, country].filter(Boolean).join(", ") || undefined,
+    stageName: stageLabel(competition),
+    players: [],
+    sourceLabel: "ESPN",
+  };
+}
+
+async function fetchScoreboardEvent(
+  competition: NbaMatchCompetition,
+  eventId: string
+): Promise<EspnScoreboardEvent | null> {
+  const slug = ESPN_PATH[competition];
+  const now = new Date();
+  const dateKeys = [-2, -1, 0, 1, 2].map((offset) =>
+    formatEspnDate(shiftDate(now, offset))
+  );
+
+  for (const dateKey of dateKeys) {
+    try {
+      const response = await fetch(
+        `https://site.api.espn.com/apis/site/v2/sports/basketball/${slug}/scoreboard?dates=${dateKey}`,
+        {
+          headers: {
+            "User-Agent": "football-intelligence-platform/1.0 (nba-match-detail)",
+            Accept: "application/json",
+          },
+          next: { revalidate: 60 },
+          signal: AbortSignal.timeout(45_000),
+        }
+      );
+      if (!response.ok) continue;
+      const payload = (await response.json()) as { events?: EspnScoreboardEvent[] };
+      const match = (payload.events ?? []).find((event) => event.id === eventId);
+      if (match) return match;
+    } catch {
+      // try next date
+    }
+  }
+  return null;
+}
+
 export function basketballMatchExternalKey(
   competition: NbaMatchCompetition,
   eventId: string
@@ -247,63 +359,46 @@ export async function fetchNbaMatchDetail(
       signal: AbortSignal.timeout(45_000),
     });
 
-    if (!response.ok) {
-      console.warn(`[nba-match-detail] HTTP ${response.status} event=${eventId}`);
-      return null;
+    if (response.ok) {
+      const summary = (await response.json()) as EspnSummaryResponse;
+      if (summary.header) {
+        const competitionBlock = summary.header.competitions?.[0];
+        if (competitionBlock) {
+          const detail = buildDetailFromCompetition(
+            competition,
+            eventId,
+            competitionBlock,
+            summary.gameInfo?.venue
+          );
+          if (detail) {
+            const playable =
+              detail.status === "finished" || detail.status === "live";
+            return {
+              ...detail,
+              sourceLabel: "ESPN boxscore",
+              players: playable ? extractPlayers(summary) : [],
+            };
+          }
+        }
+      } else {
+        console.warn(`[nba-match-detail] empty summary event=${eventId}`);
+      }
+    } else {
+      console.warn(
+        `[nba-match-detail] HTTP ${response.status} event=${eventId} — trying scoreboard`
+      );
     }
 
-    const summary = (await response.json()) as EspnSummaryResponse;
-    if (!summary.header) {
-      console.warn(`[nba-match-detail] empty summary event=${eventId}`);
-      return null;
+    // Scheduled (and some Summer League) games often 400 on /summary; scoreboard still has the card.
+    const scoreboardEvent = await fetchScoreboardEvent(competition, eventId);
+    const competitionBlock = scoreboardEvent?.competitions?.[0];
+    if (!competitionBlock) return null;
+
+    if (!competitionBlock.date && scoreboardEvent?.date) {
+      competitionBlock.date = scoreboardEvent.date;
     }
 
-    const competitionBlock = summary.header.competitions?.[0];
-    const competitors = competitionBlock?.competitors ?? [];
-    const home = competitors.find((c) => c.homeAway === "home");
-    const away = competitors.find((c) => c.homeAway === "away");
-    if (!home?.team?.displayName || !away?.team?.displayName) return null;
-
-    const statusMeta = competitionBlock?.status?.type;
-    const mapped = mapStatus(
-      statusMeta,
-      competitionBlock?.status?.period,
-      competitionBlock?.status?.displayClock
-    );
-
-    const kickOff = competitionBlock?.date ?? new Date().toISOString();
-    const venue = summary.gameInfo?.venue;
-    const city = venue?.address?.city;
-    const state = venue?.address?.state;
-    const country = venue?.address?.country;
-
-    const homeScore = parseScore(home.score);
-    const awayScore = parseScore(away.score);
-    const showScore = mapped.status === "finished" || mapped.status === "live";
-
-    return {
-      id: basketballMatchExternalKey(competition, eventId),
-      competition,
-      competitionName: competitionLabel(competition),
-      date: kickOff.slice(0, 10),
-      kickOff,
-      homeTeam: home.team.displayName,
-      awayTeam: away.team.displayName,
-      homeScore: showScore ? homeScore : null,
-      awayScore: showScore ? awayScore : null,
-      homeCrestUrl: home.team.logos?.[0]?.href,
-      awayCrestUrl: away.team.logos?.[0]?.href,
-      status: mapped.status,
-      statusLabel: mapped.label,
-      stadium: venue?.fullName ?? "—",
-      stadiumCountry: [city, state, country].filter(Boolean).join(", ") || undefined,
-      stageName: stageLabel(competition),
-      players:
-        mapped.status === "finished" || mapped.status === "live"
-          ? extractPlayers(summary)
-          : [],
-      sourceLabel: "ESPN boxscore",
-    };
+    return buildDetailFromCompetition(competition, eventId, competitionBlock);
   } catch (error) {
     console.warn(`[nba-match-detail] failed event=${eventId}:`, error);
     return null;
