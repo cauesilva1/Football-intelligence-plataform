@@ -34,7 +34,7 @@ function BasketballLeaderList({
 
   if (!players.length) {
     return (
-      <EmptyList message="Sem dados de temporada no banco. Rode o sync NBA ou abra franquias." />
+      <EmptyList message="No season data in the database. Run the NBA sync or open franchises." />
     );
   }
 
@@ -130,7 +130,7 @@ function SoccerRankingList({
   metric: "rating" | "value" | "goals90";
 }) {
   if (!players.length) {
-    return <EmptyList message="Sem jogadores neste recorte ainda." />;
+    return <EmptyList message="No players in this segment yet." />;
   }
 
   return (
@@ -181,44 +181,44 @@ export async function DashboardRankingsSection() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <DataPanel
             title="Top Prospects"
-            description="U23 com rating ≥ 7.0 — independente da temporada atual."
+            description="U23 with rating ≥ 7.0 — regardless of the current season."
             density="dense"
           >
             <RatingList
               players={overview.topProspects}
               sport="BASKETBALL"
-              emptyMessage="Nenhum prospect U23 com rating ≥ 7.0 na temporada com dados (ex.: 2025/26)."
+              emptyMessage="No U23 prospects with a rating ≥ 7.0 in a season with data (e.g. 2025/26)."
             />
           </DataPanel>
           <DataPanel
             title="Best Performers"
-            description="Rating ≥ 7.5 na melhor temporada com produção real."
+            description="Rating ≥ 7.5 in the best season with actual production."
             density="dense"
           >
             <RatingList
               players={overview.bestPerformers}
               sport="BASKETBALL"
-              emptyMessage="Sem performers com rating ≥ 7.5 — confira se a temporada com stats reais está sincronizada."
+            emptyMessage="No performers with a rating ≥ 7.5 — check that the season with actual stats is synced."
             />
           </DataPanel>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <DataPanel title="Líderes em Pontos" description="Média de PTS por jogo." density="dense">
+          <DataPanel title="Points Leaders" description="PTS average per game." density="dense">
             <BasketballLeaderList
               players={sortBasketballLeaders(sample, "points")}
               metric="points"
             />
           </DataPanel>
-          <DataPanel title="Líderes em Rebotes" description="Média de REB por jogo." density="dense">
+          <DataPanel title="Rebounds Leaders" description="REB average per game." density="dense">
             <BasketballLeaderList
               players={sortBasketballLeaders(sample, "rebounds")}
               metric="rebounds"
             />
           </DataPanel>
           <DataPanel
-            title="Líderes em Assistências"
-            description="Média de AST por jogo."
+            title="Assists Leaders"
+            description="AST average per game."
             density="dense"
           >
             <BasketballLeaderList
@@ -236,31 +236,31 @@ export async function DashboardRankingsSection() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3">
         <DataPanel
           title="Top Prospects"
-          description="U23 com rating ≥ 7.0 no elenco sincronizado."
+          description="U23 with rating ≥ 7.0 on the synced roster."
           density="dense"
         >
           <RatingList
             players={overview.topProspects}
             sport="AMERICAN_FOOTBALL"
-            emptyMessage="Abra franquias NFL/CFB para syncar elenco — aí os prospects aparecem."
+            emptyMessage="Open NFL/CFB franchises to sync rosters — prospects will then appear."
           />
         </DataPanel>
         <DataPanel title="Best Performers" description="Maiores ratings no banco." density="dense">
           <RatingList
             players={overview.bestPerformers}
             sport="AMERICAN_FOOTBALL"
-            emptyMessage="Sem jogadores sincronizados ainda."
+            emptyMessage="No synced players yet."
           />
         </DataPanel>
         <DataPanel
           title="Cap bargains"
-          description="Rating alto · Cap Hit acessível (quando houver)."
+          description="High rating · Affordable Cap Hit (when available)."
           density="dense"
         >
           <RatingList
             players={overview.marketOpportunities}
             sport="AMERICAN_FOOTBALL"
-            emptyMessage="Sem bargains de Cap Hit no banco ainda."
+            emptyMessage="No Cap Hit bargains in the database yet."
           />
         </DataPanel>
       </div>

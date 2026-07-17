@@ -18,7 +18,7 @@ export async function DashboardStatsSection() {
         accent="info"
         trend={
           isAmericanFootball
-            ? "Elenco sync sob demanda"
+            ? "On-demand roster sync"
             : `${appConfig.season} database`
         }
       />
@@ -35,7 +35,7 @@ export async function DashboardStatsSection() {
         icon={Calendar}
         accent="warning"
         trend={`${overview.totalTeams} ${
-          isBasketball || isAmericanFootball ? "franquias" : "clubs"
+          isBasketball || isAmericanFootball ? "franchises" : "clubs"
         }`}
       />
       <MetricCard
@@ -51,17 +51,17 @@ export async function DashboardStatsSection() {
           value={String(Math.round(overview.totalGoals))}
           icon={TrendingUp}
           accent="negative"
-          trend="Soma das médias por jogo"
+          trend="Sum of per-game averages"
         />
       ) : isAmericanFootball ? (
         <MetricCard
-          label="Franquias / Programas"
+          label="Franchises / Programs"
           value={String(overview.totalTeams)}
           icon={Shield}
           accent="negative"
           trend={
             overview.totalPlayers === 0
-              ? "Abra um time para syncar elenco"
+              ? "Open a team to sync its roster"
               : "Cap Hit · bargains no scouting"
           }
         />

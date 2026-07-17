@@ -15,7 +15,9 @@ export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
       density="dense"
     >
       {similar.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No similar players found in the current database.</p>
+        <p className="text-sm text-muted-foreground">
+          No similar players found in the current database.
+        </p>
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
           {similar.map(({ player, score }) => (

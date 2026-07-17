@@ -61,9 +61,9 @@ function mapGameStatus(
     return { status: "final", label: "Final" };
   }
   if (state === "in" || name === "STATUS_IN_PROGRESS") {
-    return { status: "live", label: "Ao vivo" };
+    return { status: "live", label: "Live" };
   }
-  return { status: "scheduled", label: "Agendado" };
+  return { status: "scheduled", label: "Scheduled" };
 }
 
 function mapEvent(

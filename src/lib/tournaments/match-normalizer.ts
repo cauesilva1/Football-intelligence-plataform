@@ -149,18 +149,18 @@ export function fromEspnScoreboardEvent(
   source: TournamentMatch["source"] = "scraped"
 ): TournamentMatch {
   const matchDate = event.matchDate instanceof Date ? event.matchDate : new Date(event.matchDate);
-  const stageName = normalizeApiSportsRound(event.round) || event.round || "Rodada";
+  const stageName = normalizeApiSportsRound(event.round) || event.round || "Matchday";
   const status = (["finished", "live", "scheduled", "postponed"].includes(event.status)
     ? event.status
     : "scheduled") as MatchStatus;
   const statusLabel =
     status === "live"
-      ? "Ao vivo"
+      ? "Live"
       : status === "finished"
-        ? "Encerrado"
+        ? "Final"
         : status === "postponed"
-          ? "Adiado"
-          : "Agendado";
+          ? "Postponed"
+          : "Scheduled";
 
   return {
     id: event.externalKey,

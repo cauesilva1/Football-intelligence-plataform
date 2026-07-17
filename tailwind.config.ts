@@ -103,6 +103,19 @@ const config: Config = {
       boxShadow: {
         panel:
           "0 1px 0 0 hsl(var(--foreground) / 0.03) inset, 0 8px 24px -12px hsl(var(--background) / 0.6)",
+        "sport-glow": "0 0 24px -6px hsl(var(--sport-glow) / 0.55)",
+      },
+      transitionDuration: {
+        350: "350ms",
+      },
+      keyframes: {
+        "skeleton-shimmer": {
+          "0%": { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" },
+        },
+      },
+      animation: {
+        "skeleton-shimmer": "skeleton-shimmer 1.6s ease-in-out infinite",
       },
     },
   },

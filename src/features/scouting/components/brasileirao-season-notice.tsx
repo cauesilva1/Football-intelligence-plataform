@@ -7,10 +7,10 @@ export function BrasileiraoSeasonNotice({ className }: { className?: string }) {
       role="status"
     >
       <Badge className="border-primary/40 bg-primary/20 text-primary hover:bg-primary/20">
-        Temporada 2026 · Ao vivo
+        2026 Season · Live
       </Badge>
       <p className="text-sm text-muted-foreground">
-        Brasileirão Série A 2026 sincronizado via ESPN — tabela e jogos atualizados periodicamente.
+        Brasileirão Série A 2026 synced via ESPN — standings and matches refresh periodically.
       </p>
     </div>
   );

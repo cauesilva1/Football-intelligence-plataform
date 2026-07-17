@@ -56,9 +56,9 @@ export async function DashboardInsightsSection() {
 
   const emptyHint =
     sport === "AMERICAN_FOOTBALL"
-      ? "Sem alertas ainda — sincronize elencos abrindo franquias NFL/CFB."
+      ? "No alerts yet — sync rosters by opening NFL/CFB franchises."
       : sport === "BASKETBALL"
-        ? "Sem alertas ainda — prospects e performers aparecem quando houver jogadores com rating no banco."
+        ? "No alerts yet — prospects and performers appear when rated players are in the database."
         : "Alerts and opportunities generated from the monitored database.";
 
   return (
@@ -66,7 +66,7 @@ export async function DashboardInsightsSection() {
       title="Executive Insights"
       description={
         overview.insights.length > 0
-          ? "Alertas e oportunidades a partir da base monitorada."
+          ? "Alerts and opportunities from the monitored database."
           : emptyHint
       }
       density="dense"

@@ -27,13 +27,29 @@ export default async function ScoutingPage({
   const filters = parsePlayerFilters(params, "scouting", sport);
 
   return (
-    <DashboardShell subtitle={sport === "BASKETBALL" ? "Scouting Avançado" : "Scouting"}>
+    <DashboardShell
+      subtitle={
+        sport === "BASKETBALL" || sport === "AMERICAN_FOOTBALL"
+          ? "Advanced Scouting"
+          : "Scouting"
+      }
+    >
       <div className="space-y-4">
         {sport === "BASKETBALL" ? (
           <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
-            <h1 className="font-display text-lg font-bold text-foreground md:text-xl">Scouting de Basquete</h1>
+            <h1 className="font-display text-lg font-bold text-foreground md:text-xl">Basketball Scouting</h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Refine sua busca com métricas avançadas, arquétipos e sliders de performance.
+              Refine your search with advanced metrics, archetypes, and performance sliders.
+            </p>
+          </div>
+        ) : null}
+        {sport === "AMERICAN_FOOTBALL" ? (
+          <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
+            <h1 className="font-display text-lg font-bold text-foreground md:text-xl">
+              American Football Scouting
+            </h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Filter NFL and College Football by position, age, and rating — season production is shown on the profile.
             </p>
           </div>
         ) : null}

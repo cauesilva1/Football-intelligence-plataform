@@ -22,16 +22,19 @@ export async function TeamsGrid({
     enrich: false,
   });
   const isBasketball = sport === "BASKETBALL";
+  const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
+  const isFranchiseSport = isBasketball || isAmericanFootball;
+  const entityPlural = isFranchiseSport ? "franchises / programs" : "clubs";
 
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        {teams.length} {isBasketball ? "franquias" : "clubes"}
-        {!isBasketball && (
+        {teams.length} {entityPlural}
+        {!isFranchiseSport && (
           <>
             {" · "}
             {isDbSource()
-              ? `Dados em cache (${teams[0]?.stats?.season ?? CURRENT_SEASON})`
+              ? `Cached data (${teams[0]?.stats?.season ?? CURRENT_SEASON})`
               : `Demo (${teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`}
           </>
         )}
@@ -59,23 +62,23 @@ export async function TeamsGrid({
                   <p className="font-display text-base font-bold text-foreground">{team.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {team.country}
-                    {!isBasketball && team.stadium ? ` · ${team.stadium}` : ""}
-                    {!isBasketball && sb ? ` · ${sb.seasonLabel}` : ""}
+                    {!isFranchiseSport && team.stadium ? ` · ${team.stadium}` : ""}
+                    {!isFranchiseSport && sb ? ` · ${sb.seasonLabel}` : ""}
                   </p>
 
-                  {isBasketball ? (
+                  {isFranchiseSport ? (
                     <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                       <div>
                         <p className="font-display text-sm font-bold text-primary">{team.stats?.wins ?? "—"}</p>
-                        <p className="text-[10px] uppercase text-muted-foreground">Vitórias</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">Wins</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">{team.stats?.losses ?? "—"}</p>
-                        <p className="text-[10px] uppercase text-muted-foreground">Derrotas</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">Losses</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">{team.squadSize ?? 0}</p>
-                        <p className="text-[10px] uppercase text-muted-foreground">Elenco</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">Roster</p>
                       </div>
                     </div>
                   ) : (
@@ -101,9 +104,9 @@ export async function TeamsGrid({
 
                   <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
-                      <Users className="h-3 w-3" /> {team.squadSize ?? 0} jogadores
+                      <Users className="h-3 w-3" /> {team.squadSize ?? 0} players
                     </span>
-                    {!isBasketball && sb ? <span className="text-primary/80">{sb.seasonLabel}</span> : null}
+                    {!isFranchiseSport && sb ? <span className="text-primary/80">{sb.seasonLabel}</span> : null}
                   </div>
                 </CardContent>
               </Card>
@@ -113,11 +116,12 @@ export async function TeamsGrid({
       </div>
       {teams.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-          Nenhum clube encontrado para este filtro.
-          {!isBasketball ? " Confira Torneios para tabelas ao vivo das ligas." : null}
+          {isFranchiseSport
+            ? "No franchises or programs found for this filter."
+            : "No clubs found for this filter. Check Tournaments for live league standings."}
         </p>
       ) : null}
-      {!isDbSource() && !isBasketball ? <StatsBombAttribution /> : null}
+      {!isDbSource() && !isFranchiseSport ? <StatsBombAttribution /> : null}
     </div>
   );
 }

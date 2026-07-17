@@ -15,15 +15,15 @@ export async function DashboardChartsSection() {
       : `${overview.ratingChange.toFixed(2)} vs previous season`;
 
   const chartTitle = isBasketball
-    ? "Pontos por posição"
+    ? "Points by Position"
     : isAmericanFootball
-      ? "Elenco por posição"
+      ? "Roster by Position"
       : "Goals by Position";
 
   const chartDescription = isBasketball
-    ? "Soma das médias de pontos (PPG) agregada por posição."
+    ? "Sum of points-per-game averages (PPG) by position."
     : isAmericanFootball
-      ? "Jogadores sincronizados no banco, agrupados por posição (QB, WR, LB…)."
+      ? "Players synced to the database, grouped by position (QB, WR, LB…)."
       : "Aggregated offensive distribution this season.";
 
   const valueLabel = isBasketball ? "points" : isAmericanFootball ? "players" : "goals";
@@ -35,7 +35,7 @@ export async function DashboardChartsSection() {
       </DataPanel>
       <DataPanel
         title={
-          isBasketball || isAmericanFootball ? "Tendência de rating" : "Average Rating Trend"
+          isBasketball || isAmericanFootball ? "Rating Trend" : "Average Rating Trend"
         }
         description={`${latest?.season ?? "—"} · ${latest?.avgRating.toFixed(2)} (${changeLabel})`}
         density="dense"

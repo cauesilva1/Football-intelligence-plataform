@@ -48,7 +48,7 @@ export function SoccerCompetitionHub({
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Torneios
+          Tournaments
         </Link>
         <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
           {competition.badge}
@@ -66,10 +66,10 @@ export function SoccerCompetitionHub({
 
       <Tabs defaultValue="standings">
         <TabsList className="mb-4 w-full justify-start overflow-x-auto sm:w-auto">
-          <TabsTrigger value="standings">Tabela</TabsTrigger>
-          <TabsTrigger value="leaders">Estatísticas</TabsTrigger>
-          <TabsTrigger value="matches">Jogos</TabsTrigger>
-          {hasHistorical ? <TabsTrigger value="editions">Temporadas</TabsTrigger> : null}
+          <TabsTrigger value="standings">Standings</TabsTrigger>
+          <TabsTrigger value="leaders">Statistics</TabsTrigger>
+          <TabsTrigger value="matches">Games</TabsTrigger>
+          {hasHistorical ? <TabsTrigger value="editions">Seasons</TabsTrigger> : null}
         </TabsList>
 
         <TabsContent value="standings" className="mt-0">
@@ -81,7 +81,7 @@ export function SoccerCompetitionHub({
             <SoccerLeadersBoard leaders={leaders} />
           ) : (
             <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-              Artilharia, passes e cartões ainda não disponíveis para esta competição.
+              Scoring leaders, passes, and cards are not available for this competition yet.
             </p>
           )}
         </TabsContent>

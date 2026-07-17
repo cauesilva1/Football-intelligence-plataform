@@ -54,7 +54,7 @@ export function PlayerFiltersBar() {
         <div className="relative min-w-[220px] flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Buscar jogador por nome..."
+            placeholder="Search player by name..."
             className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -66,7 +66,7 @@ export function PlayerFiltersBar() {
           onChange={(e) => pushFilters({ position: e.target.value || undefined, page: 1 })}
           className="w-36"
         >
-          <option value="">Posição</option>
+          <option value="">Position</option>
           {POSITIONS.map((p) => (
             <option key={p} value={p}>{p}</option>
           ))}
@@ -90,7 +90,7 @@ export function PlayerFiltersBar() {
         >
           <option value="rating">Ordenar: Rating</option>
           <option value="goals">Ordenar: Gols</option>
-          <option value="assists">Ordenar: Assistências</option>
+          <option value="assists">Sort: Assists</option>
           <option value="age">Ordenar: Idade</option>
           <option value="marketValue">Ordenar: Valor</option>
           <option value="name">Ordenar: Nome</option>
@@ -98,13 +98,13 @@ export function PlayerFiltersBar() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3">
-        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Filtros avançados</span>
+        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Advanced filters</span>
         <Select
           value={String(filters.minAge ?? "")}
           onChange={(e) => pushFilters({ minAge: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
           className="w-36"
         >
-          <option value="">Idade mín.</option>
+          <option value="">Min age</option>
           {MIN_AGE_OPTIONS.map((a) => (
             <option key={a} value={a}>{a}+ anos</option>
           ))}
@@ -114,9 +114,9 @@ export function PlayerFiltersBar() {
           onChange={(e) => pushFilters({ maxAge: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
           className="w-36"
         >
-          <option value="">Idade máx.</option>
+          <option value="">Max age</option>
           {MAX_AGE_OPTIONS.map((a) => (
-            <option key={a} value={a}>Até {a} anos</option>
+            <option key={a} value={a}>Up to {a} years</option>
           ))}
         </Select>
         <Select
@@ -124,7 +124,7 @@ export function PlayerFiltersBar() {
           onChange={(e) => pushFilters({ minRating: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
           className="w-36"
         >
-          <option value="">Rating mín.</option>
+          <option value="">Min rating</option>
           {MIN_RATING_OPTIONS.map((r) => (
             <option key={r} value={r}>{r.toFixed(1)}+</option>
           ))}

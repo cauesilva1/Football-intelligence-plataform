@@ -5,8 +5,8 @@ import { SearchX } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 
 export function EmptyState({
-  title = "Nenhum resultado encontrado",
-  description = "Ajuste os filtros ou o termo de busca para encontrar jogadores.",
+  title = "No results found",
+  description = "Adjust the filters or search term to find players.",
   action,
 }: {
   title?: string;

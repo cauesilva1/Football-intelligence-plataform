@@ -161,18 +161,18 @@ export function AmericanFootballGamesHub({
 
       <Tabs defaultValue={defaultTab}>
         <TabsList className="mb-4 w-full justify-start overflow-x-auto sm:w-auto">
-          <TabsTrigger value="live">Ao vivo ({schedule.live.length})</TabsTrigger>
-          <TabsTrigger value="upcoming">Próximos ({schedule.scheduled.length})</TabsTrigger>
-          <TabsTrigger value="past">Resultados ({schedule.past.length})</TabsTrigger>
+          <TabsTrigger value="live">Live ({schedule.live.length})</TabsTrigger>
+          <TabsTrigger value="upcoming">Upcoming ({schedule.scheduled.length})</TabsTrigger>
+          <TabsTrigger value="past">Results ({schedule.past.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="live" className="mt-0">
-          <GameList games={schedule.live} empty="Nenhum jogo ao vivo no momento." />
+          <GameList games={schedule.live} empty="No live games at the moment." />
         </TabsContent>
         <TabsContent value="upcoming" className="mt-0">
-          <GameList games={schedule.scheduled} empty="Nenhum jogo agendado nesta janela." />
+          <GameList games={schedule.scheduled} empty="No games scheduled in this window." />
         </TabsContent>
         <TabsContent value="past" className="mt-0">
-          <GameList games={schedule.past} empty="Sem resultados recentes nesta janela." />
+          <GameList games={schedule.past} empty="No recent results in this window." />
         </TabsContent>
       </Tabs>
     </div>

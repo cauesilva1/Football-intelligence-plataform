@@ -291,8 +291,12 @@ function AmericanFootballPerformanceSection({
 
       <div className="grid gap-4 lg:grid-cols-2">
         <DataPanel
-          title="Season Evolution"
-          description="Rating and yards by season (past + upcoming)."
+          title="Season Progression"
+          description={
+            s.appearances === 0
+              ? "The current/planned season has no games yet — actual production is available in the previous season."
+              : "Rating and yards by season (previous season with production plus current season when games are available)."
+          }
           density="dense"
           className="border"
           style={{ borderColor: `${theme.primaryColor}33` }}
@@ -302,7 +306,7 @@ function AmericanFootballPerformanceSection({
 
         <DataPanel
           title="Performance Profile"
-          description={`Production profile — season ${player.selectedSeason}.`}
+          description={`Production profile — ${player.selectedSeason} season.`}
           density="dense"
           className="border"
           style={{ borderColor: `${theme.primaryColor}33` }}
@@ -316,7 +320,11 @@ function AmericanFootballPerformanceSection({
 
       <DataPanel
         title="Detailed Metrics"
-        description={`Season totals for ${player.selectedSeason}. Upcoming seasons start empty until games are played.`}
+        description={
+          s.appearances === 0
+            ? `${player.selectedSeason} has no games yet (upcoming stub). Select the previous season to view ESPN production.`
+            : `Season totals for ${player.selectedSeason}.`
+        }
         density="dense"
         className="border"
         style={{ borderColor: `${theme.primaryColor}33` }}

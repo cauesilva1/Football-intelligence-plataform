@@ -8,6 +8,7 @@ import { DashboardStatsSection } from "@/features/analytics/components/dashboard
 import { DashboardInsightsSection } from "@/features/analytics/components/dashboard-insights-section";
 import { DashboardChartsSection } from "@/features/analytics/components/dashboard-charts-section";
 import { DashboardRankingsSection } from "@/features/analytics/components/dashboard-rankings-section";
+import { HOT_PATH_REVALIDATE_SECONDS } from "@/lib/http-cache";
 import { APP_NAME } from "@/lib/config";
 import { DashboardClubsSection } from "@/features/analytics/components/dashboard-clubs-section";
 import {
@@ -19,7 +20,8 @@ import {
 
 export const metadata = { title: `Overview · ${APP_NAME}` };
 
-export const revalidate = 300;
+/** Sport still comes from cookie — HTML stays dynamic; data layer uses unstable_cache (180s). */
+export const revalidate = HOT_PATH_REVALIDATE_SECONDS;
 export const maxDuration = 60;
 
 export default async function DashboardPage() {

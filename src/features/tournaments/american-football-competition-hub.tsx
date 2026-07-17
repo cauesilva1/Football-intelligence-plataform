@@ -45,7 +45,7 @@ export function AmericanFootballCompetitionHub({
         : "franchises";
 
   const directoryLabel =
-    competition.slug === "college-football" ? "programas" : "franquias";
+    competition.slug === "college-football" ? "programs" : "franchises";
 
   return (
     <div className="space-y-6">
@@ -56,7 +56,7 @@ export function AmericanFootballCompetitionHub({
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Ligas
+          Leagues
         </Link>
         <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
           {competition.badge}
@@ -86,7 +86,7 @@ export function AmericanFootballCompetitionHub({
             href={`/teams?league=${competition.teamsLeagueParam}`}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
           >
-            Abrir diretório de {directoryLabel}
+            Open {directoryLabel} directory
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -95,14 +95,14 @@ export function AmericanFootballCompetitionHub({
       <Tabs defaultValue={defaultTab} key={data.selectedSeasonYear}>
         <TabsList className="mb-4 w-full justify-start overflow-x-auto sm:w-auto">
           {competition.hasStandings ? (
-            <TabsTrigger value="standings">Classificação</TabsTrigger>
+            <TabsTrigger value="standings">Standings</TabsTrigger>
           ) : null}
           {competition.hasLeaders ? (
-            <TabsTrigger value="leaders">Estatísticas</TabsTrigger>
+            <TabsTrigger value="leaders">Statistics</TabsTrigger>
           ) : null}
-          {competition.hasSchedule ? <TabsTrigger value="matches">Jogos</TabsTrigger> : null}
+          {competition.hasSchedule ? <TabsTrigger value="matches">Games</TabsTrigger> : null}
           <TabsTrigger value="franchises">
-            {competition.slug === "college-football" ? "Programas" : "Franquias"}
+            {competition.slug === "college-football" ? "Programs" : "Franchises"}
           </TabsTrigger>
         </TabsList>
 
@@ -110,8 +110,8 @@ export function AmericanFootballCompetitionHub({
           <TabsContent value="standings" className="mt-0 space-y-3">
             {selectedSlice && !selectedSlice.hasStandings ? (
               <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-                Sem classificação para {selectedSlice.seasonLabel} ainda. Escolhe a temporada
-                passada no seletor acima.
+                No standings for {selectedSlice.seasonLabel} yet. Select the previous season
+                above.
               </p>
             ) : (
               <BasketballStandingsTable
@@ -126,8 +126,8 @@ export function AmericanFootballCompetitionHub({
           <TabsContent value="leaders" className="mt-0">
             {selectedSlice && !selectedSlice.hasLeaders ? (
               <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-                Sem líderes para {selectedSlice.seasonLabel} ainda. A temporada passada costuma ter
-                passe / corrida / recepção.
+                No leaders for {selectedSlice.seasonLabel} yet. The previous season typically has
+                passing, rushing, and receiving data.
               </p>
             ) : (
               <AmericanFootballLeadersBoard leaders={leaders} />
@@ -143,7 +143,7 @@ export function AmericanFootballCompetitionHub({
               title={
                 competition.slug === "college-football" ? "Agenda CFB" : "Agenda NFL"
               }
-              subtitle="Ao vivo, resultados e próximos jogos."
+              subtitle="Live, recent results, and upcoming games."
             />
           </TabsContent>
         ) : null}
@@ -153,8 +153,8 @@ export function AmericanFootballCompetitionHub({
             franchises={data.franchises}
             emptyLabel={
               competition.slug === "college-football"
-                ? "Nenhum programa CFB elite no banco ainda. Abra o diretório para disparar o bootstrap."
-                : "Nenhuma franquia NFL no banco ainda."
+                ? "No elite CFB programs in the database yet. Open the directory to start the bootstrap."
+                : "No NFL franchises in the database yet."
             }
             directoryHref={`/teams?league=${competition.teamsLeagueParam}`}
           />

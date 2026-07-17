@@ -13,16 +13,21 @@ import { Badge } from "@/components/ui/badge";
 import { chartTheme } from "@/lib/chart-theme";
 import { toRadarProfile } from "@/lib/normalize";
 import { getSportConfig } from "@/lib/sport-registry";
+import type { Sport } from "@/lib/sport";
 import { notFound } from "next/navigation";
+
+function resolveSport(aSport?: Sport, statsSport?: Sport): Sport {
+  return aSport ?? statsSport ?? "SOCCER";
+}
 
 export async function ComparisonResult({ playerA, playerB }: { playerA: string; playerB: string }) {
   const pair = await queryPlayersForComparison(playerA, playerB);
   if (!pair) notFound();
 
   const [a, b] = pair;
-  const isBasketball =
-    a.sport === "BASKETBALL" || a.currentSeasonStats.sport === "BASKETBALL";
-  const sport = isBasketball ? "BASKETBALL" : "SOCCER";
+  const sport = resolveSport(a.sport, a.currentSeasonStats.sport);
+  const isBasketball = sport === "BASKETBALL";
+  const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
   const ui = getSportConfig(sport).ui;
   const categories = comparisonCategoriesFor(sport);
   const radarMetrics = [...ui.radarMetrics];
@@ -35,7 +40,7 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
       <ComparisonPlayerCards players={[a, b]} />
 
       <DataPanel
-        title={isBasketball ? "Resumo da comparação" : "Comparison Summary"}
+        title="Comparison Summary"
         description={report.summary}
         density="dense"
       >
@@ -43,7 +48,7 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
           <div className="mb-1 flex items-center gap-2">
             <Trophy className="h-4 w-4 text-primary" />
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-              {isBasketball ? "Recomendação" : "Recommendation"}
+              Recommendation
             </p>
           </div>
           <p className="text-sm text-foreground">{report.recommendation}</p>
@@ -52,11 +57,13 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
 
       <div className="grid gap-4 lg:grid-cols-2">
         <DataPanel
-          title={isBasketball ? "Categorias" : "Category Comparison"}
+          title="Category Comparison"
           description={
             isBasketball
-              ? "Scoring, rebounding, playmaking, defense, shooting e efficiency (índice 0–100)."
-              : "Attack, creativity, finishing, passing, physical, and defense (0–100 index)."
+              ? "Scoring, rebounding, playmaking, defense, shooting, and efficiency (0–100 index)."
+              : isAmericanFootball
+                ? "Passing, rushing, receiving, defense, tackles, and sacks (0–100 index)."
+                : "Attack, creativity, finishing, passing, physical, and defense (0–100 index)."
           }
           density="dense"
         >
@@ -70,11 +77,13 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
         </DataPanel>
 
         <DataPanel
-          title={isBasketball ? "Radar" : "Radar Profile"}
+          title="Radar Profile"
           description={
             isBasketball
-              ? "Visão multidimensional normalizada por jogo."
-              : "Normalized multidimensional view per 90."
+              ? "Normalized multidimensional view per game."
+              : isAmericanFootball
+                ? "Multidimensional view of season production."
+                : "Normalized multidimensional view per 90."
           }
           density="dense"
         >
@@ -98,11 +107,7 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
 
       <div className="grid gap-4 md:grid-cols-2">
         <DataPanel
-          title={
-            isBasketball
-              ? `Vantagens — ${a.knownAs}`
-              : `Competitive Advantages — ${a.knownAs}`
-          }
+          title={`Competitive Advantages — ${a.knownAs}`}
           density="dense"
         >
           <ul className="space-y-2">
@@ -127,11 +132,7 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
         </DataPanel>
 
         <DataPanel
-          title={
-            isBasketball
-              ? `Vantagens — ${b.knownAs}`
-              : `Competitive Advantages — ${b.knownAs}`
-          }
+          title={`Competitive Advantages — ${b.knownAs}`}
           density="dense"
         >
           <ul className="space-y-2">
@@ -157,12 +158,8 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
       </div>
 
       <DataPanel
-        title={isBasketball ? "Insights automáticos" : "Automated Insights"}
-        description={
-          isBasketball
-            ? "Análise quantitativa da temporada atual."
-            : "Quantitative analysis for the current season."
-        }
+        title="Automated Insights"
+        description="Quantitative analysis for the current season."
         density="dense"
       >
         <div className="space-y-2">

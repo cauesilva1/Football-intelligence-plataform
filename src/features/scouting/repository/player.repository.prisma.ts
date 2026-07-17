@@ -615,6 +615,9 @@ export const prismaPlayerRepository: PlayerRepository & {
   async findForComparison(idA, idB) {
     const [a, b] = await Promise.all([this.findById(idA), this.findById(idB)]);
     if (!a || !b) return null;
+    const sportA = a.sport ?? a.currentSeasonStats.sport ?? "SOCCER";
+    const sportB = b.sport ?? b.currentSeasonStats.sport ?? "SOCCER";
+    if (sportA !== sportB) return null;
     return [a, b];
   },
 

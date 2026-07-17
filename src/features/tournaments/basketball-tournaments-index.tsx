@@ -12,19 +12,19 @@ export function BasketballTournamentsIndex() {
   return (
     <div className="space-y-8">
       <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-5 shadow-panel md:p-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Ligas</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Leagues</p>
         <h1 className="mt-2 font-display text-2xl font-bold text-foreground md:text-3xl">
-          Competições
+          Competitions
         </h1>
         <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-          NBA (classificação, líderes e agenda) e NCAA (scouting — temporada 2026/27 começa em
-          novembro). Elencos ficam em Franquias.
+          NBA (standings, leaders, and schedule) and NCAA (scouting — the 2026/27 season starts in
+          November). Rosters are available under Franchises.
         </p>
       </div>
 
       <section className="space-y-4">
         <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          Estados Unidos
+          United States
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {BASKETBALL_COMPETITIONS.map((competition) => {
@@ -53,7 +53,7 @@ export function BasketballTournamentsIndex() {
                   {competition.description}
                 </p>
                 <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
-                  Abrir hub
+                  Open hub
                   <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                 </span>
               </Link>

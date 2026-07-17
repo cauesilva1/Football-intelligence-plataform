@@ -156,7 +156,7 @@ export async function fetchNbaGroupedStandings(
             ? "Conferência Leste"
             : child.name?.includes("Western")
               ? "Conferência Oeste"
-              : child.name ?? "Classificação";
+              : child.name ?? "Standings";
         return { label, rows };
       })
       .filter((g) => g.rows.length > 0);

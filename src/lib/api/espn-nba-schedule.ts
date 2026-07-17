@@ -99,9 +99,9 @@ function mapGameStatus(
     return { status: "final", label: "Final" };
   }
   if (state === "in" || name === "STATUS_IN_PROGRESS") {
-    return { status: "live", label: "Ao vivo" };
+    return { status: "live", label: "Live" };
   }
-  return { status: "scheduled", label: "Agendado" };
+  return { status: "scheduled", label: "Scheduled" };
 }
 
 function parseEvent(event: EspnScoreboardEvent, competition: NbaCompetition): NbaScheduleGame | null {
@@ -278,7 +278,7 @@ export async function fetchNcaaScheduleBundle(now = new Date()): Promise<NbaSche
       if (parsed) eventsByKey.set(`ncaa:${parsed.id}`, parsed);
     }
     if (eventsByKey.size > 0) {
-      notice = `Offseason · amostra de jogos de março ${seasonEndYear - 1}/${String(seasonEndYear).slice(-2)}`;
+      notice = `Offseason · March ${seasonEndYear - 1}/${String(seasonEndYear).slice(-2)} sample games`;
     }
   }
 

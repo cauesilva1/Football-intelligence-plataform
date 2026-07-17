@@ -12,7 +12,7 @@ function LeaderTable({
   if (!rows.length) {
     return (
       <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-        {title}: sem dados ainda.
+        {title}: no data yet.
       </div>
     );
   }
@@ -25,7 +25,7 @@ function LeaderTable({
           <thead className="bg-secondary/50 text-[11px] uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-3 py-2 font-medium">#</th>
-              <th className="px-3 py-2 font-medium">Jogador</th>
+              <th className="px-3 py-2 font-medium">Player</th>
               <th className="px-3 py-2 font-medium">Time</th>
               <th className="px-3 py-2 text-right font-medium">{unit}</th>
             </tr>
@@ -63,7 +63,7 @@ export function BasketballLeadersBoard({ leaders }: { leaders: NbaCompetitionLea
   if (!hasAny) {
     return (
       <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-        Estatísticas individuais ainda não disponíveis para esta temporada.
+        Individual statistics are not available for this season yet.
       </p>
     );
   }
@@ -71,13 +71,13 @@ export function BasketballLeadersBoard({ leaders }: { leaders: NbaCompetitionLea
   return (
     <div className="space-y-6">
       <p className="text-xs text-muted-foreground">
-        Líderes ESPN · temporada {leaders.seasonLabel} (médias por jogo)
+        ESPN leaders · {leaders.seasonLabel} season (per-game averages)
       </p>
       <div className="grid gap-6 lg:grid-cols-2">
         <LeaderTable title="Cestinhas (PPG)" unit="PTS" rows={leaders.points} />
         <LeaderTable title="Rebotes (RPG)" unit="REB" rows={leaders.rebounds} />
-        <LeaderTable title="Assistências (APG)" unit="AST" rows={leaders.assists} />
-        <LeaderTable title="Roubos de bola (SPG)" unit="STL" rows={leaders.steals} />
+        <LeaderTable title="Assists (APG)" unit="AST" rows={leaders.assists} />
+        <LeaderTable title="Steals (SPG)" unit="STL" rows={leaders.steals} />
         <LeaderTable title="Tocos (BPG)" unit="BLK" rows={leaders.blocks} />
       </div>
     </div>

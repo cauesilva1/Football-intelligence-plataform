@@ -30,6 +30,7 @@ import {
   MIN_XG_PER90_OPTIONS,
   POSITIONS,
 } from "@/features/scouting/lib/constants";
+import { AMERICAN_FOOTBALL_POSITIONS } from "@/lib/positions";
 import { useSport } from "@/context/sport-context";
 import type { PlayerFilters } from "@/types";
 import {
@@ -132,6 +133,8 @@ export function ScoutingFiltersPanel({
   const [isPending, startTransition] = useTransition();
   const { currentSport } = useSport();
   const isBasketball = currentSport === "BASKETBALL";
+  const isAmericanFootball = currentSport === "AMERICAN_FOOTBALL";
+  const isFranchiseSport = isBasketball || isAmericanFootball;
   const defaults = getFilterDefaults(route, currentSport);
   const didRestorePrefs = useRef(false);
 
@@ -299,31 +302,31 @@ export function ScoutingFiltersPanel({
   const basketballAdvancedFields = (
     <>
       <BasketballMetricSlider
-        label="PTS (mín.)"
+        label="PTS (min)"
         options={MIN_POINTS_OPTIONS}
         value={filters.minPoints}
-        formatValue={(value) => (value > 0 ? `${value}+ PPG` : "Sem mínimo")}
+        formatValue={(value) => (value > 0 ? `${value}+ PPG` : "No minimum")}
         onCommit={(value) => pushFilters({ minPoints: value, page: 1 })}
       />
       <BasketballMetricSlider
-        label="REB (mín.)"
+        label="REB (min)"
         options={MIN_REBOUNDS_OPTIONS}
         value={filters.minRebounds}
-        formatValue={(value) => (value > 0 ? `${value}+ RPG` : "Sem mínimo")}
+        formatValue={(value) => (value > 0 ? `${value}+ RPG` : "No minimum")}
         onCommit={(value) => pushFilters({ minRebounds: value, page: 1 })}
       />
       <BasketballMetricSlider
-        label="AST (mín.)"
+        label="AST (min)"
         options={MIN_ASSISTS_OPTIONS}
         value={filters.minAssists}
-        formatValue={(value) => (value > 0 ? `${value}+ APG` : "Sem mínimo")}
+        formatValue={(value) => (value > 0 ? `${value}+ APG` : "No minimum")}
         onCommit={(value) => pushFilters({ minAssists: value, page: 1 })}
       />
       <BasketballMetricSlider
-        label="3P% (mín.)"
+        label="3P% (min)"
         options={MIN_THREE_PT_PCT_OPTIONS}
         value={filters.minThreePointsPercent}
-        formatValue={(value) => (value > 0 ? `${value}%+` : "Sem mínimo")}
+        formatValue={(value) => (value > 0 ? `${value}%+` : "No minimum")}
         onCommit={(value) => pushFilters({ minThreePointsPercent: value, page: 1 })}
       />
     </>
@@ -333,10 +336,48 @@ export function ScoutingFiltersPanel({
     active ? (
       <div className="flex items-end">
         <Button type="button" variant="outline" size="sm" onClick={clearFilters}>
-          <X className="h-3.5 w-3.5" /> Limpar filtros
+          <X className="h-3.5 w-3.5" /> Clear filters
         </Button>
       </div>
     ) : null;
+
+  const americanFootballAdvancedFields = (
+    <>
+      <FilterField label="Min. age">
+        <Select
+          value={String(filters.minAge ?? "")}
+          onChange={(e) => pushFilters({ minAge: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
+        >
+          <option value="">No limit</option>
+          {MIN_AGE_OPTIONS.map((a) => (
+            <option key={a} value={a}>{a}+ years</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label="Max. age">
+        <Select
+          value={String(filters.maxAge ?? "")}
+          onChange={(e) => pushFilters({ maxAge: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
+        >
+          <option value="">No limit</option>
+          {MAX_AGE_OPTIONS.map((a) => (
+            <option key={a} value={a}>Max. {a}</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label="Min. rating">
+        <Select
+          value={String(filters.minRating ?? "")}
+          onChange={(e) => pushFilters({ minRating: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
+        >
+          <option value="">No limit</option>
+          {MIN_RATING_OPTIONS.map((r) => (
+            <option key={r} value={r}>{r.toFixed(1)}+</option>
+          ))}
+        </Select>
+      </FilterField>
+    </>
+  );
 
   const isScoutingRoute = route === "scouting";
   const showBasketballScoutingTools = isBasketball && isScoutingRoute;
@@ -348,6 +389,13 @@ export function ScoutingFiltersPanel({
         {clearButton(hasActiveBasketballFilters(filters))}
       </>
     ) : null
+  ) : isAmericanFootball ? (
+    isScoutingRoute ? (
+      <>
+        {americanFootballAdvancedFields}
+        {clearButton(hasActiveFilters(filters))}
+      </>
+    ) : null
   ) : (
     <>
       {soccerAdvancedFields}
@@ -355,7 +403,11 @@ export function ScoutingFiltersPanel({
     </>
   );
 
-  const positionOptions = isBasketball ? BASKETBALL_POSITIONS : POSITIONS;
+  const positionOptions = isBasketball
+    ? BASKETBALL_POSITIONS
+    : isAmericanFootball
+      ? AMERICAN_FOOTBALL_POSITIONS
+      : POSITIONS;
 
   const archetypeBar = showBasketballScoutingTools ? (
     <div className="mb-3 flex flex-wrap gap-2">
@@ -378,31 +430,40 @@ export function ScoutingFiltersPanel({
     </div>
   ) : null;
 
-  const hasBasicBasketballFilters = Boolean(
+  const hasBasicFranchiseFilters = Boolean(
     filters.search ||
       filters.position ||
       filters.league ||
-      filters.teamId
+      filters.teamId ||
+      typeof filters.minAge === "number" ||
+      typeof filters.maxAge === "number" ||
+      typeof filters.minRating === "number"
   );
 
   const playersClearButton =
-    isBasketball && !isScoutingRoute && hasBasicBasketballFilters ? (
+    isFranchiseSport && !isScoutingRoute && hasBasicFranchiseFilters ? (
       <div className="mt-3 flex justify-end">
         <Button type="button" variant="outline" size="sm" onClick={clearFilters}>
-          <X className="h-3.5 w-3.5" /> Limpar filtros
+          <X className="h-3.5 w-3.5" /> Clear filters
         </Button>
       </div>
     ) : null;
 
+  const teamFieldLabel = isBasketball
+    ? "Franchise"
+    : isAmericanFootball
+      ? "Franchise / Program"
+      : "Club";
+
   return (
     <div>
       {archetypeBar}
-      <FilterBar pending={isPending} footer={!isBasketball && route === "players" ? advancedFields : undefined}>
+      <FilterBar pending={isPending} footer={!isFranchiseSport && route === "players" ? advancedFields : undefined}>
         <FilterField label="Search" className="min-w-[220px] flex-[2]">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder={isBasketball ? "Buscar jogador..." : "Search player by name..."}
+              placeholder="Search player by name..."
               className="pl-9"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -433,7 +494,7 @@ export function ScoutingFiltersPanel({
             ))}
           </Select>
         </FilterField>
-        <FilterField label={isBasketball ? "Franquia" : "Club"}>
+        <FilterField label={teamFieldLabel}>
           <Select
             value={filters.teamId ?? ""}
             onChange={(e) => pushFilters({ teamId: e.target.value || undefined, page: 1 })}

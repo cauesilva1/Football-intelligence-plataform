@@ -12,8 +12,8 @@ export async function ScoutingResults({ filters }: { filters: PlayerFilters }) {
   if (result.items.length === 0) {
     return (
       <EmptyState
-        title="Nenhum jogador atende aos critérios"
-        description="Amplie os filtros de scouting para ver mais resultados."
+        title="No players match your criteria"
+        description="Broaden your scouting filters to see more results."
       />
     );
   }

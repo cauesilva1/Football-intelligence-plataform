@@ -1,12 +1,14 @@
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import {
   renderCompetitionHub,
-  resolveCompetitionTitle,
+  resolveCompetitionTitleFromSlug,
+  resolveSportFromCompetitionSlug,
 } from "@/features/tournaments/sport-hub-dispatch";
-import { getServerSport } from "@/lib/sport-server";
+import { HOT_PATH_REVALIDATE_SECONDS } from "@/lib/http-cache";
 import { APP_NAME } from "@/lib/config";
+import { redirect } from "next/navigation";
 
-export const revalidate = 300;
+export const revalidate = HOT_PATH_REVALIDATE_SECONDS;
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -15,14 +17,15 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  const sport = await getServerSport();
-  const title = await resolveCompetitionTitle(sport, slug);
+  const title = await resolveCompetitionTitleFromSlug(slug);
   return { title: title ? `${title} · ${APP_NAME}` : `Torneio · ${APP_NAME}` };
 }
 
 export default async function CompetitionPage({ params, searchParams }: PageProps) {
-  const sport = await getServerSport();
   const { slug } = await params;
+  const sport = resolveSportFromCompetitionSlug(slug);
+  if (!sport) redirect("/tournaments");
+
   const query = await searchParams;
   const seasonRaw = typeof query.season === "string" ? Number(query.season) : undefined;
   const seasonYear = seasonRaw && Number.isFinite(seasonRaw) ? seasonRaw : undefined;

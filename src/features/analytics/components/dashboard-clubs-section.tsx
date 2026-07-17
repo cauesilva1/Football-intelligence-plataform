@@ -28,7 +28,7 @@ export async function DashboardClubsSection() {
 
   return (
     <DataPanel
-      title="Franquias NBA"
+      title="NBA Franchises"
       description={`${nbaTeams.length} times cadastrados · elencos ativos`}
       density="dense"
     >
@@ -50,7 +50,7 @@ export async function DashboardClubsSection() {
                 <p className="truncate font-display text-sm font-bold text-foreground">{team.name}</p>
                 <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
                   <Users className="h-3 w-3" />
-                  {team.squadSize ?? 0} jogadores
+                  {team.squadSize ?? 0} players
                 </p>
               </CardContent>
             </Card>
@@ -60,7 +60,7 @@ export async function DashboardClubsSection() {
       {nbaTeams.length > 10 ? (
         <div className="mt-4 text-center">
           <Link href="/teams?league=nba" className="text-sm font-medium text-primary hover:underline">
-            Ver todas as {nbaTeams.length} franquias →
+            View all {nbaTeams.length} franchises →
           </Link>
         </div>
       ) : null}

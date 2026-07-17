@@ -33,7 +33,7 @@ export function ScoutingFiltersBar() {
     <Card className={isPending ? "opacity-70 transition-opacity" : ""}>
       <CardContent className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <label className="mb-1 block text-xs text-muted-foreground">Posição</label>
+          <label className="mb-1 block text-xs text-muted-foreground">Position</label>
           <Select
             value={filters.position ?? ""}
             onChange={(e) => pushFilters({ position: e.target.value || undefined })}
@@ -57,24 +57,24 @@ export function ScoutingFiltersBar() {
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-xs text-muted-foreground">Idade máxima</label>
+          <label className="mb-1 block text-xs text-muted-foreground">Max age</label>
           <Select
             value={String(filters.maxAge ?? "")}
             onChange={(e) => pushFilters({ maxAge: e.target.value ? Number(e.target.value) : undefined })}
           >
-            <option value="">Sem limite</option>
+            <option value="">No limit</option>
             {MAX_AGE_OPTIONS.map((a) => (
-              <option key={a} value={a}>Até {a} anos</option>
+              <option key={a} value={a}>Up to {a} years</option>
             ))}
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-xs text-muted-foreground">Rating mínimo</label>
+          <label className="mb-1 block text-xs text-muted-foreground">Min rating</label>
           <Select
             value={String(filters.minRating ?? "")}
             onChange={(e) => pushFilters({ minRating: e.target.value ? Number(e.target.value) : undefined })}
           >
-            <option value="">Sem limite</option>
+            <option value="">No limit</option>
             {MIN_RATING_OPTIONS.map((r) => (
               <option key={r} value={r}>{r.toFixed(1)}+</option>
             ))}

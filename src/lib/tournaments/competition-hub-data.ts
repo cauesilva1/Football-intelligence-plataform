@@ -231,14 +231,14 @@ async function loadEspnCompetitionHub(
             ...row,
             points: row.points ?? row.wins * 3 + row.draws,
           }));
-          return rows.length ? [{ label: "Classificação", rows }] : [];
+          return rows.length ? [{ label: "Standings", rows }] : [];
         })();
 
   return {
     standings: await attachTeamIdsToStandings(standings, config.espnSlug),
     matches: [...byId.values()],
     leaders: leaders ?? emptyCompetitionLeaders(),
-    notice: config.seasonLabel ? `Temporada ${config.seasonLabel}` : undefined,
+    notice: config.seasonLabel ? `Season ${config.seasonLabel}` : undefined,
   };
 }
 
@@ -254,7 +254,7 @@ async function loadWorldCupHub(): Promise<CompetitionHubData> {
     standings,
     matches,
     leaders: leaders ?? emptyCompetitionLeaders(),
-    notice: "Copa do Mundo 2026 · placares ESPN quando disponíveis",
+    notice: "2026 World Cup · ESPN scores when available",
   };
 }
 
@@ -276,7 +276,7 @@ async function loadEuroHub(): Promise<CompetitionHubData> {
   }));
 
   const standings = await attachTeamIdsToStandings(
-    rows.length ? [{ label: "Classificação (grupos · Euro 2020)", rows }] : []
+    rows.length ? [{ label: "Standings (groups · Euro 2020)", rows }] : []
   );
 
   return {

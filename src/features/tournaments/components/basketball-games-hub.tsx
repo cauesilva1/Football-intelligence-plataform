@@ -129,7 +129,7 @@ function GameCard({ game }: { game: NbaScheduleGame }) {
           </div>
 
           <div className="mt-4 flex items-center justify-center gap-1 text-xs text-primary">
-            Ver ficha do jogo
+            View game card
             <ChevronRight className="h-3.5 w-3.5" />
           </div>
         </CardContent>
@@ -166,7 +166,7 @@ export function BasketballGamesHub({
   schedule,
   compact = false,
   title = "Agenda NBA",
-  subtitle = "Ao vivo, resultados e próximos jogos — abre a ficha para o box score completo.",
+  subtitle = "Live, recent results, and upcoming games — select one to open the full box score.",
 }: {
   schedule: NbaScheduleBundle;
   compact?: boolean;
@@ -184,7 +184,7 @@ export function BasketballGamesHub({
       {!compact ? (
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-            Central de jogos
+            Games hub
           </p>
           <h2 className="mt-1 font-display text-xl font-bold text-foreground">{title}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
@@ -198,21 +198,21 @@ export function BasketballGamesHub({
 
       <Tabs defaultValue={defaultTab}>
         <TabsList>
-          <TabsTrigger value="live">Ao vivo ({schedule.live.length})</TabsTrigger>
-          <TabsTrigger value="past">Passados ({schedule.past.length})</TabsTrigger>
-          <TabsTrigger value="scheduled">Agendados ({schedule.scheduled.length})</TabsTrigger>
+          <TabsTrigger value="live">Live ({schedule.live.length})</TabsTrigger>
+          <TabsTrigger value="past">Results ({schedule.past.length})</TabsTrigger>
+          <TabsTrigger value="scheduled">Scheduled ({schedule.scheduled.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="live" className="mt-4">
-          <GamesGrid games={schedule.live} emptyLabel="Nenhum jogo ao vivo no momento." />
+          <GamesGrid games={schedule.live} emptyLabel="No live games at the moment." />
         </TabsContent>
         <TabsContent value="past" className="mt-4">
-          <GamesGrid games={schedule.past} emptyLabel="Nenhum jogo finalizado recente." />
+          <GamesGrid games={schedule.past} emptyLabel="No recent completed games." />
         </TabsContent>
         <TabsContent value="scheduled" className="mt-4">
           <GamesGrid
             games={schedule.scheduled}
-            emptyLabel="Nenhum jogo agendado nos próximos dias."
+            emptyLabel="No games scheduled in the coming days."
           />
         </TabsContent>
       </Tabs>

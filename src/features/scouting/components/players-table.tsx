@@ -9,10 +9,10 @@ export function PlayersTable({ players }: { players: Player[] }) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Jogador</TableHead>
+          <TableHead>Player</TableHead>
           <TableHead>Pos.</TableHead>
-          <TableHead>Clube</TableHead>
-          <TableHead>Idade</TableHead>
+          <TableHead>Club</TableHead>
+          <TableHead>Age</TableHead>
           <TableHead>Gols/90</TableHead>
           <TableHead>Assist./90</TableHead>
           <TableHead>Rating</TableHead>

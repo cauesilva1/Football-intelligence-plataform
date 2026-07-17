@@ -17,7 +17,7 @@ export function Header({ subtitle }: { subtitle?: string }) {
   const theme = sportTheme(currentSport);
 
   return (
-    <header className="relative sticky top-0 z-10 flex shrink-0 items-center border-b border-border/80 bg-background/75 px-3 py-2.5 backdrop-blur-md md:px-8 md:py-4">
+    <header className="relative sticky top-0 z-10 flex shrink-0 items-center border-b border-border/80 bg-background/70 px-3 py-2.5 backdrop-blur-md md:px-8 md:py-4">
       <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-4">
         <Link href="/dashboard" className="shrink-0 md:hidden" aria-label={appConfig.name}>
           <OmniScoutMark sport={currentSport} />

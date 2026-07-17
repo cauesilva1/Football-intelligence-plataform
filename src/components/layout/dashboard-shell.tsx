@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { MobileNav } from "./mobile-nav";
@@ -18,6 +19,12 @@ export function DashboardShell({
   );
 }
 
+function sportModeClass(sport: string): string {
+  if (sport === "BASKETBALL") return "sport-mode-hoops";
+  if (sport === "AMERICAN_FOOTBALL") return "sport-mode-gridiron";
+  return "sport-mode-pitch";
+}
+
 function DashboardShellInner({
   children,
   subtitle,
@@ -26,12 +33,13 @@ function DashboardShellInner({
   subtitle?: string;
 }) {
   const { currentSport } = useSport();
+  const pathname = usePathname();
 
   return (
     <div
       className={cn(
-        "sport-ambient flex h-screen overflow-hidden bg-background text-foreground transition-colors duration-300",
-        currentSport === "BASKETBALL" ? "sport-mode-hoops" : "sport-mode-pitch"
+        "sport-ambient flex h-screen overflow-hidden bg-background text-foreground",
+        sportModeClass(currentSport)
       )}
       data-sport-shell={currentSport}
     >
@@ -39,7 +47,9 @@ function DashboardShellInner({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Header subtitle={subtitle} />
         <main className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-24 md:px-8 md:py-6 md:pb-6">
-          {children}
+          <div key={pathname} className="motion-enter">
+            {children}
+          </div>
         </main>
       </div>
       <MobileNav />

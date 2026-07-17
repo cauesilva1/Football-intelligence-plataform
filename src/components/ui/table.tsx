@@ -37,7 +37,12 @@ export function TableBody({ className, ...props }: React.HTMLAttributes<HTMLTabl
 }
 
 export function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) {
-  return <tr className={cn("transition-colors hover:bg-surface-muted/40", className)} {...props} />;
+  return (
+    <tr
+      className={cn("motion-row transition-colors hover:bg-surface-muted/40", className)}
+      {...props}
+    />
+  );
 }
 
 export function TableHead({ className, sticky, ...props }: React.ThHTMLAttributes<HTMLTableCellElement> & { sticky?: boolean }) {

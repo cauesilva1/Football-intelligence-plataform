@@ -223,7 +223,7 @@ async function loadAmericanFootballCompetitionHubUncached(
 
     const emptyNote =
       active.kind === "current" && !active.hasStandings
-        ? " · temporada atual ainda sem tabela (offseason)"
+        ? " · current season standings are not available yet (offseason)"
         : "";
 
     return {
@@ -233,7 +233,7 @@ async function loadAmericanFootballCompetitionHubUncached(
       leaders: active.leaders,
       seasonSlices,
       selectedSeasonYear: active.seasonYear,
-      notice: `Temporada ${active.seasonLabel}${emptyNote} · líderes e classificação ESPN`,
+      notice: `Season ${active.seasonLabel}${emptyNote} · ESPN leaders and standings`,
     };
   }
 
@@ -282,7 +282,7 @@ async function loadAmericanFootballCompetitionHubUncached(
 
   const emptyNote =
     active.kind === "current" && !active.hasStandings
-      ? " · temporada atual ainda sem tabela (offseason)"
+      ? " · current season standings are not available yet (offseason)"
       : "";
 
   return {
@@ -294,7 +294,7 @@ async function loadAmericanFootballCompetitionHubUncached(
       : emptyFootballCompetitionLeaders(active.seasonYear),
     seasonSlices,
     selectedSeasonYear: active.seasonYear,
-    notice: `Temporada ${active.seasonLabel}${emptyNote} · conferências elite e jogos ESPN`,
+    notice: `Season ${active.seasonLabel}${emptyNote} · ESPN elite conferences and games`,
   };
 }
 

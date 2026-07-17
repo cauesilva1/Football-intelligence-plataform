@@ -36,5 +36,7 @@ export const SPORT_THEME = {
 
 export function applySportToDocument(sport: Sport): void {
   if (typeof document === "undefined") return;
-  document.documentElement.setAttribute("data-sport", sport);
+  const root = document.documentElement;
+  root.setAttribute("data-sport", sport);
+  root.classList.add("sport-theme-ready");
 }

@@ -106,7 +106,7 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
                   <p className="text-xs text-white/75">
                     {p.position} · {p.nationality} · {p.age} anos
                   </p>
-                  <p className="truncate text-2xs text-white/60">{p.teamName ?? "Sem time"}</p>
+                  <p className="truncate text-2xs text-white/60">{p.teamName ?? "No team"}</p>
                 </div>
               </div>
               <div className="shrink-0 text-right">

@@ -86,6 +86,20 @@ export async function resolveCompetitionTitle(
   return getSoccerCompetition(slug)?.shortName ?? null;
 }
 
+/** Sport implied by the competition slug — avoids cookies() on hub pages. */
+export function resolveSportFromCompetitionSlug(slug: string): Sport | null {
+  if (isBasketballCompetitionSlug(slug)) return "BASKETBALL";
+  if (isAmericanFootballCompetitionSlug(slug)) return "AMERICAN_FOOTBALL";
+  if (isSoccerCompetitionSlug(slug)) return "SOCCER";
+  return null;
+}
+
+export async function resolveCompetitionTitleFromSlug(slug: string): Promise<string | null> {
+  const sport = resolveSportFromCompetitionSlug(slug);
+  if (!sport) return null;
+  return resolveCompetitionTitle(sport, slug);
+}
+
 export async function renderCompetitionHub(options: {
   sport: Sport;
   slug: string;

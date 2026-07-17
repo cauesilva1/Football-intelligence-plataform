@@ -29,7 +29,7 @@ export function ScoutingPagination({
     <div className="flex items-center justify-between px-1 py-2">
       <p className="text-xs text-muted-foreground">
         Showing <span className="text-foreground">{total === 0 ? 0 : start}-{end}</span> of{" "}
-        <span className="text-foreground">{total}</span> players found
+        <span className="text-foreground">{total}</span> players
       </p>
       <div className="flex items-center gap-2">
         {page > 1 ? (

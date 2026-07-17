@@ -5,7 +5,7 @@ import type { BasketballHubFranchise } from "@/lib/tournaments/basketball-hub-da
 
 export function BasketballFranchisesBoard({
   franchises,
-  emptyLabel = "Nenhuma franquia encontrada no banco.",
+  emptyLabel = "No franchises found in the database.",
   directoryHref,
 }: {
   franchises: BasketballHubFranchise[];
@@ -21,7 +21,7 @@ export function BasketballFranchisesBoard({
         {directoryHref ? (
           <p className="text-center text-sm">
             <Link href={directoryHref} className="font-medium text-primary hover:underline">
-              Abrir diretório completo
+              Open full directory
             </Link>
           </p>
         ) : null}
@@ -33,15 +33,14 @@ export function BasketballFranchisesBoard({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
-          {franchises.length} {franchises.length === 1 ? "time" : "times"} no banco — toque para o
-          perfil e elenco.
+          {franchises.length} {franchises.length === 1 ? "team" : "teams"} in the database — tap for profile and roster.
         </p>
         {directoryHref ? (
           <Link
             href={directoryHref}
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           >
-            Ver todos no diretório
+            View all in directory
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         ) : null}

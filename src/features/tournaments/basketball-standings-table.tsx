@@ -110,7 +110,7 @@ export function BasketballStandingsTable({
   if (!groups.length) {
     return (
       <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-        Classificação ainda não disponível para esta liga.
+        Standings are not available for this league yet.
       </p>
     );
   }
@@ -120,10 +120,10 @@ export function BasketballStandingsTable({
       {useFilter ? (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground">
-            {groups.length} conferências · times com link abrem o perfil no diretório
+            {groups.length} conferences · linked teams open their directory profile
           </p>
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            Conferência
+            Conference
             <select
               value={activeLabel}
               onChange={(event) => setSelected(event.target.value)}

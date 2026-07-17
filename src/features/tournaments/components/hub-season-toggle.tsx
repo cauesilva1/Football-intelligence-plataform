@@ -47,16 +47,16 @@ export function HubSeasonToggle({
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Temporada
+        Season
       </span>
       {slices.map((slice) => {
         const active = slice.seasonYear === selectedSeasonYear;
         const suffix =
           slice.kind === "current"
             ? slice.hasStandings || slice.hasLeaders
-              ? "atual"
-              : "atual · sem dados"
-            : "passada";
+              ? "current"
+              : "current · no data"
+            : "past";
         return (
           <Link
             key={slice.seasonYear}

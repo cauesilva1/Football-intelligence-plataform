@@ -108,9 +108,9 @@ function mapStatus(
     return { status: "finished", label: shortDetail ?? "Final" };
   }
   if (state === "in" || name === "STATUS_IN_PROGRESS") {
-    return { status: "live", label: shortDetail ?? "Ao vivo" };
+    return { status: "live", label: shortDetail ?? "Live" };
   }
-  return { status: "scheduled", label: shortDetail ?? "Agendado" };
+  return { status: "scheduled", label: shortDetail ?? "Scheduled" };
 }
 
 function parseScore(value?: string | number): number | null {

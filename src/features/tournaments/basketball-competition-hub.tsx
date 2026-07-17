@@ -45,7 +45,7 @@ export function BasketballCompetitionHub({
         : "franchises";
 
   const directoryLabel =
-    competition.slug === "ncaa" ? "programas" : "franquias";
+    competition.slug === "ncaa" ? "programs" : "franchises";
 
   return (
     <div className="space-y-6">
@@ -56,7 +56,7 @@ export function BasketballCompetitionHub({
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Ligas
+          Leagues
         </Link>
         <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
           {competition.badge}
@@ -86,7 +86,7 @@ export function BasketballCompetitionHub({
             href={`/teams?league=${competition.teamsLeagueParam}`}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
           >
-            Abrir diretório de {directoryLabel}
+            Open {directoryLabel} directory
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
           {competition.slug === "nba" ? (
@@ -94,14 +94,14 @@ export function BasketballCompetitionHub({
               href="/teams?league=nba"
               className="text-sm text-muted-foreground hover:text-primary"
             >
-              Todas as franquias NBA
+              All NBA franchises
             </Link>
           ) : (
             <Link
               href="/teams?league=ncaa"
               className="text-sm text-muted-foreground hover:text-primary"
             >
-              Programas no scouting
+              Programs in scouting
             </Link>
           )}
         </div>
@@ -110,14 +110,14 @@ export function BasketballCompetitionHub({
       <Tabs defaultValue={defaultTab} key={data.selectedSeasonYear}>
         <TabsList className="mb-4 w-full justify-start overflow-x-auto sm:w-auto">
           {competition.hasStandings ? (
-            <TabsTrigger value="standings">Classificação</TabsTrigger>
+            <TabsTrigger value="standings">Standings</TabsTrigger>
           ) : null}
           {competition.hasLeaders ? (
-            <TabsTrigger value="leaders">Estatísticas</TabsTrigger>
+            <TabsTrigger value="leaders">Statistics</TabsTrigger>
           ) : null}
-          {competition.hasSchedule ? <TabsTrigger value="matches">Jogos</TabsTrigger> : null}
+          {competition.hasSchedule ? <TabsTrigger value="matches">Games</TabsTrigger> : null}
           <TabsTrigger value="franchises">
-            {competition.slug === "ncaa" ? "Programas" : "Franquias"}
+            {competition.slug === "ncaa" ? "Programs" : "Franchises"}
           </TabsTrigger>
         </TabsList>
 
@@ -125,8 +125,8 @@ export function BasketballCompetitionHub({
           <TabsContent value="standings" className="mt-0 space-y-3">
             {selectedSlice && !selectedSlice.hasStandings ? (
               <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-                Sem classificação para {selectedSlice.seasonLabel} ainda. Escolhe a temporada
-                passada no seletor acima — a estrutura 2026/27 já está pronta.
+                No standings for {selectedSlice.seasonLabel} yet. Select the previous season
+                above — the 2026/27 structure is already available.
               </p>
             ) : (
               <BasketballStandingsTable
@@ -141,7 +141,7 @@ export function BasketballCompetitionHub({
           <TabsContent value="leaders" className="mt-0">
             {selectedSlice && !selectedSlice.hasLeaders ? (
               <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-                Sem líderes para {selectedSlice.seasonLabel} ainda. A temporada passada já tem
+                No leaders for {selectedSlice.seasonLabel} yet. The previous season already has
                 PPG / RPG / APG / SPG / BPG.
               </p>
             ) : (
@@ -158,8 +158,8 @@ export function BasketballCompetitionHub({
               title={competition.slug === "ncaa" ? "Agenda NCAA" : "Agenda NBA"}
               subtitle={
                 competition.slug === "ncaa"
-                  ? "Jogos universitários — toque para abrir o box score."
-                  : "Ao vivo, resultados e próximos jogos — abre a ficha para o box score."
+                  ? "College games — select one to open the box score."
+                  : "Live, recent results, and upcoming games — select one to open the box score."
               }
             />
           </TabsContent>
@@ -170,8 +170,8 @@ export function BasketballCompetitionHub({
             franchises={data.franchises}
             emptyLabel={
               competition.slug === "ncaa"
-                ? "Nenhum programa NCAA no banco ainda. Rode o sync NCAA ou abra o diretório."
-                : "Nenhuma franquia NBA no banco ainda."
+                ? "No NCAA programs in the database yet. Run the NCAA sync or open the directory."
+                : "No NBA franchises in the database yet."
             }
             directoryHref={`/teams?league=${competition.teamsLeagueParam}`}
           />

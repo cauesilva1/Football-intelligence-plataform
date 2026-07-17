@@ -267,7 +267,7 @@ async function loadBasketballCompetitionHubUncached(
 
     const emptyNote =
       active.kind === "current" && !active.hasStandings
-        ? " · temporada atual ainda sem tabela (offseason)"
+        ? " · current season standings are not available yet (offseason)"
         : "";
 
     return {
@@ -277,7 +277,7 @@ async function loadBasketballCompetitionHubUncached(
       leaders: active.leaders,
       seasonSlices,
       selectedSeasonYear: active.seasonYear,
-      notice: `Temporada ${active.seasonLabel}${emptyNote} · líderes e classificação ESPN`,
+      notice: `Season ${active.seasonLabel}${emptyNote} · ESPN leaders and standings`,
     };
   }
 
@@ -332,8 +332,8 @@ async function loadBasketballCompetitionHubUncached(
   const emptyNote =
     active.kind === "current" && !active.hasStandings
       ? ncaaStarted
-        ? " · tabela 2026/27 ainda vazia"
-        : " · tip-off previsto para novembro de 2026"
+        ? " · 2026/27 standings are not available yet"
+        : " · tip-off is scheduled for November 2026"
       : "";
   const scheduleNote = schedule.notice ? ` · ${schedule.notice}` : "";
 
@@ -346,7 +346,7 @@ async function loadBasketballCompetitionHubUncached(
       : emptyNbaCompetitionLeaders(active.seasonYear),
     seasonSlices,
     selectedSeasonYear: active.seasonYear,
-    notice: `Temporada ${active.seasonLabel}${emptyNote}${scheduleNote} · conferências, líderes e jogos ESPN`,
+    notice: `Season ${active.seasonLabel}${emptyNote}${scheduleNote} · ESPN conferences, leaders, and games`,
   };
 }
 

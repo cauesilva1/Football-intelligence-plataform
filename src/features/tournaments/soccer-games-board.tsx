@@ -31,18 +31,18 @@ export function SoccerGamesBoard({ matches }: { matches: TournamentMatch[] }) {
         <TabsTrigger value="live">
           <span className="inline-flex items-center gap-1.5">
             <Radio className="h-3.5 w-3.5" />
-            Ao vivo ({buckets.live.length})
+            Live ({buckets.live.length})
           </span>
         </TabsTrigger>
-        <TabsTrigger value="scheduled">Agendados ({buckets.scheduled.length})</TabsTrigger>
-        <TabsTrigger value="finished">Encerrados ({buckets.finished.length})</TabsTrigger>
+        <TabsTrigger value="scheduled">Scheduled ({buckets.scheduled.length})</TabsTrigger>
+        <TabsTrigger value="finished">Results ({buckets.finished.length})</TabsTrigger>
       </TabsList>
 
       {(["live", "scheduled", "finished"] as const).map((key) => (
         <TabsContent key={key} value={key} className="mt-0">
           {buckets[key].length === 0 ? (
             <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-              Nenhum jogo nesta aba.
+              No games in this tab.
             </p>
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">

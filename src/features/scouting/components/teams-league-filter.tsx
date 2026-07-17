@@ -9,7 +9,7 @@ export function TeamsLeagueFilter({
   tabs,
   totalCount,
   visibleCount,
-  entityLabel = "clubes",
+  entityLabel = "clubs",
 }: {
   tabs: TeamLeagueTab[];
   totalCount: number;
@@ -27,7 +27,7 @@ export function TeamsLeagueFilter({
     <div className="space-y-4 rounded-xl border border-border bg-card/60 p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-muted-foreground">
-          Mostrando{" "}
+          Showing{" "}
           <span className="font-semibold text-foreground">{visibleCount}</span> de{" "}
           <span className="font-semibold text-foreground">{totalCount}</span> {entityLabel}
         </p>

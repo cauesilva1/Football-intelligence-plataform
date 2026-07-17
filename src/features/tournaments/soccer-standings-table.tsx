@@ -80,7 +80,7 @@ export function SoccerStandingsTable({ groups }: { groups: StandingGroup[] }) {
   if (!groups.length) {
     return (
       <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-        Classificação ainda não disponível para esta competição.
+        Standings are not available for this competition yet.
       </p>
     );
   }
@@ -89,7 +89,7 @@ export function SoccerStandingsTable({ groups }: { groups: StandingGroup[] }) {
     <div className="space-y-6">
       {groups.map((group) => (
         <section key={group.label} className="space-y-3">
-          {groups.length > 1 || group.label !== "Classificação" ? (
+          {groups.length > 1 || group.label !== "Standings" ? (
             <h3 className="font-display text-base font-semibold text-foreground">{group.label}</h3>
           ) : null}
           <StandingRows rows={group.rows} />

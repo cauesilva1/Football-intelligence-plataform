@@ -4,7 +4,7 @@ import { getServerSport } from "@/lib/sport-server";
 import { getSportConfig } from "@/lib/sport-registry";
 import { APP_NAME } from "@/lib/config";
 
-export const metadata = { title: `Torneios · ${APP_NAME}` };
+export const metadata = { title: `Tournaments · ${APP_NAME}` };
 
 export const revalidate = 300;
 

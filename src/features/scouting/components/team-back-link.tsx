@@ -13,7 +13,7 @@ export function TeamBackLink({ competitionName }: { competitionName?: string | n
       className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
     >
       <ChevronLeft className="h-4 w-4" aria-hidden />
-      Voltar para Clubes
+      Back to Clubs
     </Link>
   );
 }

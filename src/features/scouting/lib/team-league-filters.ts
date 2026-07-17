@@ -14,7 +14,7 @@ type LeagueDef = {
 };
 
 const SOCCER_TAB_DEFINITIONS: LeagueDef[] = [
-  { key: "all", label: "Todos" },
+  { key: "all", label: "All" },
   {
     key: "premier-league",
     label: "Premier League",
@@ -56,7 +56,7 @@ const SOCCER_TAB_DEFINITIONS: LeagueDef[] = [
 ];
 
 const BASKETBALL_TAB_DEFINITIONS: LeagueDef[] = [
-  { key: "all", label: "Todos" },
+  { key: "all", label: "All" },
   {
     key: "nba",
     label: "NBA",
@@ -70,7 +70,7 @@ const BASKETBALL_TAB_DEFINITIONS: LeagueDef[] = [
 ];
 
 const AMERICAN_FOOTBALL_TAB_DEFINITIONS: LeagueDef[] = [
-  { key: "all", label: "Todos" },
+  { key: "all", label: "All" },
   {
     key: "nfl",
     label: "NFL",

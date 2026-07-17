@@ -35,6 +35,7 @@ export function TeamSquadTable({
 }) {
   const [page, setPage] = useState(1);
   const isBasketball = sport === "BASKETBALL";
+  const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
   const isNba = competitionName === "NBA";
 
   const totalPages = Math.max(1, Math.ceil(squad.length / PAGE_SIZE));
@@ -50,17 +51,24 @@ export function TeamSquadTable({
       <Table density="dense">
         <TableHeader>
           <TableRow>
-            <TableHead>Jogador</TableHead>
+                <TableHead>Player</TableHead>
             <TableHead>Pos.</TableHead>
             {isBasketball ? (
               <>
-                <TableHead className="text-right">Idade</TableHead>
+                <TableHead className="text-right">Age</TableHead>
                 {isNba ? (
                   <TableHead className="text-right">Cap Hit</TableHead>
                 ) : null}
                 <TableHead className="text-right">PTS</TableHead>
                 <TableHead className="text-right">REB</TableHead>
                 <TableHead className="text-right">AST</TableHead>
+              </>
+            ) : isAmericanFootball ? (
+              <>
+                <TableHead className="text-right">Rating</TableHead>
+                <TableHead className="text-right">YDS</TableHead>
+                <TableHead className="text-right">TD</TableHead>
+                <TableHead className="text-right">TKL</TableHead>
               </>
             ) : (
               <>
@@ -75,6 +83,10 @@ export function TeamSquadTable({
           {pageRows.map((player) => {
             const stats = player.currentSeasonStats;
             const perGame = stats.perGame;
+            const yards =
+              stats.totalYards ??
+              (stats.passingYards ?? 0) + (stats.rushingYards ?? 0) + (stats.receivingYards ?? 0);
+            const touchdowns = stats.touchdowns ?? stats.goals ?? 0;
 
             return (
               <TableRow key={player.id}>
@@ -117,6 +129,17 @@ export function TeamSquadTable({
                       {perGame?.assists?.toFixed(1) ?? stats.assists?.toFixed(1) ?? "—"}
                     </TableCell>
                   </>
+                ) : isAmericanFootball ? (
+                  <>
+                    <TableCell className={`text-right font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
+                      {stats.rating.toFixed(1)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">
+                      {yards.toLocaleString("en-US")}
+                    </TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">{touchdowns}</TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">{stats.tacklesWon}</TableCell>
+                  </>
                 ) : (
                   <>
                     <TableCell className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
@@ -137,7 +160,7 @@ export function TeamSquadTable({
       {squad.length > PAGE_SIZE ? (
         <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
           <span>
-            {squad.length} jogadores · página {currentPage} de {totalPages}
+            {squad.length} players · page {currentPage} of {totalPages}
           </span>
           <div className="flex items-center gap-1">
             <Button

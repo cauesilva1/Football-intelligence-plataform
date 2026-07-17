@@ -16,9 +16,9 @@ import { sportTheme } from "@/lib/sport-theme";
 import { APP_NAME } from "@/lib/config";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const metadata = { title: `Clubes · ${APP_NAME}` };
+export const metadata = { title: `Teams · ${APP_NAME}` };
 
-export const revalidate = 300;
+export const revalidate = 180;
 export const maxDuration = 60;
 
 function FilterSkeleton() {
@@ -34,7 +34,6 @@ async function TeamsToolbar({
   competitionId?: string;
   entityLabel: string;
 }) {
-  // One filtered list (+ tabs). "All" total only when a league filter is active.
   const [tabs, filteredTeams] = await Promise.all([
     queryTeamLeagueTabs(),
     queryTeams(competitionId, leagueParam, { enrich: false }),
@@ -64,25 +63,45 @@ export default async function TeamsPage({
   const [params, sport] = await Promise.all([searchParams, getServerSport()]);
   const theme = sportTheme(sport);
   const isBasketball = sport === "BASKETBALL";
+  const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
+  const isFranchiseSport = isBasketball || isAmericanFootball;
 
   const leagueParam = typeof params.league === "string" ? params.league : undefined;
   const competitionId = await queryCompetitionIdForLeague(leagueParam);
   const gridKey = leagueParam ?? competitionId ?? "all";
 
+  const subtitle = isBasketball
+    ? "Franchises"
+    : isAmericanFootball
+      ? "Franchises & Programs"
+      : "Clubs";
+
+  const entityLabel = isBasketball
+    ? "franchises / programs"
+    : isAmericanFootball
+      ? "franchises / programs"
+      : "clubs";
+
   return (
-    <DashboardShell subtitle={isBasketball ? "Franquias" : "Clubes"}>
+    <DashboardShell subtitle={subtitle}>
       <div className="space-y-6">
         <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
             {theme.label}
           </p>
           <h1 className="mt-2 font-display text-xl font-bold text-foreground md:text-3xl">
-            {isBasketball ? "Franquias & Universidades" : "Diretório de Clubes"}
+            {isBasketball
+              ? "Franchises & Colleges"
+              : isAmericanFootball
+                ? "NFL Franchises & CFB Programs"
+                : "Club Directory"}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             {isBasketball
-              ? "Catálogo de franquias NBA e programas NCAA para scouting: elenco, perfil e contexto. Classificação, líderes e jogos ficam em Ligas."
-              : "Catálogo de clubes para scouting: elenco, perfil e contexto do time. Classificação, artilharia e jogos ficam em Torneios."}
+              ? "NBA franchises and NCAA programs for scouting: roster, profile, and context. Standings, leaders, and games are available in Leagues."
+              : isAmericanFootball
+                ? "NFL franchises and College Football programs: roster, profile, and context. Standings, leaders, and games are available in Leagues."
+                : "Club directory for scouting: roster, profile, and team context. Standings, scoring leaders, and games are available in Tournaments."}
           </p>
           {isBasketball ? (
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -90,21 +109,44 @@ export default async function TeamsPage({
                 href="/tournaments/nba"
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
               >
-                Classificação NBA
+                NBA Standings
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
               <Link
                 href="/tournaments/ncaa"
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
               >
-                Conferências NCAA
+                NCAA Conferences
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
               <Link
                 href="/tournaments"
                 className="text-sm text-muted-foreground hover:text-primary"
               >
-                Todas as ligas
+                All leagues
+              </Link>
+            </div>
+          ) : isAmericanFootball ? (
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <Link
+                href="/tournaments/nfl"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                Hub NFL
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link
+                href="/tournaments/college-football"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                Hub College Football
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link
+                href="/tournaments"
+                className="text-sm text-muted-foreground hover:text-primary"
+              >
+                All leagues
               </Link>
             </div>
           ) : (
@@ -112,7 +154,7 @@ export default async function TeamsPage({
               href="/tournaments"
               className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
             >
-              Ver tabelas e estatísticas das ligas
+              View league standings and statistics
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           )}
@@ -122,11 +164,11 @@ export default async function TeamsPage({
           <TeamsToolbar
             leagueParam={leagueParam}
             competitionId={competitionId}
-            entityLabel={isBasketball ? "franquias / programas" : "clubes"}
+            entityLabel={entityLabel}
           />
         </Suspense>
 
-        {!isBasketball && leagueParam === "brasileirao" ? <BrasileiraoSeasonNotice /> : null}
+        {!isFranchiseSport && leagueParam === "brasileirao" ? <BrasileiraoSeasonNotice /> : null}
 
         <Suspense key={gridKey} fallback={<TeamsGridSkeleton />}>
           <TeamsGrid competitionId={competitionId} leagueKey={leagueParam} sport={sport} />

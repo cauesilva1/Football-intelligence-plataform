@@ -32,10 +32,10 @@ function buildStatCards(
     const winPct = games > 0 ? `${((wins / games) * 100).toFixed(1)}%` : "—";
 
     return [
-      { label: "Vitórias", value: games > 0 ? wins : "—", accent: theme.primaryColor },
-      { label: "Derrotas", value: games > 0 ? losses : "—", accent: "#f87171" },
+      { label: "Wins", value: games > 0 ? wins : "—", accent: theme.primaryColor },
+      { label: "Losses", value: games > 0 ? losses : "—", accent: "#f87171" },
       { label: "Win %", value: winPct, accent: theme.secondaryColor },
-      { label: "Elenco", value: squadSize, accent: theme.primaryColor },
+      { label: "Roster", value: squadSize, accent: theme.primaryColor },
     ];
   }
 
@@ -112,7 +112,7 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
             </div>
             {isBasketball || isAmericanFootball ? (
               <p className="text-xs text-white/50">
-                {squad.length} jogadores no elenco
+                {squad.length} players on the roster
                 {sb
                   ? ` · ${sb.wins}V–${sb.losses}D · ${sb.seasonLabel} (${sb.statsBombCompetitionName})`
                   : ""}
@@ -148,20 +148,20 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
       <Card>
         <CardHeader className="border-b border-border/60 pb-4">
           <CardTitle className="font-display text-lg">
-            {isBasketball || isAmericanFootball ? "Elenco" : "Squad"} · {squad.length}{" "}
-            {isBasketball || isAmericanFootball ? "jogadores" : "players"}
+            {isBasketball || isAmericanFootball ? "Roster" : "Squad"} · {squad.length}{" "}
+            {isBasketball || isAmericanFootball ? "players" : "players"}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
           {squad.length === 0 ? (
             <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
               {basketballLeague === "NCAA"
-                ? "Elenco universitário ainda não sincronizado para este programa."
+                ? "College roster has not been synced for this program yet."
                 : isAmericanFootball
-                  ? "Elenco ainda vazio — o sync sob demanda da ESPN roda ao abrir esta página."
+                  ? "Roster is still empty — ESPN on-demand sync runs when this page opens."
                   : isBasketball
-                    ? "Nenhum jogador vinculado a esta franquia no momento."
-                    : "Elenco ainda vazio — recarregue a página para sincronizar via ESPN."}
+                    ? "No players are linked to this franchise at the moment."
+                    : "Roster is still empty — reload the page to sync through ESPN."}
             </p>
           ) : (
             <TeamSquadTable

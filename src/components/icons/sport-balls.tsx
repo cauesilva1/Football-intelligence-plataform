@@ -6,7 +6,7 @@ type IconProps = {
 };
 
 /** Lightweight soccer ball mark — pure SVG, no assets. */
-export function SoccerBallIcon({ className, title = "Futebol" }: IconProps) {
+export function SoccerBallIcon({ className, title = "Soccer" }: IconProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -35,7 +35,7 @@ export function SoccerBallIcon({ className, title = "Futebol" }: IconProps) {
 }
 
 /** Lightweight basketball mark — pure SVG, no assets. */
-export function BasketballIcon({ className, title = "Basquete" }: IconProps) {
+export function BasketballIcon({ className, title = "Basketball" }: IconProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -60,7 +60,7 @@ export function BasketballIcon({ className, title = "Basquete" }: IconProps) {
 /** Lightweight American football (gridiron) mark — oval with lace stitches. */
 export function AmericanFootballIcon({
   className,
-  title = "Futebol americano",
+  title = "American Football",
 }: IconProps) {
   return (
     <svg

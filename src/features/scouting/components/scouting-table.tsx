@@ -314,6 +314,107 @@ function SoccerScoutingTable({
   );
 }
 
+function AmericanFootballScoutingTable({
+  players,
+  filters,
+  basePath,
+  route,
+}: {
+  players: Player[];
+  filters: PlayerFilters;
+  basePath: string;
+  route: ScoutingRoute;
+}) {
+  return (
+    <Table density="dense" stickyHeader>
+      <TableHeader>
+        <TableRow>
+          <TableHead sticky>
+            <SortableTableHead label="Player" sortKey="name" filters={filters} basePath={basePath} route={route} />
+          </TableHead>
+          <TableHead sticky>
+            <SortableTableHead label="Age" sortKey="age" filters={filters} basePath={basePath} route={route} />
+          </TableHead>
+          <TableHead sticky>
+            <SortableTableHead label="Franchise" sortKey="club" filters={filters} basePath={basePath} route={route} />
+          </TableHead>
+          <TableHead sticky>
+            <SortableTableHead label="Pos." sortKey="position" filters={filters} basePath={basePath} route={route} />
+          </TableHead>
+          <TableHead sticky>
+            <SortableTableHead label="Rating" sortKey="rating" filters={filters} basePath={basePath} route={route} />
+          </TableHead>
+          <TableHead sticky className="text-right">
+            YDS
+          </TableHead>
+          <TableHead sticky className="text-right">
+            TD
+          </TableHead>
+          <TableHead sticky className="text-right">
+            TKL
+          </TableHead>
+          <TableHead sticky className="text-right">
+            Actions
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {players.map((player) => {
+          const stats = player.currentSeasonStats;
+          const yards =
+            stats.totalYards ??
+            (stats.passingYards ?? 0) + (stats.rushingYards ?? 0) + (stats.receivingYards ?? 0);
+          const touchdowns = stats.touchdowns ?? stats.goals ?? 0;
+
+          return (
+            <TableRow key={player.id}>
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  <PlayerAvatar
+                    name={player.knownAs}
+                    fullName={player.fullName}
+                    position={player.position}
+                    competitionName={player.competitionName}
+                    teamName={player.teamName}
+                    photoUrl={player.photoUrl}
+                    apiSportsPlayerId={player.apiSportsId}
+                    size="sm"
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-foreground">{player.knownAs}</p>
+                    <p className="truncate text-2xs text-muted-foreground">{player.nationality}</p>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell className="tabular-nums">{player.age}</TableCell>
+              <TableCell className="text-muted-foreground">{player.teamShortName ?? "—"}</TableCell>
+              <TableCell>
+                <GlossaryTooltip
+                  label={<Badge variant="neutral">{player.position}</Badge>}
+                  description={getPositionGlossaryDescription(player.position, "AMERICAN_FOOTBALL")}
+                />
+              </TableCell>
+              <TableCell className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
+                {stats.rating.toFixed(1)}
+              </TableCell>
+              <TableCell className="text-right font-mono tabular-nums">
+                {yards.toLocaleString("en-US")}
+              </TableCell>
+              <TableCell className="text-right font-mono tabular-nums">{touchdowns}</TableCell>
+              <TableCell className="text-right font-mono tabular-nums">{stats.tacklesWon}</TableCell>
+              <TableCell className="text-right">
+                <Link href={`/players/${player.id}`} className={buttonVariants({ variant: "ghost", size: "xs" })}>
+                  <Eye className="h-3.5 w-3.5" /> Profile
+                </Link>
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
+  );
+}
+
 export function ScoutingTable({
   players,
   filters,
@@ -325,13 +426,22 @@ export function ScoutingTable({
   basePath: string;
   route: ScoutingRoute;
 }) {
-  const isBasketball = filters.sport === "BASKETBALL";
-
-  if (isBasketball) {
+  if (filters.sport === "BASKETBALL") {
     if (route === "players") {
       return <BasketballRosterTable players={players} filters={filters} basePath={basePath} route={route} />;
     }
     return <BasketballScoutingTable players={players} filters={filters} basePath={basePath} route={route} />;
+  }
+
+  if (filters.sport === "AMERICAN_FOOTBALL") {
+    return (
+      <AmericanFootballScoutingTable
+        players={players}
+        filters={filters}
+        basePath={basePath}
+        route={route}
+      />
+    );
   }
 
   return <SoccerScoutingTable players={players} filters={filters} basePath={basePath} route={route} />;

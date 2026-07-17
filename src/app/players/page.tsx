@@ -31,28 +31,28 @@ export default async function PlayersPage({
     <DashboardShell
       subtitle={
         sport === "BASKETBALL"
-          ? "Elenco & Prospects"
+          ? "Roster & Prospects"
           : sport === "AMERICAN_FOOTBALL"
-            ? "Elenco & Prospects"
+            ? "Roster & Prospects"
             : "Players"
       }
     >
       <div className="space-y-4">
         {sport === "BASKETBALL" ? (
           <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
-            <h1 className="font-display text-lg font-bold text-foreground md:text-xl">Elenco de Basquete</h1>
+            <h1 className="font-display text-lg font-bold text-foreground md:text-xl">Basketball Roster</h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Busque atletas da NBA e da NCAA. Filtre por franquia, posição e temporada.
+              Search NBA and NCAA players. Filter by franchise, position, and season.
             </p>
           </div>
         ) : null}
         {sport === "AMERICAN_FOOTBALL" ? (
           <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
             <h1 className="font-display text-lg font-bold text-foreground md:text-xl">
-              Elenco de Futebol Americano
+              American Football Roster
             </h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Jogadores entram sob demanda ao abrir uma franquia NFL ou programa CFB elite.
+              Players load on demand when opening an NFL franchise or elite CFB program.
             </p>
           </div>
         ) : null}

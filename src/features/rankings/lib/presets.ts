@@ -72,7 +72,7 @@ const BASKETBALL_PRESETS: RankingPreset[] = [
   {
     slug: "u23",
     title: "Prospects U23",
-    description: "Jovens com alto rating — upside para draft e desenvolvimento.",
+    description: "High-rated young players — draft upside and development potential.",
     href: "/rankings/u23",
     filters: {
       sport: "BASKETBALL",
@@ -88,7 +88,7 @@ const BASKETBALL_PRESETS: RankingPreset[] = [
   {
     slug: "scorers",
     title: "Melhores pontuadores",
-    description: "Líderes em pontos por jogo (PPG).",
+    description: "Points-per-game leaders (PPG).",
     href: "/rankings/scorers",
     filters: {
       sport: "BASKETBALL",
@@ -104,7 +104,7 @@ const BASKETBALL_PRESETS: RankingPreset[] = [
   {
     slug: "playmakers",
     title: "Melhores armadores",
-    description: "Líderes em assistências por jogo (APG).",
+    description: "Assists-per-game leaders (APG).",
     href: "/rankings/playmakers",
     filters: {
       sport: "BASKETBALL",
@@ -120,7 +120,7 @@ const BASKETBALL_PRESETS: RankingPreset[] = [
   {
     slug: "rebounders",
     title: "Melhores reboteiros",
-    description: "Líderes em rebotes por jogo (RPG).",
+    description: "Rebounds-per-game leaders (RPG).",
     href: "/rankings/rebounders",
     filters: {
       sport: "BASKETBALL",
@@ -136,7 +136,7 @@ const BASKETBALL_PRESETS: RankingPreset[] = [
   {
     slug: "bargains",
     title: "Bargains (cap hit)",
-    description: "Bom rating com salário relativamente acessível.",
+    description: "Strong rating with a relatively affordable salary.",
     href: "/rankings/bargains",
     filters: {
       sport: "BASKETBALL",
@@ -156,7 +156,7 @@ const AMERICAN_FOOTBALL_PRESETS: RankingPreset[] = [
   {
     slug: "u23",
     title: "Prospects U23",
-    description: "Jovens com alto rating — upside para draft e desenvolvimento.",
+    description: "High-rated young players — draft upside and development potential.",
     href: "/rankings/u23",
     filters: {
       sport: "AMERICAN_FOOTBALL",
@@ -172,7 +172,7 @@ const AMERICAN_FOOTBALL_PRESETS: RankingPreset[] = [
   {
     slug: "quarterbacks",
     title: "Quarterbacks",
-    description: "QBs ordenados por rating no elenco sincronizado.",
+    description: "QBs sorted by rating on the synced roster.",
     href: "/rankings/quarterbacks",
     filters: {
       sport: "AMERICAN_FOOTBALL",
@@ -187,7 +187,7 @@ const AMERICAN_FOOTBALL_PRESETS: RankingPreset[] = [
   {
     slug: "skill",
     title: "Skill positions",
-    description: "RB / WR / TE com melhor rating no banco.",
+    description: "RB / WR / TE with the best rating in the database.",
     href: "/rankings/skill",
     filters: {
       sport: "AMERICAN_FOOTBALL",
@@ -203,7 +203,7 @@ const AMERICAN_FOOTBALL_PRESETS: RankingPreset[] = [
   {
     slug: "defense",
     title: "Defesa",
-    description: "LB / CB / S / DL com rating alto.",
+    description: "LB / CB / S / DL with high rating.",
     href: "/rankings/defense",
     filters: {
       sport: "AMERICAN_FOOTBALL",
@@ -219,7 +219,7 @@ const AMERICAN_FOOTBALL_PRESETS: RankingPreset[] = [
   {
     slug: "bargains",
     title: "Cap bargains",
-    description: "Bom rating com Cap Hit acessível (quando disponível).",
+    description: "Strong rating with an affordable Cap Hit (when available).",
     href: "/rankings/bargains",
     filters: {
       sport: "AMERICAN_FOOTBALL",

@@ -22,9 +22,9 @@ export default async function RankingsPage() {
           }
           description={
             isAmericanFootball
-              ? "Listas para gridiron: prospects, QBs, skill, defesa e Cap bargains. Preenchem conforme o elenco for sincronizado."
+              ? "Gridiron lists: prospects, QBs, skill, defense, and cap bargains. They populate as rosters sync."
               : isBasketball
-                ? "Listas prontas para scouting: pontuação, armadores, rebotes, prospects e bargains."
+                ? "Ready-made scouting lists: scoring, guards, rebounds, prospects, and bargains."
                 : "Pre-configured lists for fast scouting by player profile."
           }
         />
