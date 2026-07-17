@@ -79,6 +79,13 @@ export interface PlayerStatistic {
   blocks?: number;
   fieldGoalsPercent?: number;
   threePointsPercent?: number;
+  /** American football — produção da temporada. */
+  passingYards?: number;
+  rushingYards?: number;
+  receivingYards?: number;
+  touchdowns?: number;
+  sacks?: number;
+  totalYards?: number;
   per90: PlayerMetricPer90;
   /** Basquete: médias por jogo da temporada. */
   perGame?: PlayerMetricPerGame;

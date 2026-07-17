@@ -2,7 +2,7 @@ import type { PlayerSeasonStats } from "@prisma/client";
 import { toPlayerStatistic, type StatisticInput } from "@/lib/metrics/map-statistic";
 import type { PlayerMetricPer90, PlayerStatistic } from "@/types";
 
-const CALENDAR_SEASONS = new Set(["2025", "2026"]);
+const CALENDAR_SEASONS = new Set(["2024", "2025", "2026", "2027"]);
 
 function estimateSoccerSeasonRating(stat: {
   goals: number;
@@ -133,6 +133,93 @@ function mapBasketballSeasonStatsRow(
   };
 }
 
+function estimateFootballSeasonRating(stat: {
+  totalYards: number;
+  touchdowns: number;
+  tackles: number;
+  sacks: number;
+  matchesPlayed: number;
+}): number {
+  const games = Math.max(stat.matchesPlayed, 1);
+  const yardsPerGame = stat.totalYards / games;
+  const tdPerGame = stat.touchdowns / games;
+  const rating =
+    6 +
+    yardsPerGame * 0.004 +
+    tdPerGame * 0.35 +
+    (stat.tackles / games) * 0.03 +
+    (stat.sacks / games) * 0.2;
+  return Number(Math.min(10, Math.max(5, rating)).toFixed(2));
+}
+
+function mapAmericanFootballSeasonStatsRow(
+  stat: PlayerSeasonStats,
+  team?: { id: string; name: string; shortName: string }
+): PlayerStatistic {
+  const passingYards = Math.round(stat.threePointsPercent || 0);
+  const rushingYards = stat.rebounds;
+  const receivingYards = stat.blocks;
+  const totalYards = stat.points || passingYards + rushingYards + receivingYards;
+  const touchdowns = stat.goals;
+  const sacks = Number((stat.steals / 10).toFixed(1));
+  const rating = estimateFootballSeasonRating({
+    totalYards,
+    touchdowns,
+    tackles: stat.tackles,
+    sacks,
+    matchesPlayed: stat.matchesPlayed,
+  });
+
+  return {
+    id: stat.id,
+    playerId: stat.playerId,
+    teamId: team?.id ?? "",
+    teamName: team?.name,
+    teamShortName: team?.shortName,
+    season: String(stat.season),
+    sport: "AMERICAN_FOOTBALL",
+    appearances: stat.matchesPlayed,
+    minutesPlayed: stat.minutesPlayed,
+    goals: touchdowns,
+    assists: stat.assists,
+    xG: 0,
+    xA: 0,
+    shots: 0,
+    shotsOnTarget: 0,
+    passes: 0,
+    passAccuracy: stat.passingAccuracy,
+    keyPasses: 0,
+    dribblesCompleted: 0,
+    tacklesWon: Math.round(stat.tackles),
+    interceptions: Math.round(stat.interceptions),
+    duelsWonPct: 0,
+    yellowCards: 0,
+    redCards: 0,
+    rating,
+    points: totalYards,
+    rebounds: rushingYards,
+    steals: sacks,
+    blocks: receivingYards,
+    fieldGoalsPercent: stat.fieldGoalsPercent,
+    threePointsPercent: passingYards,
+    passingYards,
+    rushingYards,
+    receivingYards,
+    touchdowns,
+    sacks,
+    totalYards,
+    per90: {
+      goals: touchdowns,
+      assists: stat.assists,
+      shots: passingYards,
+      keyPasses: receivingYards,
+      dribbles: rushingYards,
+      tackles: stat.tackles,
+      interceptions: stat.interceptions,
+    },
+  };
+}
+
 export function mapSeasonStatsRow(
   stat: PlayerSeasonStats,
   sport: string = "SOCCER",
@@ -141,12 +228,15 @@ export function mapSeasonStatsRow(
   if (sport === "BASKETBALL") {
     return mapBasketballSeasonStatsRow(stat, team);
   }
+  if (sport === "AMERICAN_FOOTBALL") {
+    return mapAmericanFootballSeasonStatsRow(stat, team);
+  }
 
   return mapSoccerSeasonStatsRow(stat, team);
 }
 
 export function isCalendarSeasonLabel(season: string): boolean {
-  return CALENDAR_SEASONS.has(season);
+  return CALENDAR_SEASONS.has(season) || /^\d{4}$/.test(season) || /^\d{6}$/.test(season);
 }
 
 export function sortSeasonLabels(seasons: string[]): string[] {
@@ -189,18 +279,27 @@ function basketballSeasonHasSignal(stat: PlayerStatistic): boolean {
   return points > 0 || rebounds > 0 || assists > 0 || (stat.rating ?? 0) > 6.05;
 }
 
-/** Prefer a season with real production over empty upcoming stubs (e.g. 202627). */
-function pickBestBasketballSeason(
+function footballSeasonHasSignal(stat: PlayerStatistic): boolean {
+  const yards = stat.totalYards ?? stat.points ?? 0;
+  const tds = stat.touchdowns ?? stat.goals ?? 0;
+  const tackles = stat.tacklesWon ?? 0;
+  const sacks = stat.sacks ?? 0;
+  return yards > 0 || tds > 0 || tackles > 0 || sacks > 0 || (stat.rating ?? 0) > 6.05;
+}
+
+/** Prefer a season with real production over empty upcoming stubs (e.g. 202627 / 2026). */
+function pickBestSeasonWithSignal(
   history: PlayerStatistic[],
-  preferredSeason?: string
+  preferredSeason: string | undefined,
+  hasSignal: (stat: PlayerStatistic) => boolean
 ): string | undefined {
   if (preferredSeason) {
     const preferred = history.find((row) => row.season === preferredSeason);
-    if (preferred && basketballSeasonHasSignal(preferred)) return preferredSeason;
+    if (preferred && hasSignal(preferred)) return preferredSeason;
   }
 
   const withSignal = [...history]
-    .filter(basketballSeasonHasSignal)
+    .filter(hasSignal)
     .sort((a, b) => {
       const yearA = Number.parseInt(a.season.replace(/\D/g, "").slice(0, 4) || "0", 10);
       const yearB = Number.parseInt(b.season.replace(/\D/g, "").slice(0, 4) || "0", 10);
@@ -220,15 +319,18 @@ export function resolveSelectedSeasonStats(
 
   const selectedSeason =
     sport === "BASKETBALL"
-      ? pickBestBasketballSeason(history, preferredSeason) ??
+      ? pickBestSeasonWithSignal(history, preferredSeason, basketballSeasonHasSignal) ??
         preferredSeason ??
         "202526"
-      : (preferredSeason && availableSeasons.includes(preferredSeason)
-          ? preferredSeason
-          : pickDefaultSeason(availableSeasons)) ??
-        preferredSeason ??
-        "2025";
-
+      : sport === "AMERICAN_FOOTBALL"
+        ? pickBestSeasonWithSignal(history, preferredSeason, footballSeasonHasSignal) ??
+          preferredSeason ??
+          "2025"
+        : (preferredSeason && availableSeasons.includes(preferredSeason)
+            ? preferredSeason
+            : pickDefaultSeason(availableSeasons)) ??
+          preferredSeason ??
+          "2025";
   const currentSeasonStats =
     history.find((row) => row.season === selectedSeason) ??
     history[history.length - 1] ?? {

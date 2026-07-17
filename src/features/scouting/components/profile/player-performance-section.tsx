@@ -2,8 +2,10 @@ import { Activity, Target, Crosshair, TrendingUp, Shield } from "lucide-react";
 import { GlossaryTooltip, METRIC_GLOSSARY } from "@/components/common/glossary-tooltip";
 import { MetricCard } from "@/components/data/metric-card";
 import { DataPanel } from "@/components/data/data-panel";
-import { PlayerSeasonChart } from "@/components/charts/player-season-chart";
-import { StatRadarChart } from "@/components/charts/stat-radar-chart";
+import {
+  LazyPlayerSeasonChart,
+  LazyStatRadarChart,
+} from "@/features/scouting/components/profile/lazy-performance-charts";
 import { aggregateSeasonTimeline } from "@/features/scouting/lib/season-history";
 import { PlayerSeasonSelector } from "@/features/scouting/components/profile/player-season-selector";
 import { toRadarProfile } from "@/lib/normalize";
@@ -64,7 +66,7 @@ function SoccerPerformanceSection({
           className="border"
           style={{ borderColor: `${theme.primaryColor}33` }}
         >
-          <PlayerSeasonChart data={timeline} sport="SOCCER" />
+          <LazyPlayerSeasonChart data={timeline} sport="SOCCER" />
         </DataPanel>
 
         <DataPanel
@@ -74,7 +76,7 @@ function SoccerPerformanceSection({
           className="border"
           style={{ borderColor: `${theme.primaryColor}33` }}
         >
-          <StatRadarChart
+          <LazyStatRadarChart
             metrics={radarMetrics}
             series={[{ name: player.knownAs, color: theme.primaryColor, values: toRadarProfile(s) }]}
           />
@@ -187,7 +189,7 @@ function BasketballPerformanceSection({
           className="border"
           style={{ borderColor: `${theme.primaryColor}33` }}
         >
-          <PlayerSeasonChart data={timeline} sport="BASKETBALL" />
+          <LazyPlayerSeasonChart data={timeline} sport="BASKETBALL" />
         </DataPanel>
 
         <DataPanel
@@ -197,7 +199,7 @@ function BasketballPerformanceSection({
           className="border"
           style={{ borderColor: `${theme.primaryColor}33` }}
         >
-          <StatRadarChart
+          <LazyStatRadarChart
             metrics={radarMetrics}
             series={[{ name: player.knownAs, color: theme.primaryColor, values: toRadarProfile(s) }]}
           />
@@ -239,11 +241,119 @@ function BasketballPerformanceSection({
   );
 }
 
+function AmericanFootballPerformanceSection({
+  player,
+  s,
+  timeline,
+  theme,
+}: {
+  player: Player;
+  s: Player["currentSeasonStats"];
+  timeline: ReturnType<typeof aggregateSeasonTimeline>;
+  theme: ReturnType<typeof getTeamTheme>;
+}) {
+  const radarMetrics = [...getSportConfig("AMERICAN_FOOTBALL").ui.radarMetrics];
+  const totalYards = s.totalYards ?? s.points ?? 0;
+  const touchdowns = s.touchdowns ?? s.goals ?? 0;
+
+  return (
+    <>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          label="Games"
+          value={String(s.appearances)}
+          icon={Activity}
+          accent="info"
+          borderColor={theme.primaryColor}
+        />
+        <MetricCard
+          label="Total Yards"
+          value={totalYards.toLocaleString("en-US")}
+          icon={Target}
+          accent="primary"
+          borderColor={theme.primaryColor}
+        />
+        <MetricCard
+          label="Touchdowns"
+          value={String(touchdowns)}
+          icon={Crosshair}
+          accent="warning"
+          borderColor={theme.primaryColor}
+        />
+        <MetricCard
+          label="Tackles"
+          value={String(s.tacklesWon)}
+          icon={Shield}
+          accent="info"
+          borderColor={theme.primaryColor}
+        />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <DataPanel
+          title="Season Evolution"
+          description="Rating and yards by season (past + upcoming)."
+          density="dense"
+          className="border"
+          style={{ borderColor: `${theme.primaryColor}33` }}
+        >
+          <LazyPlayerSeasonChart data={timeline} sport="AMERICAN_FOOTBALL" />
+        </DataPanel>
+
+        <DataPanel
+          title="Performance Profile"
+          description={`Production profile — season ${player.selectedSeason}.`}
+          density="dense"
+          className="border"
+          style={{ borderColor: `${theme.primaryColor}33` }}
+        >
+          <LazyStatRadarChart
+            metrics={radarMetrics}
+            series={[{ name: player.knownAs, color: theme.primaryColor, values: toRadarProfile(s) }]}
+          />
+        </DataPanel>
+      </div>
+
+      <DataPanel
+        title="Detailed Metrics"
+        description={`Season totals for ${player.selectedSeason}. Upcoming seasons start empty until games are played.`}
+        density="dense"
+        className="border"
+        style={{ borderColor: `${theme.primaryColor}33` }}
+      >
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          {[
+            { label: "Pass Yards", value: (s.passingYards ?? 0).toLocaleString("en-US") },
+            { label: "Rush Yards", value: (s.rushingYards ?? 0).toLocaleString("en-US") },
+            { label: "Rec Yards", value: (s.receivingYards ?? 0).toLocaleString("en-US") },
+            { label: "Touchdowns", value: String(touchdowns) },
+            { label: "Receptions", value: String(s.assists) },
+            { label: "Comp %", value: `${s.passAccuracy.toFixed(1)}%` },
+            { label: "Tackles", value: String(s.tacklesWon) },
+            { label: "Sacks", value: (s.sacks ?? 0).toFixed(1) },
+            { label: "INTs", value: String(s.interceptions) },
+            { label: "Rating", value: s.rating.toFixed(2) },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="rounded-lg border bg-surface-muted/40 px-3 py-2.5"
+              style={{ borderColor: `${theme.primaryColor}33` }}
+            >
+              <span className="text-2xs uppercase tracking-wider text-muted-foreground">{item.label}</span>
+              <div className="mt-0.5 font-mono text-sm font-semibold tabular-nums text-foreground">{item.value}</div>
+            </div>
+          ))}
+        </div>
+      </DataPanel>
+    </>
+  );
+}
+
 export function PlayerPerformanceSection({ player }: { player: Player }) {
   const s = player.currentSeasonStats;
   const timeline = aggregateSeasonTimeline(player.history, player.sport ?? s.sport);
   const theme = getTeamTheme(player.competitionName, player.teamName);
-  const isBasketball = player.sport === "BASKETBALL" || s.sport === "BASKETBALL";
+  const sport = player.sport ?? s.sport;
 
   return (
     <div className="space-y-4">
@@ -258,8 +368,10 @@ export function PlayerPerformanceSection({ player }: { player: Player }) {
         </p>
       </div>
 
-      {isBasketball ? (
+      {sport === "BASKETBALL" ? (
         <BasketballPerformanceSection player={player} s={s} timeline={timeline} theme={theme} />
+      ) : sport === "AMERICAN_FOOTBALL" ? (
+        <AmericanFootballPerformanceSection player={player} s={s} timeline={timeline} theme={theme} />
       ) : (
         <SoccerPerformanceSection player={player} s={s} timeline={timeline} theme={theme} />
       )}

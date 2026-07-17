@@ -22,6 +22,12 @@ export function PlayerSeasonChart({
   sport?: Sport;
 }) {
   const isBasketball = sport === "BASKETBALL";
+  const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
+  const productionLabel = isBasketball
+    ? "Pts/Game"
+    : isAmericanFootball
+      ? "Yards"
+      : "Gols/90";
 
   return (
     <ResponsiveContainer width="100%" height={260}>
@@ -60,12 +66,12 @@ export function PlayerSeasonChart({
           yAxisId="per90"
           type="monotone"
           dataKey="goalsPer90"
-          name={isBasketball ? "Pts/Game" : "Gols/90"}
+          name={productionLabel}
           stroke={chartTheme.series.primary}
           strokeWidth={2}
           dot={{ r: 3, fill: chartTheme.series.primary }}
         />
-        {!isBasketball ? (
+        {!isBasketball && !isAmericanFootball ? (
           <Line
             yAxisId="per90"
             type="monotone"

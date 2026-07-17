@@ -4,7 +4,7 @@ function clamp(value: number, min = 0, max = 100) {
   return Math.min(max, Math.max(min, value));
 }
 
-/** Radar profile uses per-90 (futebol) ou per-game (basquete) normalizado. */
+/** Radar profile uses per-90 (futebol), per-game (basquete) ou produção AF. */
 export function toRadarProfile(stat: PlayerStatistic): Record<string, number> {
   if (stat.sport === "BASKETBALL" && stat.perGame) {
     const g = stat.perGame;
@@ -15,6 +15,18 @@ export function toRadarProfile(stat: PlayerStatistic): Record<string, number> {
       Defense: clamp((g.steals / 2.5) * 100 * 0.5 + (g.blocks / 2.5) * 100 * 0.5),
       "FG%": clamp(stat.fieldGoalsPercent ?? 0),
       "3P%": clamp(stat.threePointsPercent ?? 0),
+    };
+  }
+
+  if (stat.sport === "AMERICAN_FOOTBALL") {
+    const games = Math.max(stat.appearances, 1);
+    return {
+      Passing: clamp(((stat.passingYards ?? 0) / games / 250) * 100),
+      Rushing: clamp(((stat.rushingYards ?? 0) / games / 60) * 100),
+      Receiving: clamp(((stat.receivingYards ?? 0) / games / 70) * 100),
+      Defense: clamp(((stat.interceptions ?? 0) / games / 0.3) * 100),
+      Tackles: clamp(((stat.tacklesWon ?? 0) / games / 7) * 100),
+      Sacks: clamp(((stat.sacks ?? 0) / games / 0.7) * 100),
     };
   }
 

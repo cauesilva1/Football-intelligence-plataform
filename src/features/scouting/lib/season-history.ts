@@ -61,6 +61,18 @@ export function aggregateSeasonTimeline(
       };
     }
 
+    if (sport === "AMERICAN_FOOTBALL") {
+      const yards = records.reduce((sum, r) => sum + (r.totalYards ?? r.points ?? 0), 0);
+      return {
+        season,
+        rating: Number(rating.toFixed(2)),
+        goalsPer90: Number(yards.toFixed(0)),
+        xGPer90: 0,
+        minutes,
+        appearances,
+      };
+    }
+
     const goals = records.reduce((sum, r) => sum + r.goals, 0);
     const xG = records.reduce((sum, r) => sum + r.xG, 0);
 
