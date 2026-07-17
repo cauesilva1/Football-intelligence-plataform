@@ -1,7 +1,7 @@
 import { getPrisma } from "@/lib/prisma";
 import {
   prismaPlayerRepository,
-  playerInclude,
+  playerListInclude,
 } from "@/features/scouting/repository/player.repository.prisma";
 import { prismaTeamRepository } from "@/features/scouting/repository/team.repository.prisma";
 import { buildDashboardOverview } from "@/features/analytics/lib/build-dashboard-overview";
@@ -21,7 +21,7 @@ export const prismaDashboardRepository: DashboardRepository = {
       prismaTeamRepository.getCompetitions(),
       prisma.player.findMany({
         where: { sport },
-        include: playerInclude,
+        include: playerListInclude,
         orderBy: [{ marketValue: "desc" }],
         take: DASHBOARD_PLAYER_SAMPLE,
       }),

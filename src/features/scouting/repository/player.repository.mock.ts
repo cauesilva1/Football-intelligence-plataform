@@ -60,7 +60,16 @@ export const mockPlayerRepository: PlayerRepository = {
     return [a, b];
   },
 
+  async findSample(sport: Sport = "SOCCER", options) {
+    const take = options?.take ?? 350;
+    let pool = filterBySport(players, sport);
+    if (options?.position) {
+      pool = pool.filter((p) => p.position === options.position);
+    }
+    return pool.slice(0, take);
+  },
+
   async getAll(sport: Sport = "SOCCER") {
-    return filterBySport(players, sport);
+    return this.findSample(sport, { take: 800 });
   },
 };

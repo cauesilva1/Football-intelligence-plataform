@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getPlayerInitials, resolvePlayerPhotoUrl } from "@/lib/player-media";
 import { getPositionAbbreviation, getTeamTheme } from "@/lib/team-theme";
+
+const SIZE_PX = { sm: 32, md: 40, lg: 80 } as const;
 
 export function PlayerAvatar({
   name,
@@ -47,6 +50,7 @@ export function PlayerAvatar({
     size === "lg" ? "h-20 w-20 text-xl" : size === "sm" ? "h-8 w-8 text-[10px]" : "h-10 w-10 text-xs";
 
   const iconSize = size === "lg" ? "h-8 w-8" : size === "sm" ? "h-3.5 w-3.5" : "h-5 w-5";
+  const px = SIZE_PX[size];
 
   const fallback = (
     <div
@@ -83,16 +87,17 @@ export function PlayerAvatar({
 
   return (
     <div className={cn("relative aspect-square shrink-0 overflow-hidden rounded-xl", sizeClass, className)}>
-      <img
+      <Image
         src={imageSrc}
         alt={fullName ?? name}
-        loading="lazy"
-        decoding="async"
-        referrerPolicy="no-referrer"
+        width={px}
+        height={px}
+        sizes={`${px}px`}
         className={cn(
           "aspect-square h-full w-full rounded-xl object-cover ring-1 ring-white/10",
           imageFailed ? "hidden" : "block"
         )}
+        referrerPolicy="no-referrer"
         onError={() => setImageFailed(true)}
       />
       {imageFailed ? fallback : null}

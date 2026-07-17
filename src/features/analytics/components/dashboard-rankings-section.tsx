@@ -174,7 +174,7 @@ export async function DashboardRankingsSection() {
 
   if (isBasketball) {
     await ensureRuntimeDataSource();
-    const allPlayers = await getPlayerRepository().getAll("BASKETBALL");
+    const sample = await getPlayerRepository().findSample("BASKETBALL", { take: 350 });
 
     return (
       <div className="space-y-4">
@@ -206,13 +206,13 @@ export async function DashboardRankingsSection() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <DataPanel title="Líderes em Pontos" description="Média de PTS por jogo." density="dense">
             <BasketballLeaderList
-              players={sortBasketballLeaders(allPlayers, "points")}
+              players={sortBasketballLeaders(sample, "points")}
               metric="points"
             />
           </DataPanel>
           <DataPanel title="Líderes em Rebotes" description="Média de REB por jogo." density="dense">
             <BasketballLeaderList
-              players={sortBasketballLeaders(allPlayers, "rebounds")}
+              players={sortBasketballLeaders(sample, "rebounds")}
               metric="rebounds"
             />
           </DataPanel>
@@ -222,7 +222,7 @@ export async function DashboardRankingsSection() {
             density="dense"
           >
             <BasketballLeaderList
-              players={sortBasketballLeaders(allPlayers, "assists")}
+              players={sortBasketballLeaders(sample, "assists")}
               metric="assists"
             />
           </DataPanel>

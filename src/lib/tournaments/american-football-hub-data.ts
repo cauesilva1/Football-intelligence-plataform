@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { getPrisma } from "@/lib/prisma";
 import { canUseDatabase } from "@/lib/system-cache";
 import { attachTeamIdsToStandings } from "@/lib/tournaments/attach-standing-team-ids";
@@ -22,6 +23,8 @@ import {
   resolveFootballHubSeasonYears,
 } from "@/lib/api/espn-football-seasons";
 import type { AmericanFootballCompetitionConfig } from "@/lib/tournaments/american-football-competitions";
+
+const AF_HUB_REVALIDATE_SECONDS = 180;
 
 export interface FootballHubFranchise {
   id: string;
@@ -169,7 +172,7 @@ function resolveSelectedYear(
   return { year: pastYear, kind: "past" };
 }
 
-export async function loadAmericanFootballCompetitionHub(
+async function loadAmericanFootballCompetitionHubUncached(
   config: AmericanFootballCompetitionConfig,
   options?: { seasonYear?: number }
 ): Promise<FootballCompetitionHubData> {
@@ -293,4 +296,19 @@ export async function loadAmericanFootballCompetitionHub(
     selectedSeasonYear: active.seasonYear,
     notice: `Temporada ${active.seasonLabel}${emptyNote} · conferências elite e jogos ESPN`,
   };
+}
+
+export async function loadAmericanFootballCompetitionHub(
+  config: AmericanFootballCompetitionConfig,
+  options?: { seasonYear?: number }
+): Promise<FootballCompetitionHubData> {
+  const seasonKey = options?.seasonYear != null ? String(options.seasonYear) : "default";
+  return unstable_cache(
+    () => loadAmericanFootballCompetitionHubUncached(config, options),
+    ["af-competition-hub", config.slug, seasonKey],
+    {
+      revalidate: AF_HUB_REVALIDATE_SECONDS,
+      tags: ["af-hub", `af-hub-${config.slug}`],
+    }
+  )();
 }

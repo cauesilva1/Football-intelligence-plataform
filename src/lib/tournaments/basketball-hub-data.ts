@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { getPrisma } from "@/lib/prisma";
 import { canUseDatabase } from "@/lib/system-cache";
 import { attachTeamIdsToStandings } from "@/lib/tournaments/attach-standing-team-ids";
@@ -23,6 +24,8 @@ import {
   type NbaScheduleBundle,
 } from "@/lib/api/espn-nba-schedule";
 import type { BasketballCompetitionConfig } from "@/lib/tournaments/basketball-competitions";
+
+const BASKETBALL_HUB_REVALIDATE_SECONDS = 180;
 
 export interface BasketballHubFranchise {
   id: string;
@@ -214,7 +217,7 @@ function resolveSelectedYear(
   return { year: pastYear, kind: "past" };
 }
 
-export async function loadBasketballCompetitionHub(
+async function loadBasketballCompetitionHubUncached(
   config: BasketballCompetitionConfig,
   options?: { seasonYear?: number }
 ): Promise<BasketballCompetitionHubData> {
@@ -345,4 +348,19 @@ export async function loadBasketballCompetitionHub(
     selectedSeasonYear: active.seasonYear,
     notice: `Temporada ${active.seasonLabel}${emptyNote}${scheduleNote} · conferências, líderes e jogos ESPN`,
   };
+}
+
+export async function loadBasketballCompetitionHub(
+  config: BasketballCompetitionConfig,
+  options?: { seasonYear?: number }
+): Promise<BasketballCompetitionHubData> {
+  const seasonKey = options?.seasonYear != null ? String(options.seasonYear) : "default";
+  return unstable_cache(
+    () => loadBasketballCompetitionHubUncached(config, options),
+    ["basketball-competition-hub", config.slug, seasonKey],
+    {
+      revalidate: BASKETBALL_HUB_REVALIDATE_SECONDS,
+      tags: ["basketball-hub", `basketball-hub-${config.slug}`],
+    }
+  )();
 }

@@ -15,6 +15,11 @@ export interface PlayerRepository {
   findById(id: string, options?: { season?: string }): Promise<Player | null>;
   findLite(sport?: Sport): Promise<PlayerLite[]>;
   findForComparison(idA: string, idB: string): Promise<[Player, Player] | null>;
+  /** Bounded sample for dashboards / similarity — never full-table hydrate. */
+  findSample(
+    sport?: Sport,
+    options?: { position?: string; take?: number }
+  ): Promise<Player[]>;
   getAll(sport?: Sport): Promise<Player[]>;
 }
 

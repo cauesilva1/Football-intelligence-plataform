@@ -31,10 +31,30 @@ export const playerInclude = {
   },
 } satisfies Prisma.PlayerInclude;
 
+/** Lista / squad / sample — só temporadas recentes (bem mais leve que o perfil). */
+export const playerListInclude = {
+  team: { include: { competition: true } },
+  statistics: {
+    where: { season: CURRENT_SEASON },
+    include: { team: true },
+    orderBy: [{ createdAt: "desc" as const }],
+    take: 4,
+  },
+  stats: {
+    orderBy: [{ season: "desc" as const }],
+    take: 4,
+  },
+} satisfies Prisma.PlayerInclude;
+
 type PrismaPlayerWithStats = Prisma.PlayerGetPayload<{ include: typeof playerInclude }>;
+type PrismaPlayerListRow = Prisma.PlayerGetPayload<{ include: typeof playerListInclude }>;
+type PrismaPlayerRow = PrismaPlayerWithStats | PrismaPlayerListRow;
+
+/** Cap when mapped filters/sorts force in-memory work (never full table). */
+const MAPPED_FILTER_CAP = 1200;
 
 function mapStatistic(
-  stat: PrismaPlayerWithStats["statistics"][number]
+  stat: PrismaPlayerRow["statistics"][number]
 ): PlayerStatistic {
   return toPlayerStatistic({
     id: stat.id,
@@ -168,7 +188,7 @@ function aggregateCurrentSeason(
   });
 }
 
-function mapPlayer(record: PrismaPlayerWithStats, options?: { season?: string }): Player {
+function mapPlayer(record: PrismaPlayerRow, options?: { season?: string }): Player {
   const legacyHistory = record.statistics.map(mapStatistic);
   const seasonStatsHistory = record.stats.map((stat) =>
     mapSeasonStatsRow(
@@ -328,6 +348,120 @@ function buildBasketballPlayerWhere(filters: PlayerFilters): Prisma.PlayerWhereI
   return where;
 }
 
+function buildPlayerOrderBy(
+  filters: PlayerFilters
+): Prisma.PlayerOrderByWithRelationInput[] {
+  const dir = filters.sortDir ?? "desc";
+
+  switch (filters.sortBy) {
+    case "name":
+      return [{ fullName: dir }];
+    case "age":
+      return [{ dateOfBirth: dir === "asc" ? "desc" : "asc" }];
+    case "marketValue":
+      return [{ marketValue: dir }];
+    case "position":
+      return [{ position: dir }, { fullName: "asc" }];
+    case "club":
+      return [{ team: { name: dir } }, { fullName: "asc" }];
+    case "rating":
+    case "points":
+    case "rebounds":
+    case "goals":
+    case "assists":
+    default:
+      return [{ marketValue: dir }, { fullName: "asc" }];
+  }
+}
+
+function needsMappedPlayerSort(filters: PlayerFilters): boolean {
+  const sortBy = filters.sortBy ?? "rating";
+  return (
+    sortBy === "rating" ||
+    sortBy === "points" ||
+    sortBy === "rebounds" ||
+    sortBy === "goals" ||
+    sortBy === "assists" ||
+    sortBy === "goalsPer90" ||
+    sortBy === "assistsPer90" ||
+    sortBy === "xGPer90"
+  );
+}
+
+function needsMappedPlayerFilter(filters: PlayerFilters): boolean {
+  return typeof filters.minRating === "number" || typeof filters.minMinutes === "number";
+}
+
+async function findManyPaginatedOnPlayer(
+  where: Prisma.PlayerWhereInput,
+  filters: PlayerFilters
+): Promise<{
+  items: Player[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}> {
+  const { page = 1, pageSize = 25 } = filters;
+  const skip = (page - 1) * pageSize;
+  const orderBy = buildPlayerOrderBy(filters);
+
+  const [total, records] = await Promise.all([
+    getPrisma().player.count({ where }),
+    getPrisma().player.findMany({
+      where,
+      include: playerListInclude,
+      orderBy,
+      skip,
+      take: pageSize,
+    }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+
+  return {
+    items: records.map((record) => mapPlayer(record)),
+    total,
+    page: safePage,
+    pageSize,
+    totalPages,
+  };
+}
+
+async function findManyCappedThenPage(
+  where: Prisma.PlayerWhereInput,
+  filters: PlayerFilters,
+  sortOptions: Parameters<typeof filterAndSortPlayers>[2]
+): Promise<{
+  items: Player[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}> {
+  const { page = 1, pageSize = 25 } = filters;
+  const records = await getPrisma().player.findMany({
+    where,
+    include: playerListInclude,
+    orderBy: [{ marketValue: "desc" }, { fullName: "asc" }],
+    take: MAPPED_FILTER_CAP,
+  });
+  let items = records.map((record) => mapPlayer(record));
+
+  if (typeof filters.minRating === "number") {
+    items = items.filter((player) => player.currentSeasonStats.rating >= filters.minRating!);
+  }
+  if (typeof filters.minMinutes === "number") {
+    items = items.filter(
+      (player) => player.currentSeasonStats.minutesPlayed >= filters.minMinutes!
+    );
+  }
+
+  const sorted = filterAndSortPlayers(items, filters, sortOptions);
+  return paginatePlayers(sorted, page, pageSize);
+}
+
 function buildStatOrderBy(filters: PlayerFilters): Prisma.PlayerStatisticOrderByWithRelationInput {
   const dir = filters.sortDir ?? "desc";
 
@@ -360,53 +494,43 @@ function buildStatOrderBy(filters: PlayerFilters): Prisma.PlayerStatisticOrderBy
 }
 
 export const prismaPlayerRepository: PlayerRepository & {
-  mapFromRecord(record: PrismaPlayerWithStats): Player;
+  mapFromRecord(record: PrismaPlayerRow, options?: { season?: string }): Player;
 } = {
   async findMany(filters) {
     const sport = filters.sport ?? "SOCCER";
 
     if (sport === "BASKETBALL") {
-      const { page = 1, pageSize = 25 } = filters;
       const isRosterBrowse = filters.route === "players";
       const where = buildBasketballPlayerWhere(filters);
+      const effective = isRosterBrowse ? filters : applyArchetypeFilters(filters);
+      const useDbPage =
+        isRosterBrowse &&
+        !needsMappedPlayerFilter(filters) &&
+        !needsMappedPlayerSort(filters);
 
-      const records = await getPrisma().player.findMany({
-        where,
-        include: playerInclude,
+      if (useDbPage) {
+        return findManyPaginatedOnPlayer(where, filters);
+      }
+
+      return findManyCappedThenPage(where, effective, {
+        prismaPrefiltered: true,
+        rosterBrowse: isRosterBrowse,
       });
-
-      let items = records.map((record) => mapPlayer(record));
-
-      if (typeof filters.minRating === "number") {
-        items = items.filter((player) => player.currentSeasonStats.rating >= filters.minRating!);
-      }
-      if (typeof filters.minMinutes === "number") {
-        items = items.filter(
-          (player) => player.currentSeasonStats.minutesPlayed >= filters.minMinutes!
-        );
-      }
-
-      const sorted = filterAndSortPlayers(
-        items,
-        isRosterBrowse ? filters : applyArchetypeFilters(filters),
-        { prismaPrefiltered: true, rosterBrowse: isRosterBrowse }
-      );
-      return paginatePlayers(sorted, page, pageSize);
     }
 
     if (sport === "AMERICAN_FOOTBALL") {
-      const { page = 1, pageSize = 25 } = filters;
       const where = buildPlayerWhere({ ...filters, sport: "AMERICAN_FOOTBALL" });
-      const records = await getPrisma().player.findMany({
-        where,
-        include: playerInclude,
-      });
-      const items = records.map((record) => mapPlayer(record));
-      const sorted = filterAndSortPlayers(items, filters, {
+      const useDbPage =
+        !needsMappedPlayerFilter(filters) && !needsMappedPlayerSort(filters);
+
+      if (useDbPage) {
+        return findManyPaginatedOnPlayer(where, filters);
+      }
+
+      return findManyCappedThenPage(where, filters, {
         prismaPrefiltered: true,
         rosterBrowse: true,
       });
-      return paginatePlayers(sorted, page, pageSize);
     }
 
     const { page = 1, pageSize = 25 } = filters;
@@ -422,7 +546,7 @@ export const prismaPlayerRepository: PlayerRepository & {
         skip,
         take: pageSize,
         include: {
-          player: { include: playerInclude },
+          player: { include: playerListInclude },
         },
       }),
     ]);
@@ -454,12 +578,54 @@ export const prismaPlayerRepository: PlayerRepository & {
       void clubRepository.ensurePlayerPersisted(record).catch((error) => {
         console.warn("[player-repo] Background sync failed:", id, error);
       });
+
+      // AF: never block TTFB on ESPN — enrich past season in the background.
+      if (record.sport === "AMERICAN_FOOTBALL") {
+        void (async () => {
+          try {
+            const { resolveAmericanFootballLeagueCode } = await import(
+              "@/lib/american-football/team-league"
+            );
+            const { resolveFootballHubSeasonYears } = await import(
+              "@/lib/api/espn-football-seasons"
+            );
+            const { ensureAmericanFootballPlayerSeasons } = await import(
+              "@/lib/sync/american-football-roster"
+            );
+            const league = resolveAmericanFootballLeagueCode(
+              record.league,
+              record.team?.competition?.name
+            );
+            const { pastYear, currentYear } = resolveFootballHubSeasonYears();
+            const pastRow = record.stats.find((s) => s.season === pastYear);
+            const hasCurrentStub = record.stats.some((s) => s.season === currentYear);
+            const pastHasSignal =
+              !!pastRow &&
+              (pastRow.points > 0 ||
+                pastRow.goals > 0 ||
+                pastRow.tackles > 0 ||
+                pastRow.steals > 0);
+            const needsWork = !hasCurrentStub || !pastRow || !pastHasSignal;
+            if (!league || !needsWork) return;
+
+            await ensureAmericanFootballPlayerSeasons({
+              playerId: record.id,
+              espnAthleteId: record.apiSportsId,
+              league,
+              fetchPastStats: !pastHasSignal,
+              timeoutMs: 10_000,
+            });
+          } catch (error) {
+            console.warn("[player-repo] AF season enrich failed:", id, error);
+          }
+        })();
+      }
     }
 
     return mapPlayer(record, options);
   },
 
-  mapFromRecord(record: PrismaPlayerWithStats, options?: { season?: string }): Player {
+  mapFromRecord(record: PrismaPlayerRow, options?: { season?: string }): Player {
     return mapPlayer(record, options);
   },
 
@@ -492,11 +658,22 @@ export const prismaPlayerRepository: PlayerRepository & {
     return [a, b];
   },
 
-  async getAll(sport: PlayerFilters["sport"] = "SOCCER") {
+  async findSample(sport: PlayerFilters["sport"] = "SOCCER", options) {
+    const take = Math.min(Math.max(options?.take ?? 350, 1), 800);
     const records = await getPrisma().player.findMany({
-      where: { sport: sport ?? "SOCCER" },
-      include: playerInclude,
+      where: {
+        sport: sport ?? "SOCCER",
+        ...(options?.position ? { position: options.position } : {}),
+      },
+      include: playerListInclude,
+      take,
+      orderBy: { updatedAt: "desc" },
     });
     return records.map((record) => mapPlayer(record));
+  },
+
+  async getAll(sport: PlayerFilters["sport"] = "SOCCER") {
+    // Prefer findSample for hot paths — kept for rare full exports / mocks.
+    return this.findSample(sport, { take: 800 });
   },
 };

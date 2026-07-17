@@ -17,7 +17,7 @@ import {
 } from "@/lib/american-football/team-league";
 import { ensureAmericanFootballTeamRoster } from "@/lib/sync/american-football-roster";
 import type { TeamRepository } from "./types";
-import { playerInclude, prismaPlayerRepository } from "./player.repository.prisma";
+import { playerListInclude, prismaPlayerRepository } from "./player.repository.prisma";
 
 const TEAM_STAT_SEASONS = [CURRENT_SEASON, BRAZIL_SEASON_LABEL, FIFA_WORLD_CUP_SEASON_LABEL] as const;
 
@@ -149,17 +149,17 @@ export const prismaTeamRepository: TeamRepository = {
           ...(afLeague ? { league: afLeague } : {}),
         },
       });
+      // Never block team hub TTFB on ESPN roster sync.
       if (squadCount < 20) {
-        try {
-          await ensureAmericanFootballTeamRoster({
-            teamId: id,
-            competitionName: team.competition?.name,
-            espnTeamId: team.apiSportsId,
-            minPlayers: 20,
-          });
-        } catch (error) {
+        void ensureAmericanFootballTeamRoster({
+          teamId: id,
+          competitionName: team.competition?.name,
+          espnTeamId: team.apiSportsId,
+          minPlayers: 20,
+          skipStats: true,
+        }).catch((error) => {
           console.warn("[team-repo] AF roster sync skipped:", id, error);
-        }
+        });
       }
     } else if (isDbSource() && !isBasketball) {
       const squadCount = await getPrisma().player.count({ where: { teamId: id } });
@@ -195,7 +195,7 @@ export const prismaTeamRepository: TeamRepository = {
           ? { sport: "AMERICAN_FOOTBALL", league: afLeague }
           : {}),
       },
-      include: playerInclude,
+      include: playerListInclude,
       orderBy: [{ knownAs: "asc" }],
     });
 
