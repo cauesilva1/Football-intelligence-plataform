@@ -10,7 +10,15 @@ import {
   fetchEspnScoreboard,
   type EspnScoreboardEvent,
 } from "@/lib/api/espn-matches";
-import { loadWorldCup2026Matches } from "@/lib/tournaments/world-cup-2026";
+import {
+  countWorldCupDbFixtures,
+  loadWorldCup2026Matches,
+  WC_MIN_DB_FIXTURES,
+} from "@/lib/tournaments/world-cup-2026";
+import {
+  FIFA_WORLD_CUP_SEASON_LABEL,
+  FIFA_WORLD_CUP_SLUG,
+} from "@/lib/seasons";
 import {
   fromEspnScoreboardEvent,
   fromStatsBombMatch,
@@ -132,7 +140,8 @@ function buildWorldCupGroupStandings(matches: StatsBombMatch[]): StandingGroup[]
 
 async function loadDbMatchesForEspnSlug(
   espnSlug: string,
-  seasonLabel?: string
+  seasonLabel?: string,
+  take = 120
 ): Promise<TournamentMatch[]> {
   if (!canUseDatabase()) return [];
 
@@ -153,7 +162,7 @@ async function loadDbMatchesForEspnSlug(
       awayTeam: { select: { name: true, crestUrl: true } },
     },
     orderBy: { matchDate: "desc" },
-    take: 120,
+    take,
   });
 
   return rows.map((row) => {
@@ -243,18 +252,35 @@ async function loadEspnCompetitionHub(
 }
 
 async function loadWorldCupHub(): Promise<CompetitionHubData> {
+  // JSON for group tables (A–L) + background seed/sync into Match.
   const raw = await loadWorldCup2026Matches();
-  const matches = raw.map((m) => fromStatsBombMatch(m, "scraped"));
-  // Keep hub SSR off the ESPN leaders path — fixtures come from local JSON.
   const standings = await attachTeamIdsToStandings(
     buildWorldCupGroupStandings(raw),
-    "fifa.world"
+    FIFA_WORLD_CUP_SLUG
   );
+
+  const dbCount = await countWorldCupDbFixtures();
+  if (dbCount >= WC_MIN_DB_FIXTURES) {
+    const dbMatches = await loadDbMatchesForEspnSlug(
+      FIFA_WORLD_CUP_SLUG,
+      FIFA_WORLD_CUP_SEASON_LABEL,
+      150
+    );
+    if (dbMatches.length > 0) {
+      return {
+        standings,
+        matches: dbMatches,
+        leaders: emptyCompetitionLeaders(),
+        notice: "2026 World Cup · fixtures from database (ESPN sync)",
+      };
+    }
+  }
+
   return {
     standings,
-    matches,
+    matches: raw.map((m) => fromStatsBombMatch(m, "scraped")),
     leaders: emptyCompetitionLeaders(),
-    notice: "2026 World Cup · fixtures from local dataset",
+    notice: "2026 World Cup · local dataset (warming database…)",
   };
 }
 
