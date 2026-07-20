@@ -32,22 +32,22 @@ export async function ScoutingResults({ filters }: { filters: PlayerFilters }) {
                   {p.fullName}
                 </Link>
                 <p className="text-xs text-muted-foreground">
-                  {p.nationality} · {p.age} anos · {p.teamShortName ?? "-"}
+                  {p.nationality} · {p.age} yrs · {p.teamShortName ?? "-"}
                 </p>
               </div>
               <Badge variant="secondary">{p.position}</Badge>
             </div>
             <div className="flex items-center gap-6 text-right">
               <div>
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Gols/90</p>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Goals/90</p>
                 <p className="font-mono text-sm text-foreground">{p.currentSeasonStats.per90.goals.toFixed(2)}</p>
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Assist./90</p>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Ast/90</p>
                 <p className="font-mono text-sm text-foreground">{p.currentSeasonStats.per90.assists.toFixed(2)}</p>
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Valor</p>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Value</p>
                 <p className="font-mono text-sm text-foreground">{formatMarketValue(p.marketValue)}</p>
               </div>
               <div>

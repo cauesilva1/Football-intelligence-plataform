@@ -142,25 +142,25 @@ export async function TeamsGrid({
                     <div className="mt-4 grid grid-cols-4 gap-2 text-center">
                       <div>
                         <p className="font-display text-sm font-bold text-primary">{sb?.wins ?? "—"}</p>
-                        <p className="text-[10px] uppercase text-muted-foreground">V</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">W</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">
                           {sb?.draws ?? "—"}
                         </p>
-                        <p className="text-[10px] uppercase text-muted-foreground">E</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">D</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">
                           {sb?.losses ?? "—"}
                         </p>
-                        <p className="text-[10px] uppercase text-muted-foreground">D</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">L</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">
                           {sb ? balanceLabel : "—"}
                         </p>
-                        <p className="text-[10px] uppercase text-muted-foreground">SG</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">GD</p>
                       </div>
                     </div>
                   )}

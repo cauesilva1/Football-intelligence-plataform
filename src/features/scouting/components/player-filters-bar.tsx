@@ -77,7 +77,7 @@ export function PlayerFiltersBar() {
           onChange={(e) => pushFilters({ league: e.target.value || undefined, page: 1 })}
           className="w-44"
         >
-          <option value="">Liga</option>
+          <option value="">League</option>
           {LEAGUES.map((l) => (
             <option key={l.id} value={l.id}>{l.name}</option>
           ))}
@@ -88,12 +88,12 @@ export function PlayerFiltersBar() {
           onChange={(e) => pushFilters({ sortBy: e.target.value as PlayerFilters["sortBy"], page: 1 })}
           className="w-40"
         >
-          <option value="rating">Ordenar: Rating</option>
-          <option value="goals">Ordenar: Gols</option>
+          <option value="rating">Sort: Rating</option>
+          <option value="goals">Sort: Goals</option>
           <option value="assists">Sort: Assists</option>
-          <option value="age">Ordenar: Idade</option>
-          <option value="marketValue">Ordenar: Valor</option>
-          <option value="name">Ordenar: Nome</option>
+          <option value="age">Sort: Age</option>
+          <option value="marketValue">Sort: Value</option>
+          <option value="name">Sort: Name</option>
         </Select>
       </div>
 
@@ -106,7 +106,7 @@ export function PlayerFiltersBar() {
         >
           <option value="">Min age</option>
           {MIN_AGE_OPTIONS.map((a) => (
-            <option key={a} value={a}>{a}+ anos</option>
+            <option key={a} value={a}>{a}+ years</option>
           ))}
         </Select>
         <Select

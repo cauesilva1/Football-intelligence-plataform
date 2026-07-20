@@ -46,12 +46,12 @@ function StandingRows({ rows }: { rows: NbaStandingRow[] }) {
         <thead className="bg-secondary/50 text-[11px] uppercase tracking-wider text-muted-foreground">
           <tr>
             <th className="px-3 py-2 font-medium">#</th>
-            <th className="px-3 py-2 font-medium">Time</th>
-            <th className="px-2 py-2 text-center font-medium">V</th>
-            <th className="px-2 py-2 text-center font-medium">D</th>
+            <th className="px-3 py-2 font-medium">Team</th>
+            <th className="px-2 py-2 text-center font-medium">W</th>
+            <th className="px-2 py-2 text-center font-medium">L</th>
             <th className="px-2 py-2 text-center font-medium">PCT</th>
             <th className="px-2 py-2 text-center font-medium">GB</th>
-            <th className="px-3 py-2 text-right font-medium">Seq.</th>
+            <th className="px-3 py-2 text-right font-medium">Streak</th>
           </tr>
         </thead>
         <tbody>

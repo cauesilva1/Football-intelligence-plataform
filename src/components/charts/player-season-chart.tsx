@@ -27,7 +27,7 @@ export function PlayerSeasonChart({
     ? "Pts/Game"
     : isAmericanFootball
       ? "Yards"
-      : "Gols/90";
+      : "Goals/90";
 
   return (
     <ResponsiveContainer width="100%" height={260}>

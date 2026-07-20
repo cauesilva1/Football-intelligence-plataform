@@ -226,7 +226,7 @@ export async function getEspnGroupedStandings(
 
     return children
       .map((child) => {
-        const label = child.name ?? "Grupo";
+        const label = child.name ?? "Group";
         const { teams } = parseStandingsEntries(
           child.standings?.entries ?? [],
           String(year),

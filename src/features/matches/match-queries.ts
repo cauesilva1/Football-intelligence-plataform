@@ -85,7 +85,7 @@ async function loadFromDatabase(id: string): Promise<MatchDetailPayload | null> 
     match,
     competitionName: row.competition?.name,
     boxScores,
-    sourceLabel: "ESPN / banco",
+    sourceLabel: "ESPN / database",
   };
 }
 
@@ -141,7 +141,7 @@ async function loadFromWorldCupJson(id: string): Promise<MatchDetailPayload | nu
     match,
     competitionName: "FIFA World Cup",
     boxScores,
-    sourceLabel: "JSON Copa 2026",
+    sourceLabel: "World Cup 2026 JSON",
   };
 }
 

@@ -15,7 +15,7 @@ export function resolvePhaseKey(stageName: string): PhaseFilterKey {
 }
 
 export function normalizeApiSportsRound(round?: string | null): string {
-  if (!round) return "Outros";
+  if (!round) return "Other";
   const r = round.toLowerCase();
   if (r.includes("group")) return "Group Stage";
   if (r.includes("round of 16")) return "Round of 16";
@@ -45,7 +45,7 @@ function mapStatsBombStatus(match: StatsBombMatch): { status: MatchStatus; statu
 }
 
 export function fromStatsBombMatch(match: StatsBombMatch, source: TournamentMatch["source"] = "statsbomb"): TournamentMatch {
-  const stageName = match.competition_stage?.name ?? "Outros";
+  const stageName = match.competition_stage?.name ?? "Other";
   const { status, statusLabel } = mapStatsBombStatus(match);
   const espnEventId = match.metadata?.espn_event_id;
   const id =

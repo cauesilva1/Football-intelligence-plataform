@@ -160,7 +160,7 @@ export const SOCCER_COMPETITIONS: SoccerCompetitionConfig[] = [
   {
     slug: "world-cup",
     name: FIFA_WORLD_CUP_LABEL,
-    shortName: "Copa do Mundo",
+    shortName: "World Cup",
     description: "2026 World Cup live + StatsBomb historical editions.",
     kind: "national",
     dataMode: "scraped-wc",

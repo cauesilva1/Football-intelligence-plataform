@@ -177,7 +177,7 @@ export async function fetchNcaaGroupedStandings(
           .filter((row): row is NbaStandingRow => row != null)
           .sort((a, b) => b.winPercent - a.winPercent || b.wins - a.wins);
         return {
-          label: child.name ?? "Conferência",
+          label: child.name ?? "Conference",
           rows,
         };
       })

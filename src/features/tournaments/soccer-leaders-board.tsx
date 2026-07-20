@@ -26,7 +26,7 @@ function LeaderTable({
             <tr>
               <th className="px-3 py-2 font-medium">#</th>
               <th className="px-3 py-2 font-medium">Player</th>
-              <th className="px-3 py-2 font-medium">Time</th>
+              <th className="px-3 py-2 font-medium">Team</th>
               <th className="px-3 py-2 text-right font-medium">{unit}</th>
             </tr>
           </thead>
@@ -73,9 +73,9 @@ export function SoccerLeadersBoard({ leaders }: { leaders: CompetitionLeaders })
         </p>
       ) : null}
       <div className="grid gap-6 lg:grid-cols-2">
-        <LeaderTable title="Artilharia" unit="Gols" rows={leaders.goals} />
+        <LeaderTable title="Top Scorers" unit="Goals" rows={leaders.goals} />
         <LeaderTable title="Assists" unit="A" rows={leaders.assists} />
-        <LeaderTable title="Passes certos" unit="Passes" rows={leaders.passes} />
+        <LeaderTable title="Completed Passes" unit="Passes" rows={leaders.passes} />
         <LeaderTable title="Yellow Cards" unit="YC" rows={leaders.yellowCards} />
         <LeaderTable title="Red Cards" unit="RC" rows={leaders.redCards} />
       </div>

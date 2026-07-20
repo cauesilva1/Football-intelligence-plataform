@@ -26,7 +26,7 @@ function LeaderTable({
             <tr>
               <th className="px-3 py-2 font-medium">#</th>
               <th className="px-3 py-2 font-medium">Player</th>
-              <th className="px-3 py-2 font-medium">Time</th>
+              <th className="px-3 py-2 font-medium">Team</th>
               <th className="px-3 py-2 text-right font-medium">{unit}</th>
             </tr>
           </thead>

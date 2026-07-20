@@ -11,7 +11,7 @@ import type { TournamentMatch } from "@/lib/tournaments/types";
 
 function formatDisplayDate(match: TournamentMatch): string {
   if (match.kickOff?.includes("T")) {
-    return new Date(match.kickOff).toLocaleDateString("pt-BR", {
+    return new Date(match.kickOff).toLocaleDateString("en-US", {
       weekday: "short",
       day: "2-digit",
       month: "short",
@@ -23,7 +23,7 @@ function formatDisplayDate(match: TournamentMatch): string {
 
   const [hours, minutes] = (match.kickOff ?? "12:00:00").split(":");
   const parsed = new Date(`${match.date}T${hours}:${minutes}:00`);
-  return parsed.toLocaleDateString("pt-BR", {
+  return parsed.toLocaleDateString("en-US", {
     weekday: "short",
     day: "2-digit",
     month: "short",

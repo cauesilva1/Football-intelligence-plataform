@@ -30,14 +30,14 @@ function StandingRows({ rows }: { rows: AggregatedTeamStats[] }) {
         <thead className="bg-secondary/50 text-[11px] uppercase tracking-wider text-muted-foreground">
           <tr>
             <th className="px-3 py-2 font-medium">#</th>
-            <th className="px-3 py-2 font-medium">Time</th>
-            <th className="px-2 py-2 text-center font-medium">J</th>
-            <th className="px-2 py-2 text-center font-medium">V</th>
-            <th className="px-2 py-2 text-center font-medium">E</th>
+            <th className="px-3 py-2 font-medium">Team</th>
+            <th className="px-2 py-2 text-center font-medium">P</th>
+            <th className="px-2 py-2 text-center font-medium">W</th>
             <th className="px-2 py-2 text-center font-medium">D</th>
-            <th className="px-2 py-2 text-center font-medium">GP</th>
-            <th className="px-2 py-2 text-center font-medium">GC</th>
-            <th className="px-2 py-2 text-center font-medium">SG</th>
+            <th className="px-2 py-2 text-center font-medium">L</th>
+            <th className="px-2 py-2 text-center font-medium">GF</th>
+            <th className="px-2 py-2 text-center font-medium">GA</th>
+            <th className="px-2 py-2 text-center font-medium">GD</th>
             <th className="px-3 py-2 text-right font-medium">Pts</th>
           </tr>
         </thead>

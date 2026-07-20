@@ -164,7 +164,7 @@ function TeamStatCard({
       <p className="text-sm font-semibold text-foreground">{name}</p>
       <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
         <div>
-          <dt className="text-[11px] text-muted-foreground">Gols</dt>
+          <dt className="text-[11px] text-muted-foreground">Goals</dt>
           <dd className="font-mono font-semibold tabular-nums">{stats.goals}</dd>
         </div>
         <div>
@@ -172,11 +172,11 @@ function TeamStatCard({
           <dd className="font-mono font-semibold tabular-nums">{stats.assists}</dd>
         </div>
         <div>
-          <dt className="text-[11px] text-muted-foreground">Desarmes</dt>
+          <dt className="text-[11px] text-muted-foreground">Tackles</dt>
           <dd className="font-mono font-semibold tabular-nums">{stats.tackles}</dd>
         </div>
         <div>
-          <dt className="text-[11px] text-muted-foreground">Passes certos</dt>
+          <dt className="text-[11px] text-muted-foreground">Completed Passes</dt>
           <dd className="font-mono font-semibold tabular-nums">{stats.passesCompleted}</dd>
         </div>
       </dl>

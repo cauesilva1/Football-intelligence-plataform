@@ -20,7 +20,7 @@ export default function RootError({
         <ErrorState onRetry={reset} />
         {isDbError ? (
           <p className="text-xs text-muted-foreground">
-            Verifique na Vercel: DATA_SOURCE=db, DATABASE_URL (pooler :6543 com schema=public) e
+            Check on Vercel: DATA_SOURCE=db, DATABASE_URL (pooler :6543 with schema=public) and
             DIRECT_URL (:5432).
           </p>
         ) : null}

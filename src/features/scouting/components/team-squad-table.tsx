@@ -73,8 +73,8 @@ export function TeamSquadTable({
             ) : (
               <>
                 <TableHead>Rating</TableHead>
-                <TableHead className="text-right">Gols</TableHead>
-                <TableHead className="text-right">Minutos</TableHead>
+                <TableHead className="text-right">Goals</TableHead>
+                <TableHead className="text-right">Minutes</TableHead>
               </>
             )}
           </TableRow>
@@ -147,7 +147,7 @@ export function TeamSquadTable({
                     </TableCell>
                     <TableCell className="text-right font-mono tabular-nums">{stats.goals}</TableCell>
                     <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
-                      {stats.minutesPlayed.toLocaleString("pt-BR")}
+                      {stats.minutesPlayed.toLocaleString("en-US")}
                     </TableCell>
                   </>
                 )}

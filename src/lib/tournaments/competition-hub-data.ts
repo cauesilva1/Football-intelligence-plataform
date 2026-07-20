@@ -115,7 +115,7 @@ function buildWorldCupGroupStandings(matches: StatsBombMatch[]): StandingGroup[]
     const group =
       match.home_team.home_team_group ??
       match.away_team.away_team_group ??
-      "Grupos";
+      "Groups";
     const list = byGroup.get(group) ?? [];
     list.push(match);
     byGroup.set(group, list);
@@ -288,7 +288,7 @@ async function loadEuroHub(): Promise<CompetitionHubData> {
     standings,
     matches: raw.map((m) => fromStatsBombMatch(m)),
     leaders: emptyCompetitionLeaders(),
-    notice: "Arquivo StatsBomb · Euro 2020 (sem leaders ESPN)",
+    notice: "StatsBomb archive · Euro 2020 (no ESPN leaders)",
   };
 }
 

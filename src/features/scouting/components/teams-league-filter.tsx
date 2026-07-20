@@ -39,7 +39,7 @@ export function TeamsLeagueFilter({
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label={`Filtrar ${entityLabel} por liga`}>
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label={`Filter ${entityLabel} by league`}>
         {tabs.map((tab) => {
           const href = tab.key === "all" ? "/teams" : `/teams?league=${tab.key}`;
           const isActive = activeKey === tab.key;

@@ -45,7 +45,7 @@ export function ScoutingFiltersBar() {
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-xs text-muted-foreground">Liga</label>
+          <label className="mb-1 block text-xs text-muted-foreground">League</label>
           <Select
             value={filters.league ?? ""}
             onChange={(e) => pushFilters({ league: e.target.value || undefined })}

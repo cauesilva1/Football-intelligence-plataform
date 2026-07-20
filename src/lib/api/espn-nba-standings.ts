@@ -153,9 +153,9 @@ export async function fetchNbaGroupedStandings(
           .sort((a, b) => b.winPercent - a.winPercent || b.wins - a.wins);
         const label =
           child.name?.includes("Eastern")
-            ? "Conferência Leste"
+            ? "Eastern Conference"
             : child.name?.includes("Western")
-              ? "Conferência Oeste"
+              ? "Western Conference"
               : child.name ?? "Standings";
         return { label, rows };
       })
