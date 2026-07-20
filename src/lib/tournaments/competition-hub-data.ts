@@ -11,9 +11,13 @@ import {
   type EspnScoreboardEvent,
 } from "@/lib/api/espn-matches";
 import {
+  isWorldCupDbReady,
   loadWorldCup2026Matches,
 } from "@/lib/tournaments/world-cup-2026";
-import { FIFA_WORLD_CUP_SLUG } from "@/lib/seasons";
+import {
+  FIFA_WORLD_CUP_SEASON_LABEL,
+  FIFA_WORLD_CUP_SLUG,
+} from "@/lib/seasons";
 import {
   fromEspnScoreboardEvent,
   fromStatsBombMatch,
@@ -247,19 +251,36 @@ async function loadEspnCompetitionHub(
 }
 
 async function loadWorldCupHub(): Promise<CompetitionHubData> {
-  // Authoritative fixtures stay on the curated JSON (correct national teams + scores).
-  // Background warmup still upserts Match rows for other surfaces / cron.
+  // Group tables need JSON (home_team_group A–L). Games prefer healthy DB rows
+  // once national-team FKs are seeded — faster + historical archive.
   const raw = await loadWorldCup2026Matches();
   const standings = await attachTeamIdsToStandings(
     buildWorldCupGroupStandings(raw),
     FIFA_WORLD_CUP_SLUG
   );
 
+  const dbReady = await isWorldCupDbReady();
+  if (dbReady) {
+    const dbMatches = await loadDbMatchesForEspnSlug(
+      FIFA_WORLD_CUP_SLUG,
+      FIFA_WORLD_CUP_SEASON_LABEL,
+      150
+    );
+    if (dbMatches.length > 0) {
+      return {
+        standings,
+        matches: dbMatches,
+        leaders: emptyCompetitionLeaders(),
+        notice: "2026 World Cup · fixtures from database (archived)",
+      };
+    }
+  }
+
   return {
     standings,
     matches: raw.map((m) => fromStatsBombMatch(m, "scraped")),
     leaders: emptyCompetitionLeaders(),
-    notice: "2026 World Cup · curated fixtures (ESPN-backed)",
+    notice: "2026 World Cup · curated fixtures (warming database…)",
   };
 }
 

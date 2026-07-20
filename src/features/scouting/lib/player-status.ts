@@ -1,4 +1,5 @@
 import type { PlayerStatistic } from "@/types";
+import { SOCCER_RATE_MIN_MINUTES } from "@/lib/scoring";
 
 export interface PlayerStatus {
   label: string;
@@ -6,9 +7,17 @@ export interface PlayerStatus {
   variant: "default" | "azure" | "amber" | "neutral";
 }
 
-/** Derives squad role from minutes and appearances (mock-season context). */
+/** Derives squad role from minutes and appearances (current-season context). */
 export function derivePlayerStatus(stats: PlayerStatistic): PlayerStatus {
   const { minutesPlayed, appearances, rating } = stats;
+
+  if (minutesPlayed > 0 && minutesPlayed < SOCCER_RATE_MIN_MINUTES) {
+    return {
+      label: "Small Sample",
+      description: `Under ${SOCCER_RATE_MIN_MINUTES}' this season — rates and rating are provisional`,
+      variant: "amber",
+    };
+  }
 
   if (minutesPlayed >= 1_200 && appearances >= 14) {
     return {
@@ -24,10 +33,10 @@ export function derivePlayerStatus(stats: PlayerStatistic): PlayerStatus {
       variant: "azure",
     };
   }
-  if (rating >= 7.2 && minutesPlayed < 600) {
+  if (rating >= 7.2 && minutesPlayed >= SOCCER_RATE_MIN_MINUTES) {
     return {
       label: "Prospect",
-      description: "High impact in limited minutes",
+      description: "Strong rating on a reliable sample",
       variant: "amber",
     };
   }

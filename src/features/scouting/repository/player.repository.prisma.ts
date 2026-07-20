@@ -354,8 +354,8 @@ function finalizeListPlayer(player: Player): Player {
     height: 0,
     weight: 0,
     preferredFoot: "RIGHT",
-    marketValue: 0,
-    capHit: undefined,
+    // Keep marketValue — Hidden Gems / valueScore rankings need it in the table.
+    capHit: player.capHit,
     summerLeague2026: undefined,
     currentSeasonStats,
     history: [currentSeasonStats],

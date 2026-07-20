@@ -48,4 +48,6 @@ export const METRIC_GLOSSARY = {
   xA: "Expected Assists (xA): measures the probability of a pass becoming a direct goal assist.",
   rating:
     "Prototype productivity score (soccer): ≈ 6 + goals/90×0.35 + assists/90×0.25 when minutes ≥ 450. Soft-capped rates; not a commercial provider rating.",
+  valueScore:
+    "Rating per €1M of estimated market value — higher means stronger performance relative to price (Hidden Gems heuristic).",
 } as const;

@@ -176,12 +176,84 @@ async function loadFromStatsBomb(id: string): Promise<MatchDetailPayload | null>
   return null;
 }
 
+async function loadWorldCupFromHealthyDb(id: string): Promise<MatchDetailPayload | null> {
+  if (!canUseDatabase()) return null;
+
+  const prisma = getPrisma();
+  const row = await prisma.match.findFirst({
+    where: { OR: [{ id }, { externalKey: id }] },
+    include: {
+      homeTeam: { select: { name: true, crestUrl: true, competitionId: true } },
+      awayTeam: { select: { name: true, crestUrl: true, competitionId: true } },
+      competition: { select: { id: true, name: true, espnSlug: true } },
+    },
+  });
+
+  if (!row || row.competition?.espnSlug !== "fifa.world") return null;
+
+  const wcCompetitionId = row.competition.id;
+  // Reject rows still linked to club teams (pre-v2 seed).
+  if (
+    row.homeTeam.competitionId !== wcCompetitionId ||
+    row.awayTeam.competitionId !== wcCompetitionId
+  ) {
+    return null;
+  }
+
+  const externalKey = row.externalKey ?? row.id;
+  const status = mapDbStatus(row.status);
+  const match: TournamentMatch = {
+    id: externalKey,
+    source: "scraped",
+    date: row.matchDate.toISOString().slice(0, 10),
+    kickOff: row.matchDate.toISOString(),
+    homeTeam: row.homeTeam.name,
+    awayTeam: row.awayTeam.name,
+    homeScore: status === "scheduled" ? null : row.homeScore,
+    awayScore: status === "scheduled" ? null : row.awayScore,
+    stageName: row.round ?? "Match",
+    stageKey: "group",
+    stageOrder: 1,
+    stadium: "—",
+    status,
+    statusLabel:
+      status === "live"
+        ? "Live"
+        : status === "finished"
+          ? "Final"
+          : status === "postponed"
+            ? "Postponed"
+            : "Scheduled",
+    homeCrestUrl: row.homeTeam.crestUrl ?? undefined,
+    awayCrestUrl: row.awayTeam.crestUrl ?? undefined,
+  };
+
+  const parsed = parseEspnExternalKey(externalKey);
+  const boxScores =
+    parsed && (status === "finished" || status === "live")
+      ? await fetchEspnMatchBoxScores(parsed.slug, parsed.eventId)
+      : [];
+
+  return {
+    match,
+    competitionName: row.competition.name,
+    boxScores,
+    sourceLabel: "ESPN / database",
+  };
+}
+
 export async function resolveMatchDetail(rawId: string): Promise<MatchDetailPayload | null> {
   const id = decodeURIComponent(rawId);
 
-  // World Cup: curated JSON is authoritative for team names. DB rows were historically
-  // linked to club teams via country fuzzy-match (Spain → St. Pauli, etc.).
-  if (parseEspnExternalKey(id)?.slug === "fifa.world" || id.startsWith("sb-")) {
+  if (parseEspnExternalKey(id)?.slug === "fifa.world") {
+    const fromHealthyDb = await loadWorldCupFromHealthyDb(id);
+    if (fromHealthyDb) return fromHealthyDb;
+
+    const fromWc = await loadFromWorldCupJson(id);
+    if (fromWc) return fromWc;
+  }
+
+  if (id.startsWith("sb-")) {
     const fromWc = await loadFromWorldCupJson(id);
     if (fromWc) return fromWc;
   }
@@ -200,6 +272,10 @@ export async function resolveMatchTitle(rawId: string): Promise<string | null> {
   const id = decodeURIComponent(rawId);
 
   if (parseEspnExternalKey(id)?.slug === "fifa.world") {
+    const fromHealthyDb = await loadWorldCupFromHealthyDb(id);
+    if (fromHealthyDb) {
+      return `${fromHealthyDb.match.homeTeam} vs ${fromHealthyDb.match.awayTeam}`;
+    }
     const match = await findWorldCupJsonMatch(id);
     if (match) return `${match.homeTeam} vs ${match.awayTeam}`;
   }

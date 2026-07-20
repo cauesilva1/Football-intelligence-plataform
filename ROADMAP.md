@@ -5,9 +5,9 @@ para **produção real**, organizado por prioridade.
 
 ## 🔜 Curto prazo (produção mínima viável)
 
-- [ ] **Ligar `DATA_SOURCE=db`**: substituir os arrays em `src/lib/mock-data/*` por
-      consultas Prisma reais dentro de `src/lib/actions/*`, mantendo as mesmas
-      assinaturas de função (já preparadas para isso).
+- [x] **UI em inglês** (labels de scouting/torneios; Brasileirão/La Liga como nomes próprios)
+- [x] **Rankings U23 / Hidden Gems** alinhados ao dashboard (≥ 450', value score)
+- [x] **Copa do Mundo no DB** com seed de seleções nacionais + hub preferindo Match saudável
 - [ ] **Autenticação real com Supabase Auth**: trocar `src/lib/auth/session.ts` por
       `@supabase/ssr`, com login por e-mail/senha e OAuth (Google/Microsoft).
 - [ ] **Roles e permissões**: usar o campo `role` (`ADMIN`, `SCOUT`, `ANALYST`,
@@ -15,8 +15,7 @@ para **produção real**, organizado por prioridade.
       relatórios de IA).
 - [ ] **Persistência de scouting reports**: salvar relatórios gerados em
       `scouting_reports` (hoje ficam em memória por sessão de servidor).
-- [ ] **Testes automatizados**: unit tests para `lib/actions`, `lib/comparison-analysis`
-      e `lib/normalize`; testes de integração para as páginas principais.
+- [x] **Testes automatizados (scoring)**: unit tests para `per90` e `soccer-rankings`
 - [ ] **Paginação e filtros no servidor com querystring**: sincronizar filtros de
       `/players` e `/scouting` com a URL para permitir compartilhamento de links.
 
@@ -36,8 +35,8 @@ para **produção real**, organizado por prioridade.
       usuário, com anotações.
 - [ ] **Multi-tenant**: isolar dados por clube/organização (campo `organizationId`
       nas tabelas principais).
-- [ ] **Internacionalização (i18n)**: hoje a UI está em pt-BR; preparar next-intl para
-      inglês/espanhol.
+- [ ] **Internacionalização (i18n)**: UI padrão em inglês; preparar next-intl se precisar
+      de pt/es.
 
 ## 🌍 Longo prazo
 

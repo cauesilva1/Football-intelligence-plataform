@@ -16,7 +16,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { SortableTableHead } from "@/features/scouting/components/sortable-table-head";
 import { computeXGPer90 } from "@/features/scouting/lib/filter-players";
 import { type ScoutingRoute } from "@/features/scouting/lib/filter-defaults";
-import { ratingColor } from "@/lib/utils";
+import { ratingColor, formatMarketValue } from "@/lib/utils";
+import { soccerValueScore } from "@/lib/scoring/soccer-rankings";
 import type { Player, PlayerFilters } from "@/types";
 
 function basketballPoints(player: Player): number {
@@ -219,6 +220,9 @@ function SoccerScoutingTable({
   basePath: string;
   route: ScoutingRoute;
 }) {
+  const showValue =
+    filters.sortBy === "valueScore" || typeof filters.maxMarketValue === "number";
+
   return (
     <Table density="dense" stickyHeader>
       <TableHeader>
@@ -244,6 +248,34 @@ function SoccerScoutingTable({
               placement="bottom"
             />
           </TableHead>
+          {showValue ? (
+            <>
+              <TableHead sticky>
+                <SortableTableHead
+                  label="Value"
+                  sortKey="marketValue"
+                  filters={filters}
+                  basePath={basePath}
+                  route={route}
+                />
+              </TableHead>
+              <TableHead sticky className="overflow-visible">
+                <GlossaryTooltip
+                  label={
+                    <SortableTableHead
+                      label="Value Score"
+                      sortKey="valueScore"
+                      filters={filters}
+                      basePath={basePath}
+                      route={route}
+                    />
+                  }
+                  description={METRIC_GLOSSARY.valueScore}
+                  placement="bottom"
+                />
+              </TableHead>
+            </>
+          ) : null}
           <TableHead sticky>
             <SortableTableHead label="Goals/90" sortKey="goalsPer90" filters={filters} basePath={basePath} route={route} />
           </TableHead>
@@ -265,6 +297,7 @@ function SoccerScoutingTable({
         {players.map((player) => {
           const stats = player.currentSeasonStats;
           const xg90 = computeXGPer90(stats.minutesPlayed, stats.xG);
+          const valueScore = soccerValueScore(stats.rating, player.marketValue);
 
           return (
             <TableRow key={player.id}>
@@ -299,6 +332,16 @@ function SoccerScoutingTable({
               <TableCell className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
                 {stats.rating.toFixed(1)}
               </TableCell>
+              {showValue ? (
+                <>
+                  <TableCell className="font-mono tabular-nums">
+                    {formatMarketValue(player.marketValue)}
+                  </TableCell>
+                  <TableCell className="font-mono tabular-nums text-primary">
+                    {valueScore.toFixed(2)}
+                  </TableCell>
+                </>
+              ) : null}
               <TableCell className="font-mono tabular-nums">{stats.per90.goals.toFixed(2)}</TableCell>
               <TableCell className="font-mono tabular-nums">{xg90.toFixed(2)}</TableCell>
               <TableCell className="text-right">

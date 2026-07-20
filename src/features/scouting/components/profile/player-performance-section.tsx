@@ -10,7 +10,7 @@ import { aggregateSeasonTimeline } from "@/features/scouting/lib/season-history"
 import { PlayerSeasonSelector } from "@/features/scouting/components/profile/player-season-selector";
 import { toRadarProfile } from "@/lib/normalize";
 import { per90 } from "@/lib/metrics/per90";
-import { SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
+import { SOCCER_RATE_MIN_MINUTES, SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
 import { getTeamTheme } from "@/lib/team-theme";
 import { getSportConfig } from "@/lib/sport-registry";
 import type { Player } from "@/types";
@@ -27,8 +27,25 @@ function SoccerPerformanceSection({
   theme: ReturnType<typeof getTeamTheme>;
 }) {
   const radarMetrics = [...getSportConfig("SOCCER").ui.radarMetrics];
+  const smallSample = s.minutesPlayed > 0 && s.minutesPlayed < SOCCER_RATE_MIN_MINUTES;
+  const goals90 = smallSample
+    ? "—"
+    : per90(s.goals, s.minutesPlayed, { softCap: SOCCER_RATE_SOFT_CAP }).toFixed(2);
+  const xg90 = smallSample
+    ? "—"
+    : (s.minutesPlayed > 0 ? (s.xG / s.minutesPlayed) * 90 : 0).toFixed(2);
+  const assists90 = smallSample
+    ? "—"
+    : per90(s.assists, s.minutesPlayed, { softCap: SOCCER_RATE_SOFT_CAP }).toFixed(2);
+
   return (
     <>
+      {smallSample ? (
+        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90">
+          Small sample ({s.minutesPlayed}&apos;). Per-90 rates are hidden until ≥ {SOCCER_RATE_MIN_MINUTES}
+          &apos; — rating is provisional.
+        </p>
+      ) : null}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Minutes"
@@ -39,21 +56,21 @@ function SoccerPerformanceSection({
         />
         <MetricCard
           label="Goals / 90"
-          value={per90(s.goals, s.minutesPlayed, { softCap: SOCCER_RATE_SOFT_CAP }).toFixed(2)}
+          value={goals90}
           icon={Target}
           accent="primary"
           borderColor={theme.primaryColor}
         />
         <MetricCard
           label={<GlossaryTooltip label="xG / 90" description={METRIC_GLOSSARY.xG} />}
-          value={(s.minutesPlayed > 0 ? (s.xG / s.minutesPlayed) * 90 : 0).toFixed(2)}
+          value={xg90}
           icon={Crosshair}
           accent="warning"
           borderColor={theme.primaryColor}
         />
         <MetricCard
           label={<GlossaryTooltip label="Assists / 90" description={METRIC_GLOSSARY.xA} />}
-          value={per90(s.assists, s.minutesPlayed, { softCap: SOCCER_RATE_SOFT_CAP }).toFixed(2)}
+          value={assists90}
           icon={TrendingUp}
           accent="info"
           borderColor={theme.primaryColor}
