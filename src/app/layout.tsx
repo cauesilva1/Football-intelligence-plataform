@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { SportProviderWrapper } from "@/components/providers/sport-provider-wrapper";
 import { APP_NAME, APP_TAGLINE } from "@/lib/config";
 import "./globals.css";
