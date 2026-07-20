@@ -1,7 +1,19 @@
 /** Normalizes raw match totals to per-90-minute rates (industry standard). */
-export function per90(value: number, minutesPlayed: number): number {
+import { SOCCER_RATE_MIN_MINUTES, SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
+
+export function per90(
+  value: number,
+  minutesPlayed: number,
+  options?: { minMinutes?: number; softCap?: number }
+): number {
   if (!minutesPlayed || minutesPlayed <= 0) return 0;
-  return Number(((value / minutesPlayed) * 90).toFixed(2));
+  const minMinutes = options?.minMinutes;
+  if (typeof minMinutes === "number" && minutesPlayed < minMinutes) return 0;
+  let rate = (value / minutesPlayed) * 90;
+  if (typeof options?.softCap === "number") {
+    rate = Math.min(rate, options.softCap);
+  }
+  return Number(rate.toFixed(2));
 }
 
 export interface RawStatInput {
@@ -15,17 +27,28 @@ export interface RawStatInput {
   interceptions: number;
 }
 
+/**
+ * Per-90 metrics for soccer.
+ * Rates are soft-capped so tiny-minute samples cannot surface as 8+ goals/90.
+ * Callers that rank players should also filter by SOCCER_RATE_MIN_MINUTES.
+ */
 export function computePer90Metrics(raw: RawStatInput) {
   const { minutesPlayed } = raw;
+  const rateOpts = { softCap: SOCCER_RATE_SOFT_CAP };
   return {
-    goals: per90(raw.goals, minutesPlayed),
-    assists: per90(raw.assists, minutesPlayed),
+    goals: per90(raw.goals, minutesPlayed, rateOpts),
+    assists: per90(raw.assists, minutesPlayed, rateOpts),
     shots: per90(raw.shots, minutesPlayed),
     keyPasses: per90(raw.keyPasses, minutesPlayed),
     dribbles: per90(raw.dribblesCompleted, minutesPlayed),
     tackles: per90(raw.tacklesWon, minutesPlayed),
     interceptions: per90(raw.interceptions, minutesPlayed),
   };
+}
+
+/** True when minutes support ranking / leaderboard use of per-90 rates. */
+export function hasReliableSoccerSample(minutesPlayed: number): boolean {
+  return minutesPlayed >= SOCCER_RATE_MIN_MINUTES;
 }
 
 /** Aggregates multiple stint records (e.g. mid-season transfer) into one season total. */

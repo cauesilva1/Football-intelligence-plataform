@@ -27,7 +27,7 @@ export async function DashboardStatsSection() {
         value={String(overview.topProspectsCount)}
         icon={Sparkles}
         accent="primary"
-        trend="U23 · rating ≥ 7.0"
+        trend="U23 · rating ≥ 7.0 · ≥450'"
       />
       <MetricCard
         label="Average Age"
@@ -71,7 +71,7 @@ export async function DashboardStatsSection() {
           value={String(overview.marketOpportunitiesCount)}
           icon={TrendingUp}
           accent="negative"
-          trend="High rating · value ≤ €8M"
+          trend="Rating ≥ 7.2 · ≤ €8M · ≥450'"
         />
       )}
     </div>

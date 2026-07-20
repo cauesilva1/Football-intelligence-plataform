@@ -9,9 +9,15 @@ function estimateSoccerSeasonRating(stat: {
   assists: number;
   minutesPlayed: number;
 }): number {
-  const minutes = stat.minutesPlayed > 0 ? stat.minutesPlayed : 90;
-  const goalsPer90 = (stat.goals / minutes) * 90;
-  const assistsPer90 = (stat.assists / minutes) * 90;
+  const minutes = stat.minutesPlayed;
+  // Tiny samples inflate goals/90 — use a conservative baseline instead of fake 90' minutes.
+  if (minutes < 450) {
+    const limited =
+      6 + Math.min(stat.goals, 5) * 0.08 + Math.min(stat.assists, 5) * 0.05;
+    return Number(Math.min(7, Math.max(5, limited)).toFixed(2));
+  }
+  const goalsPer90 = Math.min((stat.goals / minutes) * 90, 1.8);
+  const assistsPer90 = Math.min((stat.assists / minutes) * 90, 1.8);
   const rating = 6 + goalsPer90 * 0.35 + assistsPer90 * 0.25;
   return Number(Math.min(10, Math.max(5, rating)).toFixed(2));
 }

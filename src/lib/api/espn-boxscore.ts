@@ -159,7 +159,8 @@ function estimateMinutesPlayed(
   }
   if (player.starter) return 90;
   if (player.subbedIn) return 30;
-  if (statValue(player.stats, "appearances") > 0) return 1;
+  // Appeared without usable sub clocks — never use 1' (creates absurd goals/90).
+  if (statValue(player.stats, "appearances") > 0) return 15;
   return 0;
 }
 

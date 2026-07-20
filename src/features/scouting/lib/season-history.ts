@@ -1,4 +1,6 @@
 import { SEASONS } from "@/lib/data/generators";
+import { per90 } from "@/lib/metrics/per90";
+import { SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
 import type { PlayerStatistic } from "@/types";
 import type { Sport } from "@/lib/sport";
 
@@ -79,7 +81,7 @@ export function aggregateSeasonTimeline(
     return {
       season,
       rating: Number(rating.toFixed(2)),
-      goalsPer90: minutes > 0 ? Number(((goals / minutes) * 90).toFixed(2)) : 0,
+      goalsPer90: per90(goals, minutes, { softCap: SOCCER_RATE_SOFT_CAP }),
       xGPer90: minutes > 0 ? Number(((xG / minutes) * 90).toFixed(2)) : 0,
       minutes,
       appearances,

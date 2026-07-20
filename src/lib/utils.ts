@@ -53,6 +53,8 @@ export function ratingColor(rating: number): string {
 }
 
 export function per90(value: number, minutes: number): number {
-  if (!minutes) return 0;
-  return Number(((value / minutes) * 90).toFixed(2));
+  if (!minutes || minutes <= 0) return 0;
+  const rate = (value / minutes) * 90;
+  // Soft-cap absurd rates from tiny samples (shared with lib/metrics/per90).
+  return Number(Math.min(rate, 1.8).toFixed(2));
 }
