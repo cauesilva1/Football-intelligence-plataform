@@ -200,8 +200,8 @@ export async function resolveMatchTitle(rawId: string): Promise<string | null> {
   const id = decodeURIComponent(rawId);
 
   if (parseEspnExternalKey(id)?.slug === "fifa.world") {
-    const fromWc = await loadFromWorldCupJson(id);
-    if (fromWc) return `${fromWc.match.homeTeam} vs ${fromWc.match.awayTeam}`;
+    const match = await findWorldCupJsonMatch(id);
+    if (match) return `${match.homeTeam} vs ${match.awayTeam}`;
   }
 
   if (!canUseDatabase()) return null;
