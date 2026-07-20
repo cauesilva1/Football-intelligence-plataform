@@ -26,9 +26,18 @@ const SOCCER_PRESETS: RankingPreset[] = [
   {
     slug: "u23",
     title: "Best U23 Players",
-    description: "Top Rated Academy & Youth Players — high upside potential.",
+    description:
+      "Top-rated academy & youth players with a reliable minutes sample (≥ 450').",
     href: "/rankings/u23",
-    filters: { maxAge: 23, minRating: 7, sortBy: "rating", sortDir: "desc", page: 1, pageSize: 20 },
+    filters: {
+      maxAge: 23,
+      minRating: 7,
+      minMinutes: 450,
+      sortBy: "rating",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+    },
   },
   {
     slug: "finishers",
@@ -59,6 +68,7 @@ const SOCCER_PRESETS: RankingPreset[] = [
     filters: {
       maxAge: 25,
       minRating: 7.2,
+      minMinutes: 450,
       maxMarketValue: 8_000_000,
       sortBy: "rating",
       sortDir: "desc",
@@ -87,7 +97,7 @@ const BASKETBALL_PRESETS: RankingPreset[] = [
   },
   {
     slug: "scorers",
-    title: "Melhores pontuadores",
+    title: "Top Scorers",
     description: "Points-per-game leaders (PPG).",
     href: "/rankings/scorers",
     filters: {
@@ -103,7 +113,7 @@ const BASKETBALL_PRESETS: RankingPreset[] = [
   },
   {
     slug: "playmakers",
-    title: "Melhores armadores",
+    title: "Top Playmakers",
     description: "Assists-per-game leaders (APG).",
     href: "/rankings/playmakers",
     filters: {
@@ -119,7 +129,7 @@ const BASKETBALL_PRESETS: RankingPreset[] = [
   },
   {
     slug: "rebounders",
-    title: "Melhores reboteiros",
+    title: "Top Rebounders",
     description: "Rebounds-per-game leaders (RPG).",
     href: "/rankings/rebounders",
     filters: {
@@ -202,7 +212,7 @@ const AMERICAN_FOOTBALL_PRESETS: RankingPreset[] = [
   },
   {
     slug: "defense",
-    title: "Defesa",
+    title: "Defense",
     description: "LB / CB / S / DL with high rating.",
     href: "/rankings/defense",
     filters: {

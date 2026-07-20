@@ -16,6 +16,7 @@ import {
 import { BASKETBALL_SCOUTING_SEASONS } from "@/features/scouting/lib/basketball-constants";
 import { resolvePlayerPhotoUrl } from "@/lib/player-media";
 import { localizeScoutLabels } from "@/lib/scout-labels";
+import { SOCCER_RATE_MIN_MINUTES, SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
 import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
 import { isDbSource } from "@/lib/data-source";
 import type { Foot, Player, PlayerFilters, PlayerStatistic } from "@/types";
@@ -74,6 +75,31 @@ type PrismaPlayerRow = PrismaPlayerWithStats | PrismaPlayerListRow;
 /** Cap when mapped filters/sorts force in-memory work (never full table). */
 const MAPPED_FILTER_CAP = 1200;
 
+/** Recompute rating on read so tiny samples cannot keep a stored 9.5 ceiling. */
+function reliableSoccerRating(stat: {
+  minutesPlayed: number;
+  goals: number;
+  assists: number;
+  rating: number;
+}): number {
+  if (stat.minutesPlayed < SOCCER_RATE_MIN_MINUTES) {
+    const limited =
+      6 + Math.min(stat.goals, 5) * 0.08 + Math.min(stat.assists, 5) * 0.05;
+    return Number(Math.min(7, Math.max(5, limited)).toFixed(2));
+  }
+  const goalsPer90 = Math.min((stat.goals / Math.max(stat.minutesPlayed, 1)) * 90, SOCCER_RATE_SOFT_CAP);
+  const assistsPer90 = Math.min(
+    (stat.assists / Math.max(stat.minutesPlayed, 1)) * 90,
+    SOCCER_RATE_SOFT_CAP
+  );
+  const fromRates = 6 + goalsPer90 * 0.35 + assistsPer90 * 0.25;
+  // Prefer the conservative of stored vs rate-based when stored looks inflated.
+  if (stat.rating >= 8.5 && fromRates < 7.5) {
+    return Number(Math.min(10, Math.max(5, fromRates)).toFixed(2));
+  }
+  return stat.rating;
+}
+
 function mapStatistic(
   stat: PrismaPlayerRow["statistics"][number]
 ): PlayerStatistic {
@@ -101,7 +127,7 @@ function mapStatistic(
     duelsWonPct: stat.duelsWonPct,
     yellowCards: stat.yellowCards,
     redCards: stat.redCards,
-    rating: stat.rating,
+    rating: reliableSoccerRating(stat),
   });
 }
 
