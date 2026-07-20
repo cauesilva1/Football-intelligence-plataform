@@ -2,6 +2,7 @@ import { readFile } from "fs/promises";
 import path from "path";
 import type { StatsBombMatch } from "@/lib/statsbomb/types";
 import {
+  fetchEspnScoreboard,
   fetchWorldCup2026LiveEvents,
   mergeWorldCupLiveScores,
   persistEspnMatches,
@@ -12,6 +13,7 @@ import { getPrisma } from "@/lib/prisma";
 import {
   FIFA_WORLD_CUP_LABEL,
   FIFA_WORLD_CUP_SEASON_LABEL,
+  FIFA_WORLD_CUP_SEASON_YEAR,
   FIFA_WORLD_CUP_SLUG,
 } from "@/lib/seasons";
 import { canUseDatabase, readSystemCache, writeSystemCache } from "@/lib/system-cache";
@@ -77,7 +79,7 @@ function mapJsonMatchToEspnEvent(match: StatsBombMatch): EspnScoreboardEvent | n
   };
 }
 
-/** Upsert the finished-tournament JSON into Match so the hub can read from DB. */
+/** Upsert the curated JSON into Match so other surfaces can read from DB. */
 export async function seedWorldCupDbFromJson(): Promise<number> {
   if (!canUseDatabase()) return 0;
 
@@ -91,22 +93,24 @@ export async function seedWorldCupDbFromJson(): Promise<number> {
 
 /**
  * Warm the DB without blocking SSR:
- * 1) seed from local JSON if the table is thin (tournament already complete)
- * 2) optional ESPN refresh behind TTL (cron also runs this)
+ * 1) seed from local JSON (correct national teams + final scores)
+ * 2) optional ESPN refresh behind TTL
  */
 function kickOffWorldCupDbWarmup(): void {
   if (!canUseDatabase()) return;
 
   void (async () => {
     try {
+      const last = await readSystemCache<{ fetchedAt?: string }>(WC_SYNC_CACHE_KEY);
+      const fetchedAt = last?.fetchedAt ? new Date(last.fetchedAt) : null;
       const count = await countWorldCupDbFixtures();
-      if (count < WC_MIN_DB_FIXTURES) {
+      const needsSeed = count < WC_MIN_DB_FIXTURES || isStale(fetchedAt, MATCH_SYNC_TTL_MS);
+
+      if (needsSeed) {
         const seeded = await seedWorldCupDbFromJson();
         console.info(`[world-cup-2026] Seeded ${seeded} fixtures from JSON → DB`);
       }
 
-      const last = await readSystemCache<{ fetchedAt?: string }>(WC_SYNC_CACHE_KEY);
-      const fetchedAt = last?.fetchedAt ? new Date(last.fetchedAt) : null;
       if (!isStale(fetchedAt, MATCH_SYNC_TTL_MS)) return;
 
       const saved = await syncWorldCup2026Matches();
@@ -120,16 +124,50 @@ function kickOffWorldCupDbWarmup(): void {
   })();
 }
 
+/** Pull ESPN scoreboards only for still-open fixture dates (keeps Final/3rd up to date). */
+async function mergePendingEspnScores(cached: StatsBombMatch[]): Promise<StatsBombMatch[]> {
+  const pendingDates = [
+    ...new Set(
+      cached
+        .filter((match) => {
+          const status = (match.match_status ?? "").toLowerCase();
+          return status === "scheduled" || status === "live" || status === "in";
+        })
+        .map((match) => match.match_date)
+    ),
+  ].slice(0, 3);
+
+  if (!pendingDates.length) return cached;
+
+  try {
+    const batches = await Promise.all(
+      pendingDates.map((dateStr) => {
+        const [year, month, day] = dateStr.split("-").map(Number);
+        return fetchEspnScoreboard(FIFA_WORLD_CUP_SLUG, FIFA_WORLD_CUP_LABEL, {
+          date: new Date(Date.UTC(year, month - 1, day)),
+          seasonYear: FIFA_WORLD_CUP_SEASON_YEAR,
+          seasonLabel: FIFA_WORLD_CUP_SEASON_LABEL,
+        });
+      })
+    );
+    return mergeWorldCupLiveScores(cached, batches.flat());
+  } catch (error) {
+    console.warn("[world-cup-2026] Pending ESPN merge skipped:", error);
+    return cached;
+  }
+}
+
 /**
- * Hub / historical load: local JSON structure (groups) + background DB warmup.
- * Prefer `loadWorldCupHub` which serves Match rows when the DB is warm.
+ * Hub / historical load: curated JSON (correct teams + scores), with a light ESPN
+ * merge only for fixtures still marked scheduled/live.
  */
 export async function loadWorldCup2026Matches(): Promise<StatsBombMatch[]> {
   kickOffWorldCupDbWarmup();
-  return readWorldCupJson();
+  const cached = await readWorldCupJson();
+  return mergePendingEspnScores(cached);
 }
 
-/** Optional live merge for cron / scripts — not used on the hub request path. */
+/** Optional full live merge for cron / scripts. */
 export async function loadWorldCup2026MatchesWithLiveScores(): Promise<StatsBombMatch[]> {
   const cached = await loadWorldCup2026Matches();
   try {

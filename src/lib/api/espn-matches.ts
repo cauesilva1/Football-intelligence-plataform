@@ -205,15 +205,15 @@ async function ensureWorldCupCompetitionId(): Promise<string | null> {
 
 async function resolveNationalTeamId(name: string, competitionId: string): Promise<string | null> {
   const prisma = getPrisma();
+  // Only resolve within the World Cup competition — never match club rows by country
+  // (e.g. "Spain" → Atlético Madrid / St. Pauli via team.country).
   const teams = await prisma.team.findMany({
-    select: { id: true, name: true, shortName: true, country: true },
+    where: { competitionId },
+    select: { id: true, name: true, shortName: true },
   });
 
   const match = teams.find(
-    (team) =>
-      namesLikelyMatch(team.name, name) ||
-      namesLikelyMatch(team.shortName, name) ||
-      namesLikelyMatch(team.country, name)
+    (team) => namesLikelyMatch(team.name, name) || namesLikelyMatch(team.shortName, name)
   );
   if (match) return match.id;
 
@@ -435,6 +435,8 @@ export async function persistEspnMatches(events: EspnScoreboardEvent[]): Promise
         competitionId: competitionId ?? undefined,
       },
       update: {
+        homeTeamId,
+        awayTeamId,
         homeScore: event.homeScore,
         awayScore: event.awayScore,
         matchDate: event.matchDate,

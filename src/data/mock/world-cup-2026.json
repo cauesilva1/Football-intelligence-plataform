@@ -4762,11 +4762,11 @@
       "away_team_id": 448,
       "away_team_name": "England"
     },
-    "home_score": 0,
-    "away_score": 0,
-    "home_score_regular": 0,
-    "away_score_regular": 0,
-    "match_status": "scheduled",
+    "home_score": 4,
+    "away_score": 6,
+    "home_score_regular": 4,
+    "away_score_regular": 6,
+    "match_status": "available",
     "competition_stage": {
       "id": 25,
       "name": "Third Place"
@@ -4782,8 +4782,8 @@
     "metadata": {
       "source": "espn-public-api",
       "espn_event_id": "760516",
-      "fetched_at": "2026-07-16T23:27:44.974Z",
-      "status_detail": "Scheduled"
+      "fetched_at": "2026-07-20T02:15:00.000Z",
+      "status_detail": "Full Time"
     }
   },
   {
@@ -4807,11 +4807,11 @@
       "away_team_id": 202,
       "away_team_name": "Argentina"
     },
-    "home_score": 0,
+    "home_score": 1,
     "away_score": 0,
     "home_score_regular": 0,
     "away_score_regular": 0,
-    "match_status": "scheduled",
+    "match_status": "available",
     "competition_stage": {
       "id": 26,
       "name": "Final"
@@ -4827,8 +4827,8 @@
     "metadata": {
       "source": "espn-public-api",
       "espn_event_id": "760517",
-      "fetched_at": "2026-07-16T23:27:44.974Z",
-      "status_detail": "Scheduled"
+      "fetched_at": "2026-07-20T02:15:00.000Z",
+      "status_detail": "Final Score - After Extra Time"
     }
   }
 ]
