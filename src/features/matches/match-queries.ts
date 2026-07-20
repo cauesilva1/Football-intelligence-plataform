@@ -121,10 +121,14 @@ async function loadFromEspnScoreboard(id: string): Promise<MatchDetailPayload | 
   }
 }
 
-async function loadFromWorldCupJson(id: string): Promise<MatchDetailPayload | null> {
+async function findWorldCupJsonMatch(id: string): Promise<TournamentMatch | null> {
   const raw = await loadWorldCup2026Matches();
   const mapped = raw.map((m) => fromStatsBombMatch(m, "scraped"));
-  const match = mapped.find((m) => m.id === id || m.id === decodeURIComponent(id));
+  return mapped.find((m) => m.id === id || m.id === decodeURIComponent(id)) ?? null;
+}
+
+async function loadFromWorldCupJson(id: string): Promise<MatchDetailPayload | null> {
+  const match = await findWorldCupJsonMatch(id);
   if (!match) return null;
 
   const parsed = parseEspnExternalKey(match.id);
@@ -175,16 +179,18 @@ async function loadFromStatsBomb(id: string): Promise<MatchDetailPayload | null>
 export async function resolveMatchDetail(rawId: string): Promise<MatchDetailPayload | null> {
   const id = decodeURIComponent(rawId);
 
+  // World Cup: curated JSON is authoritative for team names. DB rows were historically
+  // linked to club teams via country fuzzy-match (Spain → St. Pauli, etc.).
+  if (parseEspnExternalKey(id)?.slug === "fifa.world" || id.startsWith("sb-")) {
+    const fromWc = await loadFromWorldCupJson(id);
+    if (fromWc) return fromWc;
+  }
+
   const fromDb = await loadFromDatabase(id);
   if (fromDb) return fromDb;
 
   const fromEspn = await loadFromEspnScoreboard(id);
   if (fromEspn) return fromEspn;
-
-  if (parseEspnExternalKey(id)?.slug === "fifa.world" || id.startsWith("sb-")) {
-    const fromWc = await loadFromWorldCupJson(id);
-    if (fromWc) return fromWc;
-  }
 
   return loadFromStatsBomb(id);
 }
@@ -192,6 +198,12 @@ export async function resolveMatchDetail(rawId: string): Promise<MatchDetailPayl
 /** Lightweight title for metadata — skips ESPN boxscore. */
 export async function resolveMatchTitle(rawId: string): Promise<string | null> {
   const id = decodeURIComponent(rawId);
+
+  if (parseEspnExternalKey(id)?.slug === "fifa.world") {
+    const fromWc = await loadFromWorldCupJson(id);
+    if (fromWc) return `${fromWc.match.homeTeam} vs ${fromWc.match.awayTeam}`;
+  }
+
   if (!canUseDatabase()) return null;
 
   const row = await getPrisma().match.findFirst({
