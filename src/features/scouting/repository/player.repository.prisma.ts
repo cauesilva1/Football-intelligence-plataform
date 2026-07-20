@@ -16,7 +16,7 @@ import {
 import { BASKETBALL_SCOUTING_SEASONS } from "@/features/scouting/lib/basketball-constants";
 import { resolvePlayerPhotoUrl } from "@/lib/player-media";
 import { localizeScoutLabels } from "@/lib/scout-labels";
-import { SOCCER_RATE_MIN_MINUTES, SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
+import { reliableSoccerRating } from "@/lib/scoring/soccer-rankings";
 import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
 import { isDbSource } from "@/lib/data-source";
 import type { Foot, Player, PlayerFilters, PlayerStatistic } from "@/types";
@@ -74,31 +74,6 @@ type PrismaPlayerRow = PrismaPlayerWithStats | PrismaPlayerListRow;
 
 /** Cap when mapped filters/sorts force in-memory work (never full table). */
 const MAPPED_FILTER_CAP = 1200;
-
-/** Recompute rating on read so tiny samples cannot keep a stored 9.5 ceiling. */
-function reliableSoccerRating(stat: {
-  minutesPlayed: number;
-  goals: number;
-  assists: number;
-  rating: number;
-}): number {
-  if (stat.minutesPlayed < SOCCER_RATE_MIN_MINUTES) {
-    const limited =
-      6 + Math.min(stat.goals, 5) * 0.08 + Math.min(stat.assists, 5) * 0.05;
-    return Number(Math.min(7, Math.max(5, limited)).toFixed(2));
-  }
-  const goalsPer90 = Math.min((stat.goals / Math.max(stat.minutesPlayed, 1)) * 90, SOCCER_RATE_SOFT_CAP);
-  const assistsPer90 = Math.min(
-    (stat.assists / Math.max(stat.minutesPlayed, 1)) * 90,
-    SOCCER_RATE_SOFT_CAP
-  );
-  const fromRates = 6 + goalsPer90 * 0.35 + assistsPer90 * 0.25;
-  // Prefer the conservative of stored vs rate-based when stored looks inflated.
-  if (stat.rating >= 8.5 && fromRates < 7.5) {
-    return Number(Math.min(10, Math.max(5, fromRates)).toFixed(2));
-  }
-  return stat.rating;
-}
 
 function mapStatistic(
   stat: PrismaPlayerRow["statistics"][number]
@@ -231,7 +206,15 @@ function aggregateCurrentSeason(
     duelsWonPct: Number((current.reduce((s, r) => s + r.duelsWonPct, 0) / current.length).toFixed(1)),
     yellowCards: totals.yellowCards,
     redCards: totals.redCards,
-    rating: totals.appearances > 0 ? Number((totals.ratingWeight / totals.appearances).toFixed(2)) : latest.rating,
+    rating: reliableSoccerRating({
+      minutesPlayed: totals.minutesPlayed,
+      goals: totals.goals,
+      assists: totals.assists,
+      rating:
+        totals.appearances > 0
+          ? Number((totals.ratingWeight / totals.appearances).toFixed(2))
+          : latest.rating,
+    }),
   });
 }
 
@@ -457,6 +440,9 @@ function buildPlayerWhere(filters: PlayerFilters): Prisma.PlayerWhereInput {
       where.dateOfBirth.lte = maxDob;
     }
   }
+  if (typeof filters.maxMarketValue === "number") {
+    where.marketValue = { lte: filters.maxMarketValue, gt: 0 };
+  }
 
   return where;
 }
@@ -478,14 +464,19 @@ function buildWhere(filters: PlayerFilters): Prisma.PlayerWhereInput {
   return where;
 }
 
-function buildStatWhere(filters: PlayerFilters): Prisma.PlayerStatisticWhereInput {
+function buildStatWhere(
+  filters: PlayerFilters,
+  options?: { skipRatingFilter?: boolean }
+): Prisma.PlayerStatisticWhereInput {
   const { minRating, minMinutes } = filters;
   const where: Prisma.PlayerStatisticWhereInput = {
     season: CURRENT_SEASON,
     player: buildPlayerWhere(filters),
   };
 
-  if (typeof minRating === "number") where.rating = { gte: minRating };
+  if (!options?.skipRatingFilter && typeof minRating === "number") {
+    where.rating = { gte: minRating };
+  }
   if (typeof minMinutes === "number") where.minutesPlayed = { gte: minMinutes };
 
   return where;
@@ -555,6 +546,7 @@ function needsMappedPlayerSort(filters: PlayerFilters): boolean {
   const sortBy = filters.sortBy ?? "rating";
   return (
     sortBy === "rating" ||
+    sortBy === "valueScore" ||
     sortBy === "points" ||
     sortBy === "rebounds" ||
     sortBy === "goals" ||
@@ -566,7 +558,67 @@ function needsMappedPlayerSort(filters: PlayerFilters): boolean {
 }
 
 function needsMappedPlayerFilter(filters: PlayerFilters): boolean {
-  return typeof filters.minRating === "number" || typeof filters.minMinutes === "number";
+  return (
+    typeof filters.minRating === "number" ||
+    typeof filters.minMinutes === "number" ||
+    typeof filters.maxMarketValue === "number"
+  );
+}
+
+function needsSoccerMappedPipeline(filters: PlayerFilters): boolean {
+  if (filters.route !== "scouting") return false;
+  if (typeof filters.maxMarketValue === "number") return true;
+  if (typeof filters.minGoalsPer90 === "number" || typeof filters.minXGPer90 === "number") {
+    return true;
+  }
+  return needsMappedPlayerSort(filters);
+}
+
+async function findManySoccerStatsCappedThenPage(
+  filters: PlayerFilters
+): Promise<{
+  items: Player[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}> {
+  const page = Math.max(1, filters.page ?? 1);
+  const pageSize = Math.min(50, Math.max(1, filters.pageSize ?? 25));
+  const where = buildStatWhere(filters, { skipRatingFilter: true });
+
+  const statistics = await getPrisma().playerStatistic.findMany({
+    where,
+    include: {
+      player: { include: playerListInclude },
+    },
+    orderBy: [{ minutesPlayed: "desc" }, { rating: "desc" }],
+    take: MAPPED_FILTER_CAP,
+  });
+
+  let items = statistics.map((row) => mapPlayerListForSort(row.player));
+
+  if (typeof filters.minRating === "number") {
+    items = items.filter((player) => player.currentSeasonStats.rating >= filters.minRating!);
+  }
+  if (typeof filters.minMinutes === "number") {
+    items = items.filter(
+      (player) => player.currentSeasonStats.minutesPlayed >= filters.minMinutes!
+    );
+  }
+  if (typeof filters.maxMarketValue === "number") {
+    items = items.filter(
+      (player) =>
+        player.marketValue > 0 && player.marketValue <= filters.maxMarketValue!
+    );
+  }
+
+  const sorted = filterAndSortPlayers(items, filters, { prismaPrefiltered: true });
+  const pageResult = paginatePlayers(sorted, page, pageSize);
+  return {
+    ...pageResult,
+    items: pageResult.items.map(finalizeListPlayer),
+  };
 }
 
 async function findManyPaginatedOnPlayer(
@@ -724,6 +776,11 @@ export const prismaPlayerRepository: PlayerRepository & {
 
     const page = Math.max(1, filters.page ?? 1);
     const pageSize = Math.min(50, Math.max(1, filters.pageSize ?? 25));
+
+    if (needsSoccerMappedPipeline(filters)) {
+      return findManySoccerStatsCappedThenPage(filters);
+    }
+
     const where = buildStatWhere(filters);
     const orderBy = buildStatOrderBy(filters);
     const skip = (page - 1) * pageSize;

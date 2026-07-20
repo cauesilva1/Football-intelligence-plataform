@@ -206,6 +206,7 @@ export interface PlayerFilters {
     | "rebounds"
     | "age"
     | "marketValue"
+    | "valueScore"
     | "name"
     | "position"
     | "club";

@@ -1,3 +1,4 @@
+import { soccerValueScore } from "@/lib/scoring/soccer-rankings";
 import { teams } from "@/lib/mock-data/teams";
 import type { Player, PlayerFilters } from "@/types";
 
@@ -118,6 +119,11 @@ export function filterAndSortPlayers(
         break;
       case "marketValue":
         diff = a.marketValue - b.marketValue;
+        break;
+      case "valueScore":
+        diff =
+          soccerValueScore(sa.rating, a.marketValue) -
+          soccerValueScore(sb.rating, b.marketValue);
         break;
       case "name":
         diff = a.fullName.localeCompare(b.fullName);

@@ -1,5 +1,9 @@
 import type { PlayerFilters } from "@/types";
 import type { Sport } from "@/lib/sport";
+import {
+  SOCCER_HIDDEN_GEM_FILTERS,
+  SOCCER_U23_RANKING_FILTERS,
+} from "@/lib/scoring/soccer-rankings";
 
 export type SoccerRankingSlug = "u23" | "finishers" | "creators" | "hidden-gems";
 export type BasketballRankingSlug = "u23" | "scorers" | "playmakers" | "rebounders" | "bargains";
@@ -27,14 +31,10 @@ const SOCCER_PRESETS: RankingPreset[] = [
     slug: "u23",
     title: "Best U23 Players",
     description:
-      "Top-rated academy & youth players with a reliable minutes sample (≥ 450').",
+      "Same rules as dashboard Top Prospects: U23, rating ≥ 7.0, and ≥ 450' in the current season.",
     href: "/rankings/u23",
     filters: {
-      maxAge: 23,
-      minRating: 7,
-      minMinutes: 450,
-      sortBy: "rating",
-      sortDir: "desc",
+      ...SOCCER_U23_RANKING_FILTERS,
       page: 1,
       pageSize: 20,
     },
@@ -63,15 +63,11 @@ const SOCCER_PRESETS: RankingPreset[] = [
   {
     slug: "hidden-gems",
     title: "Hidden Gems",
-    description: "Strong performance with accessible market value.",
+    description:
+      "Strong rating (≥ 7.2), age ≤ 25, value ≤ €8M, and ≥ 450' — ranked by rating per million euro.",
     href: "/rankings/hidden-gems",
     filters: {
-      maxAge: 25,
-      minRating: 7.2,
-      minMinutes: 450,
-      maxMarketValue: 8_000_000,
-      sortBy: "rating",
-      sortDir: "desc",
+      ...SOCCER_HIDDEN_GEM_FILTERS,
       page: 1,
       pageSize: 20,
     },

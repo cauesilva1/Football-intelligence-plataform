@@ -46,6 +46,7 @@ export interface StoredPlayerFilterPrefs {
     | "rebounds"
     | "age"
     | "marketValue"
+    | "valueScore"
     | "name"
     | "position"
     | "club";
