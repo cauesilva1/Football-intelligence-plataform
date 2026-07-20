@@ -126,7 +126,7 @@ function buildWorldCupGroupStandings(matches: StatsBombMatch[]): StandingGroup[]
         ...row,
         points: row.points ?? row.wins * 3 + row.draws,
       }));
-      return { label: label.startsWith("Group") || label.startsWith("Grupo") ? label : `Grupo ${label}`, rows };
+      return { label: label.startsWith("Group") || label.startsWith("Grupo") ? label.replace(/^Grupo\b/, "Group") : `Group ${label}`, rows };
     });
 }
 
@@ -245,7 +245,7 @@ async function loadEspnCompetitionHub(
 async function loadWorldCupHub(): Promise<CompetitionHubData> {
   const raw = await loadWorldCup2026Matches();
   const matches = raw.map((m) => fromStatsBombMatch(m, "scraped"));
-  const leaders = await getEspnCompetitionLeaders("fifa.world", 2026).catch(() => null);
+  // Keep hub SSR off the ESPN leaders path — fixtures come from local JSON.
   const standings = await attachTeamIdsToStandings(
     buildWorldCupGroupStandings(raw),
     "fifa.world"
@@ -253,8 +253,8 @@ async function loadWorldCupHub(): Promise<CompetitionHubData> {
   return {
     standings,
     matches,
-    leaders: leaders ?? emptyCompetitionLeaders(),
-    notice: "2026 World Cup · ESPN scores when available",
+    leaders: emptyCompetitionLeaders(),
+    notice: "2026 World Cup · fixtures from local dataset",
   };
 }
 

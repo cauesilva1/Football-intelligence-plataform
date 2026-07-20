@@ -90,15 +90,15 @@ function buildInsights(
     });
   }
 
-  if (overview.ratingChange !== 0) {
-    const direction = overview.ratingChange > 0 ? "increased" : "decreased";
-    insights.push({
-      id: "rating-trend",
-      type: "trend",
-      title: `Average Rating ${direction} ${Math.abs(overview.ratingChange).toFixed(2)} pts`,
-      description: "Comparison between the current and previous season in the monitored database.",
-    });
-  }
+  insights.push({
+    id: "rating-trend",
+    type: "trend",
+    title: `Average Rating: ${overview.avgRating.toFixed(2)}`,
+    description:
+      Math.abs(overview.ratingChange) > 0 && Math.abs(overview.ratingChange) <= 1.5
+        ? `Season trend: ${overview.ratingChange > 0 ? "+" : ""}${overview.ratingChange.toFixed(2)} vs previous season.`
+        : "Mean rating across players in the monitored database.",
+  });
 
   const eliteCount = players.filter((p) => playerEffectiveRating(p, sport) >= 8).length;
   if (eliteCount > 0) {
@@ -115,14 +115,14 @@ function buildInsights(
   if (topScorer) {
     const scoringLabel =
       sport === "BASKETBALL"
-        ? `${playerScoringRate(topScorer, sport).toFixed(1)} pts/jogo`
+        ? `${playerScoringRate(topScorer, sport).toFixed(1)} pts/game`
         : sport === "AMERICAN_FOOTBALL"
           ? `rating ${playerScoringRate(topScorer, sport).toFixed(1)}`
           : `${per90(topScorer.currentSeasonStats.goals, topScorer.currentSeasonStats.minutesPlayed, { softCap: SOCCER_RATE_SOFT_CAP }).toFixed(2)} goals/90`;
     insights.push({
       id: "top-scorer",
       type: "alert",
-      title: `Destaque: ${topScorer.knownAs}`,
+      title: `Standout: ${topScorer.knownAs}`,
       description: `${scoringLabel} · ${topScorer.teamShortName ?? "—"}`,
       href: `/players/${topScorer.id}`,
     });
