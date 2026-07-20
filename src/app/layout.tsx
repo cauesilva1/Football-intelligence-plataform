@@ -40,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         suppressHydrationWarning
       >
         <SportProviderWrapper>{children}</SportProviderWrapper>
+        <Analytics />
       </body>
     </html>
   );
