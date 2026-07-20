@@ -9,6 +9,8 @@ import {
 import { aggregateSeasonTimeline } from "@/features/scouting/lib/season-history";
 import { PlayerSeasonSelector } from "@/features/scouting/components/profile/player-season-selector";
 import { toRadarProfile } from "@/lib/normalize";
+import { per90 } from "@/lib/metrics/per90";
+import { SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
 import { getTeamTheme } from "@/lib/team-theme";
 import { getSportConfig } from "@/lib/sport-registry";
 import type { Player } from "@/types";
@@ -37,7 +39,7 @@ function SoccerPerformanceSection({
         />
         <MetricCard
           label="Goals / 90"
-          value={s.per90.goals.toFixed(2)}
+          value={per90(s.goals, s.minutesPlayed, { softCap: SOCCER_RATE_SOFT_CAP }).toFixed(2)}
           icon={Target}
           accent="primary"
           borderColor={theme.primaryColor}
@@ -51,7 +53,7 @@ function SoccerPerformanceSection({
         />
         <MetricCard
           label={<GlossaryTooltip label="Assists / 90" description={METRIC_GLOSSARY.xA} />}
-          value={s.per90.assists.toFixed(2)}
+          value={per90(s.assists, s.minutesPlayed, { softCap: SOCCER_RATE_SOFT_CAP }).toFixed(2)}
           icon={TrendingUp}
           accent="info"
           borderColor={theme.primaryColor}

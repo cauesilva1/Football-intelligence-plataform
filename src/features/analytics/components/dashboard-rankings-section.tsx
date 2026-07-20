@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { ratingColor, formatMarketValue } from "@/lib/utils";
 import { getServerSport } from "@/lib/sport-server";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
+import { SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
+import { per90 } from "@/lib/metrics/per90";
 import {
   pickBasketballDisplayStats,
   sortBasketballLeaders,
@@ -15,6 +17,12 @@ import {
 } from "@/lib/metrics/basketball-display";
 import type { Player } from "@/types";
 import { SCORE_DEFINITIONS } from "@/lib/score-definitions";
+
+function displayGoalsPer90(player: Player): number {
+  const stats = player.currentSeasonStats;
+  // Recompute + soft-cap at render so stale cache / legacy rows cannot show 8+ g/90.
+  return per90(stats.goals, stats.minutesPlayed, { softCap: SOCCER_RATE_SOFT_CAP });
+}
 
 function EmptyList({ message }: { message: string }) {
   return (
@@ -159,7 +167,7 @@ function SoccerRankingList({
           >
             {metric === "rating" && player.currentSeasonStats.rating.toFixed(1)}
             {metric === "value" && formatMarketValue(player.marketValue)}
-            {metric === "goals90" && `${player.currentSeasonStats.per90.goals.toFixed(2)} g/90`}
+            {metric === "goals90" && `${displayGoalsPer90(player).toFixed(2)} g/90`}
           </span>
         </Link>
       ))}

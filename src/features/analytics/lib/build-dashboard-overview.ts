@@ -1,6 +1,6 @@
 import { SEASONS } from "@/lib/data/generators";
 import { computeXGPer90 } from "@/features/scouting/lib/filter-players";
-import { hasReliableSoccerSample } from "@/lib/metrics/per90";
+import { hasReliableSoccerSample, per90 } from "@/lib/metrics/per90";
 import { pickBasketballDisplayStats, statPoints } from "@/lib/metrics/basketball-display";
 import {
   OPPORTUNITY_MAX_AGE,
@@ -8,6 +8,7 @@ import {
   OPPORTUNITY_MAX_VALUE,
   OPPORTUNITY_MIN_RATING,
   PROSPECT_MIN_RATING,
+  SOCCER_RATE_SOFT_CAP,
   U23_MAX_AGE,
 } from "@/lib/scoring";
 import { BASKETBALL_POSITIONS, type Sport } from "@/lib/sport";
@@ -23,7 +24,8 @@ function playerScoringRate(player: Player, sport: Sport): number {
   if (sport === "AMERICAN_FOOTBALL") {
     return player.currentSeasonStats.rating;
   }
-  return player.currentSeasonStats.per90.goals;
+  const s = player.currentSeasonStats;
+  return per90(s.goals, s.minutesPlayed, { softCap: SOCCER_RATE_SOFT_CAP });
 }
 
 function playerEffectiveRating(player: Player, sport: Sport): number {
@@ -116,7 +118,7 @@ function buildInsights(
         ? `${playerScoringRate(topScorer, sport).toFixed(1)} pts/jogo`
         : sport === "AMERICAN_FOOTBALL"
           ? `rating ${playerScoringRate(topScorer, sport).toFixed(1)}`
-          : `${topScorer.currentSeasonStats.per90.goals.toFixed(2)} goals/90`;
+          : `${per90(topScorer.currentSeasonStats.goals, topScorer.currentSeasonStats.minutesPlayed, { softCap: SOCCER_RATE_SOFT_CAP }).toFixed(2)} goals/90`;
     insights.push({
       id: "top-scorer",
       type: "alert",

@@ -18,7 +18,8 @@ async function loadDashboardOverview(sport: Sport): Promise<DashboardOverview> {
 function getCachedDashboardOverview(sport: Sport): Promise<DashboardOverview> {
   return unstable_cache(
     () => loadDashboardOverview(sport),
-    ["dashboard-overview", sport],
+    // v2: soft-capped per-90 + minutes filter — bust stale overview payloads
+    ["dashboard-overview-v2", sport],
     {
       revalidate: DASHBOARD_REVALIDATE_SECONDS,
       tags: ["dashboard", `dashboard-${sport}`],

@@ -15,6 +15,7 @@ import {
 } from "@/features/scouting/lib/basketball-filters";
 import { BASKETBALL_SCOUTING_SEASONS } from "@/features/scouting/lib/basketball-constants";
 import { resolvePlayerPhotoUrl } from "@/lib/player-media";
+import { localizeScoutLabels } from "@/lib/scout-labels";
 import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
 import { isDbSource } from "@/lib/data-source";
 import type { Foot, Player, PlayerFilters, PlayerStatistic } from "@/types";
@@ -253,8 +254,8 @@ function mapPlayer(record: PrismaPlayerRow, options?: { season?: string }): Play
     teamName: record.team?.name,
     teamShortName: record.team?.shortName,
     competitionName: record.team?.competition?.name,
-    strengths: record.strengths,
-    weaknesses: record.weaknesses,
+    strengths: localizeScoutLabels(record.strengths),
+    weaknesses: localizeScoutLabels(record.weaknesses),
     currentSeasonStats,
     availableSeasons: history.map((row) => row.season),
     selectedSeason,
