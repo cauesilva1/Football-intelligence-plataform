@@ -14,6 +14,7 @@ import {
   statRebounds,
 } from "@/lib/metrics/basketball-display";
 import type { Player } from "@/types";
+import { SCORE_DEFINITIONS } from "@/lib/score-definitions";
 
 function EmptyList({ message }: { message: string }) {
   return (
@@ -181,7 +182,7 @@ export async function DashboardRankingsSection() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <DataPanel
             title="Top Prospects"
-            description="U23 with rating ≥ 7.0 — regardless of the current season."
+            description={SCORE_DEFINITIONS.topProspects}
             density="dense"
           >
             <RatingList
@@ -192,7 +193,7 @@ export async function DashboardRankingsSection() {
           </DataPanel>
           <DataPanel
             title="Best Performers"
-            description="Rating ≥ 7.5 in the best season with actual production."
+            description={SCORE_DEFINITIONS.bestPerformers}
             density="dense"
           >
             <RatingList
@@ -236,7 +237,7 @@ export async function DashboardRankingsSection() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3">
         <DataPanel
           title="Top Prospects"
-          description="U23 with rating ≥ 7.0 on the synced roster."
+          description={SCORE_DEFINITIONS.topProspects}
           density="dense"
         >
           <RatingList
@@ -245,7 +246,11 @@ export async function DashboardRankingsSection() {
             emptyMessage="Open NFL/CFB franchises to sync rosters — prospects will then appear."
           />
         </DataPanel>
-        <DataPanel title="Best Performers" description="Maiores ratings no banco." density="dense">
+        <DataPanel
+          title="Best Performers"
+          description={SCORE_DEFINITIONS.bestPerformers}
+          density="dense"
+        >
           <RatingList
             players={overview.bestPerformers}
             sport="AMERICAN_FOOTBALL"
@@ -254,7 +259,7 @@ export async function DashboardRankingsSection() {
         </DataPanel>
         <DataPanel
           title="Cap bargains"
-          description="High rating · Affordable Cap Hit (when available)."
+          description="Strong performance indicators with a lower estimated Cap Hit (when available)."
           density="dense"
         >
           <RatingList
@@ -269,16 +274,24 @@ export async function DashboardRankingsSection() {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-4">
-      <DataPanel title="Top U23 Prospects" description="Youth players with rating ≥ 7.0." density="dense">
+      <DataPanel title="Top Prospects" description={SCORE_DEFINITIONS.topProspects} density="dense">
         <SoccerRankingList players={overview.topProspects} metric="rating" />
       </DataPanel>
-      <DataPanel title="Best Performers" description="Highest ratings this season." density="dense">
+      <DataPanel
+        title="Best Performers"
+        description={SCORE_DEFINITIONS.bestPerformers}
+        density="dense"
+      >
         <SoccerRankingList players={overview.bestPerformers} metric="rating" />
       </DataPanel>
-      <DataPanel title="Market Opportunities" description="Strong performance · accessible value." density="dense">
+      <DataPanel
+        title="Market Opportunities"
+        description={SCORE_DEFINITIONS.marketOpportunities}
+        density="dense"
+      >
         <SoccerRankingList players={overview.marketOpportunities} metric="value" />
       </DataPanel>
-      <DataPanel title="Top Scorers (g/90)" description="Normalized offensive output." density="dense">
+      <DataPanel title="Top Scorers (g/90)" description={SCORE_DEFINITIONS.topScorers} density="dense">
         <SoccerRankingList players={overview.topScorers} metric="goals90" />
       </DataPanel>
     </div>

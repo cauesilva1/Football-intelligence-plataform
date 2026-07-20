@@ -42,7 +42,15 @@ Mock seed ratings are often drawn in a band (~6.1–8.4) and are **not** the sam
 
 ---
 
-## Top Prospect
+## Top Prospect / Best Performers / Market Opportunity
+
+Short definitions (also on the dashboard):
+
+- **Top Prospects:** U23 players who meet a minimum performance rating (and a reliable minutes sample in soccer).
+- **Best Performers:** Players with the highest overall rating in the current dataset.
+- **Market Opportunities:** Players combining strong performance indicators with a lower estimated market value.
+
+### Top Prospect (thresholds)
 
 **Where:** `buildDashboardOverview` → `isTopProspect`
 

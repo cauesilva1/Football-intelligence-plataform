@@ -1,8 +1,10 @@
 import { Users, Sparkles, Calendar, Star, TrendingUp, Shield } from "lucide-react";
 import { queryDashboardOverview } from "@/features/analytics/queries/dashboard";
 import { MetricCard } from "@/components/data/metric-card";
+import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
 import { appConfig } from "@/lib/config";
 import { getServerSport } from "@/lib/sport-server";
+import { SCORE_DEFINITIONS } from "@/lib/score-definitions";
 
 export async function DashboardStatsSection() {
   const [overview, sport] = await Promise.all([queryDashboardOverview(), getServerSport()]);
@@ -23,7 +25,9 @@ export async function DashboardStatsSection() {
         }
       />
       <MetricCard
-        label="Top Prospects"
+        label={
+          <GlossaryTooltip label="Top Prospects" description={SCORE_DEFINITIONS.topProspects} />
+        }
         value={String(overview.topProspectsCount)}
         icon={Sparkles}
         accent="primary"
@@ -39,7 +43,12 @@ export async function DashboardStatsSection() {
         }`}
       />
       <MetricCard
-        label="Best Performers"
+        label={
+          <GlossaryTooltip
+            label="Best Performers"
+            description={SCORE_DEFINITIONS.bestPerformers}
+          />
+        }
         value={String(overview.bestPerformersCount)}
         icon={Star}
         accent="info"
@@ -62,12 +71,17 @@ export async function DashboardStatsSection() {
           trend={
             overview.totalPlayers === 0
               ? "Open a team to sync its roster"
-              : "Cap Hit · bargains no scouting"
+              : "Cap Hit · bargains on scouting"
           }
         />
       ) : (
         <MetricCard
-          label="Market Opportunities"
+          label={
+            <GlossaryTooltip
+              label="Market Opportunities"
+              description={SCORE_DEFINITIONS.marketOpportunities}
+            />
+          }
           value={String(overview.marketOpportunitiesCount)}
           icon={TrendingUp}
           accent="negative"
