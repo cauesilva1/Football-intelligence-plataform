@@ -134,18 +134,16 @@ function RatingList({
 function SoccerRankingList({
   players,
   metric,
-  columns = 1,
 }: {
   players: Player[];
   metric: "rating" | "value" | "goals90";
-  columns?: 1 | 2;
 }) {
   if (!players.length) {
     return <EmptyList message="No players in this segment yet." />;
   }
 
   return (
-    <div className={columns === 2 ? "grid gap-2 xl:grid-cols-2" : "space-y-2"}>
+    <div className="space-y-2">
       {players.map((player, index) => (
         <Link
           key={player.id}
@@ -282,39 +280,34 @@ export async function DashboardRankingsSection() {
     );
   }
 
-  /* Stable two-column layout on xl: recruitment lists lead the wide main column,
-     reference lists sit in the side rail. Columns stack independently, so panels
-     size to their own content instead of stretching to match row neighbors. */
+  /* Aligned 2x2 grid: each panel holds a single-column top-5 list, so all four
+     cards share the same natural height and rows line up across columns. */
   return (
-    <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-3">
-      <div className="space-y-4 xl:col-span-2">
-        <DataPanel
-          title="Top Prospects"
-          description={SCORE_DEFINITIONS.topProspects}
-          density="dense"
-        >
-          <SoccerRankingList players={overview.topProspects} metric="rating" columns={2} />
-        </DataPanel>
-        <DataPanel
-          title="Market Opportunities"
-          description={SCORE_DEFINITIONS.marketOpportunities}
-          density="dense"
-        >
-          <SoccerRankingList players={overview.marketOpportunities} metric="value" columns={2} />
-        </DataPanel>
-      </div>
-      <div className="space-y-4">
-        <DataPanel
-          title="Best Performers"
-          description={SCORE_DEFINITIONS.bestPerformers}
-          density="dense"
-        >
-          <SoccerRankingList players={overview.bestPerformers} metric="rating" />
-        </DataPanel>
-        <DataPanel title="Top Scorers (g/90)" description={SCORE_DEFINITIONS.topScorers} density="dense">
-          <SoccerRankingList players={overview.topScorers} metric="goals90" />
-        </DataPanel>
-      </div>
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <DataPanel
+        title="Top Prospects"
+        description={SCORE_DEFINITIONS.topProspects}
+        density="dense"
+      >
+        <SoccerRankingList players={overview.topProspects} metric="rating" />
+      </DataPanel>
+      <DataPanel
+        title="Best Performers"
+        description={SCORE_DEFINITIONS.bestPerformers}
+        density="dense"
+      >
+        <SoccerRankingList players={overview.bestPerformers} metric="rating" />
+      </DataPanel>
+      <DataPanel
+        title="Market Opportunities"
+        description={SCORE_DEFINITIONS.marketOpportunities}
+        density="dense"
+      >
+        <SoccerRankingList players={overview.marketOpportunities} metric="value" />
+      </DataPanel>
+      <DataPanel title="Top Scorers (g/90)" description={SCORE_DEFINITIONS.topScorers} density="dense">
+        <SoccerRankingList players={overview.topScorers} metric="goals90" />
+      </DataPanel>
     </div>
   );
 }
