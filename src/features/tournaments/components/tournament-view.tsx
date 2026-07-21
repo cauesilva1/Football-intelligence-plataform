@@ -56,7 +56,7 @@ export function TournamentView({
     <div className="space-y-6">
       {!compact ? (
         <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-8">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Tournament Hub</p>
+          <p className="text-2xs font-semibold uppercase tracking-[0.2em] text-primary">Tournament Hub</p>
           <h1 className="mt-1.5 font-display text-xl font-bold text-foreground md:mt-2 md:text-3xl">
             International Competitions
           </h1>
@@ -79,7 +79,7 @@ export function TournamentView({
                 )}
               >
                 <span className="block text-sm font-semibold">{tournament.label}</span>
-                <span className="mt-0.5 hidden max-w-[14rem] text-[11px] opacity-80 sm:block">
+                <span className="mt-0.5 hidden max-w-[14rem] text-2xs opacity-80 sm:block">
                   {tournament.description}
                 </span>
               </button>
@@ -123,11 +123,11 @@ export function TournamentView({
               {" · "}
               {totalCount} matches
               {active.source === "scraped" ? (
-                <span className="ml-2 rounded-full bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-400">
+                <span className="ml-2 rounded-full bg-sky-500/10 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-sky-400">
                   Local JSON
                 </span>
               ) : active.source === "api-sports" ? (
-                <span className="ml-2 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-400">
+                <span className="ml-2 rounded-full bg-emerald-500/10 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-emerald-400">
                   15 min cache
                 </span>
               ) : null}
@@ -145,7 +145,7 @@ export function TournamentView({
                   <h2 className="font-display text-lg font-bold text-foreground">
                     {formatStageLabel(round.stageName)}
                   </h2>
-                  <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                  <span className="rounded-full bg-secondary px-2.5 py-0.5 text-2xs text-muted-foreground">
                     {round.matches.length} matches
                   </span>
                 </div>

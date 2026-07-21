@@ -25,7 +25,7 @@ export default function RootError({
           </p>
         ) : null}
         {error.digest ? (
-          <p className="font-mono text-[10px] text-muted-foreground">Digest: {error.digest}</p>
+          <p className="font-mono text-2xs text-muted-foreground">Digest: {error.digest}</p>
         ) : null}
       </div>
     </div>

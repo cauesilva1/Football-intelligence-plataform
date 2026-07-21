@@ -98,7 +98,7 @@ export function PlayerFiltersBar() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3">
-        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Advanced filters</span>
+        <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">Advanced filters</span>
         <Select
           value={String(filters.minAge ?? "")}
           onChange={(e) => pushFilters({ minAge: e.target.value ? Number(e.target.value) : undefined, page: 1 })}

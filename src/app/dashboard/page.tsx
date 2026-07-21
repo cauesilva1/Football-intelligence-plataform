@@ -16,7 +16,6 @@ import {
   DashboardChartsSkeleton,
   DashboardRankingsSkeleton,
 } from "@/features/analytics/components/dashboard-skeletons";
-import { SCORE_DEFINITIONS } from "@/lib/score-definitions";
 
 export const metadata = { title: `Overview · ${APP_NAME}` };
 
@@ -41,7 +40,7 @@ export default async function DashboardPage() {
                 : "American football overview. Soccer remains the reference sport for the full scout workflow."
           }
           badge={
-            <span className="rounded-md border border-border bg-surface-muted/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="rounded-md border border-border bg-surface-muted/50 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
               {viewing} · {appConfig.season}
             </span>
           }
@@ -58,26 +57,6 @@ export default async function DashboardPage() {
         <Suspense fallback={<DashboardStatsSkeleton />}>
           <DashboardStatsSection />
         </Suspense>
-
-        <div className="rounded-xl border border-border bg-card/40 px-4 py-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Score definitions
-          </p>
-          <dl className="mt-2 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
-            <div>
-              <dt className="font-medium text-foreground">Top Prospects</dt>
-              <dd className="mt-0.5 leading-relaxed">{SCORE_DEFINITIONS.topProspects}</dd>
-            </div>
-            <div>
-              <dt className="font-medium text-foreground">Best Performers</dt>
-              <dd className="mt-0.5 leading-relaxed">{SCORE_DEFINITIONS.bestPerformers}</dd>
-            </div>
-            <div>
-              <dt className="font-medium text-foreground">Market Opportunities</dt>
-              <dd className="mt-0.5 leading-relaxed">{SCORE_DEFINITIONS.marketOpportunities}</dd>
-            </div>
-          </dl>
-        </div>
 
         <Suspense fallback={<DashboardInsightsSkeleton />}>
           <DashboardInsightsSection />

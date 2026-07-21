@@ -38,7 +38,7 @@ export function Header({ subtitle }: { subtitle?: string }) {
               {mounted ? (appConfig.dataSource === "mock" ? "Demo" : "Supabase") : "—"}
             </Badge>
           </div>
-          <p className="truncate text-[11px] text-muted-foreground md:text-xs">
+          <p className="truncate text-2xs text-muted-foreground md:text-xs">
             <span className="md:hidden">
               {theme.tagline} · {appConfig.season}
             </span>

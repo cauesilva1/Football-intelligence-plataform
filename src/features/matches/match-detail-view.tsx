@@ -53,12 +53,12 @@ export function MatchDetailView({ data }: { data: MatchDetailPayload }) {
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {competitionName ? (
-            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+            <span className="text-2xs font-semibold uppercase tracking-[0.2em] text-primary">
               {competitionName}
             </span>
           ) : null}
           <StatusBadge status={match.status} label={match.statusLabel} />
-          <span className="text-[11px] text-muted-foreground">{sourceLabel}</span>
+          <span className="text-2xs text-muted-foreground">{sourceLabel}</span>
         </div>
 
         <p className="mt-2 text-sm text-muted-foreground">{match.stageName}</p>
@@ -164,19 +164,19 @@ function TeamStatCard({
       <p className="text-sm font-semibold text-foreground">{name}</p>
       <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
         <div>
-          <dt className="text-[11px] text-muted-foreground">Goals</dt>
+          <dt className="text-2xs text-muted-foreground">Goals</dt>
           <dd className="font-mono font-semibold tabular-nums">{stats.goals}</dd>
         </div>
         <div>
-          <dt className="text-[11px] text-muted-foreground">Assists</dt>
+          <dt className="text-2xs text-muted-foreground">Assists</dt>
           <dd className="font-mono font-semibold tabular-nums">{stats.assists}</dd>
         </div>
         <div>
-          <dt className="text-[11px] text-muted-foreground">Tackles</dt>
+          <dt className="text-2xs text-muted-foreground">Tackles</dt>
           <dd className="font-mono font-semibold tabular-nums">{stats.tackles}</dd>
         </div>
         <div>
-          <dt className="text-[11px] text-muted-foreground">Completed Passes</dt>
+          <dt className="text-2xs text-muted-foreground">Completed Passes</dt>
           <dd className="font-mono font-semibold tabular-nums">{stats.passesCompleted}</dd>
         </div>
       </dl>
@@ -200,7 +200,7 @@ function PlayerTable({
       <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       <div className="overflow-x-auto rounded-xl border border-border/70">
         <table className="w-full min-w-[28rem] text-left text-sm">
-          <thead className="bg-secondary/50 text-[11px] uppercase tracking-wider text-muted-foreground">
+          <thead className="bg-secondary/50 text-2xs uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-3 py-2 font-medium">Player</th>
               <th className="px-2 py-2 text-center font-medium">Min</th>

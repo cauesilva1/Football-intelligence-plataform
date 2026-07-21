@@ -12,7 +12,7 @@ export function AmericanFootballTournamentsIndex() {
   return (
     <div className="space-y-8">
       <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-5 shadow-panel md:p-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Leagues</p>
+        <p className="text-2xs font-semibold uppercase tracking-[0.2em] text-primary">Leagues</p>
         <h1 className="mt-2 font-display text-2xl font-bold text-foreground md:text-3xl">
           Competitions
         </h1>
@@ -43,7 +43,7 @@ export function AmericanFootballTournamentsIndex() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="rounded-full bg-secondary px-2.5 py-0.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {competition.badge}
                   </span>
                 </div>

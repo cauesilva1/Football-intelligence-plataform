@@ -46,7 +46,7 @@ export function HubSeasonToggle({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
         Season
       </span>
       {slices.map((slice) => {

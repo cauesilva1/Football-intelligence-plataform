@@ -131,7 +131,7 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
         {statCards.map((card) => (
           <Card key={card.label} className="border-border/80 bg-card/80">
             <CardContent className="p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {card.label}
               </p>
               <p

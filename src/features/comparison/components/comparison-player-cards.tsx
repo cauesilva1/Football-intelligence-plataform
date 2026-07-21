@@ -25,7 +25,7 @@ function SoccerStatStrip({ player }: { player: Player }) {
     return (
       <div className="mt-3 space-y-1.5 border-t border-white/15 pt-3">
         {smallSample ? (
-          <p className="text-center text-[10px] text-amber-200/90">
+          <p className="text-center text-2xs text-amber-200/90">
             Small sample ({s.minutesPlayed}&apos;) — totals, not rates
           </p>
         ) : null}
@@ -37,7 +37,7 @@ function SoccerStatStrip({ player }: { player: Player }) {
             </div>
           ))}
         </div>
-        <p className="text-center text-[10px] text-white/45">{group} pack</p>
+        <p className="text-center text-2xs text-white/45">{group} pack</p>
       </div>
     );
   }

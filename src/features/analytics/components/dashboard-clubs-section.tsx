@@ -48,7 +48,7 @@ export async function DashboardClubsSection() {
                   <Badge variant="secondary">{team.shortName}</Badge>
                 </div>
                 <p className="truncate font-display text-sm font-bold text-foreground">{team.name}</p>
-                <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+                <p className="mt-1 flex items-center gap-1 text-2xs text-muted-foreground">
                   <Users className="h-3 w-3" />
                   {team.squadSize ?? 0} players
                 </p>

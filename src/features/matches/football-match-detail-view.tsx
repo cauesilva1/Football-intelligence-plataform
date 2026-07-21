@@ -118,7 +118,7 @@ function TeamStatsCompare({
   return (
     <div className="overflow-x-auto rounded-xl border border-border/70">
       <table className="w-full min-w-[28rem] text-left text-sm">
-        <thead className="bg-secondary/50 text-[11px] uppercase tracking-wider text-muted-foreground">
+        <thead className="bg-secondary/50 text-2xs uppercase tracking-wider text-muted-foreground">
           <tr>
             <th className="px-3 py-2 font-medium">{awayName}</th>
             <th className="px-3 py-2 text-center font-medium">Stat</th>
@@ -171,12 +171,12 @@ function BoxCategoryTable({
       </h3>
       {[...byTeam.entries()].map(([teamName, rows]) => (
         <div key={`${category}-${teamName}`} className="space-y-1.5">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
             {teamName}
           </p>
           <div className="overflow-x-auto rounded-xl border border-border/70">
             <table className="w-full min-w-[22rem] text-left text-sm">
-              <thead className="bg-secondary/50 text-[11px] uppercase tracking-wider text-muted-foreground">
+              <thead className="bg-secondary/50 text-2xs uppercase tracking-wider text-muted-foreground">
                 <tr>
                   <th className="px-3 py-2 font-medium">Player</th>
                   {columns.map((col) => (

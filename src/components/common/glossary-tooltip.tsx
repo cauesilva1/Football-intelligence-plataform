@@ -17,7 +17,7 @@ export function GlossaryTooltip({
       <div
         role="tooltip"
         className={cn(
-          "pointer-events-none absolute left-1/2 z-50 hidden w-56 -translate-x-1/2 rounded-lg border border-border bg-card px-2.5 py-2 text-left text-[11px] font-normal normal-case leading-snug text-muted-foreground shadow-panel group-hover:block",
+          "pointer-events-none absolute left-1/2 z-50 hidden w-56 -translate-x-1/2 rounded-lg border border-border bg-card px-2.5 py-2 text-left text-2xs font-normal normal-case leading-snug text-muted-foreground shadow-panel group-hover:block",
           placement === "top" ? "bottom-full mb-2" : "top-full mt-2"
         )}
       >

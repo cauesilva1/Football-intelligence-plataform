@@ -58,7 +58,7 @@ export function BasketballCompetitionHub({
           <ArrowLeft className="h-3.5 w-3.5" />
           Leagues
         </Link>
-        <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+        <p className="mt-3 text-2xs font-semibold uppercase tracking-[0.2em] text-primary">
           {competition.badge}
         </p>
         <h1 className="mt-1.5 font-display text-2xl font-bold text-foreground md:text-3xl">
@@ -66,7 +66,7 @@ export function BasketballCompetitionHub({
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{competition.description}</p>
         {data.notice ? (
-          <p className="mt-3 inline-flex rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
+          <p className="mt-3 inline-flex rounded-full bg-primary/10 px-3 py-1 text-2xs font-semibold text-primary">
             {data.notice}
           </p>
         ) : null}

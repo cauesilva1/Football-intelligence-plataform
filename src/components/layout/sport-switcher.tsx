@@ -38,7 +38,7 @@ export function SportSwitcher({ compact = false }: { compact?: boolean }) {
 
   const tabClass = (value: Sport, active: boolean) =>
     cn(
-      "relative z-[1] flex items-center justify-center gap-1.5 rounded-lg text-[11px] font-medium transition-colors duration-200",
+      "relative z-[1] flex items-center justify-center gap-1.5 rounded-lg text-2xs font-medium transition-colors duration-200",
       compact ? "h-8 w-8 px-0" : "min-w-0 flex-col gap-1 px-1 py-2",
       active
         ? cn(

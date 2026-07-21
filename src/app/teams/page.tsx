@@ -88,7 +88,7 @@ export default async function TeamsPage({
     <DashboardShell subtitle={subtitle}>
       <div className="space-y-6">
         <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-8">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+          <p className="text-2xs font-semibold uppercase tracking-[0.2em] text-primary">
             {theme.label}
           </p>
           <h1 className="mt-2 font-display text-xl font-bold text-foreground md:text-3xl">

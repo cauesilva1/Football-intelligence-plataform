@@ -59,10 +59,12 @@ export async function PlayerProfileView({
       <PlayerPerformanceSection player={player} />
       <PlayerCompetitionContext player={player} />
       <PlayerAnalysisSection player={player} />
-      <ScoutNotesPanel playerId={playerId} />
-      <Suspense fallback={<SimilarSkeleton />}>
-        <PlayerSimilarSection playerId={playerId} />
-      </Suspense>
+      <div className="grid items-start gap-6 xl:grid-cols-2">
+        <ScoutNotesPanel playerId={playerId} />
+        <Suspense fallback={<SimilarSkeleton />}>
+          <PlayerSimilarSection playerId={playerId} />
+        </Suspense>
+      </div>
     </div>
   );
 }

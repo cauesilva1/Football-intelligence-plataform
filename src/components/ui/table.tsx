@@ -49,7 +49,7 @@ export function TableHead({ className, sticky, ...props }: React.ThHTMLAttribute
   return (
     <th
       className={cn(
-        "h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground",
+        "h-10 px-4 text-left align-middle text-2xs font-semibold uppercase tracking-wider text-muted-foreground",
         sticky && "sticky top-0 z-10 bg-surface-muted backdrop-blur-sm",
         className
       )}

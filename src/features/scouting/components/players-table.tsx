@@ -26,7 +26,7 @@ export function PlayersTable({ players }: { players: Player[] }) {
               <Link href={`/players/${p.id}`} className="font-medium text-foreground hover:text-primary">
                 {p.knownAs}
               </Link>
-              <p className="text-[11px] text-muted-foreground">{p.nationality}</p>
+              <p className="text-2xs text-muted-foreground">{p.nationality}</p>
             </TableCell>
             <TableCell><Badge variant="secondary">{p.position}</Badge></TableCell>
             <TableCell className="text-muted-foreground">{p.teamShortName ?? "-"}</TableCell>

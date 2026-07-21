@@ -123,49 +123,49 @@ export async function TeamsGrid({
                         <p className="font-display text-sm font-bold text-primary">
                           {team.stats?.wins ?? "—"}
                         </p>
-                        <p className="text-[10px] uppercase text-muted-foreground">Wins</p>
+                        <p className="text-2xs uppercase text-muted-foreground">Wins</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">
                           {team.stats?.losses ?? "—"}
                         </p>
-                        <p className="text-[10px] uppercase text-muted-foreground">Losses</p>
+                        <p className="text-2xs uppercase text-muted-foreground">Losses</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">
                           {team.squadSize ?? 0}
                         </p>
-                        <p className="text-[10px] uppercase text-muted-foreground">Roster</p>
+                        <p className="text-2xs uppercase text-muted-foreground">Roster</p>
                       </div>
                     </div>
                   ) : (
                     <div className="mt-4 grid grid-cols-4 gap-2 text-center">
                       <div>
                         <p className="font-display text-sm font-bold text-primary">{sb?.wins ?? "—"}</p>
-                        <p className="text-[10px] uppercase text-muted-foreground">W</p>
+                        <p className="text-2xs uppercase text-muted-foreground">W</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">
                           {sb?.draws ?? "—"}
                         </p>
-                        <p className="text-[10px] uppercase text-muted-foreground">D</p>
+                        <p className="text-2xs uppercase text-muted-foreground">D</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">
                           {sb?.losses ?? "—"}
                         </p>
-                        <p className="text-[10px] uppercase text-muted-foreground">L</p>
+                        <p className="text-2xs uppercase text-muted-foreground">L</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">
                           {sb ? balanceLabel : "—"}
                         </p>
-                        <p className="text-[10px] uppercase text-muted-foreground">GD</p>
+                        <p className="text-2xs uppercase text-muted-foreground">GD</p>
                       </div>
                     </div>
                   )}
 
-                  <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
+                  <div className="mt-3 flex items-center justify-between text-2xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
                       <Users className="h-3 w-3" /> {team.squadSize ?? 0} players
                     </span>

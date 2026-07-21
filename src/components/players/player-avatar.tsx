@@ -64,7 +64,7 @@ export function PlayerAvatar({
   const positionTag = getPositionAbbreviation(position);
 
   const sizeClass =
-    size === "lg" ? "h-20 w-20 text-xl" : size === "sm" ? "h-8 w-8 text-[10px]" : "h-10 w-10 text-xs";
+    size === "lg" ? "h-20 w-20 text-xl" : size === "sm" ? "h-8 w-8 text-2xs" : "h-10 w-10 text-xs";
 
   const iconSize = size === "lg" ? "h-8 w-8" : size === "sm" ? "h-3.5 w-3.5" : "h-5 w-5";
   const px = SIZE_PX[size];
@@ -89,7 +89,7 @@ export function PlayerAvatar({
       <span
         className={cn(
           "absolute rounded font-semibold leading-none shadow-sm",
-          size === "lg" ? "bottom-1.5 px-2 py-0.5 text-[10px]" : "bottom-0.5 right-0.5 px-1 py-px text-[8px]"
+          size === "lg" ? "bottom-1.5 px-2 py-0.5 text-2xs" : "bottom-0.5 right-0.5 px-1 py-px text-[8px]"
         )}
         style={{ backgroundColor: theme.accent, color: theme.gradientTo }}
       >

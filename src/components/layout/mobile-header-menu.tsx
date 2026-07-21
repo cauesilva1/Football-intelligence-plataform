@@ -36,7 +36,7 @@ export function MobileHeaderMenu() {
           <nav className="absolute right-0 top-full z-[60] mt-2 max-h-[70vh] w-64 space-y-4 overflow-y-auto rounded-xl border border-border bg-background p-3 shadow-panel">
             {NAV_GROUPS.map((group) => (
               <div key={group.id} className="space-y-1">
-                <p className="px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
+                <p className="px-3 text-2xs font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
                   {group.label}
                 </p>
                 {group.items.map((item) => {

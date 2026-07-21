@@ -2,8 +2,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function DashboardStatsSkeleton() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-      {Array.from({ length: 5 }).map((_, i) => (
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+      <Skeleton className="h-24 rounded-xl sm:col-span-2 xl:col-span-2" />
+      {Array.from({ length: 4 }).map((_, i) => (
         <Skeleton key={i} className="h-24 rounded-xl" />
       ))}
     </div>
@@ -25,10 +26,11 @@ export function DashboardChartsSkeleton() {
 
 export function DashboardRankingsSkeleton() {
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-72 rounded-xl" />
-      ))}
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <Skeleton className="h-72 rounded-xl xl:col-span-2" />
+      <Skeleton className="h-72 rounded-xl" />
+      <Skeleton className="h-72 rounded-xl" />
+      <Skeleton className="h-72 rounded-xl xl:col-span-2" />
     </div>
   );
 }

@@ -163,7 +163,7 @@ export function ShortlistView() {
             type="button"
             onClick={() => setFilterTag(opt.value)}
             className={cn(
-              "rounded-md border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide",
+              "rounded-md border px-2.5 py-1 text-2xs font-medium uppercase tracking-wide",
               filterTag === opt.value
                 ? "border-primary bg-primary/10 text-primary"
                 : "border-border text-muted-foreground hover:text-foreground"
@@ -217,7 +217,7 @@ export function ShortlistView() {
                             void loadShortlist();
                           }}
                           className={cn(
-                            "rounded-md border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide",
+                            "rounded-md border px-2 py-0.5 text-2xs font-medium uppercase tracking-wide",
                             tag === opt.value
                               ? "border-primary bg-primary/10 text-primary"
                               : "border-border text-muted-foreground hover:text-foreground"

@@ -71,7 +71,7 @@ export function BasketballFranchisesBoard({
               <p className="truncate font-display text-sm font-semibold text-foreground">
                 {team.name}
               </p>
-              <p className="text-[11px] text-muted-foreground">{team.shortName}</p>
+              <p className="text-2xs text-muted-foreground">{team.shortName}</p>
             </div>
           </Link>
         ))}

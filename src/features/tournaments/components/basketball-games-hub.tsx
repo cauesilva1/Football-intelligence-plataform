@@ -53,7 +53,7 @@ function TeamLine({
       {logo ? (
         <Image src={logo} alt={name} width={28} height={28} className="h-7 w-7 object-contain" unoptimized />
       ) : (
-        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-[10px] font-bold">
+        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-2xs font-bold">
           {abbreviation}
         </div>
       )}
@@ -61,7 +61,7 @@ function TeamLine({
         <p className={cn("truncate text-sm font-semibold", won ? "text-foreground" : "text-muted-foreground")}>
           {name}
         </p>
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{abbreviation}</p>
+        <p className="text-2xs uppercase tracking-wider text-muted-foreground">{abbreviation}</p>
       </div>
       <span className={cn("ml-auto font-mono text-lg font-bold tabular-nums", won && "text-primary")}>{score}</span>
     </div>
@@ -96,14 +96,14 @@ function GameCard({ game }: { game: NbaScheduleGame }) {
       >
         <CardContent className="p-4">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-2xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
               {localDate}
             </span>
             <div className="flex items-center gap-2">
               {isSummer ? <SummerLeagueBadge /> : null}
               {isNcaa ? (
-                <Badge variant="outline" className="border-border text-[10px] text-muted-foreground">
+                <Badge variant="outline" className="border-border text-2xs text-muted-foreground">
                   NCAA
                 </Badge>
               ) : null}
@@ -183,7 +183,7 @@ export function BasketballGamesHub({
     <section className="space-y-4">
       {!compact ? (
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+          <p className="text-2xs font-semibold uppercase tracking-[0.2em] text-primary">
             Games hub
           </p>
           <h2 className="mt-1 font-display text-xl font-bold text-foreground">{title}</h2>

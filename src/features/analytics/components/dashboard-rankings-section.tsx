@@ -134,16 +134,18 @@ function RatingList({
 function SoccerRankingList({
   players,
   metric,
+  columns = 1,
 }: {
   players: Player[];
   metric: "rating" | "value" | "goals90";
+  columns?: 1 | 2;
 }) {
   if (!players.length) {
     return <EmptyList message="No players in this segment yet." />;
   }
 
   return (
-    <div className="space-y-2">
+    <div className={columns === 2 ? "grid gap-2 xl:grid-cols-2" : "space-y-2"}>
       {players.map((player, index) => (
         <Link
           key={player.id}
@@ -280,10 +282,16 @@ export async function DashboardRankingsSection() {
     );
   }
 
+  /* Zig-zag rhythm on xl: wide-narrow / narrow-wide — the recruitment lists lead. */
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-4">
-      <DataPanel title="Top Prospects" description={SCORE_DEFINITIONS.topProspects} density="dense">
-        <SoccerRankingList players={overview.topProspects} metric="rating" />
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <DataPanel
+        title="Top Prospects"
+        description={SCORE_DEFINITIONS.topProspects}
+        density="dense"
+        className="xl:col-span-2"
+      >
+        <SoccerRankingList players={overview.topProspects} metric="rating" columns={2} />
       </DataPanel>
       <DataPanel
         title="Best Performers"
@@ -292,15 +300,16 @@ export async function DashboardRankingsSection() {
       >
         <SoccerRankingList players={overview.bestPerformers} metric="rating" />
       </DataPanel>
+      <DataPanel title="Top Scorers (g/90)" description={SCORE_DEFINITIONS.topScorers} density="dense">
+        <SoccerRankingList players={overview.topScorers} metric="goals90" />
+      </DataPanel>
       <DataPanel
         title="Market Opportunities"
         description={SCORE_DEFINITIONS.marketOpportunities}
         density="dense"
+        className="xl:col-span-2"
       >
-        <SoccerRankingList players={overview.marketOpportunities} metric="value" />
-      </DataPanel>
-      <DataPanel title="Top Scorers (g/90)" description={SCORE_DEFINITIONS.topScorers} density="dense">
-        <SoccerRankingList players={overview.topScorers} metric="goals90" />
+        <SoccerRankingList players={overview.marketOpportunities} metric="value" columns={2} />
       </DataPanel>
     </div>
   );

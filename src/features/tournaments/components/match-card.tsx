@@ -69,13 +69,13 @@ export function MatchCard({ match }: { match: TournamentMatch }) {
       <Card className="h-full border-border/60 bg-card/90 transition-all hover:border-primary/40 hover:shadow-panel">
         <CardContent className="p-4">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-2xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
               {mounted ? formatDisplayDate(match) : match.date}
             </span>
             <div className="flex items-center gap-2">
               {match.matchWeek != null && match.stageKey === "group" ? (
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                <span className="text-2xs uppercase tracking-wider text-muted-foreground">
                   MD {match.matchWeek}
                 </span>
               ) : null}
@@ -129,7 +129,7 @@ export function MatchCard({ match }: { match: TournamentMatch }) {
             </div>
           </div>
 
-          <div className="mt-3 flex items-center gap-1 text-[11px] text-muted-foreground">
+          <div className="mt-3 flex items-center gap-1 text-2xs text-muted-foreground">
             <MapPin className="h-3 w-3 shrink-0" />
             <span className="truncate">
               {match.stadium}

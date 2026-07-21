@@ -25,8 +25,8 @@ function ScrapedAttribution() {
         </div>
         <p className="max-w-lg text-xs text-muted-foreground">
           Data Source: ESPN Scraper — public ESPN feed stored in{" "}
-          <code className="text-[10px]">src/data/mock/world-cup-2026.json</code>. Refresh with{" "}
-          <code className="text-[10px]">npm run fetch:wc2026</code>.
+          <code className="text-2xs">src/data/mock/world-cup-2026.json</code>. Refresh with{" "}
+          <code className="text-2xs">npm run fetch:wc2026</code>.
         </p>
       </div>
     </footer>

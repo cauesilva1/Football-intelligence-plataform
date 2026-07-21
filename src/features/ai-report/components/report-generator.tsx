@@ -160,8 +160,8 @@ export function ReportGenerator({
         title="Scout brief"
         description="Staff one-pager: strengths, risks, recommendation — rating matches the profile. Open from My Players to carry your tag and note."
         badge={
-          <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface-muted/40 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            <Sparkles className="h-3 w-3 text-accent-warning" /> OpenRouter · Llama 3.3
+          <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface-muted/40 px-2 py-0.5 text-2xs font-medium uppercase tracking-wider text-muted-foreground">
+            <Sparkles className="h-3 w-3 text-accent-warning" /> AI-generated
           </span>
         }
       />
@@ -209,7 +209,7 @@ export function ReportGenerator({
         {shortlistEntry ? (
           <div className="mt-4 rounded-lg border border-border bg-surface-muted/30 px-3 py-2.5">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                 From your shortlist
               </p>
               <Badge

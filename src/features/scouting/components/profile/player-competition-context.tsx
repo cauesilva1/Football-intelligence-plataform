@@ -101,7 +101,7 @@ export async function PlayerCompetitionContext({ player }: { player: Player }) {
           description="Minutes, goals/assists, defensive actions, and match rating from recent games."
           density="dense"
         >
-          <div className="mb-1 hidden text-[10px] uppercase tracking-wider text-muted-foreground sm:grid sm:grid-cols-[minmax(0,1.4fr)_repeat(5,auto)] sm:gap-2">
+          <div className="mb-1 hidden text-2xs uppercase tracking-wider text-muted-foreground sm:grid sm:grid-cols-[minmax(0,1.4fr)_repeat(5,auto)] sm:gap-2">
             <span>Fixture</span>
             <span className="text-right">Min</span>
             <span>G / A</span>

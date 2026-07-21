@@ -10,13 +10,12 @@ import { aggregateSeasonTimeline } from "@/features/scouting/lib/season-history"
 import { PlayerSeasonSelector } from "@/features/scouting/components/profile/player-season-selector";
 import {
   buildPositionScorecard,
-  soccerPositionGroup,
   soccerPositionGroupLabel,
 } from "@/features/scouting/lib/position-scorecard";
 import { toRadarProfile } from "@/lib/normalize";
-import { per90 } from "@/lib/metrics/per90";
-import { SOCCER_RATE_MIN_MINUTES, SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
+import { SOCCER_RATE_MIN_MINUTES } from "@/lib/scoring";
 import { getTeamTheme } from "@/lib/team-theme";
+import { ratingColor } from "@/lib/utils";
 import { getSportConfig } from "@/lib/sport-registry";
 import type { Player } from "@/types";
 
@@ -34,36 +33,10 @@ function SoccerPerformanceSection({
   const radarMetrics = [...getSportConfig("SOCCER").ui.radarMetrics];
   const smallSample = s.minutesPlayed > 0 && s.minutesPlayed < SOCCER_RATE_MIN_MINUTES;
   const scorecard = buildPositionScorecard(player.position, s);
-  const group = soccerPositionGroup(player.position);
-  const rateLabel = (total: number, totalLabel: string, rateLabelText: string) => {
-    if (smallSample) {
-      return { label: totalLabel, value: String(total) };
-    }
-    return {
-      label: rateLabelText,
-      value: per90(total, s.minutesPlayed, { softCap: SOCCER_RATE_SOFT_CAP }).toFixed(2),
-    };
-  };
-  const highlight =
-    group === "DEF" || group === "GK"
-      ? [
-          rateLabel(s.tacklesWon, "Tackles", "Tackles / 90"),
-          rateLabel(s.interceptions, "Interceptions", "Interceptions / 90"),
-          {
-            label: "Pass accuracy",
-            value: s.passAccuracy > 0 ? `${s.passAccuracy.toFixed(0)}%` : "—",
-          },
-        ]
-      : [
-          rateLabel(s.goals, "Goals", "Goals / 90"),
-          smallSample
-            ? { label: "xG", value: s.xG.toFixed(2) }
-            : {
-                label: "xG / 90",
-                value: (s.minutesPlayed > 0 ? (s.xG / s.minutesPlayed) * 90 : 0).toFixed(2),
-              },
-          rateLabel(s.assists, "Assists", "Assists / 90"),
-        ];
+  const ratingMetric = scorecard.metrics.find((m) => m.key === "rating");
+  const roleMetrics = scorecard.metrics.filter(
+    (m) => m.key !== "minutes" && m.key !== "apps" && m.key !== "rating"
+  );
 
   return (
     <>
@@ -81,55 +54,59 @@ function SoccerPerformanceSection({
         className="border"
         style={{ borderColor: `${theme.primaryColor}33` }}
       >
-        <div className="grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {scorecard.metrics.map((m) => (
-            <div
-              key={m.key}
-              className="flex min-h-[4.5rem] flex-col rounded-lg border bg-surface-muted/40 px-3 py-2.5"
-              style={{ borderColor: `${theme.primaryColor}33` }}
-            >
-              <span className="line-clamp-2 min-h-[1.75rem] text-2xs uppercase leading-snug tracking-wider text-muted-foreground">
-                {m.label}
-              </span>
-              <div className="mt-auto font-mono text-sm font-semibold tabular-nums text-foreground">
-                {m.value}
-              </div>
-              {m.hint ? <p className="mt-0.5 text-[10px] text-amber-200/80">{m.hint}</p> : null}
+        {/* Asymmetric band: rating anchors the eye; role rates read after it. */}
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,15rem)_1fr]">
+          <div
+            className="flex flex-col rounded-lg border bg-surface-muted/40 px-4 py-3"
+            style={{ borderColor: `${theme.primaryColor}44` }}
+          >
+            <span className="text-2xs uppercase leading-snug tracking-wider text-muted-foreground">
+              Season rating
+            </span>
+            <div className={`font-display text-4xl font-bold tabular-nums ${ratingColor(s.rating)}`}>
+              {s.rating.toFixed(1)}
             </div>
-          ))}
+            {ratingMetric?.hint ? (
+              <p className="mt-0.5 text-2xs text-amber-200/80">{ratingMetric.hint}</p>
+            ) : null}
+            <dl
+              className="mt-auto grid grid-cols-2 gap-2 border-t pt-3"
+              style={{ borderColor: `${theme.primaryColor}22` }}
+            >
+              <div>
+                <dt className="text-2xs uppercase tracking-wider text-muted-foreground">Minutes</dt>
+                <dd className="font-mono text-sm font-semibold tabular-nums text-foreground">
+                  {s.minutesPlayed > 0 ? s.minutesPlayed.toLocaleString("en-US") : "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-2xs uppercase tracking-wider text-muted-foreground">Apps</dt>
+                <dd className="font-mono text-sm font-semibold tabular-nums text-foreground">
+                  {s.appearances}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="grid items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {roleMetrics.map((m) => (
+              <div
+                key={m.key}
+                className="flex min-h-[4.5rem] flex-col rounded-lg border bg-surface-muted/40 px-3 py-2.5"
+                style={{ borderColor: `${theme.primaryColor}33` }}
+              >
+                <span className="line-clamp-2 min-h-[1.75rem] text-2xs uppercase leading-snug tracking-wider text-muted-foreground">
+                  {m.label}
+                </span>
+                <div className="mt-auto font-mono text-base font-semibold tabular-nums text-foreground">
+                  {m.value}
+                </div>
+                {m.hint ? <p className="mt-0.5 text-2xs text-amber-200/80">{m.hint}</p> : null}
+              </div>
+            ))}
+          </div>
         </div>
       </DataPanel>
-
-      <div className="grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          label="Minutes"
-          value={s.minutesPlayed.toLocaleString("en-US")}
-          icon={Activity}
-          accent="info"
-          borderColor={theme.primaryColor}
-        />
-        <MetricCard
-          label={highlight[0].label}
-          value={highlight[0].value}
-          icon={Target}
-          accent="primary"
-          borderColor={theme.primaryColor}
-        />
-        <MetricCard
-          label={highlight[1].label}
-          value={highlight[1].value}
-          icon={Crosshair}
-          accent="warning"
-          borderColor={theme.primaryColor}
-        />
-        <MetricCard
-          label={highlight[2].label}
-          value={highlight[2].value}
-          icon={group === "DEF" || group === "GK" ? Shield : TrendingUp}
-          accent="info"
-          borderColor={theme.primaryColor}
-        />
-      </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <DataPanel
