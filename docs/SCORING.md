@@ -26,7 +26,8 @@ Default local mode without DB is **`DATA_SOURCE=mock`** (generated demo players)
 
 ## Player Rating (soccer)
 
-**Where:** `estimateSoccerSeasonRating` in `src/lib/metrics/map-season-stats.ts`
+**Where:** `computeSoccerRating` / `reliableSoccerRating` in `src/lib/scoring/soccer-rating.ts`
+(re-exported from `soccer-rankings.ts` for list filters).
 
 **If minutes ≥ 450:**
 
@@ -36,9 +37,9 @@ Default local mode without DB is **`DATA_SOURCE=mock`** (generated demo players)
 
 where \(g_{90}\) and \(a_{90}\) are soft-capped at **1.8**.
 
-**If minutes < 450:** conservative baseline from raw goal/assist counts (capped contribution), max rating **7.0** — avoids inflated ratings from 10-minute cameos.
+**If minutes < 450:** conservative baseline from raw goal/assist counts (capped contribution + sample penalty), max rating **7.0** — avoids inflated ratings from 10-minute cameos.
 
-Mock seed ratings are often drawn in a band (~6.1–8.4) and are **not** the same formula.
+ETL may store a position-aware **Rating Proxy** (`computeRatingProxy`); list/profile still run through `reliableSoccerRating` so elite stored scores cannot stick on mediocre rates.
 
 ---
 
@@ -100,3 +101,39 @@ Suggested line:
 > “The product surface is multi-sport scouting UX with live hubs where it helps. Ratings and opportunity flags are transparent prototype heuristics I’m iterating on — I’m explicit about sample-size and soft caps so the numbers stay credible.”
 
 Point people to this file and the in-app prototype banner.
+
+---
+
+## Inspired by Sofascore / WhoScored (Opta) — without copying
+
+We **do not** use Opta, Sofascore, or WhoScored APIs/scores (licensed / proprietary).
+We **can** mirror publicly described *design ideas*:
+
+| Public idea | Their product | OmniScout direction |
+|-------------|----------------|---------------------|
+| Baseline mid-scale | Sofascore starts ~**6.5**/match; WhoScored ~**6.0** | Season proxy starts around **6.0** |
+| Event-weighted, +/− | Goals/assists/tackles up; cards/errors down | Goals/assists (+); cards (−); defensive rates for DF roles |
+| Position-aware | Same scale, different action weights | Position scorecards + defensive bonus in ETL proxy |
+| Context / impact | Progressive pass > safe back-pass | Out of scope without event-level data |
+| Match vs season | Live match rating + season average | Season rating on lists; **match rating** on `PlayerMatchStat` when boxscores sync |
+
+**Honest limit:** Sofascore/WhoScored ingest hundreds of *match events* (passes by zone, progressive carries, etc.). Our DB mostly has season totals → a Sofascore-*like* number is impossible without richer event feeds. Next step if we deepen scoring: weight **role packs** (ATT/MID/DEF/GK) more like their category breakdown (shooting / passing / defending), still as our own documented formula.
+
+---
+
+## Match rating (Stage 6)
+
+**Where:** `computeMatchRating` in `src/lib/scoring/soccer-rating.ts`  
+**Stored on:** `PlayerMatchStat.rating` (one row per player × ESPN event)
+
+Public inspiration (Sofascore): start near **6.5**, then +/− from actions.
+
+Our formula (boxscore fields only):
+
+- Baseline **6.5**
+- + goals (capped) / assists / tackles / interceptions
+- Light pass-accuracy adjustment when ≥ 15 attempts
+- Dampen if minutes &lt; 45′
+- Clamp **[3, 10]**
+
+Season lists/rankings still use **season** rating (`reliableSoccerRating`). Match ratings power the profile “Recent appearances” list.

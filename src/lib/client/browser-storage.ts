@@ -9,6 +9,15 @@ export function scoutNoteStorageKey(playerId: string): string {
   return `football-intel:notes:${playerId}`;
 }
 
+export type ShortlistTag = "priority" | "watch" | "reject";
+
+export interface ShortlistEntry {
+  playerId: string;
+  tag: ShortlistTag;
+  note: string;
+  updatedAt: string;
+}
+
 export interface ScoutNoteRecord {
   text: string;
   updatedAt: string;
@@ -92,42 +101,166 @@ function writeSessionFlag(key: string): void {
   }
 }
 
-export function getShortlistIds(): string[] {
-  const ids = readJson<string[]>(SHORTLIST_STORAGE_KEY, []);
-  return Array.isArray(ids) ? ids.filter((id) => typeof id === "string") : [];
+function readLegacyNoteRecord(playerId: string): ScoutNoteRecord | null {
+  const note = readJson<ScoutNoteRecord | null>(scoutNoteStorageKey(playerId), null);
+  if (!note || typeof note.text !== "string") return null;
+  return note;
 }
 
-export function setShortlistIds(ids: string[]): void {
-  const unique = [...new Set(ids)];
-  writeJson(SHORTLIST_STORAGE_KEY, unique);
+export function getShortlistEntries(): ShortlistEntry[] {
+  const raw = readJson<unknown>(SHORTLIST_STORAGE_KEY, []);
+  if (!Array.isArray(raw)) return [];
+
+  // Legacy: string[] of player IDs
+  if (raw.length > 0 && raw.every((item) => typeof item === "string")) {
+    return (raw as string[])
+      .filter((id) => id.length > 0)
+      .map((playerId) => {
+        const legacyNote = readLegacyNoteRecord(playerId);
+        return {
+          playerId,
+          tag: "watch" as const,
+          note: legacyNote?.text ?? "",
+          updatedAt: legacyNote?.updatedAt ?? new Date(0).toISOString(),
+        };
+      });
+  }
+
+  return raw
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const row = item as Partial<ShortlistEntry>;
+      if (typeof row.playerId !== "string" || !row.playerId) return null;
+      const tag: ShortlistTag =
+        row.tag === "priority" || row.tag === "reject" || row.tag === "watch"
+          ? row.tag
+          : "watch";
+      return {
+        playerId: row.playerId,
+        tag,
+        note: typeof row.note === "string" ? row.note : "",
+        updatedAt:
+          typeof row.updatedAt === "string" ? row.updatedAt : new Date(0).toISOString(),
+      } satisfies ShortlistEntry;
+    })
+    .filter((entry): entry is ShortlistEntry => entry != null);
+}
+
+export function setShortlistEntries(entries: ShortlistEntry[]): void {
+  const byId = new Map<string, ShortlistEntry>();
+  for (const entry of entries) {
+    byId.set(entry.playerId, entry);
+  }
+  writeJson(SHORTLIST_STORAGE_KEY, [...byId.values()]);
   if (isBrowser()) {
     window.dispatchEvent(new CustomEvent(SHORTLIST_CHANGED_EVENT));
   }
+}
+
+export function getShortlistIds(): string[] {
+  return getShortlistEntries().map((e) => e.playerId);
+}
+
+export function setShortlistIds(ids: string[]): void {
+  const existing = new Map(getShortlistEntries().map((e) => [e.playerId, e]));
+  const next = ids.map((playerId) => {
+    const prev = existing.get(playerId);
+    return (
+      prev ?? {
+        playerId,
+        tag: "watch" as const,
+        note: readLegacyNoteRecord(playerId)?.text ?? "",
+        updatedAt: new Date().toISOString(),
+      }
+    );
+  });
+  setShortlistEntries(next);
 }
 
 export function isInShortlist(playerId: string): boolean {
   return getShortlistIds().includes(playerId);
 }
 
+export function getShortlistEntry(playerId: string): ShortlistEntry | null {
+  return getShortlistEntries().find((e) => e.playerId === playerId) ?? null;
+}
+
 export function toggleShortlistId(playerId: string): boolean {
-  const ids = getShortlistIds();
-  const exists = ids.includes(playerId);
-  const next = exists ? ids.filter((id) => id !== playerId) : [...ids, playerId];
-  setShortlistIds(next);
+  const entries = getShortlistEntries();
+  const exists = entries.some((e) => e.playerId === playerId);
+  const next = exists
+    ? entries.filter((e) => e.playerId !== playerId)
+    : [
+        ...entries,
+        {
+          playerId,
+          tag: "watch" as const,
+          note: readLegacyNoteRecord(playerId)?.text ?? "",
+          updatedAt: new Date().toISOString(),
+        },
+      ];
+  setShortlistEntries(next);
   return !exists;
 }
 
 export function removeFromShortlist(playerId: string): void {
-  setShortlistIds(getShortlistIds().filter((id) => id !== playerId));
+  setShortlistEntries(getShortlistEntries().filter((e) => e.playerId !== playerId));
+}
+
+export function setShortlistTag(playerId: string, tag: ShortlistTag): void {
+  const entries = getShortlistEntries();
+  const idx = entries.findIndex((e) => e.playerId === playerId);
+  if (idx < 0) {
+    setShortlistEntries([
+      ...entries,
+      {
+        playerId,
+        tag,
+        note: readLegacyNoteRecord(playerId)?.text ?? "",
+        updatedAt: new Date().toISOString(),
+      },
+    ]);
+    return;
+  }
+  const next = [...entries];
+  next[idx] = { ...next[idx], tag, updatedAt: new Date().toISOString() };
+  setShortlistEntries(next);
+}
+
+export function setShortlistNote(playerId: string, note: string): ShortlistEntry {
+  const entries = getShortlistEntries();
+  const idx = entries.findIndex((e) => e.playerId === playerId);
+  const updatedAt = new Date().toISOString();
+  const entry: ShortlistEntry = {
+    playerId,
+    tag: idx >= 0 ? entries[idx].tag : "watch",
+    note,
+    updatedAt,
+  };
+  if (idx < 0) {
+    setShortlistEntries([...entries, entry]);
+  } else {
+    const next = [...entries];
+    next[idx] = entry;
+    setShortlistEntries(next);
+  }
+  writeJson(scoutNoteStorageKey(playerId), { text: note, updatedAt } satisfies ScoutNoteRecord);
+  return entry;
 }
 
 export function getScoutNote(playerId: string): ScoutNoteRecord | null {
-  const note = readJson<ScoutNoteRecord | null>(scoutNoteStorageKey(playerId), null);
-  if (!note || typeof note.text !== "string") return null;
-  return note;
+  const fromShortlist = getShortlistEntries().find((e) => e.playerId === playerId);
+  if (fromShortlist && fromShortlist.note.length > 0) {
+    return { text: fromShortlist.note, updatedAt: fromShortlist.updatedAt };
+  }
+  return readLegacyNoteRecord(playerId);
 }
 
 export function saveScoutNote(playerId: string, text: string): ScoutNoteRecord {
+  if (isInShortlist(playerId)) {
+    const entry = setShortlistNote(playerId, text);
+    return { text: entry.note, updatedAt: entry.updatedAt };
+  }
   const note: ScoutNoteRecord = { text, updatedAt: new Date().toISOString() };
   writeJson(scoutNoteStorageKey(playerId), note);
   return note;

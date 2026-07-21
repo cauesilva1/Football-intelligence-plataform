@@ -7,6 +7,7 @@ import { parseCompareParams } from "@/features/comparison/lib/parse-compare-para
 import { CompareSelectorForm } from "@/features/comparison/components/compare-selector-form";
 import { ComparisonResult } from "@/features/comparison/components/comparison-result";
 import { ComparisonResultSkeleton } from "@/features/comparison/components/comparison-result-skeleton";
+import { ScoutWorkflowNav } from "@/features/scouting/components/scout-workflow-nav";
 import { APP_NAME } from "@/lib/config";
 
 export const metadata = { title: `Compare · ${APP_NAME}` };
@@ -31,9 +32,10 @@ export default async function ComparePage({
   return (
     <DashboardShell subtitle="Player comparison">
       <div className="space-y-6">
+        <ScoutWorkflowNav current="compare" />
         <PageHeader
           title="Compare players"
-          description="Side-by-side analysis by technical categories, radar chart, and competitive edges."
+          description="Side-by-side decision support — role-aware metrics and small-sample honesty from the profile."
         />
 
         <CompareSelectorForm players={playersLite} playerA={playerA} playerB={playerB} />

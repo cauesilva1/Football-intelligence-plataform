@@ -33,14 +33,23 @@ export function MetricCard({
   return (
     <Card
       density="dense"
-      className={cn(className)}
+      className={cn("flex h-full min-h-[5.75rem] flex-col", className)}
       style={borderColor ? { borderColor: `${borderColor}55` } : undefined}
     >
-      <CardContent density="dense" className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
-          <div className="mt-1 font-display text-xl font-bold tabular-nums text-foreground md:text-2xl">{value}</div>
-          {trend && <div className="mt-0.5 text-2xs text-muted-foreground">{trend}</div>}
+      <CardContent
+        density="dense"
+        className="flex h-full flex-1 items-start justify-between gap-3"
+      >
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="line-clamp-2 min-h-[2rem] text-2xs font-medium uppercase leading-snug tracking-wider text-muted-foreground">
+            {label}
+          </div>
+          <div className="mt-1 font-display text-xl font-bold tabular-nums text-foreground md:text-2xl">
+            {value}
+          </div>
+          <div className="mt-auto pt-1 text-2xs leading-snug text-muted-foreground line-clamp-2 min-h-[1.75rem]">
+            {trend ?? "\u00a0"}
+          </div>
         </div>
         {Icon && (
           <div

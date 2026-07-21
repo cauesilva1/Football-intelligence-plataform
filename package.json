@@ -18,6 +18,8 @@
     "data:sync-br2025-db": "tsx src/scripts/sync-brasileirao-2025-db.ts",
     "data:sync-match-2026": "tsx src/scripts/sync-match-stats-2026.ts",
     "data:cron-sync-2026": "tsx src/scripts/auto-sync-completed-matches-2026.ts",
+    "data:backfill-boxscores": "tsx src/scripts/backfill-soccer-boxscores.ts",
+    "data:backfill-big5": "tsx src/scripts/backfill-soccer-big5.ts",
     "data:sync-basquete": "tsx src/scripts/sync-basketball-ecosystem.ts",
     "data:sync-nba-teste": "tsx src/scripts/sync-nba-only-history.ts",
     "data:sync-boxscore-basquete": "tsx src/scripts/sync-basketball-boxscores.ts",
@@ -29,7 +31,7 @@
     "perf:routes": "node scripts/measure-routes.mjs",
     "fetch:wc2026": "node scripts/fetch-wc2026.js",
     "data:seed-wc2026": "tsx src/scripts/seed-world-cup-2026.ts",
-    "test": "tsx --test src/lib/scoring/soccer-rankings.test.ts src/lib/metrics/per90.test.ts"
+    "test": "tsx --test src/lib/scoring/soccer-rankings.test.ts src/lib/scoring/soccer-rating.test.ts src/lib/metrics/per90.test.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.19.1",

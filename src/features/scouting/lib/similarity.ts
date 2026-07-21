@@ -1,4 +1,5 @@
 import { toRadarProfile } from "@/lib/normalize";
+import { similarPositionGroup } from "@/features/scouting/lib/position-scorecard";
 import type { Player } from "@/types";
 
 export interface SimilarPlayerResult {
@@ -84,13 +85,14 @@ function weightedSimilarity(a: Record<string, number>, b: Record<string, number>
   return totalWeight > 0 ? (score / totalWeight) * 100 : 0;
 }
 
-/** Weighted similarity v1 — same position group, mock-ready for future pgvector. */
+/** Weighted similarity — same position group (e.g. ST≈LW), role-aware weights. */
 export function findSimilarPlayers(target: Player, pool: Player[], limit = 4): SimilarPlayerResult[] {
   const weights = weightsForPosition(target.position);
   const targetVector = featureVector(target);
+  const group = new Set(similarPositionGroup(target.position));
 
   return pool
-    .filter((p) => p.id !== target.id && p.position === target.position)
+    .filter((p) => p.id !== target.id && group.has(p.position))
     .map((player) => ({
       player,
       score: weightedSimilarity(targetVector, featureVector(player), weights),

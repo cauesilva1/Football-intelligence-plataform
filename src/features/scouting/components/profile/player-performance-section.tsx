@@ -8,6 +8,11 @@ import {
 } from "@/features/scouting/components/profile/lazy-performance-charts";
 import { aggregateSeasonTimeline } from "@/features/scouting/lib/season-history";
 import { PlayerSeasonSelector } from "@/features/scouting/components/profile/player-season-selector";
+import {
+  buildPositionScorecard,
+  soccerPositionGroup,
+  soccerPositionGroupLabel,
+} from "@/features/scouting/lib/position-scorecard";
 import { toRadarProfile } from "@/lib/normalize";
 import { per90 } from "@/lib/metrics/per90";
 import { SOCCER_RATE_MIN_MINUTES, SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
@@ -28,25 +33,74 @@ function SoccerPerformanceSection({
 }) {
   const radarMetrics = [...getSportConfig("SOCCER").ui.radarMetrics];
   const smallSample = s.minutesPlayed > 0 && s.minutesPlayed < SOCCER_RATE_MIN_MINUTES;
-  const goals90 = smallSample
-    ? "—"
-    : per90(s.goals, s.minutesPlayed, { softCap: SOCCER_RATE_SOFT_CAP }).toFixed(2);
-  const xg90 = smallSample
-    ? "—"
-    : (s.minutesPlayed > 0 ? (s.xG / s.minutesPlayed) * 90 : 0).toFixed(2);
-  const assists90 = smallSample
-    ? "—"
-    : per90(s.assists, s.minutesPlayed, { softCap: SOCCER_RATE_SOFT_CAP }).toFixed(2);
+  const scorecard = buildPositionScorecard(player.position, s);
+  const group = soccerPositionGroup(player.position);
+  const rateLabel = (total: number, totalLabel: string, rateLabelText: string) => {
+    if (smallSample) {
+      return { label: totalLabel, value: String(total) };
+    }
+    return {
+      label: rateLabelText,
+      value: per90(total, s.minutesPlayed, { softCap: SOCCER_RATE_SOFT_CAP }).toFixed(2),
+    };
+  };
+  const highlight =
+    group === "DEF" || group === "GK"
+      ? [
+          rateLabel(s.tacklesWon, "Tackles", "Tackles / 90"),
+          rateLabel(s.interceptions, "Interceptions", "Interceptions / 90"),
+          {
+            label: "Pass accuracy",
+            value: s.passAccuracy > 0 ? `${s.passAccuracy.toFixed(0)}%` : "—",
+          },
+        ]
+      : [
+          rateLabel(s.goals, "Goals", "Goals / 90"),
+          smallSample
+            ? { label: "xG", value: s.xG.toFixed(2) }
+            : {
+                label: "xG / 90",
+                value: (s.minutesPlayed > 0 ? (s.xG / s.minutesPlayed) * 90 : 0).toFixed(2),
+              },
+          rateLabel(s.assists, "Assists", "Assists / 90"),
+        ];
 
   return (
     <>
       {smallSample ? (
         <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90">
-          Small sample ({s.minutesPlayed}&apos;). Per-90 rates are hidden until ≥ {SOCCER_RATE_MIN_MINUTES}
-          &apos; — rating is provisional.
+          Small sample ({s.minutesPlayed}&apos;). Showing season totals until ≥ {SOCCER_RATE_MIN_MINUTES}
+          &apos; — per-90 rates and rating stay provisional.
         </p>
       ) : null}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+
+      <DataPanel
+        title={scorecard.title}
+        description={`${soccerPositionGroupLabel(scorecard.group)} pack for ${player.position} — role-aware metrics.`}
+        density="dense"
+        className="border"
+        style={{ borderColor: `${theme.primaryColor}33` }}
+      >
+        <div className="grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          {scorecard.metrics.map((m) => (
+            <div
+              key={m.key}
+              className="flex min-h-[4.5rem] flex-col rounded-lg border bg-surface-muted/40 px-3 py-2.5"
+              style={{ borderColor: `${theme.primaryColor}33` }}
+            >
+              <span className="line-clamp-2 min-h-[1.75rem] text-2xs uppercase leading-snug tracking-wider text-muted-foreground">
+                {m.label}
+              </span>
+              <div className="mt-auto font-mono text-sm font-semibold tabular-nums text-foreground">
+                {m.value}
+              </div>
+              {m.hint ? <p className="mt-0.5 text-[10px] text-amber-200/80">{m.hint}</p> : null}
+            </div>
+          ))}
+        </div>
+      </DataPanel>
+
+      <div className="grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Minutes"
           value={s.minutesPlayed.toLocaleString("en-US")}
@@ -55,23 +109,23 @@ function SoccerPerformanceSection({
           borderColor={theme.primaryColor}
         />
         <MetricCard
-          label="Goals / 90"
-          value={goals90}
+          label={highlight[0].label}
+          value={highlight[0].value}
           icon={Target}
           accent="primary"
           borderColor={theme.primaryColor}
         />
         <MetricCard
-          label={<GlossaryTooltip label="xG / 90" description={METRIC_GLOSSARY.xG} />}
-          value={xg90}
+          label={highlight[1].label}
+          value={highlight[1].value}
           icon={Crosshair}
           accent="warning"
           borderColor={theme.primaryColor}
         />
         <MetricCard
-          label={<GlossaryTooltip label="Assists / 90" description={METRIC_GLOSSARY.xA} />}
-          value={assists90}
-          icon={TrendingUp}
+          label={highlight[2].label}
+          value={highlight[2].value}
+          icon={group === "DEF" || group === "GK" ? Shield : TrendingUp}
           accent="info"
           borderColor={theme.primaryColor}
         />
@@ -116,18 +170,44 @@ function SoccerPerformanceSection({
             { label: "Assists", value: String(s.assists) },
             { label: "Shots", value: String(s.shots) },
             { label: "Shots on Target", value: String(s.shotsOnTarget) },
-            { label: "Shots / 90", value: s.per90.shots.toFixed(2) },
+            {
+              label: "Shots / 90",
+              value: smallSample ? "—" : s.per90.shots.toFixed(2),
+            },
             { label: "Key Passes", value: String(s.keyPasses) },
-            { label: "Key Passes / 90", value: s.per90.keyPasses.toFixed(2) },
-            { label: "Passes", value: String(s.passes) },
-            { label: "Pass Accuracy", value: `${s.passAccuracy.toFixed(0)}%` },
+            {
+              label: "Key Passes / 90",
+              value: smallSample ? "—" : s.per90.keyPasses.toFixed(2),
+            },
+            {
+              label: "Passes",
+              value: s.passes > 0 ? String(s.passes) : "—",
+            },
+            {
+              label: "Pass Accuracy",
+              value: s.passAccuracy > 0 ? `${s.passAccuracy.toFixed(0)}%` : "—",
+            },
             { label: "Dribbles Completed", value: String(s.dribblesCompleted) },
-            { label: "Dribbles / 90", value: s.per90.dribbles.toFixed(2) },
+            {
+              label: "Dribbles / 90",
+              value: smallSample ? "—" : s.per90.dribbles.toFixed(2),
+            },
             { label: "xG total", value: s.xG.toFixed(2), glossary: METRIC_GLOSSARY.xG },
             { label: "xA total", value: s.xA.toFixed(2), glossary: METRIC_GLOSSARY.xA },
-            { label: "Duels Won", value: `${s.duelsWonPct.toFixed(0)}%` },
-            { label: "Tackles Won / 90", value: s.per90.tackles.toFixed(2) },
-            { label: "Interceptions / 90", value: s.per90.interceptions.toFixed(2) },
+            {
+              label: "Duels Won",
+              value: s.duelsWonPct > 0 ? `${s.duelsWonPct.toFixed(0)}%` : "—",
+            },
+            { label: "Tackles Won", value: String(s.tacklesWon) },
+            {
+              label: "Tackles Won / 90",
+              value: smallSample ? "—" : s.per90.tackles.toFixed(2),
+            },
+            { label: "Interceptions", value: String(s.interceptions) },
+            {
+              label: "Interceptions / 90",
+              value: smallSample ? "—" : s.per90.interceptions.toFixed(2),
+            },
             { label: "Yellow Cards", value: String(s.yellowCards) },
             { label: "Red Cards", value: String(s.redCards) },
           ].map((item) => (

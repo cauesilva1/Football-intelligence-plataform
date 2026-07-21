@@ -106,6 +106,7 @@ model Player {
   team              Team?             @relation(fields: [teamId], references: [id])
   statistics        PlayerStatistic[]
   stats             PlayerSeasonStats[]
+  matchStats        PlayerMatchStat[]
   reports           ScoutingReport[]
   strengths         String[]
   weaknesses        String[]
@@ -139,6 +140,7 @@ model Match {
   source        String       @default("espn")
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+  playerMatchStats PlayerMatchStat[]
 
   @@index([homeTeamId])
   @@index([awayTeamId])
@@ -205,6 +207,40 @@ model PlayerSeasonStats {
   @@index([playerId])
   @@index([season])
   @@map("player_season_stats")
+}
+
+/// Per-match appearance — Stage 6. Filled by ESPN boxscore sync / match detail persist.
+model PlayerMatchStat {
+  id               String    @id @default(cuid())
+  playerId         String
+  player           Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  matchId          String?
+  match            Match?    @relation(fields: [matchId], references: [id], onDelete: SetNull)
+  /// e.g. espn:bra.1:123456
+  externalEventKey String
+  matchDate        DateTime?
+  competitionLabel String?
+  teamName         String?
+  opponentName     String?
+  isHome           Boolean?
+  minutesPlayed    Int       @default(0)
+  goals            Int       @default(0)
+  assists          Int       @default(0)
+  tackles          Float     @default(0)
+  interceptions    Float     @default(0)
+  passesCompleted  Int       @default(0)
+  passesAttempted  Int       @default(0)
+  /// Match productivity proxy (Sofascore-inspired baseline ~6.5) — our formula.
+  rating           Float?
+  season           Int?
+  source           String    @default("espn")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([playerId, externalEventKey])
+  @@index([playerId, matchDate])
+  @@index([externalEventKey])
+  @@map("player_match_stats")
 }
 
 model TeamStatistic {

@@ -4,6 +4,8 @@ import {
   fetchEspnMatchBoxScores,
   type MatchPlayerBoxScore,
 } from "@/lib/api/espn-boxscore";
+import { persistEspnBoxScoresForKnownPlayers } from "@/lib/api/player-match-stats";
+import { isDbSource } from "@/lib/data-source";
 import { fetchEspnScoreboard } from "@/lib/api/espn-matches";
 import { resolveEspnLeagueBySlug } from "@/lib/crests/espn-standings";
 import { fromEspnScoreboardEvent, fromStatsBombMatch } from "@/lib/tournaments/match-normalizer";
@@ -81,6 +83,22 @@ async function loadFromDatabase(id: string): Promise<MatchDetailPayload | null> 
       ? await fetchEspnMatchBoxScores(parsed.slug, parsed.eventId)
       : [];
 
+  if (parsed && boxScores.length > 0 && isDbSource()) {
+    const { resolveEspnSeasonYear } = await import("@/lib/seasons");
+    void persistEspnBoxScoresForKnownPlayers(boxScores, {
+      espnSlug: parsed.slug,
+      eventId: parsed.eventId,
+      matchId: row.id,
+      matchDate: row.matchDate,
+      competitionLabel: row.competition?.name,
+      homeTeamName: row.homeTeam.name,
+      awayTeamName: row.awayTeam.name,
+      season: resolveEspnSeasonYear(row.competition?.name),
+    }).catch((error) => {
+      console.warn("[match-detail] player match stat persist failed:", error);
+    });
+  }
+
   return {
     match,
     competitionName: row.competition?.name,
@@ -108,6 +126,20 @@ async function loadFromEspnScoreboard(id: string): Promise<MatchDetailPayload | 
       match.status === "finished" || match.status === "live"
         ? await fetchEspnMatchBoxScores(parsed.slug, parsed.eventId)
         : [];
+
+    if (boxScores.length > 0 && isDbSource()) {
+      void persistEspnBoxScoresForKnownPlayers(boxScores, {
+        espnSlug: parsed.slug,
+        eventId: parsed.eventId,
+        matchDate: match.kickOff ? new Date(match.kickOff) : undefined,
+        competitionLabel: league.competitionLabel,
+        homeTeamName: match.homeTeam,
+        awayTeamName: match.awayTeam,
+        season: league.preferredSeason,
+      }).catch((error) => {
+        console.warn("[match-detail] player match stat persist failed:", error);
+      });
+    }
 
     return {
       match,

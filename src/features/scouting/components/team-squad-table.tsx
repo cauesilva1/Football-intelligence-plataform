@@ -98,8 +98,7 @@ export function TeamSquadTable({
                       position={player.position}
                       competitionName={competitionName}
                       teamName={teamName}
-                      photoUrl={player.photoUrl}
-                      apiSportsPlayerId={player.apiSportsId}
+                      photoPolicy="initials"
                       size="sm"
                     />
                     <span className="font-medium text-foreground">{player.knownAs}</span>

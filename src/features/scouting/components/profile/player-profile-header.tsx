@@ -155,7 +155,7 @@ export function PlayerProfileHeader({
               <GitCompareArrows className="h-3.5 w-3.5" /> Compare
             </Link>
             <Link href={`/reports?playerId=${player.id}`} className={buttonVariants({ variant: "secondary", size: "sm" })}>
-              <FileText className="h-3.5 w-3.5" /> Scout Report
+              <FileText className="h-3.5 w-3.5" /> Generate brief
             </Link>
           </div>
         </div>

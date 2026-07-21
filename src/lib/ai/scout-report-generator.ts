@@ -1,4 +1,5 @@
 import { derivePlayingStyle } from "@/features/scouting/lib/playing-style";
+import { computeReportOverallRating } from "@/lib/scoring/soccer-rating";
 import type { Player, ScoutingReport, TacticalFit } from "@/lib/types";
 import { formatMarketValue } from "@/lib/utils";
 
@@ -128,10 +129,7 @@ function buildTacticalFit(player: Player): TacticalFit {
 }
 
 function computeOverallRating(player: Player): number {
-  const s = player.currentSeasonStats;
-  return Number(
-    (s.rating * 0.6 + Math.min(10, (s.goals + s.assists) / 3) * 0.4).toFixed(1)
-  );
+  return computeReportOverallRating(player.currentSeasonStats);
 }
 
 function buildMockReport(player: Player): ScoutingReport {
@@ -243,9 +241,8 @@ async function generateWithOpenRouter(player: Player): Promise<ScoutingReport | 
   if (!payload?.summary || !payload.recommendation) return null;
 
   const fallbackStyle = derivePlayingStyle(player);
-  const rating = Number(
-    Math.min(9.5, Math.max(4, payload.overallRating ?? computeOverallRating(player))).toFixed(1)
-  );
+  // Always use unified soccer rating — do not trust a parallel LLM score.
+  const rating = computeOverallRating(player);
 
   return {
     id: `report-${player.id}-${Date.now()}`,

@@ -4,10 +4,18 @@ import { useState } from "react";
 import Image from "next/image";
 import { UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getPlayerInitials, resolvePlayerPhotoUrl } from "@/lib/player-media";
+import { getPlayerInitials, isUsablePlayerPhotoUrl, resolvePlayerPhotoUrl } from "@/lib/player-media";
 import { getPositionAbbreviation, getTeamTheme } from "@/lib/team-theme";
 
 const SIZE_PX = { sm: 32, md: 40, lg: 80 } as const;
+
+export type PlayerAvatarPhotoPolicy =
+  /** Resolve CDN from apiSportsId when needed (profile). */
+  | "auto"
+  /** Only show a photo already stored in DB — no CDN fallback (lists). */
+  | "stored-only"
+  /** Always initials — zero image requests. */
+  | "initials";
 
 export function PlayerAvatar({
   name,
@@ -17,6 +25,7 @@ export function PlayerAvatar({
   teamName,
   photoUrl,
   apiSportsPlayerId,
+  photoPolicy = "auto",
   size = "md",
   className,
 }: {
@@ -27,6 +36,7 @@ export function PlayerAvatar({
   teamName?: string | null;
   photoUrl?: string | null;
   apiSportsPlayerId?: number | string | null;
+  photoPolicy?: PlayerAvatarPhotoPolicy;
   size?: "sm" | "md" | "lg";
   className?: string;
 }) {
@@ -38,10 +48,17 @@ export function PlayerAvatar({
       ? Number(apiSportsPlayerId)
       : undefined;
 
-  const resolvedPhotoUrl = resolvePlayerPhotoUrl({
-    photoUrl,
-    apiSportsId: Number.isFinite(parsedApiId) ? parsedApiId : null,
-  });
+  let resolvedPhotoUrl: string | undefined;
+  if (photoPolicy === "initials") {
+    resolvedPhotoUrl = undefined;
+  } else if (photoPolicy === "stored-only") {
+    resolvedPhotoUrl = isUsablePlayerPhotoUrl(photoUrl) ? photoUrl!.trim() : undefined;
+  } else {
+    resolvedPhotoUrl = resolvePlayerPhotoUrl({
+      photoUrl,
+      apiSportsId: Number.isFinite(parsedApiId) ? parsedApiId : null,
+    });
+  }
 
   const initials = getPlayerInitials(name, fullName);
   const positionTag = getPositionAbbreviation(position);

@@ -3,7 +3,7 @@ import { ReportGenerator } from "@/features/ai-report/components/report-generato
 import { queryAllPlayersLite } from "@/features/scouting/queries/players";
 import { APP_NAME } from "@/lib/config";
 
-export const metadata = { title: `AI Reports · ${APP_NAME}` };
+export const metadata = { title: `Scout brief · ${APP_NAME}` };
 
 export default async function ReportsPage({
   searchParams,
@@ -21,7 +21,7 @@ export default async function ReportsPage({
   const validPlayerId = playerId && players.some((p) => p.id === playerId) ? playerId : undefined;
 
   return (
-    <DashboardShell subtitle="AI Scout Reports">
+    <DashboardShell subtitle="Scout brief">
       <ReportGenerator players={players} initialPlayerId={validPlayerId} />
     </DashboardShell>
   );

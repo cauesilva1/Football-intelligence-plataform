@@ -42,7 +42,22 @@ export default function MethodologyPage() {
               With &lt; {SOCCER_RATE_MIN_MINUTES}&apos;: conservative baseline from raw goals/assists
               (max 7.0) so cameos cannot inflate ratings.
             </li>
-            <li>Not Opta / Sofascore — a transparent productivity proxy.</li>
+            <li>
+              Source of truth: <code className="text-foreground">src/lib/scoring/soccer-rating.ts</code>.
+            </li>
+          </ul>
+        </DataPanel>
+
+        <DataPanel title="Match rating (appearances)" density="dense">
+          <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+            <li>
+              Baseline ~6.5 per match (Sofascore-inspired publicly), then goals / assists / tackles /
+              interceptions. Not Opta or Sofascore data.
+            </li>
+            <li>
+              Stored on <code className="text-foreground">PlayerMatchStat</code> when boxscores sync
+              or when you open a finished match page.
+            </li>
           </ul>
         </DataPanel>
 

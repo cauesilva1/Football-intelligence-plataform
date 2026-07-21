@@ -5,7 +5,12 @@ import {
   SOCCER_U23_RANKING_FILTERS,
 } from "@/lib/scoring/soccer-rankings";
 
-export type SoccerRankingSlug = "u23" | "finishers" | "creators" | "hidden-gems";
+export type SoccerRankingSlug =
+  | "u23"
+  | "finishers"
+  | "creators"
+  | "defenders"
+  | "hidden-gems";
 export type BasketballRankingSlug = "u23" | "scorers" | "playmakers" | "rebounders" | "bargains";
 export type AmericanFootballRankingSlug =
   | "u23"
@@ -59,6 +64,22 @@ const SOCCER_PRESETS: RankingPreset[] = [
     description: "Leaders in assists and chance creation per 90.",
     href: "/rankings/creators",
     filters: { minMinutes: 450, sortBy: "assistsPer90", sortDir: "desc", page: 1, pageSize: 20 },
+  },
+  {
+    slug: "defenders",
+    title: "Defensive Actions",
+    description:
+      "Centre-backs and full-backs with reliable minutes — role-aware list (tackles/ints on the profile scorecard).",
+    href: "/rankings/defenders",
+    filters: {
+      position: "CB,LB,RB,LWB,RWB",
+      minMinutes: 450,
+      minRating: 6.5,
+      sortBy: "rating",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+    },
   },
   {
     slug: "hidden-gems",

@@ -6,6 +6,7 @@ import { APP_NAME } from "@/lib/config";
 import { ScoutingFiltersPanelLoader } from "@/features/scouting/components/scouting-filters-panel-loader";
 import { ScoutingDatabaseView } from "@/features/scouting/components/scouting-database-view";
 import { ScoutingTableSkeleton } from "@/features/scouting/components/scouting-table-skeleton";
+import { ScoutWorkflowNav } from "@/features/scouting/components/scout-workflow-nav";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const metadata = { title: `Scouting · ${APP_NAME}` };
@@ -51,6 +52,17 @@ export default async function ScoutingPage({
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               Filter NFL and College Football by position, age, and rating — season production is shown on the profile.
             </p>
+          </div>
+        ) : null}
+        {sport === "SOCCER" ? (
+          <div className="space-y-3">
+            <ScoutWorkflowNav current="discover" />
+            <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
+              <h1 className="font-display text-lg font-bold text-foreground md:text-xl">Scouting</h1>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                Search by name or filter by role — Save from the list, then refine on My Players.
+              </p>
+            </div>
           </div>
         ) : null}
         <Suspense fallback={<FiltersSkeleton />}>

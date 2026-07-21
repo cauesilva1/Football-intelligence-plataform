@@ -1,9 +1,11 @@
-import { getPrisma } from "@/lib/prisma";
+import { getPrisma, withPrismaRetry } from "@/lib/prisma";
 import { namesLikelyMatch } from "@/lib/sync/data-staleness";
+import { upsertPlayerMatchStat, buildEspnEventKey } from "@/lib/api/player-match-stats";
+import { ESPN_BRAZIL_SEASON_YEAR } from "@/lib/seasons";
 
-const SEASON = 2026;
-const ESPN_SLUG = "bra.1";
-const BOXSCORE_CACHE_PREFIX = `espn:${ESPN_SLUG}:boxscore:${SEASON}:`;
+/** @deprecated Prefer processMatchBoxScore with explicit league — kept for BR scripts. */
+const LEGACY_BR_SEASON = ESPN_BRAZIL_SEASON_YEAR;
+const LEGACY_BR_SLUG = "bra.1";
 
 export interface MatchPlayerBoxScore {
   espnAthleteId: string;
@@ -20,6 +22,7 @@ export interface MatchPlayerBoxScore {
 
 export interface ProcessMatchBoxScoreResult {
   matchId: string;
+  espnSlug: string;
   playersProcessed: number;
   playersCreated: number;
   statsUpserted: number;
@@ -27,6 +30,15 @@ export interface ProcessMatchBoxScoreResult {
   failed: number;
   alreadyProcessed: boolean;
 }
+
+export type ProcessMatchBoxScoreOptions = {
+  force?: boolean;
+  /** Calendar / ESPN season year stored on PlayerSeasonStats + PlayerMatchStat */
+  seasonYear: number;
+  competitionLabel: string;
+  /** When true, do not create players that are missing from the DB */
+  createMissingPlayers?: boolean;
+};
 
 interface EspnStat {
   name?: string;
@@ -55,6 +67,11 @@ interface EspnSummaryResponse {
   header?: {
     competitions?: Array<{
       status?: { type?: { state?: string; completed?: boolean } };
+      date?: string;
+      competitors?: Array<{
+        homeAway?: string;
+        team?: { displayName?: string; name?: string };
+      }>;
     }>;
   };
 }
@@ -228,19 +245,19 @@ function combinePassingAccuracy(
 
 async function fetchMatchSummary(
   matchId: string,
-  espnSlug: string = ESPN_SLUG
+  espnSlug: string
 ): Promise<EspnSummaryResponse> {
   const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${espnSlug}/summary?event=${encodeURIComponent(matchId)}`;
   const response = await fetch(url, {
     headers: {
-      "User-Agent": "football-intelligence-platform/1.0 (brasileirao-boxscore)",
+      "User-Agent": "football-intelligence-platform/1.0 (soccer-boxscore)",
       Accept: "application/json",
     },
     signal: AbortSignal.timeout(12_000),
   });
 
   if (!response.ok) {
-    throw new Error(`ESPN summary HTTP ${response.status} for match ${matchId}`);
+    throw new Error(`ESPN summary HTTP ${response.status} for ${espnSlug}/${matchId}`);
   }
 
   return (await response.json()) as EspnSummaryResponse;
@@ -260,18 +277,30 @@ export async function fetchEspnMatchBoxScores(
   }
 }
 
-async function findTeamIdByName(teamName: string): Promise<string | null> {
+async function findTeamIdByName(
+  teamName: string,
+  competitionLabel?: string
+): Promise<string | null> {
   const prisma = getPrisma();
   const teams = await prisma.team.findMany({
-    where: {
-      competition: { name: { contains: "Brasileir", mode: "insensitive" } },
+    select: {
+      id: true,
+      name: true,
+      shortName: true,
+      competition: { select: { name: true } },
     },
-    select: { id: true, name: true, shortName: true },
+    take: 1200,
   });
 
+  const needle = competitionLabel?.toLowerCase().slice(0, 10) ?? "";
+  const inCompetition = needle
+    ? teams.filter((t) => (t.competition?.name ?? "").toLowerCase().includes(needle))
+    : teams;
+  const pool = inCompetition.length > 0 ? inCompetition : teams;
+
   const team =
-    teams.find((entry) => namesLikelyMatch(entry.name, teamName)) ??
-    teams.find((entry) => namesLikelyMatch(entry.shortName, teamName));
+    pool.find((entry) => namesLikelyMatch(entry.name, teamName)) ??
+    pool.find((entry) => namesLikelyMatch(entry.shortName, teamName));
 
   return team?.id ?? null;
 }
@@ -280,8 +309,9 @@ async function resolvePlayerId(
   cache: Map<string, PlayerRef>,
   fullName: string,
   teamName: string,
-  boxScore: MatchPlayerBoxScore
-): Promise<{ id: string; created: boolean }> {
+  boxScore: MatchPlayerBoxScore,
+  ctx: { seasonYear: number; competitionLabel: string; createMissingPlayers: boolean }
+): Promise<{ id: string; created: boolean } | null> {
   const prisma = getPrisma();
   const slug = buildPlayerSlug(fullName);
   const cached =
@@ -297,11 +327,17 @@ async function resolvePlayerId(
 
   const existing =
     (await prisma.player.findFirst({
-      where: { fullName },
+      where: { fullName, sport: "SOCCER" },
       select: { id: true, fullName: true, knownAs: true },
     })) ??
     (await prisma.player.findFirst({
-      where: { knownAs: slug },
+      where: {
+        sport: "SOCCER",
+        OR: [
+          { knownAs: { equals: fullName, mode: "insensitive" } },
+          { knownAs: slug },
+        ],
+      },
       select: { id: true, fullName: true, knownAs: true },
     }));
 
@@ -311,13 +347,17 @@ async function resolvePlayerId(
     return { id: existing.id, created: false };
   }
 
-  const teamId = await findTeamIdByName(teamName);
+  if (!ctx.createMissingPlayers) {
+    return null;
+  }
+
+  const teamId = await findTeamIdByName(teamName, ctx.competitionLabel);
   const created = await prisma.player.create({
     data: {
       fullName,
       knownAs: slug,
       dateOfBirth: new Date(Date.UTC(2000, 0, 1)),
-      nationality: "Brazil",
+      nationality: "Unknown",
       position: inferPosition(
         boxScore.goals,
         boxScore.assists,
@@ -329,7 +369,9 @@ async function resolvePlayerId(
       strengths: [],
       weaknesses: [],
       teamId,
-      dataSyncedSeason: String(SEASON),
+      sport: "SOCCER",
+      league: ctx.competitionLabel,
+      dataSyncedSeason: String(ctx.seasonYear),
       dataSyncedAt: new Date(),
     },
     select: { id: true, fullName: true, knownAs: true },
@@ -342,57 +384,62 @@ async function resolvePlayerId(
 
 async function accumulateSeasonStats(
   playerId: string,
-  boxScore: MatchPlayerBoxScore
+  boxScore: MatchPlayerBoxScore,
+  seasonYear: number
 ): Promise<void> {
   const prisma = getPrisma();
-  const existing = await prisma.playerSeasonStats.findUnique({
-    where: {
-      playerId_season: {
-        playerId,
-        season: SEASON,
-      },
-    },
-  });
-
   const matchPassAccuracy = matchPassingAccuracy(
     boxScore.passesCompleted,
     boxScore.passesAttempted
   );
 
+  // Upsert + increments avoids P2002 races when two matches/backfills hit the same player.
+  const existing = await prisma.playerSeasonStats.findUnique({
+    where: { playerId_season: { playerId, season: seasonYear } },
+  });
+
   if (!existing) {
-    await prisma.playerSeasonStats.create({
-      data: {
-        playerId,
-        season: SEASON,
-        goals: boxScore.goals,
-        assists: boxScore.assists,
-        tackles: boxScore.tackles,
-        interceptions: boxScore.interceptions,
-        minutesPlayed: boxScore.minutesPlayed,
-        matchesPlayed: 1,
-        passingAccuracy: matchPassAccuracy,
-      },
-    });
-    return;
+    try {
+      await prisma.playerSeasonStats.create({
+        data: {
+          playerId,
+          season: seasonYear,
+          goals: boxScore.goals,
+          assists: boxScore.assists,
+          tackles: boxScore.tackles,
+          interceptions: boxScore.interceptions,
+          minutesPlayed: boxScore.minutesPlayed,
+          matchesPlayed: 1,
+          passingAccuracy: matchPassAccuracy,
+        },
+      });
+      return;
+    } catch (error) {
+      const code =
+        error && typeof error === "object" && "code" in error
+          ? String((error as { code: unknown }).code)
+          : "";
+      if (code !== "P2002") throw error;
+      // Concurrent create won the race — fall through to increment update.
+    }
   }
 
+  const row = await prisma.playerSeasonStats.findUniqueOrThrow({
+    where: { playerId_season: { playerId, season: seasonYear } },
+  });
+
   await prisma.playerSeasonStats.update({
-    where: {
-      playerId_season: {
-        playerId,
-        season: SEASON,
-      },
-    },
+    where: { playerId_season: { playerId, season: seasonYear } },
     data: {
-      goals: existing.goals + boxScore.goals,
-      assists: existing.assists + boxScore.assists,
-      tackles: existing.tackles + boxScore.tackles,
-      interceptions: existing.interceptions + boxScore.interceptions,
-      minutesPlayed: existing.minutesPlayed + boxScore.minutesPlayed,
-      matchesPlayed: existing.matchesPlayed + 1,
+      goals: row.goals + boxScore.goals,
+      assists: row.assists + boxScore.assists,
+      tackles: row.tackles + boxScore.tackles,
+      interceptions: row.interceptions + boxScore.interceptions,
+      minutesPlayed: row.minutesPlayed + boxScore.minutesPlayed,
+      matchesPlayed: row.matchesPlayed + 1,
       passingAccuracy: combinePassingAccuracy(
-        existing.passingAccuracy,
-        existing.matchesPlayed,
+        row.passingAccuracy,
+        row.matchesPlayed,
         boxScore.passesCompleted,
         boxScore.passesAttempted
       ),
@@ -405,21 +452,29 @@ function isMatchFinished(summary: EspnSummaryResponse): boolean {
   return status?.completed === true || status?.state === "post";
 }
 
+function boxscoreCacheKey(espnSlug: string, seasonYear: number, eventId: string): string {
+  return `espn:${espnSlug}:boxscore:${seasonYear}:${eventId}`;
+}
+
 /**
- * Processa o box score oficial da ESPN e acumula estatísticas reais na temporada 2026.
+ * Process ESPN boxscore for any soccer league slug.
+ * Writes PlayerSeasonStats (aggregate) + PlayerMatchStat (per appearance).
  */
-export async function processMatchBoxScore2026(
-  matchId: string,
-  options: { force?: boolean } = {}
+export async function processMatchBoxScore(
+  espnSlug: string,
+  eventId: string,
+  options: ProcessMatchBoxScoreOptions
 ): Promise<ProcessMatchBoxScoreResult> {
   const prisma = getPrisma();
-  const cacheKey = `${BOXSCORE_CACHE_PREFIX}${matchId}`;
+  const cacheKey = boxscoreCacheKey(espnSlug, options.seasonYear, eventId);
+  const createMissingPlayers = options.createMissingPlayers ?? true;
 
   if (!options.force) {
     const cached = await prisma.systemCache.findUnique({ where: { key: cacheKey } });
     if (cached) {
       return {
-        matchId,
+        matchId: eventId,
+        espnSlug,
         playersProcessed: 0,
         playersCreated: 0,
         statsUpserted: 0,
@@ -430,9 +485,11 @@ export async function processMatchBoxScore2026(
     }
   }
 
-  const summary = await fetchMatchSummary(matchId);
+  const summary = await fetchMatchSummary(eventId, espnSlug);
   if (!isMatchFinished(summary)) {
-    throw new Error(`Partida ${matchId} ainda não finalizada na ESPN — aguarde o término do jogo.`);
+    throw new Error(
+      `Match ${espnSlug}/${eventId} is not finished on ESPN yet — wait for full time.`
+    );
   }
 
   const boxScores = extractMatchPlayerBoxScores(summary);
@@ -444,24 +501,86 @@ export async function processMatchBoxScore2026(
   let skipped = 0;
   let failed = 0;
 
+  const competition = summary.header?.competitions?.[0];
+  const competitors = competition?.competitors ?? [];
+  const homeName =
+    competitors.find((c) => c.homeAway === "home")?.team?.displayName ??
+    competitors.find((c) => c.homeAway === "home")?.team?.name;
+  const awayName =
+    competitors.find((c) => c.homeAway === "away")?.team?.displayName ??
+    competitors.find((c) => c.homeAway === "away")?.team?.name;
+  const matchDateRaw = competition?.date;
+  const matchDate = matchDateRaw ? new Date(matchDateRaw) : undefined;
+  const matchRow = await prisma.match.findFirst({
+    where: { externalKey: buildEspnEventKey(espnSlug, eventId) },
+    select: { id: true },
+  });
+
   for (const boxScore of boxScores) {
     playersProcessed += 1;
 
     try {
-      const { id: playerId, created } = await resolvePlayerId(
-        playerCache,
-        boxScore.fullName,
-        boxScore.teamName,
-        boxScore
+      await withPrismaRetry(
+        async () => {
+          const resolved = await resolvePlayerId(
+            playerCache,
+            boxScore.fullName,
+            boxScore.teamName,
+            boxScore,
+            {
+              seasonYear: options.seasonYear,
+              competitionLabel: options.competitionLabel,
+              createMissingPlayers,
+            }
+          );
+
+          if (!resolved) {
+            skipped += 1;
+            return;
+          }
+
+          const { id: playerId, created } = resolved;
+          if (created) playersCreated += 1;
+
+          const isHome = homeName ? namesLikelyMatch(homeName, boxScore.teamName) : undefined;
+
+          // Appearances first — season aggregate must not block Recent appearances on race errors.
+          await upsertPlayerMatchStat({
+            playerId,
+            externalEventKey: buildEspnEventKey(espnSlug, eventId),
+            matchId: matchRow?.id,
+            matchDate: matchDate && Number.isFinite(matchDate.getTime()) ? matchDate : undefined,
+            competitionLabel: options.competitionLabel,
+            teamName: boxScore.teamName,
+            opponentName:
+              isHome === true ? awayName : isHome === false ? homeName : undefined,
+            isHome,
+            minutesPlayed: boxScore.minutesPlayed,
+            goals: boxScore.goals,
+            assists: boxScore.assists,
+            tackles: boxScore.tackles,
+            interceptions: boxScore.interceptions,
+            passesCompleted: boxScore.passesCompleted,
+            passesAttempted: boxScore.passesAttempted,
+            season: options.seasonYear,
+          });
+
+          statsUpserted += 1;
+
+          try {
+            await accumulateSeasonStats(playerId, boxScore, options.seasonYear);
+          } catch (seasonError) {
+            console.warn(
+              `[boxscore] season aggregate skip ${espnSlug} ${boxScore.fullName}:`,
+              seasonError
+            );
+          }
+        },
+        { label: `boxscore:${espnSlug}:${boxScore.fullName}` }
       );
-
-      if (created) playersCreated += 1;
-
-      await accumulateSeasonStats(playerId, boxScore);
-      statsUpserted += 1;
     } catch (error) {
       failed += 1;
-      console.warn(`[boxscore-2026] FAIL ${boxScore.fullName}:`, error);
+      console.warn(`[boxscore] FAIL ${espnSlug} ${boxScore.fullName}:`, error);
     }
   }
 
@@ -470,7 +589,8 @@ export async function processMatchBoxScore2026(
     create: {
       key: cacheKey,
       json: {
-        matchId,
+        espnSlug,
+        eventId,
         processedAt: new Date().toISOString(),
         playersProcessed,
         statsUpserted,
@@ -478,7 +598,8 @@ export async function processMatchBoxScore2026(
     },
     update: {
       json: {
-        matchId,
+        espnSlug,
+        eventId,
         processedAt: new Date().toISOString(),
         playersProcessed,
         statsUpserted,
@@ -487,7 +608,8 @@ export async function processMatchBoxScore2026(
   });
 
   return {
-    matchId,
+    matchId: eventId,
+    espnSlug,
     playersProcessed,
     playersCreated,
     statsUpserted,
@@ -497,4 +619,20 @@ export async function processMatchBoxScore2026(
   };
 }
 
-export { SEASON as BRASILEIRAO_BOXSCORE_SEASON, ESPN_SLUG as BRASILEIRAO_ESPN_SLUG };
+/**
+ * @deprecated Prefer processMatchBoxScore(espnSlug, eventId, options).
+ * Kept for Brasileirão scripts/cron callers.
+ */
+export async function processMatchBoxScore2026(
+  matchId: string,
+  options: { force?: boolean } = {}
+): Promise<ProcessMatchBoxScoreResult> {
+  return processMatchBoxScore(LEGACY_BR_SLUG, matchId, {
+    force: options.force,
+    seasonYear: LEGACY_BR_SEASON,
+    competitionLabel: "Brasileirão Série A",
+    createMissingPlayers: true,
+  });
+}
+
+export { LEGACY_BR_SEASON as BRASILEIRAO_BOXSCORE_SEASON, LEGACY_BR_SLUG as BRASILEIRAO_ESPN_SLUG };

@@ -6,6 +6,8 @@ import { PlayerProfileHeader } from "@/features/scouting/components/profile/play
 import { PlayerPerformanceSection } from "@/features/scouting/components/profile/player-performance-section";
 import { PlayerAnalysisSection } from "@/features/scouting/components/profile/player-analysis-section";
 import { PlayerSimilarSection } from "@/features/scouting/components/profile/player-similar-section";
+import { PlayerCompetitionContext } from "@/features/scouting/components/profile/player-competition-context";
+import { ProfileBackButton } from "@/features/scouting/components/profile/profile-back-button";
 import { AfProfileSeasonEnricher } from "@/features/scouting/components/profile/af-profile-season-enricher";
 import { resolveFootballHubSeasonYears } from "@/lib/api/espn-football-seasons";
 import type { Player } from "@/types";
@@ -48,12 +50,14 @@ export async function PlayerProfileView({
 
   return (
     <div className="space-y-6">
+      <ProfileBackButton />
       <AfProfileSeasonEnricher
         playerId={playerId}
         enabled={playerNeedsAfSeasonEnrich(player)}
       />
       <PlayerProfileHeader player={player} />
       <PlayerPerformanceSection player={player} />
+      <PlayerCompetitionContext player={player} />
       <PlayerAnalysisSection player={player} />
       <ScoutNotesPanel playerId={playerId} />
       <Suspense fallback={<SimilarSkeleton />}>

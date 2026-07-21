@@ -1,26 +1,9 @@
 import type { PlayerSeasonStats } from "@prisma/client";
 import { toPlayerStatistic, type StatisticInput } from "@/lib/metrics/map-statistic";
+import { computeSoccerRating } from "@/lib/scoring/soccer-rating";
 import type { PlayerMetricPer90, PlayerStatistic } from "@/types";
 
 const CALENDAR_SEASONS = new Set(["2024", "2025", "2026", "2027"]);
-
-function estimateSoccerSeasonRating(stat: {
-  goals: number;
-  assists: number;
-  minutesPlayed: number;
-}): number {
-  const minutes = stat.minutesPlayed;
-  // Tiny samples inflate goals/90 — use a conservative baseline instead of fake 90' minutes.
-  if (minutes < 450) {
-    const limited =
-      6 + Math.min(stat.goals, 5) * 0.08 + Math.min(stat.assists, 5) * 0.05;
-    return Number(Math.min(7, Math.max(5, limited)).toFixed(2));
-  }
-  const goalsPer90 = Math.min((stat.goals / minutes) * 90, 1.8);
-  const assistsPer90 = Math.min((stat.assists / minutes) * 90, 1.8);
-  const rating = 6 + goalsPer90 * 0.35 + assistsPer90 * 0.25;
-  return Number(Math.min(10, Math.max(5, rating)).toFixed(2));
-}
 
 function estimateBasketballSeasonRating(stat: {
   points: number;
@@ -84,7 +67,7 @@ function mapSoccerSeasonStatsRow(
     duelsWonPct: 0,
     yellowCards: 0,
     redCards: 0,
-    rating: estimateSoccerSeasonRating(stat),
+    rating: computeSoccerRating(stat),
   };
 
   return { ...toPlayerStatistic(input), sport: "SOCCER" };
@@ -249,7 +232,12 @@ export function sortSeasonLabels(seasons: string[]): string[] {
   return [...new Set(seasons)].sort((a, b) => {
     const yearA = Number.parseInt(a.split("/")[0] ?? a, 10);
     const yearB = Number.parseInt(b.split("/")[0] ?? b, 10);
-    return yearA - yearB;
+    if (yearA !== yearB) return yearA - yearB;
+    // Same start year: prefer campaign labels (2025/26) over bare calendar (2025)
+    const slashA = a.includes("/") ? 1 : 0;
+    const slashB = b.includes("/") ? 1 : 0;
+    if (slashA !== slashB) return slashA - slashB;
+    return a.localeCompare(b);
   });
 }
 
@@ -278,6 +266,89 @@ export function mergeSeasonHistories(
   return sortSeasonLabels([...merged.keys()]).map((season) => merged.get(season)!);
 }
 
+/**
+ * European campaigns are stored twice in some pipelines:
+ * - PlayerStatistic.season = "2025/26"
+ * - PlayerSeasonStats.season (int) → "2025"
+ * They are the same campaign (25/26). Collapse only when both labels exist.
+ * Bare calendar years alone (e.g. Brasileirão 2025) stay as-is.
+ */
+export function collapseSoccerCampaignDuplicates(
+  history: PlayerStatistic[]
+): PlayerStatistic[] {
+  const bySeason = new Map(history.map((row) => [row.season, row]));
+  const bareYears = [...bySeason.keys()].filter((s) => /^\d{4}$/.test(s));
+
+  for (const year of bareYears) {
+    const y = Number(year);
+    const campaign = `${y}/${String(y + 1).slice(-2)}`;
+    const bare = bySeason.get(year);
+    const slash = bySeason.get(campaign);
+    if (!bare || !slash) continue;
+
+    bySeason.set(campaign, mergeSoccerSeasonRows(slash, bare));
+    bySeason.delete(year);
+  }
+
+  return sortSeasonLabels([...bySeason.keys()]).map((season) => bySeason.get(season)!);
+}
+
+function preferNumber(a: number, b: number): number {
+  if (a > 0 && b > 0) return Math.max(a, b);
+  return a > 0 ? a : b;
+}
+
+function mergeSoccerSeasonRows(
+  primary: PlayerStatistic,
+  secondary: PlayerStatistic
+): PlayerStatistic {
+  const merged = {
+    ...primary,
+    appearances: preferNumber(primary.appearances, secondary.appearances),
+    minutesPlayed: preferNumber(primary.minutesPlayed, secondary.minutesPlayed),
+    goals: preferNumber(primary.goals, secondary.goals),
+    assists: preferNumber(primary.assists, secondary.assists),
+    xG: preferNumber(primary.xG, secondary.xG),
+    xA: preferNumber(primary.xA, secondary.xA),
+    shots: preferNumber(primary.shots, secondary.shots),
+    shotsOnTarget: preferNumber(primary.shotsOnTarget, secondary.shotsOnTarget),
+    passes: preferNumber(primary.passes, secondary.passes),
+    passAccuracy: preferNumber(primary.passAccuracy, secondary.passAccuracy),
+    keyPasses: preferNumber(primary.keyPasses, secondary.keyPasses),
+    dribblesCompleted: preferNumber(primary.dribblesCompleted, secondary.dribblesCompleted),
+    tacklesWon: preferNumber(primary.tacklesWon, secondary.tacklesWon),
+    interceptions: preferNumber(primary.interceptions, secondary.interceptions),
+    duelsWonPct: preferNumber(primary.duelsWonPct, secondary.duelsWonPct),
+    yellowCards: preferNumber(primary.yellowCards, secondary.yellowCards),
+    redCards: preferNumber(primary.redCards, secondary.redCards),
+    rating: preferNumber(primary.rating, secondary.rating),
+  };
+  return { ...merged, per90: computePer90FromStat(merged) };
+}
+
+function computePer90FromStat(stat: {
+  minutesPlayed: number;
+  goals: number;
+  assists: number;
+  shots: number;
+  keyPasses: number;
+  dribblesCompleted: number;
+  tacklesWon: number;
+  interceptions: number;
+}): PlayerStatistic["per90"] {
+  const m = Math.max(stat.minutesPlayed, 1);
+  const rate = (v: number) => Number(((v / m) * 90).toFixed(2));
+  return {
+    goals: rate(stat.goals),
+    assists: rate(stat.assists),
+    shots: rate(stat.shots),
+    keyPasses: rate(stat.keyPasses),
+    dribbles: rate(stat.dribblesCompleted),
+    tackles: rate(stat.tacklesWon),
+    interceptions: rate(stat.interceptions),
+  };
+}
+
 function basketballSeasonHasSignal(stat: PlayerStatistic): boolean {
   const points = stat.points ?? stat.perGame?.points ?? 0;
   const rebounds = stat.rebounds ?? stat.perGame?.rebounds ?? 0;
@@ -291,6 +362,25 @@ function footballSeasonHasSignal(stat: PlayerStatistic): boolean {
   const tackles = stat.tacklesWon ?? 0;
   const sacks = stat.sacks ?? 0;
   return yards > 0 || tds > 0 || tackles > 0 || sacks > 0 || (stat.rating ?? 0) > 6.05;
+}
+
+/** Prefer seasons that actually have filled scouting metrics (not empty calendar stubs). */
+function soccerSeasonRichness(stat: PlayerStatistic): number {
+  let score = 0;
+  score += Math.min(stat.minutesPlayed, 3_000);
+  score += Math.min(stat.appearances, 40) * 10;
+  if (stat.xG > 0) score += 120;
+  if (stat.xA > 0) score += 80;
+  if (stat.shots > 0) score += 60;
+  if (stat.passes > 0) score += 60;
+  if (stat.duelsWonPct > 0) score += 40;
+  if (stat.keyPasses > 0) score += 40;
+  if (stat.season.includes("/")) score += 250;
+  return score;
+}
+
+function soccerSeasonHasSignal(stat: PlayerStatistic): boolean {
+  return soccerSeasonRichness(stat) > 250;
 }
 
 /** Prefer a season with real production over empty upcoming stubs (e.g. 202627 / 2026). */
@@ -309,11 +399,32 @@ function pickBestSeasonWithSignal(
     .sort((a, b) => {
       const yearA = Number.parseInt(a.season.replace(/\D/g, "").slice(0, 4) || "0", 10);
       const yearB = Number.parseInt(b.season.replace(/\D/g, "").slice(0, 4) || "0", 10);
-      return yearB - yearA;
+      if (yearB !== yearA) return yearB - yearA;
+      return soccerSeasonRichness(b) - soccerSeasonRichness(a);
     });
 
   if (withSignal[0]) return withSignal[0].season;
   return pickDefaultSeason(history.map((row) => row.season));
+}
+
+function pickBestSoccerSeason(
+  history: PlayerStatistic[],
+  preferredSeason: string | undefined
+): string | undefined {
+  if (preferredSeason) {
+    const preferred = history.find((row) => row.season === preferredSeason);
+    if (preferred) return preferredSeason;
+  }
+
+  const ranked = [...history].sort((a, b) => {
+    const rich = soccerSeasonRichness(b) - soccerSeasonRichness(a);
+    if (rich !== 0) return rich;
+    const yearA = Number.parseInt(a.season.split("/")[0] ?? a.season, 10);
+    const yearB = Number.parseInt(b.season.split("/")[0] ?? b.season, 10);
+    return yearB - yearA;
+  });
+
+  return ranked[0]?.season ?? pickDefaultSeason(history.map((row) => row.season));
 }
 
 export function resolveSelectedSeasonStats(
@@ -332,7 +443,8 @@ export function resolveSelectedSeasonStats(
         ? pickBestSeasonWithSignal(history, preferredSeason, footballSeasonHasSignal) ??
           preferredSeason ??
           "2025"
-        : (preferredSeason && availableSeasons.includes(preferredSeason)
+        : pickBestSoccerSeason(history, preferredSeason) ??
+          (preferredSeason && availableSeasons.includes(preferredSeason)
             ? preferredSeason
             : pickDefaultSeason(availableSeasons)) ??
           preferredSeason ??

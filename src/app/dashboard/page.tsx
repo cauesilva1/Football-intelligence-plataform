@@ -33,10 +33,17 @@ export default async function DashboardPage() {
       <div className="space-y-6">
         <PageHeader
           title="OmniScout"
-          description="OmniScout is a multi-sport intelligence platform for football, basketball and American football. Explore player data, scouting, rankings, comparisons and analytics across multiple sports."
+          description={
+            sport === "SOCCER"
+              ? "Soccer dashboard — the reference sport for OmniScout’s scouting workflow. Switch sport above for basketball or American football (each has its own overview)."
+              : sport === "BASKETBALL"
+                ? "Basketball dashboard for the selected sport context. Soccer remains the reference implementation for the full scout workflow."
+                : "American football dashboard for the selected sport context. Soccer remains the reference implementation for the full scout workflow."
+          }
           badge={
             <span className="rounded-md border border-border bg-surface-muted/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               Viewing · {viewing}
+              {sport === "SOCCER" ? " · reference sport" : ""}
             </span>
           }
           actions={

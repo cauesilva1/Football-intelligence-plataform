@@ -14,10 +14,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { SortableTableHead } from "@/features/scouting/components/sortable-table-head";
+import { ShortlistButton } from "@/features/shortlist/components/shortlist-button";
 import { computeXGPer90 } from "@/features/scouting/lib/filter-players";
 import { type ScoutingRoute } from "@/features/scouting/lib/filter-defaults";
 import { ratingColor, formatMarketValue } from "@/lib/utils";
 import { soccerValueScore } from "@/lib/scoring/soccer-rankings";
+import { hasReliableSoccerSample } from "@/lib/metrics/per90";
 import type { Player, PlayerFilters } from "@/types";
 
 function basketballPoints(player: Player): number {
@@ -75,8 +77,7 @@ function BasketballRosterTable({
                   position={player.position}
                   competitionName={player.competitionName}
                   teamName={player.teamName}
-                  photoUrl={player.photoUrl}
-                  apiSportsPlayerId={player.apiSportsId}
+                  photoPolicy="initials"
                   size="sm"
                 />
                 <div className="min-w-0">
@@ -170,8 +171,7 @@ function BasketballScoutingTable({
                     position={player.position}
                     competitionName={player.competitionName}
                     teamName={player.teamName}
-                    photoUrl={player.photoUrl}
-                    apiSportsPlayerId={player.apiSportsId}
+                    photoPolicy="initials"
                     size="sm"
                   />
                   <div className="min-w-0">
@@ -248,6 +248,7 @@ function SoccerScoutingTable({
               placement="bottom"
             />
           </TableHead>
+          <TableHead sticky className="tabular-nums">Min</TableHead>
           {showValue ? (
             <>
               <TableHead sticky>
@@ -296,7 +297,8 @@ function SoccerScoutingTable({
       <TableBody>
         {players.map((player) => {
           const stats = player.currentSeasonStats;
-          const xg90 = computeXGPer90(stats.minutesPlayed, stats.xG);
+          const reliable = hasReliableSoccerSample(stats.minutesPlayed);
+          const xg90 = reliable ? computeXGPer90(stats.minutesPlayed, stats.xG) : null;
           const valueScore = soccerValueScore(stats.rating, player.marketValue);
 
           return (
@@ -309,8 +311,7 @@ function SoccerScoutingTable({
                     position={player.position}
                     competitionName={player.competitionName}
                     teamName={player.teamName}
-                    photoUrl={player.photoUrl}
-                    apiSportsPlayerId={player.apiSportsId}
+                    photoPolicy="initials"
                     size="sm"
                   />
                   <div className="min-w-0">
@@ -329,8 +330,20 @@ function SoccerScoutingTable({
                   description={POSITION_GLOSSARY[player.position] ?? POSITION_GLOSSARY.MF}
                 />
               </TableCell>
-              <TableCell className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
-                {stats.rating.toFixed(1)}
+              <TableCell>
+                <div className="flex flex-col gap-0.5">
+                  <span className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
+                    {stats.rating.toFixed(1)}
+                  </span>
+                  {!reliable && stats.minutesPlayed > 0 ? (
+                    <Badge variant="amber" className="w-fit text-[9px]">
+                      Small sample
+                    </Badge>
+                  ) : null}
+                </div>
+              </TableCell>
+              <TableCell className="font-mono tabular-nums text-muted-foreground">
+                {stats.minutesPlayed > 0 ? stats.minutesPlayed.toLocaleString("en-US") : "—"}
               </TableCell>
               {showValue ? (
                 <>
@@ -342,12 +355,19 @@ function SoccerScoutingTable({
                   </TableCell>
                 </>
               ) : null}
-              <TableCell className="font-mono tabular-nums">{stats.per90.goals.toFixed(2)}</TableCell>
-              <TableCell className="font-mono tabular-nums">{xg90.toFixed(2)}</TableCell>
+              <TableCell className="font-mono tabular-nums">
+                {reliable ? stats.per90.goals.toFixed(2) : "—"}
+              </TableCell>
+              <TableCell className="font-mono tabular-nums">
+                {xg90 != null ? xg90.toFixed(2) : "—"}
+              </TableCell>
               <TableCell className="text-right">
-                <Link href={`/players/${player.id}`} className={buttonVariants({ variant: "ghost", size: "xs" })}>
-                  <Eye className="h-3.5 w-3.5" /> Profile
-                </Link>
+                <div className="inline-flex items-center justify-end gap-0.5">
+                  <ShortlistButton playerId={player.id} compact />
+                  <Link href={`/players/${player.id}`} className={buttonVariants({ variant: "ghost", size: "xs" })}>
+                    <Eye className="h-3.5 w-3.5" /> Profile
+                  </Link>
+                </div>
               </TableCell>
             </TableRow>
           );
@@ -419,8 +439,7 @@ function AmericanFootballScoutingTable({
                     position={player.position}
                     competitionName={player.competitionName}
                     teamName={player.teamName}
-                    photoUrl={player.photoUrl}
-                    apiSportsPlayerId={player.apiSportsId}
+                    photoPolicy="initials"
                     size="sm"
                   />
                   <div className="min-w-0">

@@ -11,10 +11,12 @@ export function ReportView({
   report,
   player,
   onExport,
+  onExportPdf,
 }: {
   report: ScoutingReport;
   player: PlayerLite;
   onExport: () => void;
+  onExportPdf?: () => void;
 }) {
   return (
     <div className="space-y-4">
@@ -33,13 +35,18 @@ export function ReportView({
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">Overall Rating (AI)</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">Overall Rating</p>
             <p className={`font-display text-2xl font-bold ${ratingColor(report.overallRating)}`}>
               {report.overallRating.toFixed(1)}
             </p>
           </div>
+          {onExportPdf ? (
+            <Button variant="default" size="sm" onClick={onExportPdf}>
+              <Download className="h-3.5 w-3.5" /> PDF brief
+            </Button>
+          ) : null}
           <Button variant="outline" size="sm" onClick={onExport}>
-            <Download className="h-3.5 w-3.5" /> Export
+            <Download className="h-3.5 w-3.5" /> Export .txt
           </Button>
         </div>
       </div>

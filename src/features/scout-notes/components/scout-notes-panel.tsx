@@ -32,7 +32,7 @@ export function ScoutNotesPanel({ playerId }: { playerId: string }) {
   return (
     <DataPanel
       title="Scout Notes"
-      description="Personal notes stored locally in your browser."
+      description="Personal notes — saved on this device (not synced to an account)."
       density="dense"
     >
       <div className="space-y-3">

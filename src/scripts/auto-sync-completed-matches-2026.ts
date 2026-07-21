@@ -1,12 +1,12 @@
 /**
- * Cron engine — descobre partidas finalizadas do Brasileirão 2026 na ESPN
- * e dispara processMatchBoxScore2026 para cada jogo ainda não processado.
+ * Cron engine — last 2 days of ESPN finals across all soccer leagues
+ * (same window as /api/cron/soccer).
  *
  * Uso: npm run data:cron-sync-2026
  */
 import fs from "fs";
 import path from "path";
-import { runSoccerDailySync } from "@/lib/cron/soccer-daily-sync";
+import { runSoccerBoxscoreBackfill } from "@/lib/cron/soccer-daily-sync";
 import { getPrisma } from "@/lib/prisma";
 
 function loadDotEnv(): void {
@@ -33,7 +33,12 @@ function loadDotEnv(): void {
 
 loadDotEnv();
 
-runSoccerDailySync()
+runSoccerBoxscoreBackfill({ days: 2 })
+  .then((result) => {
+    console.log(
+      `[cron-sync-2026] OK — days=${result.days} · processed=${result.processed} · skipped=${result.skipped} · failed=${result.failed}`
+    );
+  })
   .catch((error: unknown) => {
     console.error("[cron-sync-2026] Erro fatal:", error);
     process.exit(1);

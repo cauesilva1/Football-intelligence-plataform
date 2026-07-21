@@ -5,6 +5,7 @@ import { toPlayerStatistic } from "@/lib/metrics/map-statistic";
 import {
   mapSeasonStatsRow,
   mergeSeasonHistories,
+  collapseSoccerCampaignDuplicates,
   resolveSelectedSeasonStats,
 } from "@/lib/metrics/map-season-stats";
 import { calcAge } from "@/lib/utils";
@@ -229,7 +230,11 @@ function mapPlayer(record: PrismaPlayerRow, options?: { season?: string }): Play
         : undefined
     )
   );
-  const history = mergeSeasonHistories(legacyHistory, seasonStatsHistory);
+  const historyRaw = mergeSeasonHistories(legacyHistory, seasonStatsHistory);
+  const history =
+    record.sport === "SOCCER" || !record.sport
+      ? collapseSoccerCampaignDuplicates(historyRaw)
+      : historyRaw;
   const { selectedSeason, currentSeasonStats } = resolveSelectedSeasonStats(
     history,
     options?.season,

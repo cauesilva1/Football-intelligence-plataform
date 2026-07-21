@@ -56,6 +56,14 @@ export default async function PlayersPage({
             </p>
           </div>
         ) : null}
+        {sport === "SOCCER" ? (
+          <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
+            <h1 className="font-display text-lg font-bold text-foreground md:text-xl">Players</h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Browse the roster directory — search by name, club, or position. For intelligence filters and ratings, use Scouting.
+            </p>
+          </div>
+        ) : null}
         <Suspense fallback={<FiltersSkeleton />}>
           <ScoutingFiltersPanelLoader
             basePath="/players"
