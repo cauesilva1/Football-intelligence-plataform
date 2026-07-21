@@ -39,16 +39,16 @@ export default async function PlayersPage({
     >
       <div className="space-y-4">
         {sport === "BASKETBALL" ? (
-          <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
-            <h1 className="font-display text-lg font-bold text-foreground md:text-xl">Basketball Roster</h1>
+          <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-6">
+            <h1 className="font-display text-xl font-bold text-foreground md:text-2xl">Basketball Roster</h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               Search NBA and NCAA players. Filter by franchise, position, and season.
             </p>
           </div>
         ) : null}
         {sport === "AMERICAN_FOOTBALL" ? (
-          <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
-            <h1 className="font-display text-lg font-bold text-foreground md:text-xl">
+          <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-6">
+            <h1 className="font-display text-xl font-bold text-foreground md:text-2xl">
               American Football Roster
             </h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
@@ -57,8 +57,8 @@ export default async function PlayersPage({
           </div>
         ) : null}
         {sport === "SOCCER" ? (
-          <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
-            <h1 className="font-display text-lg font-bold text-foreground md:text-xl">Players</h1>
+          <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-6">
+            <h1 className="font-display text-xl font-bold text-foreground md:text-2xl">Players</h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               Browse the roster directory — search by name, club, or position. For intelligence filters and ratings, use Scouting.
             </p>

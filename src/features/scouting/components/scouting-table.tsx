@@ -336,7 +336,7 @@ function SoccerScoutingTable({
                     {stats.rating.toFixed(1)}
                   </span>
                   {!reliable && stats.minutesPlayed > 0 ? (
-                    <Badge variant="amber" className="w-fit text-[9px]">
+                    <Badge variant="amber" className="w-fit text-2xs">
                       Small sample
                     </Badge>
                   ) : null}

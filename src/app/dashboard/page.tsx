@@ -32,18 +32,17 @@ export default async function DashboardPage() {
     <DashboardShell subtitle="Overview">
       <div className="space-y-6">
         <PageHeader
-          title="OmniScout"
+          title="Overview"
           description={
             sport === "SOCCER"
-              ? "Soccer dashboard — the reference sport for OmniScout’s scouting workflow. Switch sport above for basketball or American football (each has its own overview)."
+              ? "Soccer is the reference sport for the full scout workflow — use the sport switcher above for basketball or American football."
               : sport === "BASKETBALL"
-                ? "Basketball dashboard for the selected sport context. Soccer remains the reference implementation for the full scout workflow."
-                : "American football dashboard for the selected sport context. Soccer remains the reference implementation for the full scout workflow."
+                ? "Basketball overview. Soccer remains the reference sport for the full scout workflow."
+                : "American football overview. Soccer remains the reference sport for the full scout workflow."
           }
           badge={
             <span className="rounded-md border border-border bg-surface-muted/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Viewing · {viewing}
-              {sport === "SOCCER" ? " · reference sport" : ""}
+              {viewing} · {appConfig.season}
             </span>
           }
           actions={
@@ -55,10 +54,6 @@ export default async function DashboardPage() {
             </Link>
           }
         />
-
-        <p className="text-xs text-muted-foreground">
-          Season {appConfig.season} · switch sport in the header to change this dashboard context.
-        </p>
 
         <Suspense fallback={<DashboardStatsSkeleton />}>
           <DashboardStatsSection />

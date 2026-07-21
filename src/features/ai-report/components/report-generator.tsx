@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { FileText, Sparkles } from "lucide-react";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorState } from "@/components/common/error-state";
 import { DataPanel } from "@/components/data/data-panel";
@@ -247,6 +247,7 @@ export function ReportGenerator({
 
       {status === "idle" && !report && (
         <EmptyState
+          icon={FileText}
           title="No brief yet"
           description="Select a player and generate a staff brief, or open Generate brief from a shortlisted player."
           action={{ label: "My Players", href: "/shortlist" }}

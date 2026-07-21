@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Bookmark } from "lucide-react";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ScoutWorkflowNav } from "@/features/scouting/components/scout-workflow-nav";
 import { ScoutingTable } from "@/features/scouting/components/scouting-table";
 import { RemoveFromShortlistButton } from "@/features/shortlist/components/remove-from-shortlist-button";
@@ -111,7 +113,16 @@ export function ShortlistView() {
   }, [players, entryById]);
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Loading your shortlist...</p>;
+    return (
+      <div className="space-y-4">
+        <ScoutWorkflowNav current="shortlist" />
+        <PageHeader
+          title="My Players"
+          description="Working shortlist — tag targets, write notes, then generate a staff brief. Saved on this device."
+        />
+        <Skeleton className="h-64 w-full rounded-xl" />
+      </div>
+    );
   }
 
   if (players.length === 0) {
@@ -123,7 +134,8 @@ export function ShortlistView() {
           description="Working shortlist — tag targets, write notes, then generate a staff brief. Saved on this device."
         />
         <EmptyState
-          title="Empty shortlist"
+          icon={Bookmark}
+          title="Your shortlist is empty"
           description="Save players from Scouting or a profile, then tag them Priority / Watch / Reject."
           action={{ label: "Open Scouting", href: "/scouting" }}
         />
@@ -136,7 +148,7 @@ export function ShortlistView() {
       <ScoutWorkflowNav current="shortlist" />
       <PageHeader
         title="My Players"
-        description={`${players.length} player(s) on this device — tag, note, then open a scout brief.`}
+        description={`${players.length} ${players.length === 1 ? "player" : "players"} saved on this device — tag, note, then open a scout brief.`}
       />
 
       <div className="flex flex-wrap gap-1.5">
@@ -250,7 +262,6 @@ export function ShortlistView() {
                   placeholder="Scout note — used as context when you open the brief…"
                   className="mt-3 w-full resize-y rounded-lg border border-border bg-surface-muted/40 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
-                <p className="mt-1 text-[10px] text-muted-foreground">Saved on this device</p>
               </div>
             );
           })

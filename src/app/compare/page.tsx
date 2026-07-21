@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { GitCompareArrows } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/common/empty-state";
@@ -30,7 +31,7 @@ export default async function ComparePage({
     : [];
 
   return (
-    <DashboardShell subtitle="Player comparison">
+    <DashboardShell subtitle="Compare">
       <div className="space-y-6">
         <ScoutWorkflowNav current="compare" />
         <PageHeader
@@ -42,6 +43,7 @@ export default async function ComparePage({
 
         {!bothSelected && (
           <EmptyState
+            icon={GitCompareArrows}
             title="Select two players"
             description="Choose a player in each field above to start a detailed comparison."
           />

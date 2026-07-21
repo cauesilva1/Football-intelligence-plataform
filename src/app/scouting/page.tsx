@@ -37,16 +37,16 @@ export default async function ScoutingPage({
     >
       <div className="space-y-4">
         {sport === "BASKETBALL" ? (
-          <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
-            <h1 className="font-display text-lg font-bold text-foreground md:text-xl">Basketball Scouting</h1>
+          <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-6">
+            <h1 className="font-display text-xl font-bold text-foreground md:text-2xl">Basketball Scouting</h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               Refine your search with advanced metrics, archetypes, and performance sliders.
             </p>
           </div>
         ) : null}
         {sport === "AMERICAN_FOOTBALL" ? (
-          <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
-            <h1 className="font-display text-lg font-bold text-foreground md:text-xl">
+          <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-6">
+            <h1 className="font-display text-xl font-bold text-foreground md:text-2xl">
               American Football Scouting
             </h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
@@ -57,10 +57,10 @@ export default async function ScoutingPage({
         {sport === "SOCCER" ? (
           <div className="space-y-3">
             <ScoutWorkflowNav current="discover" />
-            <div className="overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-zinc-950 via-slate-950 to-black p-4 shadow-panel md:p-6">
-              <h1 className="font-display text-lg font-bold text-foreground md:text-xl">Scouting</h1>
+            <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-6">
+              <h1 className="font-display text-xl font-bold text-foreground md:text-2xl">Scouting</h1>
               <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                Search by name or filter by role — Save from the list, then refine on My Players.
+                Search by name or filter by role — save players from the list, then refine on My Players.
               </p>
             </div>
           </div>
