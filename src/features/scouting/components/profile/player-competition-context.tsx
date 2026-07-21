@@ -38,7 +38,29 @@ function TeamMatchRow({ match }: { match: PlayerRecentMatch }) {
   );
 }
 
-function AppearanceRow({ row }: { row: PlayerMatchAppearance }) {
+/**
+ * ESPN boxscores for some leagues omit defensive stats entirely; we persist 0,
+ * which is indistinguishable from a real 0 per row. Heuristic: if no appearance
+ * in a competition has any defensive action, the feed almost certainly didn't
+ * provide the data — render "—" instead of a misleading "Tkl 0 · Int 0".
+ */
+function competitionsWithDefensiveData(rows: PlayerMatchAppearance[]): Set<string> {
+  const withData = new Set<string>();
+  for (const row of rows) {
+    if (row.tackles > 0 || row.interceptions > 0) {
+      withData.add(row.competitionLabel ?? "");
+    }
+  }
+  return withData;
+}
+
+function AppearanceRow({
+  row,
+  hasDefensiveData,
+}: {
+  row: PlayerMatchAppearance;
+  hasDefensiveData: boolean;
+}) {
   const date = row.matchDate
     ? new Date(row.matchDate).toLocaleDateString("en-US", {
         month: "short",
@@ -50,9 +72,9 @@ function AppearanceRow({ row }: { row: PlayerMatchAppearance }) {
     row.opponentName != null
       ? `${row.isHome ? "vs" : "@"} ${row.opponentName}`
       : row.teamName ?? "Appearance";
-  const href = row.matchId
-    ? `/matches/${row.matchId}`
-    : `/matches/${encodeURIComponent(row.externalEventKey)}`;
+  // Only link when the appearance maps to a real Match row — external event keys
+  // from the boxscore feed cannot be resolved by /matches/[id].
+  const href = row.matchId ? `/matches/${row.matchId}` : null;
 
   return (
     <li className="grid grid-cols-[1fr_auto] gap-2 border-b border-border/60 py-2 last:border-0 sm:grid-cols-[minmax(0,1.4fr)_repeat(5,auto)] sm:items-center">
@@ -69,14 +91,22 @@ function AppearanceRow({ row }: { row: PlayerMatchAppearance }) {
         G {row.goals} · A {row.assists}
       </span>
       <span className="hidden font-mono text-xs tabular-nums text-muted-foreground sm:inline">
-        Tkl {row.tackles.toFixed(0)} · Int {row.interceptions.toFixed(0)}
+        {hasDefensiveData
+          ? `Tkl ${row.tackles.toFixed(0)} · Int ${row.interceptions.toFixed(0)}`
+          : "—"}
       </span>
       <span className="font-mono text-xs font-semibold tabular-nums text-primary sm:text-right">
         {row.rating != null ? row.rating.toFixed(1) : "—"}
       </span>
-      <Link href={href} className="text-2xs text-primary hover:underline sm:text-right">
-        Match
-      </Link>
+      {href ? (
+        <Link href={href} className="text-2xs text-primary hover:underline sm:text-right">
+          Match
+        </Link>
+      ) : (
+        <span aria-hidden className="hidden text-2xs text-muted-foreground/50 sm:inline sm:text-right">
+          —
+        </span>
+      )}
     </li>
   );
 }
@@ -89,6 +119,7 @@ export async function PlayerCompetitionContext({ player }: { player: Player }) {
     getRecentMatchesForTeam(player.teamId, 6),
   ]);
   const competition = player.competitionName ?? player.league;
+  const defensiveDataCompetitions = competitionsWithDefensiveData(appearances);
 
   // Only show the appearances panel when we have real per-match rows — never ops/empty noise.
   if (appearances.length === 0 && teamMatches.length === 0) return null;
@@ -111,7 +142,11 @@ export async function PlayerCompetitionContext({ player }: { player: Player }) {
           </div>
           <ul>
             {appearances.map((row) => (
-              <AppearanceRow key={row.id} row={row} />
+              <AppearanceRow
+                key={row.id}
+                row={row}
+                hasDefensiveData={defensiveDataCompetitions.has(row.competitionLabel ?? "")}
+              />
             ))}
           </ul>
         </DataPanel>

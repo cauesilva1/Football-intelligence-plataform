@@ -65,10 +65,10 @@ function BasketballLeaderList({
             className="flex items-center justify-between rounded-lg border border-border bg-surface-muted/30 px-3 py-2 transition-colors hover:border-primary/30"
           >
             <div className="flex min-w-0 items-center gap-2.5">
-              <span className="w-5 text-2xs text-muted-foreground">#{index + 1}</span>
+              <span className="w-5 font-mono text-2xs tabular-nums text-muted-foreground">#{index + 1}</span>
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-foreground">{player.knownAs}</p>
-                <p className="truncate text-2xs text-muted-foreground">
+                <p className="truncate text-xs text-muted-foreground">
                   {player.teamShortName ?? "—"} · {player.position}
                 </p>
               </div>
@@ -110,10 +110,10 @@ function RatingList({
             className="flex items-center justify-between rounded-lg border border-border bg-surface-muted/30 px-3 py-2 transition-colors hover:border-primary/30"
           >
             <div className="flex min-w-0 items-center gap-2.5">
-              <span className="w-5 text-2xs text-muted-foreground">#{index + 1}</span>
+              <span className="w-5 font-mono text-2xs tabular-nums text-muted-foreground">#{index + 1}</span>
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-foreground">{player.knownAs}</p>
-                <p className="truncate text-2xs text-muted-foreground">
+                <p className="truncate text-xs text-muted-foreground">
                   {player.teamShortName ?? "—"} · {player.age}y
                 </p>
               </div>
@@ -153,10 +153,10 @@ function SoccerRankingList({
           className="flex items-center justify-between rounded-lg border border-border bg-surface-muted/30 px-3 py-2 transition-colors hover:border-primary/30"
         >
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="w-5 text-2xs text-muted-foreground">#{index + 1}</span>
+            <span className="w-5 font-mono text-2xs tabular-nums text-muted-foreground">#{index + 1}</span>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-foreground">{player.knownAs}</p>
-              <p className="truncate text-2xs text-muted-foreground">
+              <p className="truncate text-xs text-muted-foreground">
                 {player.teamShortName ?? "—"} · {player.age}y
               </p>
             </div>
@@ -282,35 +282,39 @@ export async function DashboardRankingsSection() {
     );
   }
 
-  /* Zig-zag rhythm on xl: wide-narrow / narrow-wide — the recruitment lists lead. */
+  /* Stable two-column layout on xl: recruitment lists lead the wide main column,
+     reference lists sit in the side rail. Columns stack independently, so panels
+     size to their own content instead of stretching to match row neighbors. */
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      <DataPanel
-        title="Top Prospects"
-        description={SCORE_DEFINITIONS.topProspects}
-        density="dense"
-        className="xl:col-span-2"
-      >
-        <SoccerRankingList players={overview.topProspects} metric="rating" columns={2} />
-      </DataPanel>
-      <DataPanel
-        title="Best Performers"
-        description={SCORE_DEFINITIONS.bestPerformers}
-        density="dense"
-      >
-        <SoccerRankingList players={overview.bestPerformers} metric="rating" />
-      </DataPanel>
-      <DataPanel title="Top Scorers (g/90)" description={SCORE_DEFINITIONS.topScorers} density="dense">
-        <SoccerRankingList players={overview.topScorers} metric="goals90" />
-      </DataPanel>
-      <DataPanel
-        title="Market Opportunities"
-        description={SCORE_DEFINITIONS.marketOpportunities}
-        density="dense"
-        className="xl:col-span-2"
-      >
-        <SoccerRankingList players={overview.marketOpportunities} metric="value" columns={2} />
-      </DataPanel>
+    <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-3">
+      <div className="space-y-4 xl:col-span-2">
+        <DataPanel
+          title="Top Prospects"
+          description={SCORE_DEFINITIONS.topProspects}
+          density="dense"
+        >
+          <SoccerRankingList players={overview.topProspects} metric="rating" columns={2} />
+        </DataPanel>
+        <DataPanel
+          title="Market Opportunities"
+          description={SCORE_DEFINITIONS.marketOpportunities}
+          density="dense"
+        >
+          <SoccerRankingList players={overview.marketOpportunities} metric="value" columns={2} />
+        </DataPanel>
+      </div>
+      <div className="space-y-4">
+        <DataPanel
+          title="Best Performers"
+          description={SCORE_DEFINITIONS.bestPerformers}
+          density="dense"
+        >
+          <SoccerRankingList players={overview.bestPerformers} metric="rating" />
+        </DataPanel>
+        <DataPanel title="Top Scorers (g/90)" description={SCORE_DEFINITIONS.topScorers} density="dense">
+          <SoccerRankingList players={overview.topScorers} metric="goals90" />
+        </DataPanel>
+      </div>
     </div>
   );
 }

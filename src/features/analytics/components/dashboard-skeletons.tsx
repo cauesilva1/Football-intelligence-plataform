@@ -26,11 +26,15 @@ export function DashboardChartsSkeleton() {
 
 export function DashboardRankingsSkeleton() {
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <Skeleton className="h-72 rounded-xl xl:col-span-2" />
-      <Skeleton className="h-72 rounded-xl" />
-      <Skeleton className="h-72 rounded-xl" />
-      <Skeleton className="h-72 rounded-xl xl:col-span-2" />
+    <div className="grid items-start gap-4 xl:grid-cols-3">
+      <div className="space-y-4 xl:col-span-2">
+        <Skeleton className="h-56 rounded-xl" />
+        <Skeleton className="h-56 rounded-xl" />
+      </div>
+      <div className="space-y-4">
+        <Skeleton className="h-72 rounded-xl" />
+        <Skeleton className="h-72 rounded-xl" />
+      </div>
     </div>
   );
 }
