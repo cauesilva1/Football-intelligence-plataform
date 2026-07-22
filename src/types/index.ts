@@ -204,6 +204,8 @@ export interface PlayerFilters {
     | "xGPer90"
     | "points"
     | "rebounds"
+    | "steals"
+    | "blocks"
     | "age"
     | "marketValue"
     | "valueScore"

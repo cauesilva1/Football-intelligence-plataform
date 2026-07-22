@@ -555,6 +555,8 @@ function needsMappedPlayerSort(filters: PlayerFilters): boolean {
     sortBy === "valueScore" ||
     sortBy === "points" ||
     sortBy === "rebounds" ||
+    sortBy === "steals" ||
+    sortBy === "blocks" ||
     sortBy === "goals" ||
     sortBy === "assists" ||
     sortBy === "goalsPer90" ||

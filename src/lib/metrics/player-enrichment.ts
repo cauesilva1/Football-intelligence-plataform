@@ -180,3 +180,56 @@ export function enrichPlayerRecord(
     preferredFoot: derivePreferredFoot(player.id),
   };
 }
+
+/** Basketball strengths/weaknesses from per-game season averages. */
+export function deriveBasketballStrengthsWeaknesses(stat: {
+  appearances: number;
+  minutesPlayed: number;
+  points?: number | null;
+  rebounds?: number | null;
+  assists?: number;
+  steals?: number | null;
+  blocks?: number | null;
+  fieldGoalsPercent?: number | null;
+  threePointsPercent?: number | null;
+  perGame?: {
+    points: number;
+    rebounds: number;
+    assists: number;
+    steals: number;
+    blocks: number;
+  } | null;
+}): { strengths: string[]; weaknesses: string[] } {
+  const strengths: string[] = [];
+  const weaknesses: string[] = [];
+  const g = stat.perGame ?? {
+    points: stat.points ?? 0,
+    rebounds: stat.rebounds ?? 0,
+    assists: stat.assists ?? 0,
+    steals: stat.steals ?? 0,
+    blocks: stat.blocks ?? 0,
+  };
+
+  if (g.points >= 18) strengths.push("High-Volume Scoring");
+  if (g.assists >= 6) strengths.push("Primary Creator");
+  if (g.rebounds >= 8) strengths.push("Glass Presence");
+  if (g.steals >= 1.4) strengths.push("On-Ball Disruption");
+  if (g.blocks >= 1.2) strengths.push("Rim Protection");
+  if ((stat.threePointsPercent ?? 0) >= 37) strengths.push("Perimeter Shooting");
+  if ((stat.fieldGoalsPercent ?? 0) >= 52) strengths.push("Efficient Finishing");
+
+  if (stat.appearances < 10 || stat.minutesPlayed < 200) {
+    weaknesses.push("Limited Sample");
+  }
+  if (g.points < 8 && g.assists < 3 && g.rebounds < 5) {
+    weaknesses.push("Low Production Line");
+  }
+  if ((stat.threePointsPercent ?? 0) > 0 && (stat.threePointsPercent ?? 0) < 30) {
+    weaknesses.push("Inconsistent Three-Point Shot");
+  }
+
+  return {
+    strengths: strengths.slice(0, 4),
+    weaknesses: weaknesses.slice(0, 3),
+  };
+}

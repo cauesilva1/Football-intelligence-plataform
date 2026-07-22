@@ -3,10 +3,11 @@ import { ensureBrasileiraoCompetition } from "@/lib/sync/brasileirao-bootstrap";
 import { ensureMlsCompetition } from "@/lib/sync/mls-bootstrap";
 import { ensureNbaCompetition } from "@/lib/sync/nba-bootstrap";
 import { ensureNcaaCompetition } from "@/lib/sync/ncaa-bootstrap";
+import { ensureEuroLeagueCompetition } from "@/lib/sync/euroleague-sync";
 import { ensureNflCompetition } from "@/lib/sync/nfl-bootstrap";
 import { ensureCfbCompetition } from "@/lib/sync/cfb-bootstrap";
 
-const BASKETBALL_COMPETITION_NAMES = ["NBA", "NCAA Men's Basketball"] as const;
+const BASKETBALL_COMPETITION_NAMES = ["NBA", "NCAA Men's Basketball", "EuroLeague"] as const;
 const AMERICAN_FOOTBALL_COMPETITION_NAMES = ["NFL", "College Football"] as const;
 
 /**
@@ -45,7 +46,9 @@ function isBasketballCompetitionName(name: string): boolean {
     lower === "nba" ||
     lower.includes("ncaa") ||
     lower.includes("college basketball") ||
-    lower.includes("national basketball")
+    lower.includes("national basketball") ||
+    lower.includes("euroleague") ||
+    lower.includes("euro league")
   );
 }
 
@@ -104,7 +107,11 @@ export const SPORT_REGISTRY: Record<Sport, SportConfig> = {
     tagline: "Court Intelligence",
     isCompetition: isBasketballCompetitionName,
     runBootstrap: async () => {
-      await Promise.all([ensureNbaCompetition(), ensureNcaaCompetition()]);
+      await Promise.all([
+        ensureNbaCompetition(),
+        ensureNcaaCompetition(),
+        ensureEuroLeagueCompetition(),
+      ]);
     },
     hubKind: "basketball",
     matchKind: "basketball",

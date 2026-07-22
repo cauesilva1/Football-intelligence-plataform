@@ -11,7 +11,14 @@ export type SoccerRankingSlug =
   | "creators"
   | "defenders"
   | "hidden-gems";
-export type BasketballRankingSlug = "u23" | "scorers" | "playmakers" | "rebounders" | "bargains";
+export type BasketballRankingSlug =
+  | "u23"
+  | "scorers"
+  | "playmakers"
+  | "rebounders"
+  | "bargains"
+  | "three-and-d"
+  | "rim-protectors";
 export type AmericanFootballRankingSlug =
   | "u23"
   | "quarterbacks"
@@ -173,6 +180,40 @@ const BASKETBALL_PRESETS: RankingPreset[] = [
       minMinutes: 200,
       maxCapHit: 12_000_000,
       sortBy: "rating",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+  {
+    slug: "three-and-d",
+    title: "3&D Wings",
+    description: "Perimeter shooting with defensive disruption (steal rate).",
+    href: "/rankings/three-and-d",
+    filters: {
+      sport: "BASKETBALL",
+      minMinutes: 200,
+      minSteals: 1,
+      archetype: "three-and-d",
+      sortBy: "rating",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+  {
+    slug: "rim-protectors",
+    title: "Rim Protectors",
+    description: "Blocks and rebounding for bigs who own the paint.",
+    href: "/rankings/rim-protectors",
+    filters: {
+      sport: "BASKETBALL",
+      minMinutes: 200,
+      minBlocks: 1,
+      archetype: "rim-protector",
+      sortBy: "blocks",
       sortDir: "desc",
       page: 1,
       pageSize: 20,

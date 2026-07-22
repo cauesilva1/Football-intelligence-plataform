@@ -20,6 +20,13 @@ export type PlayerMatchStatUpsertInput = {
   interceptions: number;
   passesCompleted: number;
   passesAttempted: number;
+  /** Basketball native fields (nullable on soccer rows). */
+  points?: number | null;
+  rebounds?: number | null;
+  steals?: number | null;
+  blocks?: number | null;
+  fieldGoalsMade?: number | null;
+  fieldGoalsAttempted?: number | null;
   season?: number | null;
   source?: string;
   /** When set, skip soccer computeMatchRating (basketball boxscores). */
@@ -70,6 +77,12 @@ export async function upsertPlayerMatchStat(input: PlayerMatchStatUpsertInput): 
       interceptions: input.interceptions,
       passesCompleted: input.passesCompleted,
       passesAttempted: input.passesAttempted,
+      points: input.points ?? undefined,
+      rebounds: input.rebounds ?? undefined,
+      steals: input.steals ?? undefined,
+      blocks: input.blocks ?? undefined,
+      fieldGoalsMade: input.fieldGoalsMade ?? undefined,
+      fieldGoalsAttempted: input.fieldGoalsAttempted ?? undefined,
       rating: rating ?? undefined,
       season: input.season ?? undefined,
       source: input.source ?? "espn",
@@ -88,6 +101,14 @@ export async function upsertPlayerMatchStat(input: PlayerMatchStatUpsertInput): 
       interceptions: input.interceptions,
       passesCompleted: input.passesCompleted,
       passesAttempted: input.passesAttempted,
+      ...(input.points != null ? { points: input.points } : {}),
+      ...(input.rebounds != null ? { rebounds: input.rebounds } : {}),
+      ...(input.steals != null ? { steals: input.steals } : {}),
+      ...(input.blocks != null ? { blocks: input.blocks } : {}),
+      ...(input.fieldGoalsMade != null ? { fieldGoalsMade: input.fieldGoalsMade } : {}),
+      ...(input.fieldGoalsAttempted != null
+        ? { fieldGoalsAttempted: input.fieldGoalsAttempted }
+        : {}),
       rating: rating ?? undefined,
       season: input.season ?? undefined,
       source: input.source ?? "espn",

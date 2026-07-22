@@ -64,6 +64,9 @@ export const queryCompetitionIdForLeague = cache(async (leagueParam?: string) =>
   if (sport === "BASKETBALL" && leagueParam === "ncaa") {
     return tabs.find((tab) => tab.key === "ncaa")?.competitionId;
   }
+  if (sport === "BASKETBALL" && leagueParam === "euroleague") {
+    return tabs.find((tab) => tab.key === "euroleague")?.competitionId;
+  }
   if (sport === "AMERICAN_FOOTBALL" && leagueParam === "nfl") {
     return tabs.find((tab) => tab.key === "nfl")?.competitionId;
   }

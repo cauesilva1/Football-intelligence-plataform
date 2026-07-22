@@ -230,6 +230,13 @@ model PlayerMatchStat {
   interceptions    Float     @default(0)
   passesCompleted  Int       @default(0)
   passesAttempted  Int       @default(0)
+  /// Basketball native match lines (nullable so soccer rows stay valid).
+  points               Int?
+  rebounds             Int?
+  steals               Int?
+  blocks               Int?
+  fieldGoalsMade       Int?
+  fieldGoalsAttempted  Int?
   /// Match productivity proxy (Sofascore-inspired baseline ~6.5) — our formula.
   rating           Float?
   season           Int?

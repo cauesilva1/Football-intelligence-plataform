@@ -109,7 +109,7 @@ function SoccerAppearanceRow({
   );
 }
 
-/** BB rows hijack soccer columns: goals→PTS, passesCompleted→REB, assists→AST, tackles→STL, ints→BLK. */
+/** BB rows prefer native columns; fall back to soccer-column hijack. */
 function BasketballAppearanceRow({ row }: { row: PlayerMatchAppearance }) {
   const date = row.matchDate
     ? new Date(row.matchDate).toLocaleDateString("en-US", {
@@ -122,6 +122,10 @@ function BasketballAppearanceRow({ row }: { row: PlayerMatchAppearance }) {
     row.opponentName != null
       ? `${row.isHome ? "vs" : "@"} ${row.opponentName}`
       : row.teamName ?? "Appearance";
+  const points = row.points ?? row.goals;
+  const rebounds = row.rebounds ?? row.passesCompleted;
+  const steals = row.steals ?? row.tackles ?? 0;
+  const blocks = row.blocks ?? row.interceptions ?? 0;
 
   return (
     <li className="grid grid-cols-[1fr_auto] gap-2 border-b border-border/60 py-2 last:border-0 sm:grid-cols-[minmax(0,1.4fr)_repeat(5,auto)] sm:items-center">
@@ -135,10 +139,10 @@ function BasketballAppearanceRow({ row }: { row: PlayerMatchAppearance }) {
         {row.minutesPlayed}&apos;
       </span>
       <span className="hidden font-mono text-xs tabular-nums sm:inline">
-        {row.goals} / {row.passesCompleted} / {row.assists}
+        {points} / {rebounds} / {row.assists}
       </span>
       <span className="hidden font-mono text-xs tabular-nums text-muted-foreground sm:inline">
-        Stl {(row.tackles ?? 0).toFixed(0)} · Blk {(row.interceptions ?? 0).toFixed(0)}
+        Stl {Number(steals).toFixed(0)} · Blk {Number(blocks).toFixed(0)}
       </span>
       <span className="font-mono text-xs font-semibold tabular-nums text-primary sm:text-right">
         {row.rating != null ? row.rating.toFixed(1) : "—"}

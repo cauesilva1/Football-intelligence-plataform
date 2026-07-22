@@ -67,6 +67,11 @@ const BASKETBALL_TAB_DEFINITIONS: LeagueDef[] = [
     label: "NCAA",
     match: (name) => name.includes("ncaa"),
   },
+  {
+    key: "euroleague",
+    label: "EuroLeague",
+    match: (name) => name.includes("euroleague") || name.includes("euro league"),
+  },
 ];
 
 const AMERICAN_FOOTBALL_TAB_DEFINITIONS: LeagueDef[] = [

@@ -57,7 +57,7 @@ Season counting stats are stored as **per-game averages**; minutes are a **seaso
 
 **Otherwise:** conservative baseline (max **7.0**).
 
-Match ratings use the same Sofascore-inspired ~6.5 baseline on boxscore lines. `PlayerMatchStat` columns are hijacked for BB until native fields exist: `goals→PTS`, `assists→AST`, `tackles→STL`, `interceptions→BLK`, `passesCompleted→REB`.
+Match ratings use the same Sofascore-inspired ~6.5 baseline on boxscore lines. Native basketball fields on `PlayerMatchStat` (`points`, `rebounds`, `steals`, `blocks`, `fieldGoalsMade` / `fieldGoalsAttempted`) are the source of truth. Dual-write still fills legacy hijack columns (`goals→PTS`, `assists→AST`, `tackles→STL`, `interceptions→BLK`, `passesCompleted→REB`) for rollback until `data:migrate-bb-match-native` has been applied everywhere.
 
 ---
 

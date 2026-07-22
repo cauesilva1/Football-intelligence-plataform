@@ -53,6 +53,8 @@ export interface StoredPlayerFilterPrefs {
     | "xGPer90"
     | "points"
     | "rebounds"
+    | "steals"
+    | "blocks"
     | "age"
     | "marketValue"
     | "valueScore"

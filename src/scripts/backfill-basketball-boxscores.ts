@@ -1,13 +1,17 @@
 /**
- * Multi-day ESPN NBA boxscore backfill → season averages + PlayerMatchStat.
+ * Multi-day ESPN basketball boxscore backfill → season averages + PlayerMatchStat.
+ * Default leagues: NBA + NCAA (mens-college-basketball). EuroLeague: use data:sync-euroleague.
  *
  *   npm run data:backfill-boxscores-basquete -- --days=14
  *   npm run data:backfill-boxscores-basquete -- --days=21 --end=2026-07-20
  *   npm run data:backfill-boxscores-basquete -- --days=7 --force
+ *   npm run data:backfill-boxscores-basquete -- --days=7 --league=nba
+ *   npm run data:backfill-boxscores-basquete -- --days=7 --league=ncaa
  */
 import fs from "fs";
 import path from "path";
 import { runBasketballBoxscoreBackfill } from "@/lib/cron/basketball-daily-sync";
+import type { BasketballLeagueSlug } from "@/lib/api/espn-basketball-boxscore";
 
 function loadDotEnv(): void {
   const envPath = path.join(process.cwd(), ".env");
@@ -48,11 +52,19 @@ function parseEndDate(raw: string | undefined): Date | undefined {
   return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0);
 }
 
+function resolveLeagues(raw: string | undefined): BasketballLeagueSlug[] | undefined {
+  if (!raw || raw === "all") return undefined;
+  if (raw === "nba") return ["nba"];
+  if (raw === "ncaa" || raw === "mens-college-basketball") return ["mens-college-basketball"];
+  throw new Error("Use --league=nba|ncaa|all");
+}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2).filter((arg) => arg !== "--");
   const days = Number(readFlag(args, "days") ?? "14");
   const endDate = parseEndDate(readFlag(args, "end"));
   const force = args.includes("--force");
+  const leagues = resolveLeagues(readFlag(args, "league"));
 
   if (!process.env.DATABASE_URL?.trim()) {
     throw new Error("DATABASE_URL ausente. Configure .env antes de executar o backfill.");
@@ -65,10 +77,10 @@ async function main(): Promise<void> {
   console.log(
     `[backfill-boxscores-basquete] days=${days}${
       endDate ? ` · end=${endDate.toISOString().slice(0, 10)}` : ""
-    }${force ? " · force" : ""}...`
+    }${force ? " · force" : ""}${leagues ? ` · leagues=${leagues.join(",")}` : " · leagues=nba,ncaa"}...`
   );
 
-  const result = await runBasketballBoxscoreBackfill({ days, force, endDate });
+  const result = await runBasketballBoxscoreBackfill({ days, force, endDate, leagues });
 
   console.log(
     `[backfill-boxscores-basquete] OK — processed ${result.totals.processed} · skipped ${result.totals.skipped} · failed ${result.totals.failed} · statsUpdated ${result.totals.statsUpdated}`

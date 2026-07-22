@@ -114,6 +114,14 @@ export function filterAndSortPlayers(
         diff =
           (sa.rebounds ?? sa.perGame?.rebounds ?? 0) - (sb.rebounds ?? sb.perGame?.rebounds ?? 0);
         break;
+      case "steals":
+        diff =
+          (sa.steals ?? sa.perGame?.steals ?? 0) - (sb.steals ?? sb.perGame?.steals ?? 0);
+        break;
+      case "blocks":
+        diff =
+          (sa.blocks ?? sa.perGame?.blocks ?? 0) - (sb.blocks ?? sb.perGame?.blocks ?? 0);
+        break;
       case "age":
         diff = a.age - b.age;
         break;
