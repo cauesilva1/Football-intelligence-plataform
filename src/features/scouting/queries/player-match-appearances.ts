@@ -13,12 +13,13 @@ export type PlayerMatchAppearance = {
   minutesPlayed: number;
   goals: number;
   assists: number;
-  tackles: number;
-  interceptions: number;
+  /** null = provider did not supply the metric */
+  tackles: number | null;
+  interceptions: number | null;
   rating: number | null;
 };
 
-/** Recent per-match appearances stored for this player (Stage 6). */
+/** Recent per-match appearances stored for this player (Stage 6 / 8). */
 export async function getPlayerMatchAppearances(
   playerId: string,
   limit = 12

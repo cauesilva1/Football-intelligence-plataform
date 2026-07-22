@@ -451,3 +451,110 @@ export async function fetchWorldCup2026FixturesRaw(): Promise<ApiSportsFixtureIt
 
   return fixtures;
 }
+
+// ── Stage 8: fixture player defensive stats ───────────────────────────────
+
+export type ApiSportsFixturePlayerLine = {
+  teamId: number;
+  teamName: string;
+  playerId: number;
+  playerName: string;
+  minutes: number | null;
+  goals: number | null;
+  assists: number | null;
+  tackles: number | null;
+  interceptions: number | null;
+  duelsTotal: number | null;
+  duelsWon: number | null;
+  passesTotal: number | null;
+  passesAccuracy: number | null;
+  rating: number | null;
+};
+
+type ApiFixturesPlayersTeamBlock = {
+  team: { id: number; name: string };
+  players: Array<{
+    player: { id: number; name: string };
+    statistics: Array<{
+      games?: { minutes?: number | null; rating?: string | null };
+      goals?: { total?: number | null; assists?: number | null };
+      tackles?: { total?: number | null; interceptions?: number | null };
+      duels?: { total?: number | null; won?: number | null };
+      passes?: { total?: number | null; accuracy?: number | string | null };
+    }>;
+  }>;
+};
+
+function numOrNull(value: unknown): number | null {
+  if (value == null || value === "") return null;
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Find a finished/in-play fixture id for a team on a calendar day (YYYY-MM-DD). */
+export async function findApiSportsFixtureId(opts: {
+  teamApiId: number;
+  dateIso: string;
+}): Promise<number | null> {
+  const cacheKey = `api-sports:fixture-lookup:${opts.teamApiId}:${opts.dateIso}`;
+  const cached = await readSystemCache<{ fixtureId?: number | null }>(cacheKey);
+  if (cached && "fixtureId" in cached) {
+    return cached.fixtureId ?? null;
+  }
+
+  const response = await fetchApiSports<ApiSportsFixtureItem[]>("/fixtures", {
+    team: opts.teamApiId,
+    date: opts.dateIso,
+  });
+  const fixtures = response ?? [];
+  const preferred =
+    fixtures.find((f) => ["FT", "AET", "PEN"].includes(f.fixture.status.short)) ??
+    fixtures[0];
+  const fixtureId = preferred?.fixture.id ?? null;
+  await writeSystemCache(cacheKey, { fixtureId });
+  return fixtureId;
+}
+
+/** Per-player box lines for one fixture (includes tackles / interceptions / duels). */
+export async function fetchApiSportsFixturePlayers(
+  fixtureId: number
+): Promise<ApiSportsFixturePlayerLine[]> {
+  const cacheKey = `api-sports:fixture-players:${fixtureId}`;
+  const cached = await readSystemCache<{ lines?: ApiSportsFixturePlayerLine[] }>(cacheKey);
+  if (cached?.lines?.length) return cached.lines;
+
+  const response = await fetchApiSports<ApiFixturesPlayersTeamBlock[]>("/fixtures/players", {
+    fixture: fixtureId,
+  });
+  if (!response?.length) {
+    await writeSystemCache(cacheKey, { lines: [] });
+    return [];
+  }
+
+  const lines: ApiSportsFixturePlayerLine[] = [];
+  for (const block of response) {
+    for (const entry of block.players ?? []) {
+      const stats = entry.statistics?.[0];
+      if (!stats) continue;
+      lines.push({
+        teamId: block.team.id,
+        teamName: block.team.name,
+        playerId: entry.player.id,
+        playerName: entry.player.name,
+        minutes: numOrNull(stats.games?.minutes),
+        goals: numOrNull(stats.goals?.total),
+        assists: numOrNull(stats.goals?.assists),
+        tackles: numOrNull(stats.tackles?.total),
+        interceptions: numOrNull(stats.tackles?.interceptions),
+        duelsTotal: numOrNull(stats.duels?.total),
+        duelsWon: numOrNull(stats.duels?.won),
+        passesTotal: numOrNull(stats.passes?.total),
+        passesAccuracy: numOrNull(stats.passes?.accuracy),
+        rating: numOrNull(stats.games?.rating),
+      });
+    }
+  }
+
+  await writeSystemCache(cacheKey, { lines });
+  return lines;
+}

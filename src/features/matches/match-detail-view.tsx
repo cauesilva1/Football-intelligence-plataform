@@ -146,7 +146,7 @@ function summarizeTeam(players: MatchDetailPayload["boxScores"]) {
   return {
     goals: players.reduce((s, p) => s + p.goals, 0),
     assists: players.reduce((s, p) => s + p.assists, 0),
-    tackles: players.reduce((s, p) => s + p.tackles, 0),
+    tackles: players.reduce((s, p) => s + (p.tackles ?? 0), 0),
     passesCompleted: players.reduce((s, p) => s + p.passesCompleted, 0),
   };
 }

@@ -20,6 +20,7 @@
     "data:cron-sync-2026": "tsx src/scripts/auto-sync-completed-matches-2026.ts",
     "data:backfill-boxscores": "tsx src/scripts/backfill-soccer-boxscores.ts",
     "data:backfill-big5": "tsx src/scripts/backfill-soccer-big5.ts",
+    "data:enrich-defense": "tsx src/scripts/enrich-defensive-stats.ts",
     "data:sync-basquete": "tsx src/scripts/sync-basketball-ecosystem.ts",
     "data:sync-nba-teste": "tsx src/scripts/sync-nba-only-history.ts",
     "data:sync-boxscore-basquete": "tsx src/scripts/sync-basketball-boxscores.ts",

@@ -226,14 +226,18 @@ model PlayerMatchStat {
   minutesPlayed    Int       @default(0)
   goals            Int       @default(0)
   assists          Int       @default(0)
-  tackles          Float     @default(0)
-  interceptions    Float     @default(0)
+  /// null = provider did not supply the metric (do not treat as zero).
+  tackles          Float?
+  interceptions    Float?
   passesCompleted  Int       @default(0)
   passesAttempted  Int       @default(0)
   /// Match productivity proxy (Sofascore-inspired baseline ~6.5) — our formula.
   rating           Float?
   season           Int?
+  /// espn | api-sports | espn+api-sports
   source           String    @default("espn")
+  /// API-Football fixture id when defensive stats were enriched from /fixtures/players
+  apiSportsFixtureId Int?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 

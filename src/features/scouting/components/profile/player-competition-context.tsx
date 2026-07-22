@@ -39,19 +39,34 @@ function TeamMatchRow({ match }: { match: PlayerRecentMatch }) {
 }
 
 /**
- * ESPN boxscores for some leagues omit defensive stats entirely; we persist 0,
- * which is indistinguishable from a real 0 per row. Heuristic: if no appearance
- * in a competition has any defensive action, the feed almost certainly didn't
- * provide the data — render "—" instead of a misleading "Tkl 0 · Int 0".
+ * Defensive display: null means the provider never supplied the metric.
+ * Legacy ESPN rows may still store 0 for missing data — keep the competition
+ * heuristic as a fallback until Stage 8 enrichment rewrites them.
  */
 function competitionsWithDefensiveData(rows: PlayerMatchAppearance[]): Set<string> {
   const withData = new Set<string>();
   for (const row of rows) {
-    if (row.tackles > 0 || row.interceptions > 0) {
+    if ((row.tackles != null && row.tackles > 0) || (row.interceptions != null && row.interceptions > 0)) {
       withData.add(row.competitionLabel ?? "");
     }
   }
   return withData;
+}
+
+function formatDefCell(row: PlayerMatchAppearance, hasDefensiveData: boolean): string {
+  // Honest nulls from Stage 8
+  if (row.tackles == null && row.interceptions == null) {
+    return "—";
+  }
+  if (row.tackles != null && row.interceptions != null) {
+    if (row.tackles === 0 && row.interceptions === 0 && !hasDefensiveData) {
+      return "—"; // legacy ESPN ambiguity
+    }
+    return `Tkl ${row.tackles.toFixed(0)} · Int ${row.interceptions.toFixed(0)}`;
+  }
+  const tkl = row.tackles != null ? `Tkl ${row.tackles.toFixed(0)}` : "Tkl —";
+  const int = row.interceptions != null ? `Int ${row.interceptions.toFixed(0)}` : "Int —";
+  return `${tkl} · ${int}`;
 }
 
 function AppearanceRow({
@@ -91,9 +106,7 @@ function AppearanceRow({
         G {row.goals} · A {row.assists}
       </span>
       <span className="hidden font-mono text-xs tabular-nums text-muted-foreground sm:inline">
-        {hasDefensiveData
-          ? `Tkl ${row.tackles.toFixed(0)} · Int ${row.interceptions.toFixed(0)}`
-          : "—"}
+        {formatDefCell(row, hasDefensiveData)}
       </span>
       <span className="font-mono text-xs font-semibold tabular-nums text-primary sm:text-right">
         {row.rating != null ? row.rating.toFixed(1) : "—"}
