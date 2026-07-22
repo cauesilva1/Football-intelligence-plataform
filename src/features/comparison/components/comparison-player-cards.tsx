@@ -92,7 +92,7 @@ function BasketballStatStrip({ player }: { player: Player }) {
 
 export function ComparisonPlayerCards({ players }: { players: [Player, Player] }) {
   return (
-    <div className="grid gap-3 md:grid-cols-2">
+    <div className="relative grid gap-3 md:grid-cols-2">
       {players.map((p, index) => {
         const s = p.currentSeasonStats;
         const isBasketball = p.sport === "BASKETBALL" || s.sport === "BASKETBALL";
@@ -105,7 +105,7 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
           <div
             key={p.id}
             className={cn(
-              "overflow-hidden rounded-xl border bg-gradient-to-br p-4 shadow-panel",
+              "overflow-hidden rounded-xl border bg-gradient-to-br p-4 shadow-panel transition-[transform,box-shadow] duration-150 hover:-translate-y-0.5 hover:shadow-lg",
               theme.gradientString
             )}
             style={{ borderColor: `${theme.primaryColor}44` }}
@@ -157,6 +157,12 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
           </div>
         );
       })}
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/2 z-10 hidden h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background font-mono text-2xs font-semibold uppercase tracking-wider text-muted-foreground shadow-panel md:flex"
+        aria-hidden
+      >
+        vs
+      </div>
     </div>
   );
 }

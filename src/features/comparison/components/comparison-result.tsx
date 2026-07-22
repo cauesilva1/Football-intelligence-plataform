@@ -116,7 +116,7 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
             {report.advantagesA.map((item) => (
               <li
                 key={item}
-                className="rounded-lg border border-border bg-surface-muted/30 px-3 py-2 text-xs text-foreground"
+                className="rounded-lg border border-border bg-surface-muted/30 px-3 py-2 text-xs text-foreground transition-colors duration-150 hover:border-primary/30 hover:bg-surface-muted/50"
               >
                 {item}
               </li>
@@ -141,7 +141,7 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
             {report.advantagesB.map((item) => (
               <li
                 key={item}
-                className="rounded-lg border border-border bg-surface-muted/30 px-3 py-2 text-xs text-foreground"
+                className="rounded-lg border border-border bg-surface-muted/30 px-3 py-2 text-xs text-foreground transition-colors duration-150 hover:border-primary/30 hover:bg-surface-muted/50"
               >
                 {item}
               </li>
@@ -168,7 +168,7 @@ export async function ComparisonResult({ playerA, playerB }: { playerA: string; 
           {report.insights.map((line) => (
             <div
               key={line}
-              className="flex items-start gap-2 rounded-lg border border-border bg-surface-muted/30 px-3 py-2 text-xs text-foreground"
+              className="flex items-start gap-2 rounded-lg border border-border bg-surface-muted/30 px-3 py-2 text-xs text-foreground transition-colors duration-150 hover:border-primary/30 hover:bg-surface-muted/50"
             >
               <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-warning" />
               {line}

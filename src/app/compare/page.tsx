@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { GitCompareArrows } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/common/empty-state";
 import { queryAllPlayersLite } from "@/features/scouting/queries/players";
 import { parseCompareParams } from "@/features/comparison/lib/parse-compare-params";
@@ -32,12 +31,17 @@ export default async function ComparePage({
 
   return (
     <DashboardShell subtitle="Compare">
-      <div className="space-y-6">
+      <div className="space-y-4">
         <ScoutWorkflowNav current="compare" />
-        <PageHeader
-          title="Compare players"
-          description="Side-by-side decision support — role-aware metrics and small-sample honesty from the profile."
-        />
+        <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-6">
+          <h1 className="font-display text-xl font-bold text-foreground md:text-2xl">
+            Compare players
+          </h1>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            Side-by-side decision support — role-aware metrics and small-sample honesty from the
+            profile.
+          </p>
+        </div>
 
         <CompareSelectorForm players={playersLite} playerA={playerA} playerB={playerB} />
 
