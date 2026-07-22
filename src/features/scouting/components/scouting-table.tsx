@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Eye } from "lucide-react";
 import { PlayerAvatar } from "@/components/players/player-avatar";
-import { GlossaryTooltip, METRIC_GLOSSARY, POSITION_GLOSSARY } from "@/components/common/glossary-tooltip";
+import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
+import { METRIC_GLOSSARY, POSITION_GLOSSARY } from "@/components/common/glossary-copy";
 import { getPositionGlossaryDescription } from "@/lib/positions";
 import {
   Table,

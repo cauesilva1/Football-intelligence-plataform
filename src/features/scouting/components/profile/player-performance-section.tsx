@@ -1,5 +1,6 @@
 import { Activity, Target, Crosshair, TrendingUp, Shield } from "lucide-react";
-import { GlossaryTooltip, METRIC_GLOSSARY } from "@/components/common/glossary-tooltip";
+import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
+import { METRIC_GLOSSARY } from "@/components/common/glossary-copy";
 import { MetricCard } from "@/components/data/metric-card";
 import { DataPanel } from "@/components/data/data-panel";
 import {

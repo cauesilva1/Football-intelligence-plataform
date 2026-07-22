@@ -1,5 +1,5 @@
 import type { Sport } from "@/lib/sport";
-import { POSITION_GLOSSARY } from "@/components/common/glossary-tooltip";
+import { POSITION_GLOSSARY } from "@/components/common/glossary-copy";
 
 export const BASKETBALL_POSITIONS = ["PG", "SG", "SF", "PF", "C"] as const;
 
