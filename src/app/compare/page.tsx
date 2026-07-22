@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { GitCompareArrows } from "lucide-react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { EmptyState } from "@/components/common/empty-state";
 import { queryAllPlayersLite } from "@/features/scouting/queries/players";
@@ -47,7 +46,7 @@ export default async function ComparePage({
 
         {!bothSelected && (
           <EmptyState
-            icon={GitCompareArrows}
+            icon="compare"
             title="Select two players"
             description="Choose a player in each field above to start a detailed comparison."
           />

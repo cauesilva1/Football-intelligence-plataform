@@ -4,7 +4,6 @@ import { ScoutingTable } from "@/features/scouting/components/scouting-table";
 import { ScoutingPagination } from "@/features/scouting/components/scouting-pagination";
 import type { ScoutingRoute } from "@/features/scouting/lib/filter-defaults";
 import type { PlayerFilters } from "@/types";
-import { SearchX } from "lucide-react";
 
 export async function ScoutingDatabaseView({
   filters,
@@ -20,7 +19,7 @@ export async function ScoutingDatabaseView({
   if (result.items.length === 0) {
     return (
       <EmptyState
-        icon={SearchX}
+        icon="search"
         title={
           route === "scouting"
             ? "No players match the filters."

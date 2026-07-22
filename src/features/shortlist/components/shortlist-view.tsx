@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Bookmark } from "lucide-react";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -134,7 +133,7 @@ export function ShortlistView() {
           description="Working shortlist — tag targets, write notes, then generate a staff brief. Saved on this device."
         />
         <EmptyState
-          icon={Bookmark}
+          icon="bookmark"
           title="Your shortlist is empty"
           description="Save players from Scouting or a profile, then tag them Priority / Watch / Reject."
           action={{ label: "Open Scouting", href: "/scouting" }}

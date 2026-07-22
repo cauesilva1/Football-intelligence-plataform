@@ -1,20 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { SearchX, type LucideIcon } from "lucide-react";
+import {
+  Bookmark,
+  FileText,
+  GitCompareArrows,
+  SearchX,
+} from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+
+const EMPTY_ICONS = {
+  search: SearchX,
+  compare: GitCompareArrows,
+  bookmark: Bookmark,
+  file: FileText,
+} as const;
+
+export type EmptyStateIcon = keyof typeof EMPTY_ICONS;
 
 export function EmptyState({
   title = "No results found",
   description = "Adjust the filters or search term to find players.",
   action,
-  icon: Icon = SearchX,
+  icon = "search",
 }: {
   title?: string;
   description?: string;
   action?: { label: string; href: string };
-  icon?: LucideIcon;
+  /** Named icon — serializable from Server Components (do not pass Lucide components). */
+  icon?: EmptyStateIcon;
 }) {
+  const Icon = EMPTY_ICONS[icon] ?? SearchX;
+
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border p-10 text-center">
       <Icon className="h-8 w-8 text-muted-foreground" />
