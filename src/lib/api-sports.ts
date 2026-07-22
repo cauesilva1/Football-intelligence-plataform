@@ -400,6 +400,89 @@ export async function getApiSportsQuotaStatus(): Promise<{ used: number; limit: 
   return { used: await getQuotaCount(), limit: DAILY_LIMIT, date: todayKey() };
 }
 
+/** All clubs in a league/season — typically 1 request (used to stamp Team.apiSportsId). */
+export async function fetchTeamsForLeagueSeason(
+  leagueId: number,
+  season: number
+): Promise<Array<{ id: number; name: string; logo: string | null }>> {
+  const cacheKey = `api-sports:league-teams:${leagueId}:${season}`;
+  const cached = await readSystemCache<{ teams?: Array<{ id: number; name: string; logo: string | null }> }>(
+    cacheKey
+  );
+  if (cached?.teams?.length) return cached.teams;
+
+  const response = await fetchApiSports<ApiTeamSearchItem[]>("/teams", {
+    league: leagueId,
+    season,
+  });
+  const teams = (response ?? []).map((row) => ({
+    id: row.team.id,
+    name: row.team.name,
+    logo: row.team.logo,
+  }));
+  await writeSystemCache(cacheKey, { teams });
+  return teams;
+}
+
+export type ApiSportsSeasonPlayerDefense = {
+  playerId: number;
+  playerName: string;
+  teamId: number;
+  tackles: number;
+  interceptions: number;
+  minutes: number;
+};
+
+type ApiPlayerSeasonItem = {
+  player: { id: number; name: string };
+  statistics: Array<{
+    team?: { id?: number };
+    games?: { minutes?: number | null };
+    tackles?: { total?: number | null; interceptions?: number | null };
+  }>;
+};
+
+/**
+ * Season defensive totals for one club (paginated /players?team=&season=).
+ * Prefer this over FBref scrape for operational updates — same ~next-day lag as FBref tables.
+ */
+export async function fetchTeamSeasonPlayerDefense(
+  teamApiId: number,
+  season: number,
+  maxPages = 3
+): Promise<ApiSportsSeasonPlayerDefense[]> {
+  const lines: ApiSportsSeasonPlayerDefense[] = [];
+  for (let page = 1; page <= maxPages; page += 1) {
+    const q = await getQuotaCount();
+    if (q >= DAILY_LIMIT) break;
+
+    const response = await fetchApiSports<ApiPlayerSeasonItem[]>("/players", {
+      team: teamApiId,
+      season,
+      page,
+    });
+    if (!response?.length) break;
+
+    for (const row of response) {
+      const stats = row.statistics?.[0];
+      const tackles = numOrNull(stats?.tackles?.total) ?? 0;
+      const interceptions = numOrNull(stats?.tackles?.interceptions) ?? 0;
+      if (tackles === 0 && interceptions === 0) continue;
+      lines.push({
+        playerId: row.player.id,
+        playerName: row.player.name,
+        teamId: stats?.team?.id ?? teamApiId,
+        tackles,
+        interceptions,
+        minutes: numOrNull(stats?.games?.minutes) ?? 0,
+      });
+    }
+
+    if (response.length < 20) break;
+  }
+  return lines;
+}
+
 // ── World Cup 2026 fixtures (cached 15 min) ───────────────────────────────
 
 const WC_2026_LEAGUE_ID = 1;

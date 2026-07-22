@@ -193,16 +193,22 @@ FBref (season tables, later)           →  validate / backfill season aggregate
 **Ops notes**
 
 ```bash
+# Stamp Team.apiSportsId (static map + optional Big-5 /teams sync)
+npm run data:ensure-team-apisports
+npm run data:ensure-team-apisports -- --map-only
+
 # Enrich recent PlayerMatchStat rows that still lack defense (uses APISPORTS_KEY)
 npm run data:enrich-defense -- --limit=40
 
-# Optional: only one competition label substring
-npm run data:enrich-defense -- --limit=20 --competition=La\ Liga
+# Season totals for scorecards (API-Football /players — FBref-equivalent lag)
+npm run data:enrich-season-defense -- --teams=8
 ```
 
-**Free-tier reality (api-sports.io):** the Free plan only exposes fixtures in a **rolling recent date window** (often ~today ±1–2 days — the API returns `Free plans do not have access to this date`). Historical Big-5 backfill (Apr/May) requires a paid plan **or** Stage 8.7 FBref. Also requires `Team.apiSportsId` (and ideally `Player.apiSportsId`) — enrich skips rows without a team id and may set player ids when a name match succeeds.
+**FBref cadence:** squad tables update **during the season, usually the day after matchdays** — not live. Same practical lag as API-Football season `/players`. Daily cron uses match-level `/fixtures/players` for the free-tier recent window; season enrich fills profile scorecards.
 
-Daily quota ≈ **100 requests** — each fixture costs ~1–2 calls (lookup + players). Prefer enriching after daily ESPN cron (last 2 days) so free-tier dates overlap.
+**Free-tier reality (api-sports.io):** the Free plan only exposes fixtures in a **rolling recent date window** (often ~today ±1–2 days — the API returns `Free plans do not have access to this date`). Season `/players` and `/teams?league=` are limited to seasons **2022–2024** on free (`data:enrich-season-defense` defaults to 2024; set `APISPORTS_ALLOW_CURRENT_SEASON=1` or `--season=2025` on paid). Historical Big-5 match enrich (Apr/May) requires a paid plan **or** offline FBref/ETL CSV. Match enrich also requires `Team.apiSportsId` — `data:ensure-team-apisports` + cron handle this.
+
+Daily quota ≈ **100 requests** — cron runs ESPN 2-day backfill, then team-id sync (≈5 league calls), then defense enrich (`limit=40`).
 
 **Out of Stage 8:** replacing ESPN as the fixture spine; paid Opta/Wyscout; StatsBomb open data.
 

@@ -1,10 +1,23 @@
 /**
- * FBref enrichment (Stage 8.7 — Phase B).
+ * FBref & seasonal defensive totals (Stage 8.7).
  *
- * Intent: season-level validation / backfill of tacklesWon + interceptions on
- * PlayerSeasonStats when API-Football match coverage is thin.
+ * ## Is FBref updated day-to-day?
+ * Yes during the season — usually **the day after** matches (Opta-fed tables),
+ * not live/in-play. Same practical lag as API-Football season `/players` stats.
  *
- * Not implemented yet — scraping FBref is rate-limited and brittle; prefer
- * API-Football `/fixtures/players` (Stage 8.3–8.5) for match-level defense.
+ * ## What we use operationally
+ * - **Match-level (yesterday):** API-Football `/fixtures/players` via cron
+ *   (`data:enrich-defense`) — free tier only covers a rolling recent date window.
+ * - **Season totals (scorecards):** API-Football `/players?team=&season=` via
+ *   `enrichSeasonDefenseFromApiFootball` — updates `PlayerSeasonStats.tackles`
+ *   / `interceptions` without scraping.
+ *
+ * ## FBref role
+ * Offline CSV / future scrape for validation and gaps — see existing ETL CSV
+ * path (`TklW` / `Int`). Live scrape is intentionally not the daily path
+ * (rate limits + HTML fragility).
  */
-export const FBREF_STATUS = "planned" as const;
+export { enrichSeasonDefenseFromApiFootball } from "@/lib/api/enrich-season-defense";
+
+export const FBREF_UPDATE_CADENCE =
+  "Season tables typically refresh next day after matchdays — not live.";
