@@ -23,6 +23,7 @@
     "data:sync-basquete": "tsx src/scripts/sync-basketball-ecosystem.ts",
     "data:sync-nba-teste": "tsx src/scripts/sync-nba-only-history.ts",
     "data:sync-boxscore-basquete": "tsx src/scripts/sync-basketball-boxscores.ts",
+    "data:backfill-boxscores-basquete": "tsx src/scripts/backfill-basketball-boxscores.ts",
     "data:cron-basquete": "tsx src/scripts/cron-basketball-sync.ts",
     "data:sync-nba-elencos": "tsx src/scripts/sync-nba-teams-players.ts",
     "data:sync-ncaa-teams": "tsx src/scripts/sync-ncaa-teams.ts",

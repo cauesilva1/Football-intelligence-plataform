@@ -57,11 +57,13 @@ export const mockPlayerRepository: PlayerRepository = {
     const primary = scoped.slice(0, take);
     const extras = scoped.filter((p) => ensureIds.has(p.id) && !primary.some((x) => x.id === p.id));
     return [...primary, ...extras].map(
-      ({ id, fullName, knownAs, position, teamId, teamShortName, teamName }) => ({
+      ({ id, fullName, knownAs, position, age, sport: playerSport, teamId, teamShortName, teamName }) => ({
         id,
         fullName,
         knownAs,
         position,
+        age,
+        sport: playerSport,
         teamId,
         teamShortName,
         teamName,

@@ -35,8 +35,13 @@ function shiftLocalDate(base: Date, days: number): Date {
   return date;
 }
 
-export function buildBasketballScanDates(now = new Date()): Date[] {
-  return [shiftLocalDate(now, -1), shiftLocalDate(now, 0)];
+export function buildBasketballScanDates(now = new Date(), days = 2): Date[] {
+  const window = Math.max(1, Math.min(days, 90));
+  const dates: Date[] = [];
+  for (let offset = window - 1; offset >= 0; offset -= 1) {
+    dates.push(shiftLocalDate(now, -offset));
+  }
+  return dates;
 }
 
 function logDaySummary(label: string, summary: SyncBasketballBoxScoresResult): void {
@@ -82,25 +87,26 @@ function aggregateTotals(summaries: SyncBasketballBoxScoresResult[]) {
 }
 
 export async function runBasketballDailySync(
-  options: { force?: boolean; now?: Date } = {}
+  options: { force?: boolean; now?: Date; days?: number } = {}
 ): Promise<BasketballCronResult> {
   if (!process.env.DATABASE_URL?.trim()) {
     throw new Error("DATABASE_URL ausente. Configure .env antes de executar o cron.");
   }
 
   const now = options.now ?? new Date();
-  const scanDates = buildBasketballScanDates(now);
+  const daysWindow = options.days ?? 2;
+  const scanDates = buildBasketballScanDates(now, daysWindow);
   const days: BasketballCronDayResult[] = [];
   const summaries: SyncBasketballBoxScoresResult[] = [];
 
   console.log(`${LOG_PREFIX} Iniciando varredura diária...`);
   console.log(
-    `${LOG_PREFIX} Referência: ${now.toISOString()} · janela: ontem + hoje (${formatEspnDate(scanDates[0])} → ${formatEspnDate(scanDates[1])})${options.force ? " · modo force" : ""}`
+    `${LOG_PREFIX} Referência: ${now.toISOString()} · janela: últimos ${daysWindow} dia(s) (${formatEspnDate(scanDates[0])} → ${formatEspnDate(scanDates[scanDates.length - 1])})${options.force ? " · modo force" : ""}`
   );
 
   for (const date of scanDates) {
-    const label = date < shiftLocalDate(now, 0) ? "Dia anterior" : "Dia corrente";
-    console.log(`${LOG_PREFIX} Varredura — ${label} (${formatEspnDate(date)})...`);
+    const label = formatEspnDate(date);
+    console.log(`${LOG_PREFIX} Varredura — ${label}...`);
 
     try {
       const summary = await syncTodaysBasketballBoxScores(date, { force: options.force });
@@ -134,9 +140,22 @@ export async function runBasketballDailySync(
     reference: now.toISOString(),
     window: {
       from: formatEspnDate(scanDates[0]),
-      to: formatEspnDate(scanDates[1]),
+      to: formatEspnDate(scanDates[scanDates.length - 1]),
     },
     days,
     totals,
   };
+}
+
+/** Multi-day NBA boxscore backfill (writes season averages + PlayerMatchStat). */
+export async function runBasketballBoxscoreBackfill(options: {
+  days: number;
+  force?: boolean;
+  endDate?: Date;
+}): Promise<BasketballCronResult> {
+  return runBasketballDailySync({
+    days: options.days,
+    force: options.force,
+    now: options.endDate ?? new Date(),
+  });
 }

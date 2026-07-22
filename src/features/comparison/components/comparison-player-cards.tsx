@@ -4,9 +4,12 @@ import { buttonVariants } from "@/components/ui/button";
 import { PlayerAvatar } from "@/components/players/player-avatar";
 import { computeXGPer90 } from "@/features/scouting/lib/filter-players";
 import {
+  buildBasketballPositionScorecard,
   buildPositionScorecard,
+  basketballPositionGroup,
   soccerPositionGroup,
 } from "@/features/scouting/lib/position-scorecard";
+import { hasReliableBasketballSample } from "@/lib/scoring/basketball-rating";
 import { SOCCER_RATE_MIN_MINUTES } from "@/lib/scoring";
 import { getTeamTheme } from "@/lib/team-theme";
 import { cn, formatCapHit, formatMarketValue, ratingColor } from "@/lib/utils";
@@ -69,6 +72,39 @@ function SoccerStatStrip({ player }: { player: Player }) {
 
 function BasketballStatStrip({ player }: { player: Player }) {
   const s = player.currentSeasonStats;
+  const smallSample =
+    s.appearances > 0 &&
+    !hasReliableBasketballSample({
+      matchesPlayed: s.appearances,
+      minutesPlayed: s.minutesPlayed,
+    });
+  const group = basketballPositionGroup(player.position);
+  const scorecard = buildBasketballPositionScorecard(player.position, s);
+  const highlight = scorecard.metrics
+    .filter((m) => m.key !== "games" && m.key !== "mpg" && m.key !== "rating")
+    .slice(0, 3);
+
+  if (highlight.length >= 3) {
+    return (
+      <div className="mt-3 space-y-1.5 border-t border-white/15 pt-3">
+        {smallSample ? (
+          <p className="text-center text-2xs text-amber-200/90">
+            Small sample ({s.appearances} G) — rating provisional
+          </p>
+        ) : null}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {highlight.map((m) => (
+            <div key={m.key}>
+              <p className="font-mono text-sm font-semibold tabular-nums text-white">{m.value}</p>
+              <p className="text-2xs text-white/60">{m.label}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-center text-2xs text-white/45">{group} pack</p>
+      </div>
+    );
+  }
+
   const pts = s.perGame?.points ?? s.points ?? 0;
   const reb = s.perGame?.rebounds ?? s.rebounds ?? 0;
   const ast = s.perGame?.assists ?? s.assists ?? 0;

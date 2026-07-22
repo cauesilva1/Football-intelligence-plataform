@@ -7,7 +7,7 @@ import { formatMarketValue } from "@/lib/utils";
 const OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-const SYSTEM_PROMPT = `You are a professional football scout analyst writing structured scouting reports for a analytics platform.
+const SYSTEM_PROMPT_SOCCER = `You are a professional football scout analyst writing structured scouting reports for a analytics platform.
 
 CRITICAL: Every text field in your JSON response MUST be written in English only (Player Summary, Playing Style, Technical Recommendation, strengths, weaknesses, tactical narrative).
 
@@ -31,6 +31,39 @@ Return ONLY valid JSON matching this schema:
 }
 
 Use industry-standard analytics language (per 90, xG, xA, rating). overallRating must be between 4.0 and 9.5.`;
+
+const SYSTEM_PROMPT_BASKETBALL = `You are a professional basketball scout analyst writing structured scouting reports for an analytics platform.
+
+CRITICAL: Every text field in your JSON response MUST be written in English only.
+
+Return ONLY valid JSON matching this schema:
+{
+  "summary": "string — quantitative player summary for the current season",
+  "strengths": ["string", "..."],
+  "weaknesses": ["string", "..."],
+  "playingStyle": {
+    "label": "string",
+    "description": "string",
+    "traits": ["string", "..."]
+  },
+  "tacticalFit": {
+    "systems": ["string", "..."],
+    "roles": ["string", "..."],
+    "narrative": "string"
+  },
+  "recommendation": "string — scouting verdict for recruitment / draft / free agency",
+  "overallRating": number
+}
+
+Use basketball analytics language (PPG, RPG, APG, FG%, 3P%, SPG, BPG, MPG). overallRating must be between 4.0 and 9.5.`;
+
+function isBasketballPlayer(player: Player): boolean {
+  return (player.sport ?? "SOCCER") === "BASKETBALL";
+}
+
+function resolveTacticalFit(player: Player): TacticalFit {
+  return isBasketballPlayer(player) ? buildBasketballTacticalFit(player) : buildTacticalFit(player);
+}
 
 interface LlmReportPayload {
   summary?: string;
@@ -211,12 +244,11 @@ function computeOverallRating(player: Player): number {
 function buildMockReport(player: Player): ScoutingReport {
   const playingStyle = derivePlayingStyle(player);
   const rating = computeOverallRating(player);
-  const isBasketball = (player.sport ?? "SOCCER") === "BASKETBALL";
 
   return {
     id: `report-${player.id}-${Date.now()}`,
     playerId: player.id,
-    summary: isBasketball ? buildBasketballSummary(player) : buildSummary(player),
+    summary: isBasketballPlayer(player) ? buildBasketballSummary(player) : buildSummary(player),
     strengths: player.strengths,
     weaknesses: player.weaknesses,
     playingStyle: {
@@ -224,7 +256,7 @@ function buildMockReport(player: Player): ScoutingReport {
       description: playingStyle.description,
       traits: playingStyle.traits,
     },
-    tacticalFit: isBasketball ? buildBasketballTacticalFit(player) : buildTacticalFit(player),
+    tacticalFit: resolveTacticalFit(player),
     recommendation: buildRecommendation(rating, player.age),
     overallRating: rating,
     generatedBy: "mock-ai-v2",
@@ -297,6 +329,11 @@ async function generateWithOpenRouter(player: Player): Promise<ScoutingReport | 
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) return null;
 
+  const fallbackFit = resolveTacticalFit(player);
+  const systemPrompt = isBasketballPlayer(player)
+    ? SYSTEM_PROMPT_BASKETBALL
+    : SYSTEM_PROMPT_SOCCER;
+
   const response = await fetch(OPENROUTER_URL, {
     method: "POST",
     headers: {
@@ -308,7 +345,7 @@ async function generateWithOpenRouter(player: Player): Promise<ScoutingReport | 
     body: JSON.stringify({
       model: OPENROUTER_MODEL,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         {
           role: "user",
           content: `Generate a scouting report JSON for this player dataset:\n${buildPlayerContext(player)}`,
@@ -333,7 +370,7 @@ async function generateWithOpenRouter(player: Player): Promise<ScoutingReport | 
   if (!payload?.summary || !payload.recommendation) return null;
 
   const fallbackStyle = derivePlayingStyle(player);
-  // Always use unified soccer rating — do not trust a parallel LLM score.
+  // Always use unified sport rating — do not trust a parallel LLM score.
   const rating = computeOverallRating(player);
 
   return {
@@ -350,9 +387,9 @@ async function generateWithOpenRouter(player: Player): Promise<ScoutingReport | 
     tacticalFit: {
       systems: payload.tacticalFit?.systems?.length
         ? payload.tacticalFit.systems
-        : buildTacticalFit(player).systems,
-      roles: payload.tacticalFit?.roles?.length ? payload.tacticalFit.roles : buildTacticalFit(player).roles,
-      narrative: payload.tacticalFit?.narrative ?? buildTacticalFit(player).narrative,
+        : fallbackFit.systems,
+      roles: payload.tacticalFit?.roles?.length ? payload.tacticalFit.roles : fallbackFit.roles,
+      narrative: payload.tacticalFit?.narrative ?? fallbackFit.narrative,
     },
     recommendation: payload.recommendation,
     overallRating: rating,

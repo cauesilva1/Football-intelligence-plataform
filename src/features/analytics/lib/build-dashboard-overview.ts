@@ -1,13 +1,17 @@
 import { SEASONS } from "@/lib/data/generators";
 import { computeXGPer90 } from "@/features/scouting/lib/filter-players";
 import { hasReliableSoccerSample, per90 } from "@/lib/metrics/per90";
+import { hasReliableBasketballSample } from "@/lib/scoring/basketball-rating";
 import { pickBasketballDisplayStats, statPoints } from "@/lib/metrics/basketball-display";
 import {
+  BB_RATE_MIN_GAMES,
+  BB_RATE_MIN_MINUTES,
   OPPORTUNITY_MAX_AGE,
   OPPORTUNITY_MAX_CAP_HIT,
   OPPORTUNITY_MAX_VALUE,
   OPPORTUNITY_MIN_RATING,
   PROSPECT_MIN_RATING,
+  SOCCER_RATE_MIN_MINUTES,
   SOCCER_RATE_SOFT_CAP,
   U23_MAX_AGE,
 } from "@/lib/scoring";
@@ -16,6 +20,20 @@ import { AMERICAN_FOOTBALL_POSITIONS } from "@/lib/positions";
 import type { Competition, DashboardInsight, DashboardOverview, Player, Team } from "@/types";
 
 const SOCCER_POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"];
+
+function hasReliableSample(player: Player, sport: Sport): boolean {
+  const s = player.currentSeasonStats;
+  if (sport === "BASKETBALL") {
+    return hasReliableBasketballSample({
+      matchesPlayed: s.appearances,
+      minutesPlayed: s.minutesPlayed,
+    });
+  }
+  if (sport === "SOCCER") {
+    return hasReliableSoccerSample(s.minutesPlayed);
+  }
+  return true;
+}
 
 function playerScoringRate(player: Player, sport: Sport): number {
   if (sport === "BASKETBALL") {
@@ -38,9 +56,7 @@ function playerEffectiveRating(player: Player, sport: Sport): number {
 function isMarketOpportunity(player: Player, sport: Sport): boolean {
   if (player.age > OPPORTUNITY_MAX_AGE) return false;
   if (playerEffectiveRating(player, sport) < OPPORTUNITY_MIN_RATING) return false;
-  if (sport === "SOCCER" && !hasReliableSoccerSample(player.currentSeasonStats.minutesPlayed)) {
-    return false;
-  }
+  if (!hasReliableSample(player, sport)) return false;
   if (sport === "AMERICAN_FOOTBALL") {
     const cap = player.capHit ?? 0;
     return cap > 0 && cap <= OPPORTUNITY_MAX_CAP_HIT;
@@ -51,9 +67,7 @@ function isMarketOpportunity(player: Player, sport: Sport): boolean {
 function isTopProspect(player: Player, sport: Sport): boolean {
   if (player.age > U23_MAX_AGE) return false;
   if (playerEffectiveRating(player, sport) < PROSPECT_MIN_RATING) return false;
-  if (sport === "SOCCER" && !hasReliableSoccerSample(player.currentSeasonStats.minutesPlayed)) {
-    return false;
-  }
+  if (!hasReliableSample(player, sport)) return false;
   return true;
 }
 
@@ -72,8 +86,14 @@ function buildInsights(
       id: "prospects",
       type: "opportunity",
       title: `${overview.topProspectsCount} standout U23 prospects`,
-      description: "Sub-23 players with rating ≥ 7.0 and a reliable minutes sample (≥ 450').",
-      href: "/scouting?maxAge=23&minRating=7&minMinutes=450",
+      description:
+        sport === "BASKETBALL"
+          ? `Sub-23 players with rating ≥ ${PROSPECT_MIN_RATING} and a reliable sample (≥ ${BB_RATE_MIN_GAMES} G / ${BB_RATE_MIN_MINUTES}').`
+          : `Sub-23 players with rating ≥ 7.0 and a reliable minutes sample (≥ ${SOCCER_RATE_MIN_MINUTES}').`,
+      href:
+        sport === "BASKETBALL"
+          ? `/scouting?maxAge=23&minRating=7&minMinutes=${BB_RATE_MIN_MINUTES}`
+          : `/scouting?maxAge=23&minRating=7&minMinutes=${SOCCER_RATE_MIN_MINUTES}`,
     });
   }
 
@@ -85,8 +105,13 @@ function buildInsights(
       description:
         sport === "AMERICAN_FOOTBALL"
           ? "Strong rating with accessible Cap Hit (≤ $5M)."
-          : "Rating ≥ 7.2, age ≤ 25, value ≤ €8M, and ≥ 450' played.",
-      href: "/scouting?maxAge=25&minRating=7.2&minMinutes=450",
+          : sport === "BASKETBALL"
+            ? `Rating ≥ ${OPPORTUNITY_MIN_RATING}, age ≤ ${OPPORTUNITY_MAX_AGE}, and ≥ ${BB_RATE_MIN_GAMES} G / ${BB_RATE_MIN_MINUTES}'.`
+            : `Rating ≥ 7.2, age ≤ 25, value ≤ €8M, and ≥ ${SOCCER_RATE_MIN_MINUTES}' played.`,
+      href:
+        sport === "BASKETBALL"
+          ? `/scouting?maxAge=25&minRating=7.2&minMinutes=${BB_RATE_MIN_MINUTES}`
+          : `/scouting?maxAge=25&minRating=7.2&minMinutes=${SOCCER_RATE_MIN_MINUTES}`,
     });
   }
 
@@ -186,9 +211,7 @@ export function buildDashboardOverview(
   const bestPerformers = [...players]
     .filter((p) => {
       if (playerEffectiveRating(p, sport) < 7.5) return false;
-      if (sport === "SOCCER" && !hasReliableSoccerSample(p.currentSeasonStats.minutesPlayed)) {
-        return false;
-      }
+      if (!hasReliableSample(p, sport)) return false;
       return true;
     })
     .sort((a, b) => playerEffectiveRating(b, sport) - playerEffectiveRating(a, sport))
@@ -196,9 +219,7 @@ export function buildDashboardOverview(
 
   const bestPerformersCount = players.filter((p) => {
     if (playerEffectiveRating(p, sport) < 7.5) return false;
-    if (sport === "SOCCER" && !hasReliableSoccerSample(p.currentSeasonStats.minutesPlayed)) {
-      return false;
-    }
+    if (!hasReliableSample(p, sport)) return false;
     return true;
   }).length;
 
@@ -221,10 +242,7 @@ export function buildDashboardOverview(
   const marketOpportunitiesCount = players.filter((p) => isMarketOpportunity(p, sport)).length;
 
   const topScorers = [...players]
-    .filter((p) => {
-      if (sport !== "SOCCER") return true;
-      return hasReliableSoccerSample(p.currentSeasonStats.minutesPlayed);
-    })
+    .filter((p) => hasReliableSample(p, sport))
     .sort((a, b) => playerScoringRate(b, sport) - playerScoringRate(a, sport))
     .slice(0, 5);
 

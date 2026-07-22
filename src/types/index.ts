@@ -255,5 +255,13 @@ export interface DashboardOverview {
 
 export type PlayerLite = Pick<
   Player,
-  "id" | "fullName" | "knownAs" | "position" | "teamId" | "teamShortName" | "teamName"
+  | "id"
+  | "fullName"
+  | "knownAs"
+  | "position"
+  | "age"
+  | "sport"
+  | "teamId"
+  | "teamShortName"
+  | "teamName"
 >;
