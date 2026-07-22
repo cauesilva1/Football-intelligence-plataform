@@ -219,6 +219,13 @@ export function encodeFootballStatsForPrisma(stats: ParsedFootballSeasonStats) {
     tackles: stats.tackles,
     interceptions: stats.interceptions,
     passingAccuracy: stats.completionPct,
+    // Native dual-write
+    passingYards: Math.round(stats.passingYards),
+    rushingYards: Math.round(stats.rushingYards),
+    receivingYards: Math.round(stats.receivingYards),
+    touchdowns: Math.round(stats.touchdowns),
+    sacks: stats.sacks,
+    totalYards: Math.round(stats.totalYards),
   };
 }
 

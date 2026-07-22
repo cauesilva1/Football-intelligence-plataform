@@ -12,10 +12,17 @@ import { PlayerSeasonSelector } from "@/features/scouting/components/profile/pla
 import {
   buildPositionScorecard,
   buildBasketballPositionScorecard,
+  buildFootballPositionScorecard,
   soccerPositionGroupLabel,
 } from "@/features/scouting/lib/position-scorecard";
 import { toRadarProfile } from "@/lib/normalize";
-import { BB_RATE_MIN_GAMES, BB_RATE_MIN_MINUTES, SOCCER_RATE_MIN_MINUTES } from "@/lib/scoring";
+import {
+  AF_RATE_MIN_GAMES,
+  AF_RATE_MIN_MINUTES,
+  BB_RATE_MIN_GAMES,
+  BB_RATE_MIN_MINUTES,
+  SOCCER_RATE_MIN_MINUTES,
+} from "@/lib/scoring";
 import { getTeamTheme } from "@/lib/team-theme";
 import { ratingColor } from "@/lib/utils";
 import { getSportConfig } from "@/lib/sport-registry";
@@ -392,9 +399,37 @@ function AmericanFootballPerformanceSection({
   const radarMetrics = [...getSportConfig("AMERICAN_FOOTBALL").ui.radarMetrics];
   const totalYards = s.totalYards ?? s.points ?? 0;
   const touchdowns = s.touchdowns ?? s.goals ?? 0;
+  const smallSample =
+    s.appearances > 0 &&
+    (s.appearances < AF_RATE_MIN_GAMES || s.minutesPlayed < AF_RATE_MIN_MINUTES);
+  const scorecard = buildFootballPositionScorecard(player.position, s);
 
   return (
     <>
+      {smallSample ? (
+        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90">
+          Small sample ({s.appearances} G). Rating stays provisional until ≥ {AF_RATE_MIN_GAMES}{" "}
+          games and ≥ {AF_RATE_MIN_MINUTES}&apos; proxy minutes.
+        </p>
+      ) : null}
+
+      <DataPanel
+        title={scorecard.title}
+        description="Role-aware production snapshot."
+        density="dense"
+        className="border"
+        style={{ borderColor: `${theme.primaryColor}33` }}
+      >
+        <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-6">
+          {scorecard.metrics.map((m) => (
+            <div key={m.key} className="rounded-lg border border-border/60 bg-surface-muted/30 px-3 py-2">
+              <p className="text-2xs uppercase tracking-wider text-muted-foreground">{m.label}</p>
+              <p className="font-mono text-sm font-semibold tabular-nums">{m.value}</p>
+            </div>
+          ))}
+        </div>
+      </DataPanel>
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Games"

@@ -61,6 +61,22 @@ Match ratings use the same Sofascore-inspired ~6.5 baseline on boxscore lines. N
 
 ---
 
+## Player Rating (American football)
+
+**Where:** `computeFootballRating` / `reliableFootballRating` in `src/lib/scoring/football-rating.ts`
+
+Season counting stats are **season totals** (yards/TDs); minutes are a **proxy** (`games × 60`). Role groups (QB / skill / defense / OL / specialist) tilt the formula.
+
+**If games ≥ 6 and minutes ≥ 360:**
+
+Role-aware clamp to \[5, 10\] from yards/game, TD/game, tackles/game, sacks/game (see source).
+
+**Otherwise:** conservative baseline (max **7.0**).
+
+Match ratings use baseline ~6.5 on boxscore lines. Native AF fields on `PlayerMatchStat` / `PlayerSeasonStats` (`passingYards`, `rushingYards`, `receivingYards`, `touchdowns`, `sacks`, `totalYards`) are preferred; dual-write keeps legacy hijack (`goals→TD`, `points→yards`, …) until `data:migrate-af-match-native`.
+
+---
+
 ## Top Prospect / Best Performers / Market Opportunity
 
 Short definitions (also on the dashboard):

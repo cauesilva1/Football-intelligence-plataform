@@ -61,6 +61,33 @@ const BASKETBALL_STYLE_BY_DIMENSION: Record<string, { label: string; description
   },
 };
 
+const FOOTBALL_STYLE_BY_DIMENSION: Record<string, { label: string; description: string }> = {
+  Passing: {
+    label: "Pocket Passer",
+    description: "Moves the ball vertically through the air.",
+  },
+  Rushing: {
+    label: "Ground Threat",
+    description: "Creates yards after contact and between the tackles.",
+  },
+  Receiving: {
+    label: "Route Runner",
+    description: "Separates and finishes drives as a pass catcher.",
+  },
+  Defense: {
+    label: "Playmaker Defender",
+    description: "Creates negative plays and takeaways.",
+  },
+  Tackles: {
+    label: "Run Stuffer",
+    description: "Consistently finishes tackles and resets downs.",
+  },
+  Sacks: {
+    label: "Pass Rusher",
+    description: "Collapses the pocket and pressures the QB.",
+  },
+};
+
 function deriveSoccerPlayingStyle(player: Player): PlayingStyle {
   const profile = toRadarProfile(player.currentSeasonStats);
   const ranked = Object.entries(profile).sort(([, a], [, b]) => b - a);
@@ -117,10 +144,32 @@ function deriveBasketballPlayingStyle(player: Player): PlayingStyle {
   };
 }
 
+function deriveFootballPlayingStyle(player: Player): PlayingStyle {
+  const profile = toRadarProfile(player.currentSeasonStats);
+  const ranked = Object.entries(profile).sort(([, a], [, b]) => b - a);
+  const [topKey, topValue] = ranked[0] ?? ["Passing", 50];
+  const [secondKey] = ranked[1] ?? ["Rushing", 40];
+
+  const primary = FOOTBALL_STYLE_BY_DIMENSION[topKey];
+  const secondary = FOOTBALL_STYLE_BY_DIMENSION[secondKey];
+
+  return {
+    label: primary?.label ?? "Two-Way Gridiron",
+    description: `${primary?.description ?? "Balanced production."} Complemented by a ${
+      secondary?.label.toLowerCase() ?? "balanced"
+    } tendency.`,
+    traits: [
+      `${topKey} (${Math.round(Number(topValue))}/100)`,
+      `${secondKey} (${Math.round(profile[secondKey] ?? 0)}/100)`,
+      player.position,
+    ],
+  };
+}
+
 /** Product-facing playing style derived from normalized radar dimensions. */
 export function derivePlayingStyle(player: Player): PlayingStyle {
-  if ((player.sport ?? "SOCCER") === "BASKETBALL") {
-    return deriveBasketballPlayingStyle(player);
-  }
+  const sport = player.sport ?? "SOCCER";
+  if (sport === "BASKETBALL") return deriveBasketballPlayingStyle(player);
+  if (sport === "AMERICAN_FOOTBALL") return deriveFootballPlayingStyle(player);
   return deriveSoccerPlayingStyle(player);
 }

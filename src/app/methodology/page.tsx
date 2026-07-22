@@ -3,6 +3,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { DataPanel } from "@/components/data/data-panel";
 import { APP_NAME } from "@/lib/config";
 import {
+  AF_RATE_MIN_GAMES,
+  AF_RATE_MIN_MINUTES,
   BB_RATE_MIN_GAMES,
   BB_RATE_MIN_MINUTES,
   OPPORTUNITY_MAX_AGE,
@@ -71,6 +73,20 @@ export default function MethodologyPage() {
           </ul>
         </DataPanel>
 
+        <DataPanel title="Player Rating (American football)" density="dense">
+          <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+            <li>
+              With ≥ {AF_RATE_MIN_GAMES} games and ≥ {AF_RATE_MIN_MINUTES}&apos; proxy minutes:
+              role-aware formula (QB / skill / defense) from yards, TDs, tackles, and sacks.
+            </li>
+            <li>Below that sample floor: conservative baseline (max 7.0).</li>
+            <li>
+              Source of truth:{" "}
+              <code className="text-foreground">src/lib/scoring/football-rating.ts</code>.
+            </li>
+          </ul>
+        </DataPanel>
+
         <DataPanel title="Match rating (appearances)" density="dense">
           <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
             <li>
@@ -82,8 +98,12 @@ export default function MethodologyPage() {
               attempts). Written when NBA boxscores sync.
             </li>
             <li>
+              American football: baseline ~6.5, then yards / TDs / tackles / sacks. Written when NFL
+              or CFB boxscores sync (or when you open a finished match page).
+            </li>
+            <li>
               Stored on <code className="text-foreground">PlayerMatchStat</code> when boxscores sync
-              (or when you open a finished soccer match page).
+              (or when you open a finished match page).
             </li>
           </ul>
         </DataPanel>

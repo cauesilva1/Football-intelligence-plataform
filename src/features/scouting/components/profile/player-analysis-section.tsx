@@ -4,6 +4,7 @@ import { DataPanel } from "@/components/data/data-panel";
 import { derivePlayingStyle } from "@/features/scouting/lib/playing-style";
 import {
   deriveBasketballStrengthsWeaknesses,
+  deriveFootballStrengthsWeaknesses,
   deriveStrengthsWeaknesses,
 } from "@/lib/metrics/player-enrichment";
 import { localizeScoutLabels } from "@/lib/scout-labels";
@@ -17,7 +18,9 @@ export function PlayerAnalysisSection({ player }: { player: Player }) {
       ? deriveStrengthsWeaknesses(player.currentSeasonStats, player.position)
       : sport === "BASKETBALL"
         ? deriveBasketballStrengthsWeaknesses(player.currentSeasonStats)
-        : null;
+        : sport === "AMERICAN_FOOTBALL"
+          ? deriveFootballStrengthsWeaknesses(player.currentSeasonStats)
+          : null;
   const strengths = localizeScoutLabels(derived?.strengths ?? player.strengths);
   const weaknesses = localizeScoutLabels(derived?.weaknesses ?? player.weaknesses);
 

@@ -5,12 +5,15 @@ import { PlayerAvatar } from "@/components/players/player-avatar";
 import { computeXGPer90 } from "@/features/scouting/lib/filter-players";
 import {
   buildBasketballPositionScorecard,
+  buildFootballPositionScorecard,
   buildPositionScorecard,
   basketballPositionGroup,
+  footballPositionGroup,
   soccerPositionGroup,
 } from "@/features/scouting/lib/position-scorecard";
 import { hasReliableBasketballSample } from "@/lib/scoring/basketball-rating";
-import { SOCCER_RATE_MIN_MINUTES } from "@/lib/scoring";
+import { hasReliableFootballSample } from "@/lib/scoring/football-rating";
+import { AF_RATE_MIN_GAMES, SOCCER_RATE_MIN_MINUTES } from "@/lib/scoring";
 import { getTeamTheme } from "@/lib/team-theme";
 import { cn, formatCapHit, formatMarketValue, ratingColor } from "@/lib/utils";
 import type { Player } from "@/types";
@@ -126,16 +129,77 @@ function BasketballStatStrip({ player }: { player: Player }) {
   );
 }
 
+function FootballStatStrip({ player }: { player: Player }) {
+  const s = player.currentSeasonStats;
+  const smallSample =
+    s.appearances > 0 &&
+    !hasReliableFootballSample({
+      matchesPlayed: s.appearances,
+      minutesPlayed: s.minutesPlayed,
+    });
+  const group = footballPositionGroup(player.position);
+  const scorecard = buildFootballPositionScorecard(player.position, s);
+  const highlight = scorecard.metrics
+    .filter((m) => m.key !== "games" && m.key !== "games2" && m.key !== "rating")
+    .slice(0, 3);
+
+  if (highlight.length >= 3) {
+    return (
+      <div className="mt-3 space-y-1.5 border-t border-white/15 pt-3">
+        {smallSample ? (
+          <p className="text-center text-2xs text-amber-200/90">
+            Small sample ({s.appearances} G / need {AF_RATE_MIN_GAMES}+) — rating provisional
+          </p>
+        ) : null}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {highlight.map((m) => (
+            <div key={m.key}>
+              <p className="font-mono text-sm font-semibold tabular-nums text-white">{m.value}</p>
+              <p className="text-2xs text-white/60">{m.label}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-center text-2xs text-white/45">{group} pack</p>
+      </div>
+    );
+  }
+
+  const yards = s.totalYards ?? 0;
+  const tds = s.touchdowns ?? s.goals ?? 0;
+  const sacks = s.sacks ?? 0;
+  return (
+    <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/15 pt-3 text-center">
+      <div>
+        <p className="font-mono text-sm font-semibold tabular-nums text-white">
+          {yards.toLocaleString("en-US")}
+        </p>
+        <p className="text-2xs text-white/60">Yards</p>
+      </div>
+      <div>
+        <p className="font-mono text-sm font-semibold tabular-nums text-white">{tds}</p>
+        <p className="text-2xs text-white/60">TD</p>
+      </div>
+      <div>
+        <p className="font-mono text-sm font-semibold tabular-nums text-white">{sacks.toFixed(1)}</p>
+        <p className="text-2xs text-white/60">Sacks</p>
+      </div>
+    </div>
+  );
+}
+
 export function ComparisonPlayerCards({ players }: { players: [Player, Player] }) {
   return (
     <div className="relative grid gap-3 md:grid-cols-2">
       {players.map((p, index) => {
         const s = p.currentSeasonStats;
         const isBasketball = p.sport === "BASKETBALL" || s.sport === "BASKETBALL";
+        const isFootball =
+          p.sport === "AMERICAN_FOOTBALL" || s.sport === "AMERICAN_FOOTBALL";
         const theme = getTeamTheme(p.competitionName, p.teamName);
-        const valueLabel = isBasketball
-          ? formatCapHit(p.capHit ?? 0)
-          : formatMarketValue(p.marketValue);
+        const valueLabel =
+          isBasketball || isFootball
+            ? formatCapHit(p.capHit ?? 0)
+            : formatMarketValue(p.marketValue);
 
         return (
           <div
@@ -189,7 +253,13 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
                 <p className="text-2xs text-white/60">{valueLabel}</p>
               </div>
             </div>
-            {isBasketball ? <BasketballStatStrip player={p} /> : <SoccerStatStrip player={p} />}
+            {isBasketball ? (
+              <BasketballStatStrip player={p} />
+            ) : isFootball ? (
+              <FootballStatStrip player={p} />
+            ) : (
+              <SoccerStatStrip player={p} />
+            )}
           </div>
         );
       })}

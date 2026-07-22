@@ -19,6 +19,11 @@ export const BB_RATE_MIN_GAMES = 10;
 /** Minimum season minutes alongside BB_RATE_MIN_GAMES. */
 export const BB_RATE_MIN_MINUTES = 200;
 
+/** American football — reliable sample for season rating. */
+export const AF_RATE_MIN_GAMES = 6;
+/** Proxy minutes (games × 60) alongside AF_RATE_MIN_GAMES. */
+export const AF_RATE_MIN_MINUTES = 360;
+
 export const U23_MAX_AGE = 23;
 export const PROSPECT_MIN_RATING = 7;
 export const OPPORTUNITY_MAX_AGE = 25;

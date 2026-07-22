@@ -233,3 +233,49 @@ export function deriveBasketballStrengthsWeaknesses(stat: {
     weaknesses: weaknesses.slice(0, 3),
   };
 }
+
+/** American football strengths/weaknesses from season totals. */
+export function deriveFootballStrengthsWeaknesses(stat: {
+  appearances: number;
+  minutesPlayed: number;
+  passingYards?: number | null;
+  rushingYards?: number | null;
+  receivingYards?: number | null;
+  touchdowns?: number | null;
+  sacks?: number | null;
+  tacklesWon?: number;
+  interceptions?: number;
+  totalYards?: number | null;
+  goals?: number;
+}): { strengths: string[]; weaknesses: string[] } {
+  const strengths: string[] = [];
+  const weaknesses: string[] = [];
+  const games = Math.max(stat.appearances, 1);
+  const passYds = stat.passingYards ?? 0;
+  const rushYds = stat.rushingYards ?? 0;
+  const recYds = stat.receivingYards ?? 0;
+  const tds = stat.touchdowns ?? stat.goals ?? 0;
+  const sacks = stat.sacks ?? 0;
+  const tackles = stat.tacklesWon ?? 0;
+  const total = stat.totalYards ?? passYds + rushYds + recYds;
+
+  if (passYds / games >= 220) strengths.push("High-Volume Passing");
+  if (rushYds / games >= 60) strengths.push("Ground Production");
+  if (recYds / games >= 55) strengths.push("Receiving Threat");
+  if (tds / games >= 0.7) strengths.push("Red-Zone Finisher");
+  if (sacks / games >= 0.5) strengths.push("Pass-Rush Presence");
+  if (tackles / games >= 6) strengths.push("Tackle Machine");
+  if ((stat.interceptions ?? 0) / games >= 0.2) strengths.push("Ball Hawk");
+
+  if (stat.appearances < 6 || stat.minutesPlayed < 360) {
+    weaknesses.push("Limited Sample");
+  }
+  if (total / games < 20 && tackles / games < 3 && sacks / games < 0.2) {
+    weaknesses.push("Low Production Line");
+  }
+
+  return {
+    strengths: strengths.slice(0, 4),
+    weaknesses: weaknesses.slice(0, 3),
+  };
+}

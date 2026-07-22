@@ -22,6 +22,13 @@ export type PlayerMatchAppearance = {
   rebounds: number | null;
   steals: number | null;
   blocks: number | null;
+  /** American football native (preferred over hijack). */
+  passingYards: number | null;
+  rushingYards: number | null;
+  receivingYards: number | null;
+  touchdowns: number | null;
+  sacks: number | null;
+  totalYards: number | null;
   rating: number | null;
 };
 
@@ -59,6 +66,12 @@ export async function getPlayerMatchAppearances(
       rebounds: row.rebounds,
       steals: row.steals,
       blocks: row.blocks,
+      passingYards: row.passingYards,
+      rushingYards: row.rushingYards,
+      receivingYards: row.receivingYards,
+      touchdowns: row.touchdowns,
+      sacks: row.sacks,
+      totalYards: row.totalYards,
       rating: row.rating,
     }));
   } catch {

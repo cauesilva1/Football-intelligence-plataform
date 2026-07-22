@@ -269,3 +269,113 @@ export function similarBasketballPositionGroup(position: string): string[] {
   if (group === "WING") return ["SF", "SG", "PF"];
   return ["PF", "C"];
 }
+
+export type FootballPositionGroup = "QB" | "SKILL" | "OL" | "DEFENSE" | "SPECIALIST";
+
+export function footballPositionGroup(position: string): FootballPositionGroup {
+  const p = position.toUpperCase();
+  if (p === "QB") return "QB";
+  if (["WR", "TE", "RB", "FB", "HB"].includes(p)) return "SKILL";
+  if (["OT", "OG", "C", "OL", "G", "T"].includes(p)) return "OL";
+  if (["K", "P", "LS", "PK"].includes(p)) return "SPECIALIST";
+  return "DEFENSE";
+}
+
+/** Role-aware metric pack for American football profiles. */
+export function buildFootballPositionScorecard(
+  position: string,
+  stats: PlayerStatistic
+): { group: FootballPositionGroup; title: string; metrics: ScorecardMetric[] } {
+  const group = footballPositionGroup(position);
+  const reliable = stats.appearances >= 6 && stats.minutesPlayed >= 360;
+  const games = Math.max(stats.appearances, 1);
+  const passYds = stats.passingYards ?? 0;
+  const rushYds = stats.rushingYards ?? 0;
+  const recYds = stats.receivingYards ?? 0;
+  const tds = stats.touchdowns ?? stats.goals ?? 0;
+  const sacks = stats.sacks ?? 0;
+
+  const shared: ScorecardMetric[] = [
+    { key: "games", label: "Games", value: String(stats.appearances) },
+    {
+      key: "rating",
+      label: "Rating",
+      value: stats.rating.toFixed(1),
+      hint: reliable ? undefined : "Provisional (small sample)",
+    },
+  ];
+
+  if (group === "QB") {
+    return {
+      group,
+      title: "QB scorecard",
+      metrics: [
+        ...shared,
+        { key: "pass", label: "Pass Yds", value: passYds.toLocaleString("en-US") },
+        { key: "td", label: "TD", value: String(tds) },
+        {
+          key: "ypg",
+          label: "Yds/G",
+          value: ((passYds + rushYds) / games).toFixed(0),
+        },
+        {
+          key: "comp",
+          label: "Comp %",
+          value: stats.passAccuracy > 0 ? `${stats.passAccuracy.toFixed(1)}%` : "—",
+        },
+      ],
+    };
+  }
+
+  if (group === "SKILL") {
+    return {
+      group,
+      title: "Skill scorecard",
+      metrics: [
+        ...shared,
+        { key: "recYds", label: "Rec Yds", value: recYds.toLocaleString("en-US") },
+        { key: "rush", label: "Rush Yds", value: rushYds.toLocaleString("en-US") },
+        { key: "td", label: "TD", value: String(tds) },
+        { key: "receptions", label: "Receptions", value: String(stats.assists) },
+      ],
+    };
+  }
+
+  if (group === "DEFENSE") {
+    return {
+      group,
+      title: "Defense scorecard",
+      metrics: [
+        ...shared,
+        { key: "tkl", label: "Tackles", value: String(stats.tacklesWon) },
+        { key: "sack", label: "Sacks", value: sacks.toFixed(1) },
+        { key: "int", label: "INT", value: String(stats.interceptions) },
+        { key: "td", label: "TD", value: String(tds) },
+      ],
+    };
+  }
+
+  return {
+    group,
+    title: group === "SPECIALIST" ? "Specialist scorecard" : "OL scorecard",
+    metrics: [
+      ...shared,
+      { key: "games2", label: "Games", value: String(stats.appearances) },
+      { key: "td", label: "TD", value: String(tds) },
+      {
+        key: "yards",
+        label: "Total Yds",
+        value: (stats.totalYards ?? 0).toLocaleString("en-US"),
+      },
+    ],
+  };
+}
+
+export function similarFootballPositionGroup(position: string): string[] {
+  const group = footballPositionGroup(position);
+  if (group === "QB") return ["QB"];
+  if (group === "SKILL") return ["WR", "TE", "RB", "FB", "HB"];
+  if (group === "OL") return ["OL", "OT", "OG", "C", "G", "T"];
+  if (group === "SPECIALIST") return ["K", "P", "LS", "PK"];
+  return ["DL", "LB", "CB", "S", "DE", "DT", "EDGE"];
+}

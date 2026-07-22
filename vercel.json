@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/basketball",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/american-football",
+      "schedule": "0 12 * * *"
     }
   ]
 }

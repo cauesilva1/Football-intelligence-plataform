@@ -27,9 +27,16 @@ export type PlayerMatchStatUpsertInput = {
   blocks?: number | null;
   fieldGoalsMade?: number | null;
   fieldGoalsAttempted?: number | null;
+  /** American football native fields (nullable on soccer/BB rows). */
+  passingYards?: number | null;
+  rushingYards?: number | null;
+  receivingYards?: number | null;
+  touchdowns?: number | null;
+  sacks?: number | null;
+  totalYards?: number | null;
   season?: number | null;
   source?: string;
-  /** When set, skip soccer computeMatchRating (basketball boxscores). */
+  /** When set, skip soccer computeMatchRating (basketball/AF boxscores). */
   ratingOverride?: number | null;
 };
 
@@ -83,6 +90,12 @@ export async function upsertPlayerMatchStat(input: PlayerMatchStatUpsertInput): 
       blocks: input.blocks ?? undefined,
       fieldGoalsMade: input.fieldGoalsMade ?? undefined,
       fieldGoalsAttempted: input.fieldGoalsAttempted ?? undefined,
+      passingYards: input.passingYards ?? undefined,
+      rushingYards: input.rushingYards ?? undefined,
+      receivingYards: input.receivingYards ?? undefined,
+      touchdowns: input.touchdowns ?? undefined,
+      sacks: input.sacks ?? undefined,
+      totalYards: input.totalYards ?? undefined,
       rating: rating ?? undefined,
       season: input.season ?? undefined,
       source: input.source ?? "espn",
@@ -109,6 +122,12 @@ export async function upsertPlayerMatchStat(input: PlayerMatchStatUpsertInput): 
       ...(input.fieldGoalsAttempted != null
         ? { fieldGoalsAttempted: input.fieldGoalsAttempted }
         : {}),
+      ...(input.passingYards != null ? { passingYards: input.passingYards } : {}),
+      ...(input.rushingYards != null ? { rushingYards: input.rushingYards } : {}),
+      ...(input.receivingYards != null ? { receivingYards: input.receivingYards } : {}),
+      ...(input.touchdowns != null ? { touchdowns: input.touchdowns } : {}),
+      ...(input.sacks != null ? { sacks: input.sacks } : {}),
+      ...(input.totalYards != null ? { totalYards: input.totalYards } : {}),
       rating: rating ?? undefined,
       season: input.season ?? undefined,
       source: input.source ?? "espn",
