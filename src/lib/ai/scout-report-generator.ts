@@ -1,5 +1,6 @@
 import { derivePlayingStyle } from "@/features/scouting/lib/playing-style";
 import { computeReportOverallRating } from "@/lib/scoring/soccer-rating";
+import { computeBasketballReportOverallRating } from "@/lib/scoring/basketball-rating";
 import type { Player, ScoutingReport, TacticalFit } from "@/lib/types";
 import { formatMarketValue } from "@/lib/utils";
 
@@ -128,18 +129,94 @@ function buildTacticalFit(player: Player): TacticalFit {
   };
 }
 
+function buildBasketballSummary(player: Player): string {
+  const s = player.currentSeasonStats;
+  const g = s.perGame ?? {
+    points: s.points ?? 0,
+    rebounds: s.rebounds ?? 0,
+    steals: s.steals ?? 0,
+    blocks: s.blocks ?? 0,
+    assists: s.assists,
+  };
+  return [
+    `${player.knownAs} (${player.age} years old, ${player.position}) played ${s.appearances} games (${s.minutesPlayed.toLocaleString("en-US")} min) this season. `,
+    `Per-game line: ${g.points.toFixed(1)} PPG, ${g.rebounds.toFixed(1)} RPG, ${g.assists.toFixed(1)} APG. `,
+    `Estimated market value ${formatMarketValue(player.marketValue)} with a prototype rating of ${s.rating.toFixed(1)}.`,
+  ].join("");
+}
+
+function buildBasketballTacticalFit(player: Player): TacticalFit {
+  const s = player.currentSeasonStats;
+  const g = s.perGame ?? {
+    points: s.points ?? 0,
+    rebounds: s.rebounds ?? 0,
+    steals: s.steals ?? 0,
+    blocks: s.blocks ?? 0,
+    assists: s.assists,
+  };
+  const pos = player.position;
+  const systems: string[] = [];
+  const roles: string[] = [];
+
+  if (pos === "PG" || pos === "SG") {
+    systems.push("Pick-and-roll heavy", "Five-out spacing", "Transition push");
+    roles.push(
+      g.assists >= 6 ? "Primary initiator" : "Secondary creator",
+      g.points >= 18 ? "Scoring guard" : "Connector"
+    );
+  } else if (pos === "SF") {
+    systems.push("Switch defense", "Motion offense", "Corner spacing");
+    roles.push(
+      g.points >= 16 ? "Two-way wing" : "3-and-D wing",
+      g.rebounds >= 6 ? "Rebounder wing" : "Cutter"
+    );
+  } else {
+    systems.push("Drop coverage", "PnR as roll man", "Glass-cleaning five");
+    roles.push(
+      g.rebounds >= 9 ? "Boards specialist" : "Stretch big",
+      g.blocks >= 1.2 ? "Rim protector" : "Finisher"
+    );
+  }
+
+  const style = derivePlayingStyle(player);
+  const narrative = [
+    `${style.label} profile fits lineups that value ${style.traits[0]?.toLowerCase() ?? "versatility"}.`,
+    `Across ${s.appearances} games, the player projects as ${roles[0]?.toLowerCase() ?? "a defined role"} in ${systems[0] ?? "flexible schemes"}.`,
+  ].join(" ");
+
+  return {
+    systems: [...new Set(systems)].slice(0, 3),
+    roles: [...new Set(roles)].slice(0, 3),
+    narrative,
+  };
+}
+
 function computeOverallRating(player: Player): number {
+  if ((player.sport ?? "SOCCER") === "BASKETBALL") {
+    const s = player.currentSeasonStats;
+    return computeBasketballReportOverallRating({
+      matchesPlayed: s.appearances,
+      minutesPlayed: s.minutesPlayed,
+      points: s.points ?? s.perGame?.points ?? 0,
+      rebounds: s.rebounds ?? s.perGame?.rebounds ?? 0,
+      assists: s.assists,
+      steals: s.steals ?? s.perGame?.steals ?? 0,
+      blocks: s.blocks ?? s.perGame?.blocks ?? 0,
+      rating: s.rating,
+    });
+  }
   return computeReportOverallRating(player.currentSeasonStats);
 }
 
 function buildMockReport(player: Player): ScoutingReport {
   const playingStyle = derivePlayingStyle(player);
   const rating = computeOverallRating(player);
+  const isBasketball = (player.sport ?? "SOCCER") === "BASKETBALL";
 
   return {
     id: `report-${player.id}-${Date.now()}`,
     playerId: player.id,
-    summary: buildSummary(player),
+    summary: isBasketball ? buildBasketballSummary(player) : buildSummary(player),
     strengths: player.strengths,
     weaknesses: player.weaknesses,
     playingStyle: {
@@ -147,7 +224,7 @@ function buildMockReport(player: Player): ScoutingReport {
       description: playingStyle.description,
       traits: playingStyle.traits,
     },
-    tacticalFit: buildTacticalFit(player),
+    tacticalFit: isBasketball ? buildBasketballTacticalFit(player) : buildTacticalFit(player),
     recommendation: buildRecommendation(rating, player.age),
     overallRating: rating,
     generatedBy: "mock-ai-v2",
@@ -157,7 +234,8 @@ function buildMockReport(player: Player): ScoutingReport {
 
 function buildPlayerContext(player: Player): string {
   const s = player.currentSeasonStats;
-  const p90 = s.per90;
+  const isBasketball = (player.sport ?? "SOCCER") === "BASKETBALL";
+  const g = s.perGame;
   return JSON.stringify(
     {
       player: {
@@ -168,21 +246,35 @@ function buildPlayerContext(player: Player): string {
         secondaryPosition: player.secondaryPosition,
         nationality: player.nationality,
         team: player.teamName,
+        sport: player.sport ?? "SOCCER",
         marketValue: formatMarketValue(player.marketValue),
         strengths: player.strengths,
         weaknesses: player.weaknesses,
       },
-      seasonStats: {
-        appearances: s.appearances,
-        minutesPlayed: s.minutesPlayed,
-        goals: s.goals,
-        assists: s.assists,
-        rating: s.rating,
-        xG: s.xG,
-        xA: s.xA,
-        passAccuracy: s.passAccuracy,
-        per90: p90,
-      },
+      seasonStats: isBasketball
+        ? {
+            appearances: s.appearances,
+            minutesPlayed: s.minutesPlayed,
+            rating: s.rating,
+            points: s.points ?? g?.points,
+            rebounds: s.rebounds ?? g?.rebounds,
+            assists: s.assists,
+            steals: s.steals ?? g?.steals,
+            blocks: s.blocks ?? g?.blocks,
+            fieldGoalsPercent: s.fieldGoalsPercent,
+            threePointsPercent: s.threePointsPercent,
+          }
+        : {
+            appearances: s.appearances,
+            minutesPlayed: s.minutesPlayed,
+            goals: s.goals,
+            assists: s.assists,
+            rating: s.rating,
+            xG: s.xG,
+            xA: s.xA,
+            passAccuracy: s.passAccuracy,
+            per90: s.per90,
+          },
     },
     null,
     2

@@ -1,26 +1,10 @@
 import type { PlayerSeasonStats } from "@prisma/client";
 import { toPlayerStatistic, type StatisticInput } from "@/lib/metrics/map-statistic";
 import { computeSoccerRating } from "@/lib/scoring/soccer-rating";
+import { computeBasketballRating } from "@/lib/scoring/basketball-rating";
 import type { PlayerMetricPer90, PlayerStatistic } from "@/types";
 
 const CALENDAR_SEASONS = new Set(["2024", "2025", "2026", "2027"]);
-
-function estimateBasketballSeasonRating(stat: {
-  points: number;
-  rebounds: number;
-  assists: number;
-  steals: number;
-  blocks: number;
-}): number {
-  const rating =
-    6 +
-    stat.points * 0.08 +
-    stat.rebounds * 0.04 +
-    stat.assists * 0.05 +
-    stat.steals * 0.15 +
-    stat.blocks * 0.12;
-  return Number(Math.min(10, Math.max(5, rating)).toFixed(2));
-}
 
 /** Basquete: stats no banco são médias por jogo; normaliza para taxa por 48 min (padrão NBA). */
 function computeBasketballPer48(stat: PlayerSeasonStats): PlayerMetricPer90 {
@@ -104,7 +88,15 @@ function mapBasketballSeasonStatsRow(
     duelsWonPct: 0,
     yellowCards: 0,
     redCards: 0,
-    rating: estimateBasketballSeasonRating(stat),
+    rating: computeBasketballRating({
+      matchesPlayed: stat.matchesPlayed,
+      minutesPlayed: Math.round(stat.minutesPlayed),
+      points: stat.points,
+      rebounds: stat.rebounds,
+      assists: stat.assists,
+      steals: stat.steals,
+      blocks: stat.blocks,
+    }),
     points: stat.points,
     rebounds: stat.rebounds,
     steals: stat.steals,

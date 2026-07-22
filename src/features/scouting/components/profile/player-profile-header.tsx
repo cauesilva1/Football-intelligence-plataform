@@ -28,7 +28,7 @@ export function PlayerProfileHeader({
   const stats = player.currentSeasonStats;
   const isBasketball = player.sport === "BASKETBALL";
   const positionSport = isBasketball ? "BASKETBALL" : "SOCCER";
-  const status = derivePlayerStatus(stats);
+  const status = derivePlayerStatus(stats, player.sport ?? "SOCCER");
   const theme = getTeamTheme(player.competitionName, player.teamName);
 
   const statusVariant =

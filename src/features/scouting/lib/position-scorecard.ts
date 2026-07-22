@@ -160,3 +160,112 @@ export function similarPositionGroup(position: string): string[] {
   if (group === "MID") return ["CM", "CDM", "CAM", "LM", "RM"];
   return ["CB", "LB", "RB", "LWB", "RWB", "CDM"];
 }
+
+export type BasketballPositionGroup = "GUARD" | "WING" | "BIG";
+
+export function basketballPositionGroup(position: string): BasketballPositionGroup {
+  if (["PG", "SG"].includes(position)) return "GUARD";
+  if (position === "SF") return "WING";
+  return "BIG";
+}
+
+/** Role-aware metric pack for basketball profiles — guard vs big highlight different lines. */
+export function buildBasketballPositionScorecard(
+  position: string,
+  stats: PlayerStatistic
+): { group: BasketballPositionGroup; title: string; metrics: ScorecardMetric[] } {
+  const group = basketballPositionGroup(position);
+  const g = stats.perGame ?? {
+    points: stats.points ?? 0,
+    rebounds: stats.rebounds ?? 0,
+    steals: stats.steals ?? 0,
+    blocks: stats.blocks ?? 0,
+    assists: stats.assists,
+  };
+  const reliable =
+    stats.appearances >= 10 && stats.minutesPlayed >= 200;
+  const mpg =
+    stats.appearances > 0 ? stats.minutesPlayed / stats.appearances : 0;
+
+  const shared: ScorecardMetric[] = [
+    {
+      key: "games",
+      label: "Games",
+      value: String(stats.appearances),
+    },
+    {
+      key: "mpg",
+      label: "MPG",
+      value: mpg > 0 ? mpg.toFixed(1) : "—",
+    },
+    {
+      key: "rating",
+      label: "Rating",
+      value: stats.rating.toFixed(1),
+      hint: reliable ? undefined : "Provisional (small sample)",
+    },
+  ];
+
+  if (group === "GUARD") {
+    return {
+      group,
+      title: "Guard scorecard",
+      metrics: [
+        ...shared,
+        { key: "ppg", label: "PPG", value: g.points.toFixed(1) },
+        { key: "apg", label: "APG", value: g.assists.toFixed(1) },
+        {
+          key: "3p",
+          label: "3P%",
+          value: `${(stats.threePointsPercent ?? 0).toFixed(1)}%`,
+        },
+        { key: "spg", label: "SPG", value: g.steals.toFixed(1) },
+      ],
+    };
+  }
+
+  if (group === "WING") {
+    return {
+      group,
+      title: "Wing scorecard",
+      metrics: [
+        ...shared,
+        { key: "ppg", label: "PPG", value: g.points.toFixed(1) },
+        { key: "rpg", label: "RPG", value: g.rebounds.toFixed(1) },
+        {
+          key: "3p",
+          label: "3P%",
+          value: `${(stats.threePointsPercent ?? 0).toFixed(1)}%`,
+        },
+        {
+          key: "fg",
+          label: "FG%",
+          value: `${(stats.fieldGoalsPercent ?? 0).toFixed(1)}%`,
+        },
+      ],
+    };
+  }
+
+  return {
+    group,
+    title: "Big scorecard",
+    metrics: [
+      ...shared,
+      { key: "rpg", label: "RPG", value: g.rebounds.toFixed(1) },
+      { key: "bpg", label: "BPG", value: g.blocks.toFixed(1) },
+      {
+        key: "fg",
+        label: "FG%",
+        value: `${(stats.fieldGoalsPercent ?? 0).toFixed(1)}%`,
+      },
+      { key: "ppg", label: "PPG", value: g.points.toFixed(1) },
+    ],
+  };
+}
+
+export function similarBasketballPositionGroup(position: string): string[] {
+  const group = basketballPositionGroup(position);
+  if (group === "GUARD") return ["PG", "SG"];
+  if (group === "WING") return ["SF", "SG", "PF"];
+  return ["PF", "C"];
+}

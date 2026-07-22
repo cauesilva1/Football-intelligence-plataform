@@ -1,5 +1,8 @@
 import { toRadarProfile } from "@/lib/normalize";
-import { similarPositionGroup } from "@/features/scouting/lib/position-scorecard";
+import {
+  similarBasketballPositionGroup,
+  similarPositionGroup,
+} from "@/features/scouting/lib/position-scorecard";
 import type { Player } from "@/types";
 
 export interface SimilarPlayerResult {
@@ -89,7 +92,11 @@ function weightedSimilarity(a: Record<string, number>, b: Record<string, number>
 export function findSimilarPlayers(target: Player, pool: Player[], limit = 4): SimilarPlayerResult[] {
   const weights = weightsForPosition(target.position);
   const targetVector = featureVector(target);
-  const group = new Set(similarPositionGroup(target.position));
+  const groupPositions =
+    (target.sport ?? "SOCCER") === "BASKETBALL"
+      ? similarBasketballPositionGroup(target.position)
+      : similarPositionGroup(target.position);
+  const group = new Set(groupPositions);
 
   return pool
     .filter((p) => p.id !== target.id && group.has(p.position))

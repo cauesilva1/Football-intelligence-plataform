@@ -13,8 +13,10 @@ export type PlayerMatchAppearance = {
   minutesPlayed: number;
   goals: number;
   assists: number;
-  tackles: number;
-  interceptions: number;
+  tackles: number | null;
+  interceptions: number | null;
+  /** Soccer: passes completed. Basketball hijack: rebounds. */
+  passesCompleted: number;
   rating: number | null;
 };
 
@@ -47,6 +49,7 @@ export async function getPlayerMatchAppearances(
       assists: row.assists,
       tackles: row.tackles,
       interceptions: row.interceptions,
+      passesCompleted: row.passesCompleted,
       rating: row.rating,
     }));
   } catch {

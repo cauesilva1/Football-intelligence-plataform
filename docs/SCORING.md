@@ -43,6 +43,24 @@ ETL may store a position-aware **Rating Proxy** (`computeRatingProxy`); list/pro
 
 ---
 
+## Player Rating (basketball)
+
+**Where:** `computeBasketballRating` / `reliableBasketballRating` in `src/lib/scoring/basketball-rating.ts`
+
+Season counting stats are stored as **per-game averages**; minutes are a **season total**.
+
+**If games ≥ 10 and minutes ≥ 200:**
+
+\[
+\text{rating} = \mathrm{clamp}_{[5,10]}\bigl(6 + \mathrm{PPG}\cdot 0.08 + \mathrm{RPG}\cdot 0.04 + \mathrm{APG}\cdot 0.06 + \mathrm{SPG}\cdot 0.18 + \mathrm{BPG}\cdot 0.14\bigr)
+\]
+
+**Otherwise:** conservative baseline (max **7.0**).
+
+Match ratings use the same Sofascore-inspired ~6.5 baseline on boxscore lines. `PlayerMatchStat` columns are hijacked for BB until native fields exist: `goals→PTS`, `assists→AST`, `tackles→STL`, `interceptions→BLK`, `passesCompleted→REB`.
+
+---
+
 ## Top Prospect / Best Performers / Market Opportunity
 
 Short definitions (also on the dashboard):
@@ -123,12 +141,13 @@ We **can** mirror publicly described *design ideas*:
 
 ## Match rating (Stage 6)
 
-**Where:** `computeMatchRating` in `src/lib/scoring/soccer-rating.ts`  
+**Soccer — where:** `computeMatchRating` in `src/lib/scoring/soccer-rating.ts`  
+**Basketball — where:** `computeBasketballMatchRating` in `src/lib/scoring/basketball-rating.ts`  
 **Stored on:** `PlayerMatchStat.rating` (one row per player × ESPN event)
 
 Public inspiration (Sofascore): start near **6.5**, then +/− from actions.
 
-Our formula (boxscore fields only):
+Soccer formula (boxscore fields only):
 
 - Baseline **6.5**
 - + goals (capped) / assists / tackles / interceptions
@@ -136,4 +155,12 @@ Our formula (boxscore fields only):
 - Dampen if minutes &lt; 45′
 - Clamp **[3, 10]**
 
-Season lists/rankings still use **season** rating (`reliableSoccerRating`). Match ratings power the profile “Recent appearances” list.
+Basketball formula:
+
+- Baseline **6.5**
+- + PTS / REB / AST / STL / BLK (capped)
+- FG% adjustment when ≥ 5 attempts
+- Dampen if minutes &lt; 24′
+- Clamp **[3, 10]**
+
+Season lists/rankings still use **season** rating. Match ratings power the profile “Recent appearances” list.

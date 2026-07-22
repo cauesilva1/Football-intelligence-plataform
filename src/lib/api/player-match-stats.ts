@@ -22,6 +22,8 @@ export type PlayerMatchStatUpsertInput = {
   passesAttempted: number;
   season?: number | null;
   source?: string;
+  /** When set, skip soccer computeMatchRating (basketball boxscores). */
+  ratingOverride?: number | null;
 };
 
 export function buildEspnEventKey(espnSlug: string, eventId: string): string {
@@ -32,15 +34,18 @@ export async function upsertPlayerMatchStat(input: PlayerMatchStatUpsertInput): 
   if (!isDbSource()) return;
 
   const prisma = getPrisma();
-  const rating = computeMatchRating({
-    minutesPlayed: input.minutesPlayed,
-    goals: input.goals,
-    assists: input.assists,
-    tackles: input.tackles,
-    interceptions: input.interceptions,
-    passesCompleted: input.passesCompleted,
-    passesAttempted: input.passesAttempted,
-  });
+  const rating =
+    input.ratingOverride !== undefined
+      ? input.ratingOverride
+      : computeMatchRating({
+          minutesPlayed: input.minutesPlayed,
+          goals: input.goals,
+          assists: input.assists,
+          tackles: input.tackles,
+          interceptions: input.interceptions,
+          passesCompleted: input.passesCompleted,
+          passesAttempted: input.passesAttempted,
+        });
 
   await prisma.playerMatchStat.upsert({
     where: {

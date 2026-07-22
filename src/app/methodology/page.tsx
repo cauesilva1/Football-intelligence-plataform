@@ -3,6 +3,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { DataPanel } from "@/components/data/data-panel";
 import { APP_NAME } from "@/lib/config";
 import {
+  BB_RATE_MIN_GAMES,
+  BB_RATE_MIN_MINUTES,
   OPPORTUNITY_MAX_AGE,
   OPPORTUNITY_MAX_VALUE,
   OPPORTUNITY_MIN_RATING,
@@ -48,15 +50,40 @@ export default function MethodologyPage() {
           </ul>
         </DataPanel>
 
+        <DataPanel title="Player Rating (basketball)" density="dense">
+          <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+            <li>
+              With ≥ {BB_RATE_MIN_GAMES} games and ≥ {BB_RATE_MIN_MINUTES}&apos;:{" "}
+              <code className="text-foreground">
+                6 + PPG×0.08 + RPG×0.04 + APG×0.06 + SPG×0.18 + BPG×0.14
+              </code>
+              , clamped to 5–10 (per-game averages as stored).
+            </li>
+            <li>
+              Below that sample floor: conservative baseline (max 7.0) so short bursts cannot print a
+              9.5.
+            </li>
+            <li>
+              Source of truth:{" "}
+              <code className="text-foreground">src/lib/scoring/basketball-rating.ts</code>. List,
+              profile, rankings map, and reports share the same helpers.
+            </li>
+          </ul>
+        </DataPanel>
+
         <DataPanel title="Match rating (appearances)" density="dense">
           <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
             <li>
-              Baseline ~6.5 per match (Sofascore-inspired publicly), then goals / assists / tackles /
-              interceptions. Not Opta or Sofascore data.
+              Soccer: baseline ~6.5, then goals / assists / tackles / interceptions. Not Opta or
+              Sofascore data.
+            </li>
+            <li>
+              Basketball: baseline ~6.5, then PTS / REB / AST / STL / BLK (+ FG% when volume ≥ 5
+              attempts). Written when NBA boxscores sync.
             </li>
             <li>
               Stored on <code className="text-foreground">PlayerMatchStat</code> when boxscores sync
-              or when you open a finished match page.
+              (or when you open a finished soccer match page).
             </li>
           </ul>
         </DataPanel>

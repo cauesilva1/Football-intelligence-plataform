@@ -1,5 +1,5 @@
 /**
- * Shared scoring / sample-size rules for soccer rates.
+ * Shared scoring / sample-size rules.
  * Keep in sync with docs/SCORING.md.
  */
 
@@ -12,6 +12,12 @@ export const SOCCER_RATE_MIN_MINUTES = 450;
  * a tiny-minutes artefact (e.g. 1 goal in 11 minutes → 8.18).
  */
 export const SOCCER_RATE_SOFT_CAP = 1.8;
+
+/** Minimum games before basketball per-game rates / rating are treated as reliable. */
+export const BB_RATE_MIN_GAMES = 10;
+
+/** Minimum season minutes alongside BB_RATE_MIN_GAMES. */
+export const BB_RATE_MIN_MINUTES = 200;
 
 export const U23_MAX_AGE = 23;
 export const PROSPECT_MIN_RATING = 7;

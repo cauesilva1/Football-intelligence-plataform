@@ -1,4 +1,7 @@
 import { getPrisma } from "@/lib/prisma";
+import { buildEspnEventKey, upsertPlayerMatchStat } from "@/lib/api/player-match-stats";
+import { computeBasketballMatchRating } from "@/lib/scoring/basketball-rating";
+import { isDbSource } from "@/lib/data-source";
 
 export const NBA_BOXSCORE_SEASON = 202627;
 export type BasketballLeagueSlug = "nba" | "nba-summer";
@@ -94,7 +97,12 @@ interface EspnSummaryResponse {
   };
   header?: {
     competitions?: Array<{
+      date?: string;
       status?: { type?: { state?: string; completed?: boolean; name?: string } };
+      competitors?: Array<{
+        homeAway?: string;
+        team?: { displayName?: string; name?: string };
+      }>;
     }>;
   };
 }
@@ -157,6 +165,26 @@ function rollingPercent(
   const gamePct = (made / attempted) * 100;
   if (games <= 0) return Number(gamePct.toFixed(1));
   return Number(rollingAverage(currentPct, games, gamePct).toFixed(1));
+}
+
+function extractMatchMeta(summary: EspnSummaryResponse): {
+  matchDate: Date | null;
+  homeName: string | null;
+  awayName: string | null;
+} {
+  const competition = summary.header?.competitions?.[0];
+  const dateRaw = competition?.date;
+  const matchDate = dateRaw && !Number.isNaN(Date.parse(dateRaw)) ? new Date(dateRaw) : null;
+  const competitors = competition?.competitors ?? [];
+  const home =
+    competitors.find((c) => c.homeAway === "home")?.team?.displayName ??
+    competitors.find((c) => c.homeAway === "home")?.team?.name ??
+    null;
+  const away =
+    competitors.find((c) => c.homeAway === "away")?.team?.displayName ??
+    competitors.find((c) => c.homeAway === "away")?.team?.name ??
+    null;
+  return { matchDate, homeName: home, awayName: away };
 }
 
 function athletePlayed(entry: EspnAthleteEntry): boolean {
@@ -461,6 +489,7 @@ export async function processBasketballBoxScore(
   }
 
   const boxScores = extractPlayerBoxScores(summary);
+  const meta = extractMatchMeta(summary);
 
   let playersProcessed = 0;
   let statsUpdated = 0;
@@ -481,6 +510,48 @@ export async function processBasketballBoxScore(
       }
 
       await accumulateSeasonStats(playerId, boxScore);
+
+      if (isDbSource()) {
+        const isHome =
+          meta.homeName != null
+            ? boxScore.teamName.toLowerCase() === meta.homeName.toLowerCase()
+            : null;
+        const opponentName =
+          isHome === true ? meta.awayName : isHome === false ? meta.homeName : null;
+        const minutes = Math.round(boxScore.minutesPlayed);
+        await upsertPlayerMatchStat({
+          playerId,
+          externalEventKey: buildEspnEventKey(league, eventId),
+          matchDate: meta.matchDate,
+          competitionLabel: league === "nba" ? "NBA" : "NBA Summer League",
+          teamName: boxScore.teamName,
+          opponentName,
+          isHome,
+          minutesPlayed: minutes,
+          // Column hijack for BB (documented in basketball-rating + SCORING.md):
+          // goals→PTS, assists→AST, tackles→STL, interceptions→BLK,
+          // passesCompleted→REB, passesAttempted→FGA
+          goals: Math.round(boxScore.points),
+          assists: Math.round(boxScore.assists),
+          tackles: Math.round(boxScore.steals),
+          interceptions: Math.round(boxScore.blocks),
+          passesCompleted: Math.round(boxScore.rebounds),
+          passesAttempted: Math.round(boxScore.fieldGoalsAttempted),
+          season: NBA_BOXSCORE_SEASON,
+          source: `espn-${league}`,
+          ratingOverride: computeBasketballMatchRating({
+            minutesPlayed: minutes,
+            points: boxScore.points,
+            rebounds: boxScore.rebounds,
+            assists: boxScore.assists,
+            steals: boxScore.steals,
+            blocks: boxScore.blocks,
+            fieldGoalsMade: boxScore.fieldGoalsMade,
+            fieldGoalsAttempted: boxScore.fieldGoalsAttempted,
+          }),
+        });
+      }
+
       statsUpdated += 1;
     } catch (error) {
       failed += 1;
