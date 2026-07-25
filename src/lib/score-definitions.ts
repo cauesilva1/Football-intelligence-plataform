@@ -4,10 +4,10 @@
  */
 export const SCORE_DEFINITIONS = {
   topProspects:
-    "U23 players who meet a minimum performance rating (and a reliable minutes sample in soccer).",
-  bestPerformers: "Players with the highest overall rating in the current dataset.",
+    "U23 players who meet a minimum performance rating and a reliable sample (soccer minutes / BB·AF games).",
+  bestPerformers: "Players with the highest overall rating in the current dataset (reliable sample only).",
   marketOpportunities:
-    "Players combining strong performance indicators with a lower estimated market value (soccer: ≤ €8M, ≥ 450', rating ≥ 7.2).",
+    "Strong rating, age ≤ 25, reliable sample — soccer ≤ €8M market value; basketball/AF ≤ $5M Cap Hit.",
   topScorers:
     "Highest Goals/90 among players with a reliable minutes sample (≥ 450'). Soft-capped rates.",
 } as const;

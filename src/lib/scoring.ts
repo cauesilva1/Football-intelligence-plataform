@@ -30,3 +30,9 @@ export const OPPORTUNITY_MAX_AGE = 25;
 export const OPPORTUNITY_MIN_RATING = 7.2;
 export const OPPORTUNITY_MAX_VALUE = 8_000_000;
 export const OPPORTUNITY_MAX_CAP_HIT = 5_000_000;
+
+/** Rating per $1M Cap Hit — BB/AF market bargains heuristic. */
+export function capValueScore(rating: number, capHit: number): number {
+  const value = Math.max(capHit, 500_000);
+  return Number((rating / (value / 1_000_000)).toFixed(3));
+}

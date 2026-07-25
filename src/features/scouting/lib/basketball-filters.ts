@@ -40,6 +40,9 @@ export function hasActiveBasketballFilters(filters: PlayerFilters): boolean {
       filters.teamId ||
       typeof filters.minAge === "number" ||
       typeof filters.maxAge === "number" ||
+      typeof filters.minRating === "number" ||
+      typeof filters.minMinutes === "number" ||
+      typeof filters.maxCapHit === "number" ||
       filters.archetype ||
       hasBasketballStatFilters(filters)
   );

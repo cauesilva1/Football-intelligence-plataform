@@ -449,6 +449,9 @@ function buildPlayerWhere(filters: PlayerFilters): Prisma.PlayerWhereInput {
   if (typeof filters.maxMarketValue === "number") {
     where.marketValue = { lte: filters.maxMarketValue, gt: 0 };
   }
+  if (typeof filters.maxCapHit === "number") {
+    where.capHit = { lte: filters.maxCapHit, gt: 0 };
+  }
 
   return where;
 }
@@ -561,7 +564,11 @@ function needsMappedPlayerSort(filters: PlayerFilters): boolean {
     sortBy === "assists" ||
     sortBy === "goalsPer90" ||
     sortBy === "assistsPer90" ||
-    sortBy === "xGPer90"
+    sortBy === "xGPer90" ||
+    sortBy === "totalYards" ||
+    sortBy === "touchdowns" ||
+    sortBy === "sacks" ||
+    sortBy === "yardsPerGame"
   );
 }
 
@@ -569,7 +576,11 @@ function needsMappedPlayerFilter(filters: PlayerFilters): boolean {
   return (
     typeof filters.minRating === "number" ||
     typeof filters.minMinutes === "number" ||
-    typeof filters.maxMarketValue === "number"
+    typeof filters.maxMarketValue === "number" ||
+    typeof filters.maxCapHit === "number" ||
+    typeof filters.minYardsPerGame === "number" ||
+    typeof filters.minTouchdownsPerGame === "number" ||
+    typeof filters.minSacksPerGame === "number"
   );
 }
 

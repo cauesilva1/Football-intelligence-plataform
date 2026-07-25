@@ -193,6 +193,10 @@ export interface PlayerFilters {
   minSteals?: number;
   minBlocks?: number;
   archetype?: "three-and-d" | "rim-protector";
+  /** American football — mínimos de produção (por jogo). */
+  minYardsPerGame?: number;
+  minTouchdownsPerGame?: number;
+  minSacksPerGame?: number;
   /** Origem da listagem — players = elenco; scouting = inteligência de mercado. */
   route?: "players" | "scouting";
   sortBy?:
@@ -206,6 +210,10 @@ export interface PlayerFilters {
     | "rebounds"
     | "steals"
     | "blocks"
+    | "totalYards"
+    | "touchdowns"
+    | "sacks"
+    | "yardsPerGame"
     | "age"
     | "marketValue"
     | "valueScore"

@@ -3,7 +3,7 @@ import { queryDashboardOverview } from "@/features/analytics/queries/dashboard";
 import { getPlayerRepository } from "@/features/scouting/repository";
 import { DataPanel } from "@/components/data/data-panel";
 import { Badge } from "@/components/ui/badge";
-import { ratingColor, formatMarketValue } from "@/lib/utils";
+import { ratingColor, formatMarketValue, formatCapHit } from "@/lib/utils";
 import { getServerSport } from "@/lib/sport-server";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
 import { SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
@@ -131,6 +131,42 @@ function RatingList({
   );
 }
 
+function CapBargainList({
+  players,
+  emptyMessage,
+}: {
+  players: Player[];
+  emptyMessage: string;
+}) {
+  if (!players.length) return <EmptyList message={emptyMessage} />;
+
+  return (
+    <div className="space-y-2">
+      {players.map((player, index) => (
+        <Link
+          key={player.id}
+          href={`/players/${player.id}`}
+          className="flex items-center justify-between rounded-lg border border-border bg-surface-muted/30 px-3 py-2 transition-colors hover:border-primary/30"
+        >
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="w-5 font-mono text-2xs tabular-nums text-muted-foreground">#{index + 1}</span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-foreground">{player.knownAs}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {player.teamShortName ?? "—"} · {player.age}y · {player.currentSeasonStats.rating.toFixed(1)}
+              </p>
+            </div>
+            <Badge variant="neutral">{player.position}</Badge>
+          </div>
+          <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-foreground">
+            {formatCapHit(player.capHit ?? 0)}
+          </span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 function SoccerRankingList({
   players,
   metric,
@@ -187,7 +223,7 @@ export async function DashboardRankingsSection() {
 
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <DataPanel
             title="Top Prospects"
             description={SCORE_DEFINITIONS.topProspects}
@@ -208,6 +244,16 @@ export async function DashboardRankingsSection() {
               players={overview.bestPerformers}
               sport="BASKETBALL"
             emptyMessage="No performers with a rating ≥ 7.5 — check that the season with actual stats is synced."
+            />
+          </DataPanel>
+          <DataPanel
+            title="Market Opportunities"
+            description={SCORE_DEFINITIONS.marketOpportunities}
+            density="dense"
+          >
+            <CapBargainList
+              players={overview.marketOpportunities}
+              emptyMessage="No Cap Hit bargains yet — sync salaries or widen filters."
             />
           </DataPanel>
         </div>
@@ -266,13 +312,12 @@ export async function DashboardRankingsSection() {
           />
         </DataPanel>
         <DataPanel
-          title="Cap bargains"
-          description="Strong performance indicators with a lower estimated Cap Hit (when available)."
+          title="Market Opportunities"
+          description={SCORE_DEFINITIONS.marketOpportunities}
           density="dense"
         >
-          <RatingList
+          <CapBargainList
             players={overview.marketOpportunities}
-            sport="AMERICAN_FOOTBALL"
             emptyMessage="No Cap Hit bargains in the database yet."
           />
         </DataPanel>

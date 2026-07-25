@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles, Calendar, Star, TrendingUp, Shield, ArrowRight } from "lucide-react";
+import { Sparkles, Calendar, Star, TrendingUp, ArrowRight } from "lucide-react";
 import { queryDashboardOverview } from "@/features/analytics/queries/dashboard";
 import { MetricCard } from "@/components/data/metric-card";
 import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
@@ -68,23 +68,29 @@ export async function DashboardStatsSection() {
       />
       {isBasketball ? (
         <MetricCard
-          label="Total Points (avg)"
-          value={String(Math.round(overview.totalGoals))}
+          label={
+            <GlossaryTooltip
+              label="Market Opportunities"
+              description={SCORE_DEFINITIONS.marketOpportunities}
+            />
+          }
+          value={String(overview.marketOpportunitiesCount)}
           icon={TrendingUp}
           accent="negative"
-          trend="Sum of per-game averages"
+          trend="Rating ≥ 7.2 · ≤ $5M Cap · sample"
         />
       ) : isAmericanFootball ? (
         <MetricCard
-          label="Franchises / Programs"
-          value={String(overview.totalTeams)}
-          icon={Shield}
-          accent="negative"
-          trend={
-            overview.totalPlayers === 0
-              ? "Open a team to sync its roster"
-              : "Cap Hit · bargains on scouting"
+          label={
+            <GlossaryTooltip
+              label="Market Opportunities"
+              description={SCORE_DEFINITIONS.marketOpportunities}
+            />
           }
+          value={String(overview.marketOpportunitiesCount)}
+          icon={TrendingUp}
+          accent="negative"
+          trend="Rating ≥ 7.2 · ≤ $5M Cap · sample"
         />
       ) : (
         <MetricCard

@@ -24,6 +24,9 @@ export type AmericanFootballRankingSlug =
   | "quarterbacks"
   | "skill"
   | "defense"
+  | "yards"
+  | "touchdowns"
+  | "sacks"
   | "bargains";
 export type RankingSlug =
   | SoccerRankingSlug
@@ -171,7 +174,8 @@ const BASKETBALL_PRESETS: RankingPreset[] = [
   {
     slug: "bargains",
     title: "Bargains (cap hit)",
-    description: "Strong rating with a relatively affordable salary.",
+    description:
+      "Rating ≥ 7.0, age ≤ 28, Cap Hit ≤ $12M, ≥ 200' — ranked by rating per $1M Cap Hit.",
     href: "/rankings/bargains",
     filters: {
       sport: "BASKETBALL",
@@ -179,7 +183,7 @@ const BASKETBALL_PRESETS: RankingPreset[] = [
       minRating: 7,
       minMinutes: 200,
       maxCapHit: 12_000_000,
-      sortBy: "rating",
+      sortBy: "valueScore",
       sortDir: "desc",
       page: 1,
       pageSize: 20,
@@ -226,12 +230,13 @@ const AMERICAN_FOOTBALL_PRESETS: RankingPreset[] = [
   {
     slug: "u23",
     title: "Prospects U23",
-    description: "High-rated young players — draft upside and development potential.",
+    description: "High-rated young players with a reliable sample — draft upside.",
     href: "/rankings/u23",
     filters: {
       sport: "AMERICAN_FOOTBALL",
       maxAge: 23,
       minRating: 7,
+      minMinutes: 360,
       sortBy: "rating",
       sortDir: "desc",
       page: 1,
@@ -247,6 +252,7 @@ const AMERICAN_FOOTBALL_PRESETS: RankingPreset[] = [
     filters: {
       sport: "AMERICAN_FOOTBALL",
       position: "QB",
+      minMinutes: 360,
       sortBy: "rating",
       sortDir: "desc",
       page: 1,
@@ -263,6 +269,7 @@ const AMERICAN_FOOTBALL_PRESETS: RankingPreset[] = [
       sport: "AMERICAN_FOOTBALL",
       position: "RB,WR,TE,HB,FB",
       minRating: 6.5,
+      minMinutes: 360,
       sortBy: "rating",
       sortDir: "desc",
       page: 1,
@@ -279,6 +286,7 @@ const AMERICAN_FOOTBALL_PRESETS: RankingPreset[] = [
       sport: "AMERICAN_FOOTBALL",
       position: "LB,ILB,OLB,MLB,CB,S,SS,FS,DL,DE,DT,NT",
       minRating: 6.5,
+      minMinutes: 360,
       sortBy: "rating",
       sortDir: "desc",
       page: 1,
@@ -287,15 +295,67 @@ const AMERICAN_FOOTBALL_PRESETS: RankingPreset[] = [
     },
   },
   {
+    slug: "yards",
+    title: "Yards / game",
+    description: "Pass + rush + receiving yards per game — production rate leaders.",
+    href: "/rankings/yards",
+    filters: {
+      sport: "AMERICAN_FOOTBALL",
+      minMinutes: 360,
+      minYardsPerGame: 40,
+      sortBy: "yardsPerGame",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+  {
+    slug: "touchdowns",
+    title: "Touchdown production",
+    description: "Players with meaningful TD/game rates (reliable sample).",
+    href: "/rankings/touchdowns",
+    filters: {
+      sport: "AMERICAN_FOOTBALL",
+      minMinutes: 360,
+      minTouchdownsPerGame: 0.3,
+      sortBy: "touchdowns",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+  {
+    slug: "sacks",
+    title: "Sack production",
+    description: "Pass-rushers with elevated sacks per game.",
+    href: "/rankings/sacks",
+    filters: {
+      sport: "AMERICAN_FOOTBALL",
+      position: "LB,ILB,OLB,MLB,DL,DE,DT,NT,EDGE",
+      minMinutes: 360,
+      minSacksPerGame: 0.2,
+      sortBy: "sacks",
+      sortDir: "desc",
+      page: 1,
+      pageSize: 20,
+      route: "scouting",
+    },
+  },
+  {
     slug: "bargains",
-    title: "Cap bargains",
-    description: "Strong rating with an affordable Cap Hit (when available).",
+    title: "Market Opportunities",
+    description:
+      "Rating ≥ 7.0, age ≤ 28, Cap Hit ≤ $5M — ranked by rating per $1M Cap Hit.",
     href: "/rankings/bargains",
     filters: {
       sport: "AMERICAN_FOOTBALL",
       maxAge: 28,
       minRating: 7,
-      sortBy: "rating",
+      minMinutes: 360,
+      maxCapHit: 5_000_000,
+      sortBy: "valueScore",
       sortDir: "desc",
       page: 1,
       pageSize: 20,

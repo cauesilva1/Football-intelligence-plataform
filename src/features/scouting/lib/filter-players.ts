@@ -1,4 +1,5 @@
 import { soccerValueScore } from "@/lib/scoring/soccer-rankings";
+import { capValueScore } from "@/lib/scoring";
 import { teams } from "@/lib/mock-data/teams";
 import type { Player, PlayerFilters } from "@/types";
 
@@ -12,6 +13,38 @@ export type FilterPlayersOptions = {
 export function computeXGPer90(minutesPlayed: number, xG: number): number {
   if (!minutesPlayed) return 0;
   return Number(((xG / minutesPlayed) * 90).toFixed(2));
+}
+
+function totalYardsOf(player: Player): number {
+  const s = player.currentSeasonStats;
+  return (
+    s.totalYards ??
+    (s.passingYards ?? 0) + (s.rushingYards ?? 0) + (s.receivingYards ?? 0)
+  );
+}
+
+function yardsPerGameOf(player: Player): number {
+  const games = Math.max(player.currentSeasonStats.appearances, 1);
+  return totalYardsOf(player) / games;
+}
+
+function touchdownsPerGameOf(player: Player): number {
+  const s = player.currentSeasonStats;
+  const tds = s.touchdowns ?? s.goals ?? 0;
+  return tds / Math.max(s.appearances, 1);
+}
+
+function sacksPerGameOf(player: Player): number {
+  const s = player.currentSeasonStats;
+  return (s.sacks ?? 0) / Math.max(s.appearances, 1);
+}
+
+function valueScoreOf(player: Player): number {
+  const sport = player.sport ?? "SOCCER";
+  if (sport === "BASKETBALL" || sport === "AMERICAN_FOOTBALL") {
+    return capValueScore(player.currentSeasonStats.rating, player.capHit ?? 0);
+  }
+  return soccerValueScore(player.currentSeasonStats.rating, player.marketValue);
 }
 
 export function filterAndSortPlayers(
@@ -32,6 +65,9 @@ export function filterAndSortPlayers(
     minXGPer90,
     maxMarketValue,
     maxCapHit,
+    minYardsPerGame,
+    minTouchdownsPerGame,
+    minSacksPerGame,
     sortBy = "rating",
     sortDir = "desc",
   } = filters;
@@ -79,6 +115,15 @@ export function filterAndSortPlayers(
       (p) => typeof p.capHit === "number" && p.capHit > 0 && p.capHit <= maxCapHit
     );
   }
+  if (typeof minYardsPerGame === "number") {
+    result = result.filter((p) => yardsPerGameOf(p) >= minYardsPerGame);
+  }
+  if (typeof minTouchdownsPerGame === "number") {
+    result = result.filter((p) => touchdownsPerGameOf(p) >= minTouchdownsPerGame);
+  }
+  if (typeof minSacksPerGame === "number") {
+    result = result.filter((p) => sacksPerGameOf(p) >= minSacksPerGame);
+  }
 
   result.sort((a, b) => {
     const sa = a.currentSeasonStats;
@@ -122,6 +167,18 @@ export function filterAndSortPlayers(
         diff =
           (sa.blocks ?? sa.perGame?.blocks ?? 0) - (sb.blocks ?? sb.perGame?.blocks ?? 0);
         break;
+      case "totalYards":
+        diff = totalYardsOf(a) - totalYardsOf(b);
+        break;
+      case "touchdowns":
+        diff = (sa.touchdowns ?? sa.goals ?? 0) - (sb.touchdowns ?? sb.goals ?? 0);
+        break;
+      case "sacks":
+        diff = (sa.sacks ?? 0) - (sb.sacks ?? 0);
+        break;
+      case "yardsPerGame":
+        diff = yardsPerGameOf(a) - yardsPerGameOf(b);
+        break;
       case "age":
         diff = a.age - b.age;
         break;
@@ -129,9 +186,7 @@ export function filterAndSortPlayers(
         diff = a.marketValue - b.marketValue;
         break;
       case "valueScore":
-        diff =
-          soccerValueScore(sa.rating, a.marketValue) -
-          soccerValueScore(sb.rating, b.marketValue);
+        diff = valueScoreOf(a) - valueScoreOf(b);
         break;
       case "name":
         diff = a.fullName.localeCompare(b.fullName);
@@ -140,7 +195,9 @@ export function filterAndSortPlayers(
         diff = a.position.localeCompare(b.position);
         break;
       case "club":
-        diff = (a.teamName ?? a.teamShortName ?? "").localeCompare(b.teamName ?? b.teamShortName ?? "");
+        diff = (a.teamName ?? a.teamShortName ?? "").localeCompare(
+          b.teamName ?? b.teamShortName ?? ""
+        );
         break;
     }
 
