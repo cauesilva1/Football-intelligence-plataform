@@ -31,6 +31,7 @@
     "data:sync-ncaa-teams": "tsx src/scripts/sync-ncaa-teams.ts",
     "data:sync-ncaa-rosters": "tsx src/scripts/sync-ncaa-rosters.ts",
     "data:sync-af-rosters": "tsx src/scripts/sync-american-football-rosters.ts",
+    "data:backfill-af-season-stats": "tsx src/scripts/sync-american-football-rosters.ts --seasons-only --with-stats",
     "data:backfill-boxscores-af": "tsx src/scripts/backfill-football-boxscores.ts",
     "data:migrate-af-match-native": "tsx src/scripts/migrate-af-match-native.ts",
     "data:cron-af": "tsx src/scripts/cron-football-sync.ts",

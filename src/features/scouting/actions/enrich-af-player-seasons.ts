@@ -6,6 +6,7 @@ import { canUseDatabase } from "@/lib/system-cache";
 import { enforceActionRateLimit } from "@/lib/action-guard";
 import { resolveAmericanFootballLeagueCode } from "@/lib/american-football/team-league";
 import { resolveFootballHubSeasonYears } from "@/lib/api/espn-football-seasons";
+import { footballSeasonRowHasSignal } from "@/lib/api/espn-football-athlete-stats";
 import { ensureAmericanFootballPlayerSeasons } from "@/lib/sync/american-football-roster";
 
 export async function enrichAmericanFootballPlayerSeasonsAction(
@@ -32,7 +33,21 @@ export async function enrichAmericanFootballPlayerSeasonsAction(
       league: true,
       apiSportsId: true,
       team: { select: { competition: { select: { name: true } } } },
-      stats: { select: { season: true, points: true, goals: true, tackles: true, steals: true } },
+      stats: {
+        select: {
+          season: true,
+          points: true,
+          goals: true,
+          tackles: true,
+          steals: true,
+          totalYards: true,
+          touchdowns: true,
+          sacks: true,
+          passingYards: true,
+          rushingYards: true,
+          receivingYards: true,
+        },
+      },
     },
   });
 
@@ -49,9 +64,7 @@ export async function enrichAmericanFootballPlayerSeasonsAction(
   const { pastYear, currentYear } = resolveFootballHubSeasonYears();
   const pastRow = player.stats.find((s) => s.season === pastYear);
   const hasCurrentStub = player.stats.some((s) => s.season === currentYear);
-  const pastHasSignal =
-    !!pastRow &&
-    (pastRow.points > 0 || pastRow.goals > 0 || pastRow.tackles > 0 || pastRow.steals > 0);
+  const pastHasSignal = footballSeasonRowHasSignal(pastRow);
 
   if (hasCurrentStub && pastRow && pastHasSignal) {
     return { ok: true, refreshed: false };

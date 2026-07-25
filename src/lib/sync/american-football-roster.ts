@@ -7,6 +7,7 @@ import {
 import {
   encodeFootballStatsForPrisma,
   fetchFootballAthleteSeasonStats,
+  footballSeasonRowHasSignal,
   zeroFootballStatsForPrisma,
   type ParsedFootballSeasonStats,
 } from "@/lib/api/espn-football-athlete-stats";
@@ -145,18 +146,24 @@ export async function ensureAmericanFootballPlayerSeasons(options: {
 
   const existingPast = await prisma.playerSeasonStats.findUnique({
     where: { playerId_season: { playerId: options.playerId, season: pastYear } },
-    select: { points: true, goals: true, tackles: true, steals: true },
+    select: {
+      points: true,
+      goals: true,
+      tackles: true,
+      steals: true,
+      totalYards: true,
+      touchdowns: true,
+      sacks: true,
+      passingYards: true,
+      rushingYards: true,
+      receivingYards: true,
+    },
   });
   const existingCurrent = await prisma.playerSeasonStats.findUnique({
     where: { playerId_season: { playerId: options.playerId, season: currentYear } },
     select: { id: true },
   });
-  const pastHasSignal =
-    !!existingPast &&
-    ((existingPast.points ?? 0) > 0 ||
-      (existingPast.goals ?? 0) > 0 ||
-      (existingPast.tackles ?? 0) > 0 ||
-      (existingPast.steals ?? 0) > 0);
+  const pastHasSignal = footballSeasonRowHasSignal(existingPast);
 
   // Both season rows already present and we are not fetching ESPN — nothing to do.
   if (existingPast && existingCurrent && (!fetchPast || pastHasSignal)) {

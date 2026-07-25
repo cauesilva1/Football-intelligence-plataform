@@ -232,3 +232,31 @@ export function encodeFootballStatsForPrisma(stats: ParsedFootballSeasonStats) {
 export function zeroFootballStatsForPrisma() {
   return encodeFootballStatsForPrisma(emptyStats());
 }
+
+/** True when a season row already has production (native or legacy hijack). */
+export function footballSeasonRowHasSignal(row: {
+  points?: number | null;
+  goals?: number | null;
+  tackles?: number | null;
+  steals?: number | null;
+  totalYards?: number | null;
+  touchdowns?: number | null;
+  sacks?: number | null;
+  passingYards?: number | null;
+  rushingYards?: number | null;
+  receivingYards?: number | null;
+} | null | undefined): boolean {
+  if (!row) return false;
+  return (
+    (row.totalYards ?? 0) > 0 ||
+    (row.touchdowns ?? 0) > 0 ||
+    (row.sacks ?? 0) > 0 ||
+    (row.passingYards ?? 0) > 0 ||
+    (row.rushingYards ?? 0) > 0 ||
+    (row.receivingYards ?? 0) > 0 ||
+    (row.points ?? 0) > 0 ||
+    (row.goals ?? 0) > 0 ||
+    (row.tackles ?? 0) > 0 ||
+    (row.steals ?? 0) > 0
+  );
+}

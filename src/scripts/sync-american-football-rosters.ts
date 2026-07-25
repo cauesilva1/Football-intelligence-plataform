@@ -3,11 +3,13 @@
  *
  * Uso:
  *   npm run data:sync-af-rosters
- *   npm run data:sync-af-rosters -- --league=nfl
- *   npm run data:sync-af-rosters -- --seasons-only
- *   npm run data:sync-af-rosters -- --seasons-only --with-stats   # slow mass ESPN (avoid)
+ *   npm run data:sync-af-rosters -- --league=nfl --force
+ *   npm run data:sync-af-rosters -- --league=nfl --seasons-only --with-stats
+ *   npm run data:sync-af-rosters -- --league=nfl --seasons-only --with-stats --limit=200
+ *   npm run data:backfill-af-season-stats -- --league=nfl
  *
- * Default: stubs only (2025+2026). Past-season ESPN stats load on player profile open.
+ * Default roster sync: Cap Hit + stubs only. Past-season ESPN production:
+ * use --seasons-only --with-stats (or data:backfill-af-season-stats).
  */
 
 // Mass sync prefers DIRECT_URL to avoid Supabase pooler starvation.
@@ -20,7 +22,7 @@ process.stdout.write(`[af-rosters] boot pid=${process.pid}\n`);
 
 const FETCH_DELAY_MS = 150;
 const TEAM_CONCURRENCY = 3;
-const PLAYER_SEASON_CONCURRENCY = 12;
+const PLAYER_SEASON_CONCURRENCY = 8;
 
 type LeagueFilter = "all" | "nfl" | "cfb";
 
@@ -29,12 +31,14 @@ function parseArgs(argv: string[]): {
   force: boolean;
   seasonsOnly: boolean;
   skipStats: boolean;
+  limit: number | null;
 } {
   let league: LeagueFilter = "all";
   let force = false;
   let seasonsOnly = false;
-  // Fast by default — ESPN past stats are fetched on profile open.
+  // Fast by default — ESPN past stats are fetched on profile open / seasons-only --with-stats.
   let skipStats = true;
+  let limit: number | null = null;
   for (const arg of argv) {
     if (arg === "--force") force = true;
     if (arg === "--seasons-only") seasonsOnly = true;
@@ -44,8 +48,12 @@ function parseArgs(argv: string[]): {
       const value = arg.slice("--league=".length).toLowerCase();
       if (value === "nfl" || value === "cfb" || value === "all") league = value;
     }
+    if (arg.startsWith("--limit=")) {
+      const n = Number.parseInt(arg.slice("--limit=".length), 10);
+      if (Number.isFinite(n) && n > 0) limit = n;
+    }
   }
-  return { league, force, seasonsOnly, skipStats };
+  return { league, force, seasonsOnly, skipStats, limit };
 }
 
 function sleep(ms: number): Promise<void> {
@@ -65,7 +73,7 @@ async function main() {
     "@/lib/american-football/team-league"
   );
 
-  const { league, force, seasonsOnly, skipStats } = parseArgs(process.argv.slice(2));
+  const { league, force, seasonsOnly, skipStats, limit } = parseArgs(process.argv.slice(2));
 
   if (!canUseDatabase()) {
     console.error(
@@ -75,7 +83,7 @@ async function main() {
   }
 
   console.log(
-    `[af-rosters] Starting · league=${league} · force=${force} · seasonsOnly=${seasonsOnly} · skipStats=${skipStats}`
+    `[af-rosters] Starting · league=${league} · force=${force} · seasonsOnly=${seasonsOnly} · skipStats=${skipStats} · limit=${limit ?? "none"}`
   );
 
   if (league === "all" || league === "nfl") {
@@ -111,23 +119,55 @@ async function main() {
   }
 
   if (seasonsOnly) {
-    const players = await prisma.player.findMany({
+    const { resolveFootballHubSeasonYears } = await import("@/lib/api/espn-football-seasons");
+    const { footballSeasonRowHasSignal } = await import("@/lib/api/espn-football-athlete-stats");
+    const { pastYear } = resolveFootballHubSeasonYears();
+
+    let players = await prisma.player.findMany({
       where: {
         sport: "AMERICAN_FOOTBALL",
         team: { competitionId: { in: competitions.map((c) => c.id) } },
+        ...(skipStats ? {} : { apiSportsId: { not: null } }),
       },
       select: {
         id: true,
         fullName: true,
         apiSportsId: true,
         team: { select: { competition: { select: { name: true } } } },
+        stats: {
+          where: { season: pastYear },
+          select: {
+            points: true,
+            goals: true,
+            tackles: true,
+            steals: true,
+            totalYards: true,
+            touchdowns: true,
+            sacks: true,
+            passingYards: true,
+            rushingYards: true,
+            receivingYards: true,
+          },
+          take: 1,
+        },
       },
       orderBy: { fullName: "asc" },
     });
 
-    console.log(`[af-rosters] seasons-only · ${players.length} players`);
+    if (!skipStats) {
+      players = players.filter((p) => !footballSeasonRowHasSignal(p.stats[0]));
+    }
+    if (limit != null) {
+      players = players.slice(0, limit);
+    }
+
+    console.log(
+      `[af-rosters] seasons-only · ${players.length} players` +
+        (skipStats ? " (stubs)" : " missing past production → ESPN fetch")
+    );
 
     let ok = 0;
+    let fetched = 0;
     let failed = 0;
     for (let i = 0; i < players.length; i += PLAYER_SEASON_CONCURRENCY) {
       const batch = players.slice(i, i + PLAYER_SEASON_CONCURRENCY);
@@ -143,15 +183,18 @@ async function main() {
             return;
           }
           try {
-            await ensureAmericanFootballPlayerSeasons({
+            const didFetch = await ensureAmericanFootballPlayerSeasons({
               playerId: player.id,
               espnAthleteId: player.apiSportsId,
               league: leagueCode,
               fetchPastStats: !skipStats,
             });
             ok += 1;
-            if (index % 100 === 0 || index === players.length) {
-              console.log(`[${index}/${players.length}] seasons ok (running total ${ok})`);
+            if (didFetch) fetched += 1;
+            if (index % 50 === 0 || index === players.length) {
+              console.log(
+                `[${index}/${players.length}] seasons ok=${ok} fetched=${fetched} failed=${failed}`
+              );
             }
           } catch (error) {
             failed += 1;
@@ -162,7 +205,9 @@ async function main() {
       await sleep(FETCH_DELAY_MS);
     }
 
-    console.log(`[af-rosters] Done seasons-only · ok=${ok} failed=${failed}`);
+    console.log(
+      `[af-rosters] Done seasons-only · ok=${ok} fetched=${fetched} failed=${failed}`
+    );
     return;
   }
 
