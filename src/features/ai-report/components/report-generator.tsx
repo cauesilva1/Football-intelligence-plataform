@@ -132,6 +132,12 @@ export function ReportGenerator({
     if (!report || !selectedPlayer) return;
     const note = shortlistEntry?.note?.trim();
     const isBasketball = selectedPlayer.sport === "BASKETBALL";
+    const isAmericanFootball = selectedPlayer.sport === "AMERICAN_FOOTBALL";
+    const methodologyLabel = isBasketball
+      ? "basketball"
+      : isAmericanFootball
+        ? "American football"
+        : "soccer";
     const blob = buildScoutBriefPdf({
       playerName: selectedPlayer.fullName,
       position: selectedPlayer.position,
@@ -144,13 +150,11 @@ export function ReportGenerator({
       risks: report.weaknesses,
       recommendation: report.recommendation,
       keyRates: [
-        `Overall rating: ${report.overallRating.toFixed(1)} (same rules as profile / ${
-          isBasketball ? "basketball" : "soccer"
-        } methodology)`,
+        `Overall rating: ${report.overallRating.toFixed(1)} (same rules as profile / ${methodologyLabel} methodology)`,
         shortlistEntry?.tag ? `Shortlist: ${shortlistEntry.tag}` : null,
         note ? `Scout note: ${note.slice(0, 160)}${note.length > 160 ? "…" : ""}` : null,
         `Style: ${report.playingStyle.label}`,
-        isBasketball
+        isBasketball || isAmericanFootball
           ? `Schemes: ${report.tacticalFit.systems.join(", ") || "—"}`
           : `Systems: ${report.tacticalFit.systems.join(", ") || "—"}`,
         `Roles: ${report.tacticalFit.roles.join(", ") || "—"}`,

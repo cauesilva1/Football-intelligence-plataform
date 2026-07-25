@@ -119,6 +119,14 @@ export function reliableFootballRating(
   return Number(stat.rating.toFixed(2));
 }
 
+/** Report overall — one decimal, sample-aware (same contract as basketball reports). */
+export function computeFootballReportOverallRating(
+  stat: FootballRatingStat & { rating: number },
+  position = "WR"
+): number {
+  return Number(reliableFootballRating(stat, position).toFixed(1));
+}
+
 /** Single-game productivity proxy (Sofascore-inspired baseline ~6.5). */
 export function computeFootballMatchRating(stat: {
   minutesPlayed: number;

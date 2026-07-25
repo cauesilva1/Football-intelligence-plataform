@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   computeFootballMatchRating,
   computeFootballRating,
+  computeFootballReportOverallRating,
   footballPositionGroup,
   hasReliableFootballSample,
 } from "@/lib/scoring/football-rating";
@@ -67,6 +68,25 @@ describe("computeFootballRating", () => {
     const asSkill = computeFootballRating(production, "RB");
     const asDefense = computeFootballRating(production, "LB");
     assert.notEqual(asSkill, asDefense);
+  });
+});
+
+describe("computeFootballReportOverallRating", () => {
+  it("returns one decimal from reliableFootballRating", () => {
+    const rating = computeFootballReportOverallRating(
+      {
+        matchesPlayed: 12,
+        minutesPlayed: 720,
+        totalYards: 3600,
+        touchdowns: 28,
+        tackles: 0,
+        sacks: 0,
+        passingYards: 3600,
+        rating: 8.2,
+      },
+      "QB"
+    );
+    assert.equal(String(rating).split(".")[1]?.length ?? 0, 1);
   });
 });
 
