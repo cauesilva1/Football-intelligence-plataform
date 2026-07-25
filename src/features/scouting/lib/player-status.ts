@@ -1,5 +1,9 @@
 import type { PlayerStatistic } from "@/types";
-import { SOCCER_RATE_MIN_MINUTES } from "@/lib/scoring";
+import {
+  BB_RATE_MIN_GAMES,
+  BB_RATE_MIN_MINUTES,
+  SOCCER_RATE_MIN_MINUTES,
+} from "@/lib/scoring";
 
 export interface PlayerStatus {
   label: string;
@@ -8,8 +12,54 @@ export interface PlayerStatus {
 }
 
 /** Derives squad role from minutes and appearances (current-season context). */
-export function derivePlayerStatus(stats: PlayerStatistic): PlayerStatus {
+export function derivePlayerStatus(
+  stats: PlayerStatistic,
+  sport: string = "SOCCER"
+): PlayerStatus {
   const { minutesPlayed, appearances, rating } = stats;
+
+  if (sport === "BASKETBALL") {
+    if (
+      appearances > 0 &&
+      (appearances < BB_RATE_MIN_GAMES || minutesPlayed < BB_RATE_MIN_MINUTES)
+    ) {
+      return {
+        label: "Small Sample",
+        description: `Under ${BB_RATE_MIN_GAMES} games or ${BB_RATE_MIN_MINUTES}' — rating is provisional`,
+        variant: "amber",
+      };
+    }
+    if (minutesPlayed >= 1_000 && appearances >= 40) {
+      return {
+        label: "Starter",
+        description: "Consistent minutes this season",
+        variant: "default",
+      };
+    }
+    if (minutesPlayed >= 500 && appearances >= 20) {
+      return {
+        label: "Rotation",
+        description: "Regular rotation involvement",
+        variant: "azure",
+      };
+    }
+    if (
+      rating >= 7.2 &&
+      appearances >= BB_RATE_MIN_GAMES &&
+      minutesPlayed >= BB_RATE_MIN_MINUTES
+    ) {
+      return {
+        label: "Prospect",
+        description: "Strong rating on a reliable sample",
+        variant: "amber",
+      };
+    }
+    return {
+      label: "Squad Player",
+      description: "Reduced minutes this season",
+      variant: "neutral",
+    };
+  }
 
   if (minutesPlayed > 0 && minutesPlayed < SOCCER_RATE_MIN_MINUTES) {
     return {

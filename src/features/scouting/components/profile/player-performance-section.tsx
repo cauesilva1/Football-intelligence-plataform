@@ -11,10 +11,18 @@ import { aggregateSeasonTimeline } from "@/features/scouting/lib/season-history"
 import { PlayerSeasonSelector } from "@/features/scouting/components/profile/player-season-selector";
 import {
   buildPositionScorecard,
+  buildBasketballPositionScorecard,
+  buildFootballPositionScorecard,
   soccerPositionGroupLabel,
 } from "@/features/scouting/lib/position-scorecard";
 import { toRadarProfile } from "@/lib/normalize";
-import { SOCCER_RATE_MIN_MINUTES } from "@/lib/scoring";
+import {
+  AF_RATE_MIN_GAMES,
+  AF_RATE_MIN_MINUTES,
+  BB_RATE_MIN_GAMES,
+  BB_RATE_MIN_MINUTES,
+  SOCCER_RATE_MIN_MINUTES,
+} from "@/lib/scoring";
 import { getTeamTheme } from "@/lib/team-theme";
 import { ratingColor } from "@/lib/utils";
 import { getSportConfig } from "@/lib/sport-registry";
@@ -232,9 +240,24 @@ function BasketballPerformanceSection({
     assists: s.assists ?? 0,
   };
   const radarMetrics = [...getSportConfig("BASKETBALL").ui.radarMetrics];
+  const smallSample =
+    s.appearances > 0 &&
+    (s.appearances < BB_RATE_MIN_GAMES || s.minutesPlayed < BB_RATE_MIN_MINUTES);
+  const scorecard = buildBasketballPositionScorecard(player.position, s);
+  const ratingMetric = scorecard.metrics.find((m) => m.key === "rating");
+  const roleMetrics = scorecard.metrics.filter(
+    (m) => m.key !== "games" && m.key !== "mpg" && m.key !== "rating"
+  );
 
   return (
     <>
+      {smallSample ? (
+        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90">
+          Small sample ({s.appearances} G / {s.minutesPlayed}&apos;). Rating stays provisional until ≥{" "}
+          {BB_RATE_MIN_GAMES} games and ≥ {BB_RATE_MIN_MINUTES}&apos;.
+        </p>
+      ) : null}
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Games"
@@ -265,6 +288,42 @@ function BasketballPerformanceSection({
           borderColor={theme.primaryColor}
         />
       </div>
+
+      <DataPanel
+        title={`${scorecard.title}`}
+        description={`Role pack for ${player.position} — same rating rules as list / report.`}
+        density="dense"
+        className="border"
+        style={{ borderColor: `${theme.primaryColor}33` }}
+      >
+        <div className="mb-3 flex flex-wrap items-baseline gap-3">
+          <span
+            className="font-mono text-2xl font-semibold tabular-nums"
+            style={{ color: ratingColor(s.rating) }}
+          >
+            {ratingMetric?.value ?? s.rating.toFixed(1)}
+          </span>
+          {ratingMetric?.hint ? (
+            <span className="text-2xs text-amber-200/80">{ratingMetric.hint}</span>
+          ) : null}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+          {roleMetrics.map((item) => (
+            <div
+              key={item.key}
+              className="rounded-lg border bg-surface-muted/40 px-3 py-2.5"
+              style={{ borderColor: `${theme.primaryColor}33` }}
+            >
+              <span className="text-2xs uppercase tracking-wider text-muted-foreground">
+                {item.label}
+              </span>
+              <div className="mt-0.5 font-mono text-sm font-semibold tabular-nums text-foreground">
+                {item.value}
+              </div>
+            </div>
+          ))}
+        </div>
+      </DataPanel>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <DataPanel
@@ -340,9 +399,37 @@ function AmericanFootballPerformanceSection({
   const radarMetrics = [...getSportConfig("AMERICAN_FOOTBALL").ui.radarMetrics];
   const totalYards = s.totalYards ?? s.points ?? 0;
   const touchdowns = s.touchdowns ?? s.goals ?? 0;
+  const smallSample =
+    s.appearances > 0 &&
+    (s.appearances < AF_RATE_MIN_GAMES || s.minutesPlayed < AF_RATE_MIN_MINUTES);
+  const scorecard = buildFootballPositionScorecard(player.position, s);
 
   return (
     <>
+      {smallSample ? (
+        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90">
+          Small sample ({s.appearances} G). Rating stays provisional until ≥ {AF_RATE_MIN_GAMES}{" "}
+          games and ≥ {AF_RATE_MIN_MINUTES}&apos; proxy minutes.
+        </p>
+      ) : null}
+
+      <DataPanel
+        title={scorecard.title}
+        description="Role-aware production snapshot."
+        density="dense"
+        className="border"
+        style={{ borderColor: `${theme.primaryColor}33` }}
+      >
+        <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-6">
+          {scorecard.metrics.map((m) => (
+            <div key={m.key} className="rounded-lg border border-border/60 bg-surface-muted/30 px-3 py-2">
+              <p className="text-2xs uppercase tracking-wider text-muted-foreground">{m.label}</p>
+              <p className="font-mono text-sm font-semibold tabular-nums">{m.value}</p>
+            </div>
+          ))}
+        </div>
+      </DataPanel>
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Games"

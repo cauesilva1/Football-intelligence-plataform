@@ -19,6 +19,13 @@ import {
   MIN_THREE_PT_PCT_OPTIONS,
 } from "@/features/scouting/lib/basketball-constants";
 import { hasActiveBasketballFilters } from "@/features/scouting/lib/basketball-filters";
+import {
+  MAX_CAP_HIT_OPTIONS,
+  MIN_SACKS_PER_GAME_OPTIONS,
+  MIN_TD_PER_GAME_OPTIONS,
+  MIN_YARDS_PER_GAME_OPTIONS,
+} from "@/features/scouting/lib/football-constants";
+import { hasActiveFootballFilters } from "@/features/scouting/lib/football-filters";
 import type { LeagueOption } from "@/features/scouting/queries/filter-options";
 import type { TeamOption } from "@/features/scouting/lib/teams-options";
 import {
@@ -32,6 +39,7 @@ import {
 } from "@/features/scouting/lib/constants";
 import { AMERICAN_FOOTBALL_POSITIONS } from "@/lib/positions";
 import { useSport } from "@/context/sport-context";
+import { formatCapHit } from "@/lib/utils";
 import type { PlayerFilters } from "@/types";
 import {
   clearPlayerFilterPrefs,
@@ -76,6 +84,9 @@ function prefsFromFilters(filters: PlayerFilters): StoredPlayerFilterPrefs {
     minSteals: filters.minSteals,
     minBlocks: filters.minBlocks,
     archetype: filters.archetype,
+    minYardsPerGame: filters.minYardsPerGame,
+    minTouchdownsPerGame: filters.minTouchdownsPerGame,
+    minSacksPerGame: filters.minSacksPerGame,
     sortBy: filters.sortBy,
     sortDir: filters.sortDir,
     pageSize: filters.pageSize,
@@ -301,6 +312,65 @@ export function ScoutingFiltersPanel({
 
   const basketballAdvancedFields = (
     <>
+      <FilterField label="Min Age">
+        <Select
+          value={String(filters.minAge ?? "")}
+          onChange={(e) => pushFilters({ minAge: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
+        >
+          <option value="">No limit</option>
+          {MIN_AGE_OPTIONS.map((a) => (
+            <option key={a} value={a}>{a}+ years</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label="Max Age">
+        <Select
+          value={String(filters.maxAge ?? "")}
+          onChange={(e) => pushFilters({ maxAge: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
+        >
+          <option value="">No limit</option>
+          {MAX_AGE_OPTIONS.map((a) => (
+            <option key={a} value={a}>Max Age: {a}</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label="Min Rating">
+        <Select
+          value={String(filters.minRating ?? "")}
+          onChange={(e) => pushFilters({ minRating: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
+        >
+          <option value="">No limit</option>
+          {MIN_RATING_OPTIONS.map((r) => (
+            <option key={r} value={r}>{r.toFixed(1)}+</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label="Min Minutes">
+        <Select
+          value={String(filters.minMinutes ?? "")}
+          onChange={(e) =>
+            pushFilters({ minMinutes: e.target.value ? Number(e.target.value) : undefined, page: 1 })
+          }
+        >
+          <option value="">No limit</option>
+          {MIN_MINUTES_OPTIONS.filter((m) => m > 0).map((m) => (
+            <option key={m} value={m}>{m}+ min</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label="Max Cap Hit">
+        <Select
+          value={String(filters.maxCapHit ?? "")}
+          onChange={(e) =>
+            pushFilters({ maxCapHit: e.target.value ? Number(e.target.value) : undefined, page: 1 })
+          }
+        >
+          <option value="">No limit</option>
+          {MAX_CAP_HIT_OPTIONS.filter((v) => v > 0).map((v) => (
+            <option key={v} value={v}>{formatCapHit(v)} or less</option>
+          ))}
+        </Select>
+      </FilterField>
       <BasketballMetricSlider
         label="PTS (min)"
         options={MIN_POINTS_OPTIONS}
@@ -376,6 +446,80 @@ export function ScoutingFiltersPanel({
           ))}
         </Select>
       </FilterField>
+      <FilterField label="Min Minutes">
+        <Select
+          value={String(filters.minMinutes ?? "")}
+          onChange={(e) =>
+            pushFilters({ minMinutes: e.target.value ? Number(e.target.value) : undefined, page: 1 })
+          }
+        >
+          <option value="">No limit</option>
+          {MIN_MINUTES_OPTIONS.filter((m) => m > 0).map((m) => (
+            <option key={m} value={m}>{m}+ min</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label="Min Yds/G">
+        <Select
+          value={String(filters.minYardsPerGame ?? "")}
+          onChange={(e) =>
+            pushFilters({
+              minYardsPerGame: e.target.value ? Number(e.target.value) : undefined,
+              page: 1,
+            })
+          }
+        >
+          <option value="">No limit</option>
+          {MIN_YARDS_PER_GAME_OPTIONS.filter((v) => v > 0).map((v) => (
+            <option key={v} value={v}>{v}+ yds/G</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label="Min TD/G">
+        <Select
+          value={String(filters.minTouchdownsPerGame ?? "")}
+          onChange={(e) =>
+            pushFilters({
+              minTouchdownsPerGame: e.target.value ? Number(e.target.value) : undefined,
+              page: 1,
+            })
+          }
+        >
+          <option value="">No limit</option>
+          {MIN_TD_PER_GAME_OPTIONS.filter((v) => v > 0).map((v) => (
+            <option key={v} value={v}>{v}+ TD/G</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label="Min Sacks/G">
+        <Select
+          value={String(filters.minSacksPerGame ?? "")}
+          onChange={(e) =>
+            pushFilters({
+              minSacksPerGame: e.target.value ? Number(e.target.value) : undefined,
+              page: 1,
+            })
+          }
+        >
+          <option value="">No limit</option>
+          {MIN_SACKS_PER_GAME_OPTIONS.filter((v) => v > 0).map((v) => (
+            <option key={v} value={v}>{v}+ sacks/G</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label="Max Cap Hit">
+        <Select
+          value={String(filters.maxCapHit ?? "")}
+          onChange={(e) =>
+            pushFilters({ maxCapHit: e.target.value ? Number(e.target.value) : undefined, page: 1 })
+          }
+        >
+          <option value="">No limit</option>
+          {MAX_CAP_HIT_OPTIONS.filter((v) => v > 0).map((v) => (
+            <option key={v} value={v}>{formatCapHit(v)} or less</option>
+          ))}
+        </Select>
+      </FilterField>
     </>
   );
 
@@ -393,7 +537,7 @@ export function ScoutingFiltersPanel({
     isScoutingRoute ? (
       <>
         {americanFootballAdvancedFields}
-        {clearButton(hasActiveFilters(filters))}
+        {clearButton(hasActiveFootballFilters(filters))}
       </>
     ) : null
   ) : (

@@ -13,8 +13,22 @@ export type PlayerMatchAppearance = {
   minutesPlayed: number;
   goals: number;
   assists: number;
-  tackles: number;
-  interceptions: number;
+  tackles: number | null;
+  interceptions: number | null;
+  /** Soccer: passes completed. Basketball fallback hijack: rebounds. */
+  passesCompleted: number;
+  /** Basketball native (preferred over hijack). */
+  points: number | null;
+  rebounds: number | null;
+  steals: number | null;
+  blocks: number | null;
+  /** American football native (preferred over hijack). */
+  passingYards: number | null;
+  rushingYards: number | null;
+  receivingYards: number | null;
+  touchdowns: number | null;
+  sacks: number | null;
+  totalYards: number | null;
   rating: number | null;
 };
 
@@ -47,6 +61,17 @@ export async function getPlayerMatchAppearances(
       assists: row.assists,
       tackles: row.tackles,
       interceptions: row.interceptions,
+      passesCompleted: row.passesCompleted,
+      points: row.points,
+      rebounds: row.rebounds,
+      steals: row.steals,
+      blocks: row.blocks,
+      passingYards: row.passingYards,
+      rushingYards: row.rushingYards,
+      receivingYards: row.receivingYards,
+      touchdowns: row.touchdowns,
+      sacks: row.sacks,
+      totalYards: row.totalYards,
       rating: row.rating,
     }));
   } catch {

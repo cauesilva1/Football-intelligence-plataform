@@ -24,6 +24,12 @@ import {
   type NbaScheduleBundle,
 } from "@/lib/api/espn-nba-schedule";
 import type { BasketballCompetitionConfig } from "@/lib/tournaments/basketball-competitions";
+import {
+  EUROLEAGUE_ESPN_SLUG,
+  EUROLEAGUE_LABEL,
+  EUROLEAGUE_SEASON_YEAR,
+} from "@/lib/api/euroleague";
+import type { NbaLeaderRow } from "@/lib/api/espn-nba-leaders";
 
 const BASKETBALL_HUB_REVALIDATE_SECONDS = 180;
 
@@ -127,6 +133,150 @@ async function loadNcaaPrograms(): Promise<BasketballHubFranchise[]> {
   }));
 }
 
+async function loadEuroLeagueClubs(): Promise<BasketballHubFranchise[]> {
+  if (!canUseDatabase()) return [];
+
+  const competitionId = await resolveCompetitionId({
+    OR: [
+      { espnSlug: EUROLEAGUE_ESPN_SLUG },
+      { name: { equals: EUROLEAGUE_LABEL, mode: "insensitive" } },
+    ],
+  });
+
+  const teams = await getPrisma().team.findMany({
+    where: competitionId
+      ? { competitionId }
+      : { competition: { name: { equals: EUROLEAGUE_LABEL, mode: "insensitive" } } },
+    select: { id: true, name: true, shortName: true, crestUrl: true, country: true },
+    orderBy: { name: "asc" },
+  });
+
+  return teams.map((t) => ({
+    id: t.id,
+    name: t.name,
+    shortName: t.shortName,
+    crestUrl: t.crestUrl ?? undefined,
+    country: t.country,
+  }));
+}
+
+function toLeaderRows(
+  rows: Array<{ playerName: string; teamName: string; value: number }>,
+  decimals = 1
+): NbaLeaderRow[] {
+  return rows.map((row, index) => ({
+    rank: index + 1,
+    playerName: row.playerName,
+    teamName: row.teamName,
+    value: row.value,
+    displayValue: row.value.toFixed(decimals),
+  }));
+}
+
+async function loadEuroLeagueLeadersFromDb(): Promise<NbaCompetitionLeaders> {
+  const empty = emptyNbaCompetitionLeaders(EUROLEAGUE_SEASON_YEAR);
+  if (!canUseDatabase()) return empty;
+
+  const stats = await getPrisma().playerSeasonStats.findMany({
+    where: {
+      season: EUROLEAGUE_SEASON_YEAR,
+      matchesPlayed: { gte: 5 },
+      player: { sport: "BASKETBALL", league: EUROLEAGUE_LABEL },
+    },
+    select: {
+      points: true,
+      rebounds: true,
+      assists: true,
+      steals: true,
+      blocks: true,
+      matchesPlayed: true,
+      minutesPlayed: true,
+      player: {
+        select: {
+          knownAs: true,
+          fullName: true,
+          team: { select: { name: true, shortName: true } },
+        },
+      },
+    },
+    take: 400,
+  });
+
+  const mapped = stats.map((s) => {
+    const playerName = s.player.knownAs || s.player.fullName;
+    const teamName = s.player.team?.shortName || s.player.team?.name || "—";
+    return {
+      playerName,
+      teamName,
+      points: s.points,
+      rebounds: s.rebounds,
+      assists: s.assists,
+      steals: s.steals,
+      blocks: s.blocks,
+    };
+  });
+
+  const top = (key: "points" | "rebounds" | "assists" | "steals" | "blocks") =>
+    [...mapped]
+      .sort((a, b) => b[key] - a[key])
+      .slice(0, 10)
+      .map((r) => ({ playerName: r.playerName, teamName: r.teamName, value: r[key] }));
+
+  return {
+    points: toLeaderRows(top("points")),
+    rebounds: toLeaderRows(top("rebounds")),
+    assists: toLeaderRows(top("assists")),
+    steals: toLeaderRows(top("steals")),
+    blocks: toLeaderRows(top("blocks")),
+    seasonYear: EUROLEAGUE_SEASON_YEAR,
+    seasonLabel: "2025-26",
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+async function loadEuroLeagueHub(): Promise<BasketballCompetitionHubData> {
+  const [franchises, leaders] = await Promise.all([
+    loadEuroLeagueClubs(),
+    loadEuroLeagueLeadersFromDb(),
+  ]);
+
+  const hasLeaders =
+    leaders.points.length +
+      leaders.rebounds.length +
+      leaders.assists.length +
+      leaders.steals.length +
+      leaders.blocks.length >
+    0;
+
+  const slice: BasketballSeasonSlice = {
+    seasonYear: EUROLEAGUE_SEASON_YEAR,
+    seasonLabel: "2025-26",
+    kind: "past",
+    standings: [],
+    leaders,
+    hasStandings: false,
+    hasLeaders,
+  };
+
+  return {
+    standings: [],
+    schedule: {
+      live: [],
+      past: [],
+      scheduled: [],
+      fetchedAt: new Date().toISOString(),
+      notice: "Schedule UI uses ESPN; EuroLeague match lines sync via official API.",
+    },
+    franchises,
+    leaders,
+    seasonSlices: [slice],
+    selectedSeasonYear: EUROLEAGUE_SEASON_YEAR,
+    notice: hasLeaders
+      ? "Season 2025-26 · leaders from synced EuroLeague boxscores"
+      : "Season 2025-26 · run npm run data:sync-euroleague to load clubs, rosters, and boxscores",
+  };
+}
+
 function sliceMeta(
   seasonYear: number,
   kind: "current" | "past",
@@ -221,6 +371,10 @@ async function loadBasketballCompetitionHubUncached(
   config: BasketballCompetitionConfig,
   options?: { seasonYear?: number }
 ): Promise<BasketballCompetitionHubData> {
+  if (config.slug === "euroleague") {
+    return loadEuroLeagueHub();
+  }
+
   if (config.slug === "nba") {
     const { currentYear, pastYear, defaultYear } = resolveNbaHubSeasonYears();
     const selectedMeta = resolveSelectedYear(

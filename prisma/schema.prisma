@@ -202,6 +202,13 @@ model PlayerSeasonStats {
   blocks             Int    @default(0)
   fieldGoalsPercent  Float  @default(0.0)
   threePointsPercent Float  @default(0.0)
+  /// American football native season lines (nullable so soccer/BB rows stay valid).
+  passingYards       Int?
+  rushingYards       Int?
+  receivingYards     Int?
+  touchdowns         Int?
+  sacks              Float?
+  totalYards         Int?
 
   @@unique([playerId, season])
   @@index([playerId])
@@ -230,6 +237,20 @@ model PlayerMatchStat {
   interceptions    Float     @default(0)
   passesCompleted  Int       @default(0)
   passesAttempted  Int       @default(0)
+  /// Basketball native match lines (nullable so soccer rows stay valid).
+  points               Int?
+  rebounds             Int?
+  steals               Int?
+  blocks               Int?
+  fieldGoalsMade       Int?
+  fieldGoalsAttempted  Int?
+  /// American football native match lines (nullable so soccer/BB rows stay valid).
+  passingYards         Int?
+  rushingYards         Int?
+  receivingYards       Int?
+  touchdowns           Int?
+  sacks                Float?
+  totalYards           Int?
   /// Match productivity proxy (Sofascore-inspired baseline ~6.5) — our formula.
   rating           Float?
   season           Int?

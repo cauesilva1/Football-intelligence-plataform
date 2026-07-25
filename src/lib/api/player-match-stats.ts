@@ -20,8 +20,24 @@ export type PlayerMatchStatUpsertInput = {
   interceptions: number;
   passesCompleted: number;
   passesAttempted: number;
+  /** Basketball native fields (nullable on soccer rows). */
+  points?: number | null;
+  rebounds?: number | null;
+  steals?: number | null;
+  blocks?: number | null;
+  fieldGoalsMade?: number | null;
+  fieldGoalsAttempted?: number | null;
+  /** American football native fields (nullable on soccer/BB rows). */
+  passingYards?: number | null;
+  rushingYards?: number | null;
+  receivingYards?: number | null;
+  touchdowns?: number | null;
+  sacks?: number | null;
+  totalYards?: number | null;
   season?: number | null;
   source?: string;
+  /** When set, skip soccer computeMatchRating (basketball/AF boxscores). */
+  ratingOverride?: number | null;
 };
 
 export function buildEspnEventKey(espnSlug: string, eventId: string): string {
@@ -32,15 +48,18 @@ export async function upsertPlayerMatchStat(input: PlayerMatchStatUpsertInput): 
   if (!isDbSource()) return;
 
   const prisma = getPrisma();
-  const rating = computeMatchRating({
-    minutesPlayed: input.minutesPlayed,
-    goals: input.goals,
-    assists: input.assists,
-    tackles: input.tackles,
-    interceptions: input.interceptions,
-    passesCompleted: input.passesCompleted,
-    passesAttempted: input.passesAttempted,
-  });
+  const rating =
+    input.ratingOverride !== undefined
+      ? input.ratingOverride
+      : computeMatchRating({
+          minutesPlayed: input.minutesPlayed,
+          goals: input.goals,
+          assists: input.assists,
+          tackles: input.tackles,
+          interceptions: input.interceptions,
+          passesCompleted: input.passesCompleted,
+          passesAttempted: input.passesAttempted,
+        });
 
   await prisma.playerMatchStat.upsert({
     where: {
@@ -65,6 +84,18 @@ export async function upsertPlayerMatchStat(input: PlayerMatchStatUpsertInput): 
       interceptions: input.interceptions,
       passesCompleted: input.passesCompleted,
       passesAttempted: input.passesAttempted,
+      points: input.points ?? undefined,
+      rebounds: input.rebounds ?? undefined,
+      steals: input.steals ?? undefined,
+      blocks: input.blocks ?? undefined,
+      fieldGoalsMade: input.fieldGoalsMade ?? undefined,
+      fieldGoalsAttempted: input.fieldGoalsAttempted ?? undefined,
+      passingYards: input.passingYards ?? undefined,
+      rushingYards: input.rushingYards ?? undefined,
+      receivingYards: input.receivingYards ?? undefined,
+      touchdowns: input.touchdowns ?? undefined,
+      sacks: input.sacks ?? undefined,
+      totalYards: input.totalYards ?? undefined,
       rating: rating ?? undefined,
       season: input.season ?? undefined,
       source: input.source ?? "espn",
@@ -83,6 +114,20 @@ export async function upsertPlayerMatchStat(input: PlayerMatchStatUpsertInput): 
       interceptions: input.interceptions,
       passesCompleted: input.passesCompleted,
       passesAttempted: input.passesAttempted,
+      ...(input.points != null ? { points: input.points } : {}),
+      ...(input.rebounds != null ? { rebounds: input.rebounds } : {}),
+      ...(input.steals != null ? { steals: input.steals } : {}),
+      ...(input.blocks != null ? { blocks: input.blocks } : {}),
+      ...(input.fieldGoalsMade != null ? { fieldGoalsMade: input.fieldGoalsMade } : {}),
+      ...(input.fieldGoalsAttempted != null
+        ? { fieldGoalsAttempted: input.fieldGoalsAttempted }
+        : {}),
+      ...(input.passingYards != null ? { passingYards: input.passingYards } : {}),
+      ...(input.rushingYards != null ? { rushingYards: input.rushingYards } : {}),
+      ...(input.receivingYards != null ? { receivingYards: input.receivingYards } : {}),
+      ...(input.touchdowns != null ? { touchdowns: input.touchdowns } : {}),
+      ...(input.sacks != null ? { sacks: input.sacks } : {}),
+      ...(input.totalYards != null ? { totalYards: input.totalYards } : {}),
       rating: rating ?? undefined,
       season: input.season ?? undefined,
       source: input.source ?? "espn",

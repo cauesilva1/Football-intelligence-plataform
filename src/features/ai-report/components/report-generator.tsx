@@ -131,10 +131,12 @@ export function ReportGenerator({
   const exportPdf = useCallback(() => {
     if (!report || !selectedPlayer) return;
     const note = shortlistEntry?.note?.trim();
+    const isBasketball = selectedPlayer.sport === "BASKETBALL";
     const blob = buildScoutBriefPdf({
       playerName: selectedPlayer.fullName,
       position: selectedPlayer.position,
       club: selectedPlayer.teamShortName ?? selectedPlayer.teamName ?? "—",
+      age: selectedPlayer.age,
       rating: report.overallRating,
       minutes: 0,
       summary: report.summary,
@@ -142,11 +144,15 @@ export function ReportGenerator({
       risks: report.weaknesses,
       recommendation: report.recommendation,
       keyRates: [
-        `Overall rating: ${report.overallRating.toFixed(1)} (same rules as profile)`,
+        `Overall rating: ${report.overallRating.toFixed(1)} (same rules as profile / ${
+          isBasketball ? "basketball" : "soccer"
+        } methodology)`,
         shortlistEntry?.tag ? `Shortlist: ${shortlistEntry.tag}` : null,
         note ? `Scout note: ${note.slice(0, 160)}${note.length > 160 ? "…" : ""}` : null,
         `Style: ${report.playingStyle.label}`,
-        `Systems: ${report.tacticalFit.systems.join(", ") || "—"}`,
+        isBasketball
+          ? `Schemes: ${report.tacticalFit.systems.join(", ") || "—"}`
+          : `Systems: ${report.tacticalFit.systems.join(", ") || "—"}`,
         `Roles: ${report.tacticalFit.roles.join(", ") || "—"}`,
       ].filter((line): line is string => line != null),
     });

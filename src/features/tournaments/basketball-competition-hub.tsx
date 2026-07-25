@@ -96,6 +96,13 @@ export function BasketballCompetitionHub({
             >
               All NBA franchises
             </Link>
+          ) : competition.slug === "euroleague" ? (
+            <Link
+              href="/teams?league=euroleague"
+              className="text-sm text-muted-foreground hover:text-primary"
+            >
+              Clubs in scouting
+            </Link>
           ) : (
             <Link
               href="/teams?league=ncaa"

@@ -23,15 +23,21 @@
     "data:sync-basquete": "tsx src/scripts/sync-basketball-ecosystem.ts",
     "data:sync-nba-teste": "tsx src/scripts/sync-nba-only-history.ts",
     "data:sync-boxscore-basquete": "tsx src/scripts/sync-basketball-boxscores.ts",
+    "data:backfill-boxscores-basquete": "tsx src/scripts/backfill-basketball-boxscores.ts",
+    "data:migrate-bb-match-native": "tsx src/scripts/migrate-bb-match-native.ts",
+    "data:sync-euroleague": "tsx src/scripts/sync-euroleague.ts",
     "data:cron-basquete": "tsx src/scripts/cron-basketball-sync.ts",
     "data:sync-nba-elencos": "tsx src/scripts/sync-nba-teams-players.ts",
     "data:sync-ncaa-teams": "tsx src/scripts/sync-ncaa-teams.ts",
     "data:sync-ncaa-rosters": "tsx src/scripts/sync-ncaa-rosters.ts",
     "data:sync-af-rosters": "tsx src/scripts/sync-american-football-rosters.ts",
+    "data:backfill-boxscores-af": "tsx src/scripts/backfill-football-boxscores.ts",
+    "data:migrate-af-match-native": "tsx src/scripts/migrate-af-match-native.ts",
+    "data:cron-af": "tsx src/scripts/cron-football-sync.ts",
     "perf:routes": "node scripts/measure-routes.mjs",
     "fetch:wc2026": "node scripts/fetch-wc2026.js",
     "data:seed-wc2026": "tsx src/scripts/seed-world-cup-2026.ts",
-    "test": "tsx --test src/lib/scoring/soccer-rankings.test.ts src/lib/scoring/soccer-rating.test.ts src/lib/metrics/per90.test.ts"
+    "test": "tsx --test src/lib/scoring/soccer-rankings.test.ts src/lib/scoring/soccer-rating.test.ts src/lib/scoring/basketball-rating.test.ts src/lib/scoring/football-rating.test.ts src/lib/metrics/per90.test.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.19.1",

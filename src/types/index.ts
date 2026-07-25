@@ -193,6 +193,10 @@ export interface PlayerFilters {
   minSteals?: number;
   minBlocks?: number;
   archetype?: "three-and-d" | "rim-protector";
+  /** American football — mínimos de produção (por jogo). */
+  minYardsPerGame?: number;
+  minTouchdownsPerGame?: number;
+  minSacksPerGame?: number;
   /** Origem da listagem — players = elenco; scouting = inteligência de mercado. */
   route?: "players" | "scouting";
   sortBy?:
@@ -204,6 +208,12 @@ export interface PlayerFilters {
     | "xGPer90"
     | "points"
     | "rebounds"
+    | "steals"
+    | "blocks"
+    | "totalYards"
+    | "touchdowns"
+    | "sacks"
+    | "yardsPerGame"
     | "age"
     | "marketValue"
     | "valueScore"
@@ -255,5 +265,13 @@ export interface DashboardOverview {
 
 export type PlayerLite = Pick<
   Player,
-  "id" | "fullName" | "knownAs" | "position" | "teamId" | "teamShortName" | "teamName"
+  | "id"
+  | "fullName"
+  | "knownAs"
+  | "position"
+  | "age"
+  | "sport"
+  | "teamId"
+  | "teamShortName"
+  | "teamName"
 >;

@@ -20,6 +20,7 @@ import { localizeScoutLabels } from "@/lib/scout-labels";
 import { reliableSoccerRating } from "@/lib/scoring/soccer-rankings";
 import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
 import { isDbSource } from "@/lib/data-source";
+import type { Sport } from "@/lib/sport";
 import type { Foot, Player, PlayerFilters, PlayerStatistic } from "@/types";
 import type { PlayerRepository } from "./types";
 
@@ -448,6 +449,9 @@ function buildPlayerWhere(filters: PlayerFilters): Prisma.PlayerWhereInput {
   if (typeof filters.maxMarketValue === "number") {
     where.marketValue = { lte: filters.maxMarketValue, gt: 0 };
   }
+  if (typeof filters.maxCapHit === "number") {
+    where.capHit = { lte: filters.maxCapHit, gt: 0 };
+  }
 
   return where;
 }
@@ -554,11 +558,17 @@ function needsMappedPlayerSort(filters: PlayerFilters): boolean {
     sortBy === "valueScore" ||
     sortBy === "points" ||
     sortBy === "rebounds" ||
+    sortBy === "steals" ||
+    sortBy === "blocks" ||
     sortBy === "goals" ||
     sortBy === "assists" ||
     sortBy === "goalsPer90" ||
     sortBy === "assistsPer90" ||
-    sortBy === "xGPer90"
+    sortBy === "xGPer90" ||
+    sortBy === "totalYards" ||
+    sortBy === "touchdowns" ||
+    sortBy === "sacks" ||
+    sortBy === "yardsPerGame"
   );
 }
 
@@ -566,7 +576,11 @@ function needsMappedPlayerFilter(filters: PlayerFilters): boolean {
   return (
     typeof filters.minRating === "number" ||
     typeof filters.minMinutes === "number" ||
-    typeof filters.maxMarketValue === "number"
+    typeof filters.maxMarketValue === "number" ||
+    typeof filters.maxCapHit === "number" ||
+    typeof filters.minYardsPerGame === "number" ||
+    typeof filters.minTouchdownsPerGame === "number" ||
+    typeof filters.minSacksPerGame === "number"
   );
 }
 
@@ -853,6 +867,8 @@ export const prismaPlayerRepository: PlayerRepository & {
       fullName: true,
       knownAs: true,
       position: true,
+      sport: true,
+      dateOfBirth: true,
       teamId: true,
       team: { select: { shortName: true, name: true } },
     } as const;
@@ -889,15 +905,21 @@ export const prismaPlayerRepository: PlayerRepository & {
 
     return [...byId.values()]
       .sort((a, b) => a.fullName.localeCompare(b.fullName))
-      .map((r) => ({
-        id: r.id,
-        fullName: r.fullName,
-        knownAs: r.knownAs,
-        position: r.position,
-        teamId: r.teamId ?? "",
-        teamShortName: r.team?.shortName,
-        teamName: r.team?.name,
-      }));
+      .map((r) => {
+        const ageMs = Date.now() - new Date(r.dateOfBirth).getTime();
+        const age = Math.max(15, Math.min(50, Math.floor(ageMs / (365.25 * 24 * 60 * 60 * 1000))));
+        return {
+          id: r.id,
+          fullName: r.fullName,
+          knownAs: r.knownAs,
+          position: r.position,
+          age,
+          sport: r.sport as Sport,
+          teamId: r.teamId ?? "",
+          teamShortName: r.team?.shortName,
+          teamName: r.team?.name,
+        };
+      });
   },
 
   async findForComparison(idA, idB) {

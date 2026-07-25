@@ -18,9 +18,12 @@ import { SortableTableHead } from "@/features/scouting/components/sortable-table
 import { ShortlistButton } from "@/features/shortlist/components/shortlist-button";
 import { computeXGPer90 } from "@/features/scouting/lib/filter-players";
 import { type ScoutingRoute } from "@/features/scouting/lib/filter-defaults";
-import { ratingColor, formatMarketValue } from "@/lib/utils";
+import { ratingColor, formatMarketValue, formatCapHit } from "@/lib/utils";
 import { soccerValueScore } from "@/lib/scoring/soccer-rankings";
+import { capValueScore } from "@/lib/scoring";
 import { hasReliableSoccerSample } from "@/lib/metrics/per90";
+import { hasReliableBasketballSample } from "@/lib/scoring/basketball-rating";
+import { hasReliableFootballSample } from "@/lib/scoring/football-rating";
 import type { Player, PlayerFilters } from "@/types";
 
 function basketballPoints(player: Player): number {
@@ -33,6 +36,14 @@ function basketballRebounds(player: Player): number {
 
 function basketballAssists(player: Player): number {
   return player.currentSeasonStats.perGame?.assists ?? player.currentSeasonStats.assists ?? 0;
+}
+
+function totalYardsOf(player: Player): number {
+  const s = player.currentSeasonStats;
+  return (
+    s.totalYards ??
+    (s.passingYards ?? 0) + (s.rushingYards ?? 0) + (s.receivingYards ?? 0)
+  );
 }
 
 function BasketballRosterTable({
@@ -120,6 +131,9 @@ function BasketballScoutingTable({
   basePath: string;
   route: ScoutingRoute;
 }) {
+  const showValue =
+    filters.sortBy === "valueScore" || typeof filters.maxCapHit === "number";
+
   return (
     <Table density="dense" stickyHeader>
       <TableHeader>
@@ -141,7 +155,7 @@ function BasketballScoutingTable({
               label={
                 <SortableTableHead label="Rating" sortKey="rating" filters={filters} basePath={basePath} route={route} />
               }
-              description={METRIC_GLOSSARY.rating}
+              description={METRIC_GLOSSARY.ratingBasketball}
               placement="bottom"
             />
           </TableHead>
@@ -154,6 +168,32 @@ function BasketballScoutingTable({
           <TableHead sticky>
             <SortableTableHead label="AST" sortKey="assists" filters={filters} basePath={basePath} route={route} />
           </TableHead>
+          {showValue ? (
+            <>
+              <TableHead sticky className="overflow-visible">
+                <GlossaryTooltip
+                  label={<span className="text-xs font-medium">Cap Hit</span>}
+                  description={METRIC_GLOSSARY.capHit}
+                  placement="bottom"
+                />
+              </TableHead>
+              <TableHead sticky className="overflow-visible">
+                <GlossaryTooltip
+                  label={
+                    <SortableTableHead
+                      label="Value Score"
+                      sortKey="valueScore"
+                      filters={filters}
+                      basePath={basePath}
+                      route={route}
+                    />
+                  }
+                  description={METRIC_GLOSSARY.capValueScore}
+                  placement="bottom"
+                />
+              </TableHead>
+            </>
+          ) : null}
           <TableHead sticky className="text-right">
             Actions
           </TableHead>
@@ -162,6 +202,12 @@ function BasketballScoutingTable({
       <TableBody>
         {players.map((player) => {
           const stats = player.currentSeasonStats;
+          const reliable = hasReliableBasketballSample({
+            matchesPlayed: stats.appearances,
+            minutesPlayed: stats.minutesPlayed,
+          });
+          const valueScore = capValueScore(stats.rating, player.capHit ?? 0);
+
           return (
             <TableRow key={player.id}>
               <TableCell>
@@ -191,16 +237,36 @@ function BasketballScoutingTable({
                   description={getPositionGlossaryDescription(player.position, "BASKETBALL")}
                 />
               </TableCell>
-              <TableCell className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
-                {stats.rating.toFixed(1)}
+              <TableCell>
+                <div className="flex flex-col gap-0.5">
+                  <span className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
+                    {stats.rating.toFixed(1)}
+                  </span>
+                  {!reliable && stats.appearances > 0 ? (
+                    <Badge variant="amber" className="w-fit text-2xs">
+                      Small sample
+                    </Badge>
+                  ) : null}
+                </div>
               </TableCell>
               <TableCell className="font-mono tabular-nums">{basketballPoints(player).toFixed(1)}</TableCell>
               <TableCell className="font-mono tabular-nums">{basketballRebounds(player).toFixed(1)}</TableCell>
               <TableCell className="font-mono tabular-nums">{basketballAssists(player).toFixed(1)}</TableCell>
+              {showValue ? (
+                <>
+                  <TableCell className="font-mono tabular-nums">{formatCapHit(player.capHit ?? 0)}</TableCell>
+                  <TableCell className="font-mono tabular-nums text-primary">
+                    {(player.capHit ?? 0) > 0 ? valueScore.toFixed(2) : "—"}
+                  </TableCell>
+                </>
+              ) : null}
               <TableCell className="text-right">
-                <Link href={`/players/${player.id}`} className={buttonVariants({ variant: "ghost", size: "xs" })}>
-                  <Eye className="h-3.5 w-3.5" /> Profile
-                </Link>
+                <div className="inline-flex items-center justify-end gap-0.5">
+                  <ShortlistButton playerId={player.id} compact />
+                  <Link href={`/players/${player.id}`} className={buttonVariants({ variant: "ghost", size: "xs" })}>
+                    <Eye className="h-3.5 w-3.5" /> Profile
+                  </Link>
+                </div>
               </TableCell>
             </TableRow>
           );
@@ -389,6 +455,9 @@ function AmericanFootballScoutingTable({
   basePath: string;
   route: ScoutingRoute;
 }) {
+  const showValue =
+    filters.sortBy === "valueScore" || typeof filters.maxCapHit === "number";
+
   return (
     <Table density="dense" stickyHeader>
       <TableHeader>
@@ -405,18 +474,62 @@ function AmericanFootballScoutingTable({
           <TableHead sticky>
             <SortableTableHead label="Pos." sortKey="position" filters={filters} basePath={basePath} route={route} />
           </TableHead>
-          <TableHead sticky>
-            <SortableTableHead label="Rating" sortKey="rating" filters={filters} basePath={basePath} route={route} />
+          <TableHead sticky className="overflow-visible">
+            <GlossaryTooltip
+              label={
+                <SortableTableHead label="Rating" sortKey="rating" filters={filters} basePath={basePath} route={route} />
+              }
+              description={METRIC_GLOSSARY.ratingFootball}
+              placement="bottom"
+            />
+          </TableHead>
+          <TableHead sticky className="overflow-visible text-right">
+            <GlossaryTooltip
+              label={
+                <SortableTableHead
+                  label="Yds/G"
+                  sortKey="yardsPerGame"
+                  filters={filters}
+                  basePath={basePath}
+                  route={route}
+                />
+              }
+              description={METRIC_GLOSSARY.yardsPerGame}
+              placement="bottom"
+            />
           </TableHead>
           <TableHead sticky className="text-right">
-            YDS
+            <SortableTableHead label="TD" sortKey="touchdowns" filters={filters} basePath={basePath} route={route} />
           </TableHead>
           <TableHead sticky className="text-right">
-            TD
+            <SortableTableHead label="Sacks" sortKey="sacks" filters={filters} basePath={basePath} route={route} />
           </TableHead>
-          <TableHead sticky className="text-right">
-            TKL
-          </TableHead>
+          {showValue ? (
+            <>
+              <TableHead sticky className="overflow-visible">
+                <GlossaryTooltip
+                  label={<span className="text-xs font-medium">Cap Hit</span>}
+                  description={METRIC_GLOSSARY.capHit}
+                  placement="bottom"
+                />
+              </TableHead>
+              <TableHead sticky className="overflow-visible">
+                <GlossaryTooltip
+                  label={
+                    <SortableTableHead
+                      label="Value Score"
+                      sortKey="valueScore"
+                      filters={filters}
+                      basePath={basePath}
+                      route={route}
+                    />
+                  }
+                  description={METRIC_GLOSSARY.capValueScore}
+                  placement="bottom"
+                />
+              </TableHead>
+            </>
+          ) : null}
           <TableHead sticky className="text-right">
             Actions
           </TableHead>
@@ -425,10 +538,15 @@ function AmericanFootballScoutingTable({
       <TableBody>
         {players.map((player) => {
           const stats = player.currentSeasonStats;
-          const yards =
-            stats.totalYards ??
-            (stats.passingYards ?? 0) + (stats.rushingYards ?? 0) + (stats.receivingYards ?? 0);
+          const games = Math.max(stats.appearances, 1);
+          const yards = totalYardsOf(player);
+          const yardsPerGame = yards / games;
           const touchdowns = stats.touchdowns ?? stats.goals ?? 0;
+          const reliable = hasReliableFootballSample({
+            matchesPlayed: stats.appearances,
+            minutesPlayed: stats.minutesPlayed,
+          });
+          const valueScore = capValueScore(stats.rating, player.capHit ?? 0);
 
           return (
             <TableRow key={player.id}>
@@ -444,7 +562,9 @@ function AmericanFootballScoutingTable({
                     size="sm"
                   />
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-foreground">{player.knownAs}</p>
+                    <Link href={`/players/${player.id}`} className="truncate font-medium text-foreground hover:text-primary">
+                      {player.knownAs}
+                    </Link>
                     <p className="truncate text-2xs text-muted-foreground">{player.nationality}</p>
                   </div>
                 </div>
@@ -457,18 +577,40 @@ function AmericanFootballScoutingTable({
                   description={getPositionGlossaryDescription(player.position, "AMERICAN_FOOTBALL")}
                 />
               </TableCell>
-              <TableCell className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
-                {stats.rating.toFixed(1)}
+              <TableCell>
+                <div className="flex flex-col gap-0.5">
+                  <span className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
+                    {stats.rating.toFixed(1)}
+                  </span>
+                  {!reliable && stats.appearances > 0 ? (
+                    <Badge variant="amber" className="w-fit text-2xs">
+                      Small sample
+                    </Badge>
+                  ) : null}
+                </div>
               </TableCell>
               <TableCell className="text-right font-mono tabular-nums">
-                {yards.toLocaleString("en-US")}
+                {reliable ? yardsPerGame.toFixed(1) : "—"}
               </TableCell>
               <TableCell className="text-right font-mono tabular-nums">{touchdowns}</TableCell>
-              <TableCell className="text-right font-mono tabular-nums">{stats.tacklesWon}</TableCell>
+              <TableCell className="text-right font-mono tabular-nums">
+                {(stats.sacks ?? 0).toFixed(1)}
+              </TableCell>
+              {showValue ? (
+                <>
+                  <TableCell className="font-mono tabular-nums">{formatCapHit(player.capHit ?? 0)}</TableCell>
+                  <TableCell className="font-mono tabular-nums text-primary">
+                    {(player.capHit ?? 0) > 0 ? valueScore.toFixed(2) : "—"}
+                  </TableCell>
+                </>
+              ) : null}
               <TableCell className="text-right">
-                <Link href={`/players/${player.id}`} className={buttonVariants({ variant: "ghost", size: "xs" })}>
-                  <Eye className="h-3.5 w-3.5" /> Profile
-                </Link>
+                <div className="inline-flex items-center justify-end gap-0.5">
+                  <ShortlistButton playerId={player.id} compact />
+                  <Link href={`/players/${player.id}`} className={buttonVariants({ variant: "ghost", size: "xs" })}>
+                    <Eye className="h-3.5 w-3.5" /> Profile
+                  </Link>
+                </div>
               </TableCell>
             </TableRow>
           );

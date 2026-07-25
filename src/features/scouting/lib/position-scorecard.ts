@@ -160,3 +160,222 @@ export function similarPositionGroup(position: string): string[] {
   if (group === "MID") return ["CM", "CDM", "CAM", "LM", "RM"];
   return ["CB", "LB", "RB", "LWB", "RWB", "CDM"];
 }
+
+export type BasketballPositionGroup = "GUARD" | "WING" | "BIG";
+
+export function basketballPositionGroup(position: string): BasketballPositionGroup {
+  if (["PG", "SG"].includes(position)) return "GUARD";
+  if (position === "SF") return "WING";
+  return "BIG";
+}
+
+/** Role-aware metric pack for basketball profiles — guard vs big highlight different lines. */
+export function buildBasketballPositionScorecard(
+  position: string,
+  stats: PlayerStatistic
+): { group: BasketballPositionGroup; title: string; metrics: ScorecardMetric[] } {
+  const group = basketballPositionGroup(position);
+  const g = stats.perGame ?? {
+    points: stats.points ?? 0,
+    rebounds: stats.rebounds ?? 0,
+    steals: stats.steals ?? 0,
+    blocks: stats.blocks ?? 0,
+    assists: stats.assists,
+  };
+  const reliable =
+    stats.appearances >= 10 && stats.minutesPlayed >= 200;
+  const mpg =
+    stats.appearances > 0 ? stats.minutesPlayed / stats.appearances : 0;
+
+  const shared: ScorecardMetric[] = [
+    {
+      key: "games",
+      label: "Games",
+      value: String(stats.appearances),
+    },
+    {
+      key: "mpg",
+      label: "MPG",
+      value: mpg > 0 ? mpg.toFixed(1) : "—",
+    },
+    {
+      key: "rating",
+      label: "Rating",
+      value: stats.rating.toFixed(1),
+      hint: reliable ? undefined : "Provisional (small sample)",
+    },
+  ];
+
+  if (group === "GUARD") {
+    return {
+      group,
+      title: "Guard scorecard",
+      metrics: [
+        ...shared,
+        { key: "ppg", label: "PPG", value: g.points.toFixed(1) },
+        { key: "apg", label: "APG", value: g.assists.toFixed(1) },
+        {
+          key: "3p",
+          label: "3P%",
+          value: `${(stats.threePointsPercent ?? 0).toFixed(1)}%`,
+        },
+        { key: "spg", label: "SPG", value: g.steals.toFixed(1) },
+      ],
+    };
+  }
+
+  if (group === "WING") {
+    return {
+      group,
+      title: "Wing scorecard",
+      metrics: [
+        ...shared,
+        { key: "ppg", label: "PPG", value: g.points.toFixed(1) },
+        { key: "rpg", label: "RPG", value: g.rebounds.toFixed(1) },
+        {
+          key: "3p",
+          label: "3P%",
+          value: `${(stats.threePointsPercent ?? 0).toFixed(1)}%`,
+        },
+        {
+          key: "fg",
+          label: "FG%",
+          value: `${(stats.fieldGoalsPercent ?? 0).toFixed(1)}%`,
+        },
+      ],
+    };
+  }
+
+  return {
+    group,
+    title: "Big scorecard",
+    metrics: [
+      ...shared,
+      { key: "rpg", label: "RPG", value: g.rebounds.toFixed(1) },
+      { key: "bpg", label: "BPG", value: g.blocks.toFixed(1) },
+      {
+        key: "fg",
+        label: "FG%",
+        value: `${(stats.fieldGoalsPercent ?? 0).toFixed(1)}%`,
+      },
+      { key: "ppg", label: "PPG", value: g.points.toFixed(1) },
+    ],
+  };
+}
+
+export function similarBasketballPositionGroup(position: string): string[] {
+  const group = basketballPositionGroup(position);
+  if (group === "GUARD") return ["PG", "SG"];
+  if (group === "WING") return ["SF", "SG", "PF"];
+  return ["PF", "C"];
+}
+
+export type FootballPositionGroup = "QB" | "SKILL" | "OL" | "DEFENSE" | "SPECIALIST";
+
+export function footballPositionGroup(position: string): FootballPositionGroup {
+  const p = position.toUpperCase();
+  if (p === "QB") return "QB";
+  if (["WR", "TE", "RB", "FB", "HB"].includes(p)) return "SKILL";
+  if (["OT", "OG", "C", "OL", "G", "T"].includes(p)) return "OL";
+  if (["K", "P", "LS", "PK"].includes(p)) return "SPECIALIST";
+  return "DEFENSE";
+}
+
+/** Role-aware metric pack for American football profiles. */
+export function buildFootballPositionScorecard(
+  position: string,
+  stats: PlayerStatistic
+): { group: FootballPositionGroup; title: string; metrics: ScorecardMetric[] } {
+  const group = footballPositionGroup(position);
+  const reliable = stats.appearances >= 6 && stats.minutesPlayed >= 360;
+  const games = Math.max(stats.appearances, 1);
+  const passYds = stats.passingYards ?? 0;
+  const rushYds = stats.rushingYards ?? 0;
+  const recYds = stats.receivingYards ?? 0;
+  const tds = stats.touchdowns ?? stats.goals ?? 0;
+  const sacks = stats.sacks ?? 0;
+
+  const shared: ScorecardMetric[] = [
+    { key: "games", label: "Games", value: String(stats.appearances) },
+    {
+      key: "rating",
+      label: "Rating",
+      value: stats.rating.toFixed(1),
+      hint: reliable ? undefined : "Provisional (small sample)",
+    },
+  ];
+
+  if (group === "QB") {
+    return {
+      group,
+      title: "QB scorecard",
+      metrics: [
+        ...shared,
+        { key: "pass", label: "Pass Yds", value: passYds.toLocaleString("en-US") },
+        { key: "td", label: "TD", value: String(tds) },
+        {
+          key: "ypg",
+          label: "Yds/G",
+          value: ((passYds + rushYds) / games).toFixed(0),
+        },
+        {
+          key: "comp",
+          label: "Comp %",
+          value: stats.passAccuracy > 0 ? `${stats.passAccuracy.toFixed(1)}%` : "—",
+        },
+      ],
+    };
+  }
+
+  if (group === "SKILL") {
+    return {
+      group,
+      title: "Skill scorecard",
+      metrics: [
+        ...shared,
+        { key: "recYds", label: "Rec Yds", value: recYds.toLocaleString("en-US") },
+        { key: "rush", label: "Rush Yds", value: rushYds.toLocaleString("en-US") },
+        { key: "td", label: "TD", value: String(tds) },
+        { key: "receptions", label: "Receptions", value: String(stats.assists) },
+      ],
+    };
+  }
+
+  if (group === "DEFENSE") {
+    return {
+      group,
+      title: "Defense scorecard",
+      metrics: [
+        ...shared,
+        { key: "tkl", label: "Tackles", value: String(stats.tacklesWon) },
+        { key: "sack", label: "Sacks", value: sacks.toFixed(1) },
+        { key: "int", label: "INT", value: String(stats.interceptions) },
+        { key: "td", label: "TD", value: String(tds) },
+      ],
+    };
+  }
+
+  return {
+    group,
+    title: group === "SPECIALIST" ? "Specialist scorecard" : "OL scorecard",
+    metrics: [
+      ...shared,
+      { key: "games2", label: "Games", value: String(stats.appearances) },
+      { key: "td", label: "TD", value: String(tds) },
+      {
+        key: "yards",
+        label: "Total Yds",
+        value: (stats.totalYards ?? 0).toLocaleString("en-US"),
+      },
+    ],
+  };
+}
+
+export function similarFootballPositionGroup(position: string): string[] {
+  const group = footballPositionGroup(position);
+  if (group === "QB") return ["QB"];
+  if (group === "SKILL") return ["WR", "TE", "RB", "FB", "HB"];
+  if (group === "OL") return ["OL", "OT", "OG", "C", "G", "T"];
+  if (group === "SPECIALIST") return ["K", "P", "LS", "PK"];
+  return ["DL", "LB", "CB", "S", "DE", "DT", "EDGE"];
+}

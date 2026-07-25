@@ -15,7 +15,7 @@ function num(value: string | undefined): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
-const SORT_KEYS: PlayerFilters["sortBy"][] = [
+const SORT_KEYS: NonNullable<PlayerFilters["sortBy"]>[] = [
   "rating",
   "goals",
   "assists",
@@ -24,6 +24,12 @@ const SORT_KEYS: PlayerFilters["sortBy"][] = [
   "xGPer90",
   "points",
   "rebounds",
+  "steals",
+  "blocks",
+  "totalYards",
+  "touchdowns",
+  "sacks",
+  "yardsPerGame",
   "age",
   "marketValue",
   "valueScore",
@@ -71,6 +77,9 @@ export function parsePlayerFilters(
     minSteals: num(param(searchParams.minSteals)),
     minBlocks: num(param(searchParams.minBlocks)),
     archetype: archetypeParam && ARCHETYPE_KEYS.includes(archetypeParam) ? archetypeParam : undefined,
+    minYardsPerGame: num(param(searchParams.minYardsPerGame)),
+    minTouchdownsPerGame: num(param(searchParams.minTouchdownsPerGame)),
+    minSacksPerGame: num(param(searchParams.minSacksPerGame)),
     route,
     sortBy: sortByParam && SORT_KEYS.includes(sortByParam) ? sortByParam : defaults.sortBy,
     sortDir: sortDir === "asc" || sortDir === "desc" ? sortDir : defaults.sortDir,
@@ -116,7 +125,17 @@ export function filtersToSearchParams(
   if (typeof filters.minSteals === "number") params.set("minSteals", String(filters.minSteals));
   if (typeof filters.minBlocks === "number") params.set("minBlocks", String(filters.minBlocks));
   if (filters.archetype) params.set("archetype", filters.archetype);
+  if (typeof filters.minYardsPerGame === "number") {
+    params.set("minYardsPerGame", String(filters.minYardsPerGame));
+  }
+  if (typeof filters.minTouchdownsPerGame === "number") {
+    params.set("minTouchdownsPerGame", String(filters.minTouchdownsPerGame));
+  }
+  if (typeof filters.minSacksPerGame === "number") {
+    params.set("minSacksPerGame", String(filters.minSacksPerGame));
+  }
   if (typeof filters.maxMarketValue === "number") params.set("maxMarketValue", String(filters.maxMarketValue));
+  if (typeof filters.maxCapHit === "number") params.set("maxCapHit", String(filters.maxCapHit));
   if (filters.sortBy && filters.sortBy !== (defaults.sortBy ?? "rating")) {
     params.set("sortBy", filters.sortBy);
   }
@@ -149,6 +168,11 @@ export function hasActiveFilters(filters: PlayerFilters): boolean {
       typeof filters.minThreePointsPercent === "number" ||
       typeof filters.minSteals === "number" ||
       typeof filters.minBlocks === "number" ||
+      typeof filters.minYardsPerGame === "number" ||
+      typeof filters.minTouchdownsPerGame === "number" ||
+      typeof filters.minSacksPerGame === "number" ||
+      typeof filters.maxCapHit === "number" ||
+      typeof filters.maxMarketValue === "number" ||
       filters.archetype
   );
 }

@@ -6,11 +6,14 @@ export interface BasketballCompetitionConfig {
   shortName: string;
   description: string;
   kind: BasketballCompetitionKind;
-  /** ESPN basketball league path segment */
+  /**
+   * ESPN basketball league path segment — empty for EuroLeague
+   * (official api-live.euroleague.net spine).
+   */
   espnSlug: string;
   competitionLabel: string;
   badge: string;
-  teamsLeagueParam: "nba" | "ncaa";
+  teamsLeagueParam: "nba" | "ncaa" | "euroleague";
   hasStandings: boolean;
   hasSchedule: boolean;
   hasLeaders: boolean;
@@ -45,6 +48,21 @@ export const BASKETBALL_COMPETITIONS: BasketballCompetitionConfig[] = [
     teamsLeagueParam: "ncaa",
     hasStandings: true,
     hasSchedule: true,
+    hasLeaders: true,
+  },
+  {
+    slug: "euroleague",
+    name: "EuroLeague",
+    shortName: "EuroLeague",
+    description:
+      "Europe's top club competition — clubs, rosters, and match lines via the official EuroLeague API.",
+    kind: "pro",
+    espnSlug: "euroleague",
+    competitionLabel: "EuroLeague",
+    badge: "Professional",
+    teamsLeagueParam: "euroleague",
+    hasStandings: false,
+    hasSchedule: false,
     hasLeaders: true,
   },
 ];

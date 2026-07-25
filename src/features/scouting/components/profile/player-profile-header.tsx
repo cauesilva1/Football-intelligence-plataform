@@ -26,9 +26,16 @@ export function PlayerProfileHeader({
   player: Player;
 }) {
   const stats = player.currentSeasonStats;
-  const isBasketball = player.sport === "BASKETBALL";
-  const positionSport = isBasketball ? "BASKETBALL" : "SOCCER";
-  const status = derivePlayerStatus(stats);
+  const sport = player.sport ?? "SOCCER";
+  const isBasketball = sport === "BASKETBALL";
+  const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
+  const usesCapHit = isBasketball || isAmericanFootball;
+  const positionSport = isBasketball
+    ? "BASKETBALL"
+    : isAmericanFootball
+      ? "AMERICAN_FOOTBALL"
+      : "SOCCER";
+  const status = derivePlayerStatus(stats, sport);
   const theme = getTeamTheme(player.competitionName, player.teamName);
 
   const statusVariant =
@@ -133,18 +140,18 @@ export function PlayerProfileHeader({
                 {stats.rating.toFixed(1)}
               </div>
             </div>
-            {!isBasketball ? (
-              <div>
-                <div className="text-2xs font-medium uppercase tracking-wider text-white/60">Market Value</div>
-                <div className="font-display text-2xl font-bold tabular-nums text-white">
-                  {formatMarketValue(player.marketValue)}
-                </div>
-              </div>
-            ) : (
+            {usesCapHit ? (
               <div>
                 <div className="text-2xs font-medium uppercase tracking-wider text-white/60">Cap Hit</div>
                 <div className="font-display text-2xl font-bold tabular-nums text-white">
                   {formatCapHit(player.capHit ?? 0)}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="text-2xs font-medium uppercase tracking-wider text-white/60">Market Value</div>
+                <div className="font-display text-2xl font-bold tabular-nums text-white">
+                  {formatMarketValue(player.marketValue)}
                 </div>
               </div>
             )}

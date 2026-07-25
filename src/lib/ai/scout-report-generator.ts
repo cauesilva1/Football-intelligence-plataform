@@ -1,12 +1,13 @@
 import { derivePlayingStyle } from "@/features/scouting/lib/playing-style";
 import { computeReportOverallRating } from "@/lib/scoring/soccer-rating";
+import { computeBasketballReportOverallRating } from "@/lib/scoring/basketball-rating";
 import type { Player, ScoutingReport, TacticalFit } from "@/lib/types";
 import { formatMarketValue } from "@/lib/utils";
 
 const OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-const SYSTEM_PROMPT = `You are a professional football scout analyst writing structured scouting reports for a analytics platform.
+const SYSTEM_PROMPT_SOCCER = `You are a professional football scout analyst writing structured scouting reports for a analytics platform.
 
 CRITICAL: Every text field in your JSON response MUST be written in English only (Player Summary, Playing Style, Technical Recommendation, strengths, weaknesses, tactical narrative).
 
@@ -30,6 +31,39 @@ Return ONLY valid JSON matching this schema:
 }
 
 Use industry-standard analytics language (per 90, xG, xA, rating). overallRating must be between 4.0 and 9.5.`;
+
+const SYSTEM_PROMPT_BASKETBALL = `You are a professional basketball scout analyst writing structured scouting reports for an analytics platform.
+
+CRITICAL: Every text field in your JSON response MUST be written in English only.
+
+Return ONLY valid JSON matching this schema:
+{
+  "summary": "string — quantitative player summary for the current season",
+  "strengths": ["string", "..."],
+  "weaknesses": ["string", "..."],
+  "playingStyle": {
+    "label": "string",
+    "description": "string",
+    "traits": ["string", "..."]
+  },
+  "tacticalFit": {
+    "systems": ["string", "..."],
+    "roles": ["string", "..."],
+    "narrative": "string"
+  },
+  "recommendation": "string — scouting verdict for recruitment / draft / free agency",
+  "overallRating": number
+}
+
+Use basketball analytics language (PPG, RPG, APG, FG%, 3P%, SPG, BPG, MPG). overallRating must be between 4.0 and 9.5.`;
+
+function isBasketballPlayer(player: Player): boolean {
+  return (player.sport ?? "SOCCER") === "BASKETBALL";
+}
+
+function resolveTacticalFit(player: Player): TacticalFit {
+  return isBasketballPlayer(player) ? buildBasketballTacticalFit(player) : buildTacticalFit(player);
+}
 
 interface LlmReportPayload {
   summary?: string;
@@ -128,7 +162,82 @@ function buildTacticalFit(player: Player): TacticalFit {
   };
 }
 
+function buildBasketballSummary(player: Player): string {
+  const s = player.currentSeasonStats;
+  const g = s.perGame ?? {
+    points: s.points ?? 0,
+    rebounds: s.rebounds ?? 0,
+    steals: s.steals ?? 0,
+    blocks: s.blocks ?? 0,
+    assists: s.assists,
+  };
+  return [
+    `${player.knownAs} (${player.age} years old, ${player.position}) played ${s.appearances} games (${s.minutesPlayed.toLocaleString("en-US")} min) this season. `,
+    `Per-game line: ${g.points.toFixed(1)} PPG, ${g.rebounds.toFixed(1)} RPG, ${g.assists.toFixed(1)} APG. `,
+    `Estimated market value ${formatMarketValue(player.marketValue)} with a prototype rating of ${s.rating.toFixed(1)}.`,
+  ].join("");
+}
+
+function buildBasketballTacticalFit(player: Player): TacticalFit {
+  const s = player.currentSeasonStats;
+  const g = s.perGame ?? {
+    points: s.points ?? 0,
+    rebounds: s.rebounds ?? 0,
+    steals: s.steals ?? 0,
+    blocks: s.blocks ?? 0,
+    assists: s.assists,
+  };
+  const pos = player.position;
+  const systems: string[] = [];
+  const roles: string[] = [];
+
+  if (pos === "PG" || pos === "SG") {
+    systems.push("Pick-and-roll heavy", "Five-out spacing", "Transition push");
+    roles.push(
+      g.assists >= 6 ? "Primary initiator" : "Secondary creator",
+      g.points >= 18 ? "Scoring guard" : "Connector"
+    );
+  } else if (pos === "SF") {
+    systems.push("Switch defense", "Motion offense", "Corner spacing");
+    roles.push(
+      g.points >= 16 ? "Two-way wing" : "3-and-D wing",
+      g.rebounds >= 6 ? "Rebounder wing" : "Cutter"
+    );
+  } else {
+    systems.push("Drop coverage", "PnR as roll man", "Glass-cleaning five");
+    roles.push(
+      g.rebounds >= 9 ? "Boards specialist" : "Stretch big",
+      g.blocks >= 1.2 ? "Rim protector" : "Finisher"
+    );
+  }
+
+  const style = derivePlayingStyle(player);
+  const narrative = [
+    `${style.label} profile fits lineups that value ${style.traits[0]?.toLowerCase() ?? "versatility"}.`,
+    `Across ${s.appearances} games, the player projects as ${roles[0]?.toLowerCase() ?? "a defined role"} in ${systems[0] ?? "flexible schemes"}.`,
+  ].join(" ");
+
+  return {
+    systems: [...new Set(systems)].slice(0, 3),
+    roles: [...new Set(roles)].slice(0, 3),
+    narrative,
+  };
+}
+
 function computeOverallRating(player: Player): number {
+  if ((player.sport ?? "SOCCER") === "BASKETBALL") {
+    const s = player.currentSeasonStats;
+    return computeBasketballReportOverallRating({
+      matchesPlayed: s.appearances,
+      minutesPlayed: s.minutesPlayed,
+      points: s.points ?? s.perGame?.points ?? 0,
+      rebounds: s.rebounds ?? s.perGame?.rebounds ?? 0,
+      assists: s.assists,
+      steals: s.steals ?? s.perGame?.steals ?? 0,
+      blocks: s.blocks ?? s.perGame?.blocks ?? 0,
+      rating: s.rating,
+    });
+  }
   return computeReportOverallRating(player.currentSeasonStats);
 }
 
@@ -139,7 +248,7 @@ function buildMockReport(player: Player): ScoutingReport {
   return {
     id: `report-${player.id}-${Date.now()}`,
     playerId: player.id,
-    summary: buildSummary(player),
+    summary: isBasketballPlayer(player) ? buildBasketballSummary(player) : buildSummary(player),
     strengths: player.strengths,
     weaknesses: player.weaknesses,
     playingStyle: {
@@ -147,7 +256,7 @@ function buildMockReport(player: Player): ScoutingReport {
       description: playingStyle.description,
       traits: playingStyle.traits,
     },
-    tacticalFit: buildTacticalFit(player),
+    tacticalFit: resolveTacticalFit(player),
     recommendation: buildRecommendation(rating, player.age),
     overallRating: rating,
     generatedBy: "mock-ai-v2",
@@ -157,7 +266,8 @@ function buildMockReport(player: Player): ScoutingReport {
 
 function buildPlayerContext(player: Player): string {
   const s = player.currentSeasonStats;
-  const p90 = s.per90;
+  const isBasketball = (player.sport ?? "SOCCER") === "BASKETBALL";
+  const g = s.perGame;
   return JSON.stringify(
     {
       player: {
@@ -168,21 +278,35 @@ function buildPlayerContext(player: Player): string {
         secondaryPosition: player.secondaryPosition,
         nationality: player.nationality,
         team: player.teamName,
+        sport: player.sport ?? "SOCCER",
         marketValue: formatMarketValue(player.marketValue),
         strengths: player.strengths,
         weaknesses: player.weaknesses,
       },
-      seasonStats: {
-        appearances: s.appearances,
-        minutesPlayed: s.minutesPlayed,
-        goals: s.goals,
-        assists: s.assists,
-        rating: s.rating,
-        xG: s.xG,
-        xA: s.xA,
-        passAccuracy: s.passAccuracy,
-        per90: p90,
-      },
+      seasonStats: isBasketball
+        ? {
+            appearances: s.appearances,
+            minutesPlayed: s.minutesPlayed,
+            rating: s.rating,
+            points: s.points ?? g?.points,
+            rebounds: s.rebounds ?? g?.rebounds,
+            assists: s.assists,
+            steals: s.steals ?? g?.steals,
+            blocks: s.blocks ?? g?.blocks,
+            fieldGoalsPercent: s.fieldGoalsPercent,
+            threePointsPercent: s.threePointsPercent,
+          }
+        : {
+            appearances: s.appearances,
+            minutesPlayed: s.minutesPlayed,
+            goals: s.goals,
+            assists: s.assists,
+            rating: s.rating,
+            xG: s.xG,
+            xA: s.xA,
+            passAccuracy: s.passAccuracy,
+            per90: s.per90,
+          },
     },
     null,
     2
@@ -205,6 +329,11 @@ async function generateWithOpenRouter(player: Player): Promise<ScoutingReport | 
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) return null;
 
+  const fallbackFit = resolveTacticalFit(player);
+  const systemPrompt = isBasketballPlayer(player)
+    ? SYSTEM_PROMPT_BASKETBALL
+    : SYSTEM_PROMPT_SOCCER;
+
   const response = await fetch(OPENROUTER_URL, {
     method: "POST",
     headers: {
@@ -216,7 +345,7 @@ async function generateWithOpenRouter(player: Player): Promise<ScoutingReport | 
     body: JSON.stringify({
       model: OPENROUTER_MODEL,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         {
           role: "user",
           content: `Generate a scouting report JSON for this player dataset:\n${buildPlayerContext(player)}`,
@@ -241,7 +370,7 @@ async function generateWithOpenRouter(player: Player): Promise<ScoutingReport | 
   if (!payload?.summary || !payload.recommendation) return null;
 
   const fallbackStyle = derivePlayingStyle(player);
-  // Always use unified soccer rating — do not trust a parallel LLM score.
+  // Always use unified sport rating — do not trust a parallel LLM score.
   const rating = computeOverallRating(player);
 
   return {
@@ -258,9 +387,9 @@ async function generateWithOpenRouter(player: Player): Promise<ScoutingReport | 
     tacticalFit: {
       systems: payload.tacticalFit?.systems?.length
         ? payload.tacticalFit.systems
-        : buildTacticalFit(player).systems,
-      roles: payload.tacticalFit?.roles?.length ? payload.tacticalFit.roles : buildTacticalFit(player).roles,
-      narrative: payload.tacticalFit?.narrative ?? buildTacticalFit(player).narrative,
+        : fallbackFit.systems,
+      roles: payload.tacticalFit?.roles?.length ? payload.tacticalFit.roles : fallbackFit.roles,
+      narrative: payload.tacticalFit?.narrative ?? fallbackFit.narrative,
     },
     recommendation: payload.recommendation,
     overallRating: rating,

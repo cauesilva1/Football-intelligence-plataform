@@ -44,6 +44,9 @@ export interface StoredPlayerFilterPrefs {
   minSteals?: number;
   minBlocks?: number;
   archetype?: "three-and-d" | "rim-protector";
+  minYardsPerGame?: number;
+  minTouchdownsPerGame?: number;
+  minSacksPerGame?: number;
   sortBy?:
     | "rating"
     | "goals"
@@ -53,6 +56,12 @@ export interface StoredPlayerFilterPrefs {
     | "xGPer90"
     | "points"
     | "rebounds"
+    | "steals"
+    | "blocks"
+    | "totalYards"
+    | "touchdowns"
+    | "sacks"
+    | "yardsPerGame"
     | "age"
     | "marketValue"
     | "valueScore"

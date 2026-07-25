@@ -1,5 +1,5 @@
 /**
- * Shared scoring / sample-size rules for soccer rates.
+ * Shared scoring / sample-size rules.
  * Keep in sync with docs/SCORING.md.
  */
 
@@ -13,9 +13,26 @@ export const SOCCER_RATE_MIN_MINUTES = 450;
  */
 export const SOCCER_RATE_SOFT_CAP = 1.8;
 
+/** Minimum games before basketball per-game rates / rating are treated as reliable. */
+export const BB_RATE_MIN_GAMES = 10;
+
+/** Minimum season minutes alongside BB_RATE_MIN_GAMES. */
+export const BB_RATE_MIN_MINUTES = 200;
+
+/** American football — reliable sample for season rating. */
+export const AF_RATE_MIN_GAMES = 6;
+/** Proxy minutes (games × 60) alongside AF_RATE_MIN_GAMES. */
+export const AF_RATE_MIN_MINUTES = 360;
+
 export const U23_MAX_AGE = 23;
 export const PROSPECT_MIN_RATING = 7;
 export const OPPORTUNITY_MAX_AGE = 25;
 export const OPPORTUNITY_MIN_RATING = 7.2;
 export const OPPORTUNITY_MAX_VALUE = 8_000_000;
 export const OPPORTUNITY_MAX_CAP_HIT = 5_000_000;
+
+/** Rating per $1M Cap Hit — BB/AF market bargains heuristic. */
+export function capValueScore(rating: number, capHit: number): number {
+  const value = Math.max(capHit, 500_000);
+  return Number((rating / (value / 1_000_000)).toFixed(3));
+}

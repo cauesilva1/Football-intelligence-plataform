@@ -43,6 +43,40 @@ ETL may store a position-aware **Rating Proxy** (`computeRatingProxy`); list/pro
 
 ---
 
+## Player Rating (basketball)
+
+**Where:** `computeBasketballRating` / `reliableBasketballRating` in `src/lib/scoring/basketball-rating.ts`
+
+Season counting stats are stored as **per-game averages**; minutes are a **season total**.
+
+**If games ≥ 10 and minutes ≥ 200:**
+
+\[
+\text{rating} = \mathrm{clamp}_{[5,10]}\bigl(6 + \mathrm{PPG}\cdot 0.08 + \mathrm{RPG}\cdot 0.04 + \mathrm{APG}\cdot 0.06 + \mathrm{SPG}\cdot 0.18 + \mathrm{BPG}\cdot 0.14\bigr)
+\]
+
+**Otherwise:** conservative baseline (max **7.0**).
+
+Match ratings use the same Sofascore-inspired ~6.5 baseline on boxscore lines. Native basketball fields on `PlayerMatchStat` (`points`, `rebounds`, `steals`, `blocks`, `fieldGoalsMade` / `fieldGoalsAttempted`) are the source of truth. Dual-write still fills legacy hijack columns (`goals→PTS`, `assists→AST`, `tackles→STL`, `interceptions→BLK`, `passesCompleted→REB`) for rollback until `data:migrate-bb-match-native` has been applied everywhere.
+
+---
+
+## Player Rating (American football)
+
+**Where:** `computeFootballRating` / `reliableFootballRating` in `src/lib/scoring/football-rating.ts`
+
+Season counting stats are **season totals** (yards/TDs); minutes are a **proxy** (`games × 60`). Role groups (QB / skill / defense / OL / specialist) tilt the formula.
+
+**If games ≥ 6 and minutes ≥ 360:**
+
+Role-aware clamp to \[5, 10\] from yards/game, TD/game, tackles/game, sacks/game (see source).
+
+**Otherwise:** conservative baseline (max **7.0**).
+
+Match ratings use baseline ~6.5 on boxscore lines. Native AF fields on `PlayerMatchStat` / `PlayerSeasonStats` (`passingYards`, `rushingYards`, `receivingYards`, `touchdowns`, `sacks`, `totalYards`) are preferred; dual-write keeps legacy hijack (`goals→TD`, `points→yards`, …) until `data:migrate-af-match-native`.
+
+---
+
 ## Top Prospect / Best Performers / Market Opportunity
 
 Short definitions (also on the dashboard):
@@ -123,12 +157,13 @@ We **can** mirror publicly described *design ideas*:
 
 ## Match rating (Stage 6)
 
-**Where:** `computeMatchRating` in `src/lib/scoring/soccer-rating.ts`  
+**Soccer — where:** `computeMatchRating` in `src/lib/scoring/soccer-rating.ts`  
+**Basketball — where:** `computeBasketballMatchRating` in `src/lib/scoring/basketball-rating.ts`  
 **Stored on:** `PlayerMatchStat.rating` (one row per player × ESPN event)
 
 Public inspiration (Sofascore): start near **6.5**, then +/− from actions.
 
-Our formula (boxscore fields only):
+Soccer formula (boxscore fields only):
 
 - Baseline **6.5**
 - + goals (capped) / assists / tackles / interceptions
@@ -136,4 +171,12 @@ Our formula (boxscore fields only):
 - Dampen if minutes &lt; 45′
 - Clamp **[3, 10]**
 
-Season lists/rankings still use **season** rating (`reliableSoccerRating`). Match ratings power the profile “Recent appearances” list.
+Basketball formula:
+
+- Baseline **6.5**
+- + PTS / REB / AST / STL / BLK (capped)
+- FG% adjustment when ≥ 5 attempts
+- Dampen if minutes &lt; 24′
+- Clamp **[3, 10]**
+
+Season lists/rankings still use **season** rating. Match ratings power the profile “Recent appearances” list.

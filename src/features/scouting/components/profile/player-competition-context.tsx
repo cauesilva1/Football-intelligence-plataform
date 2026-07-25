@@ -47,14 +47,14 @@ function TeamMatchRow({ match }: { match: PlayerRecentMatch }) {
 function competitionsWithDefensiveData(rows: PlayerMatchAppearance[]): Set<string> {
   const withData = new Set<string>();
   for (const row of rows) {
-    if (row.tackles > 0 || row.interceptions > 0) {
+    if ((row.tackles ?? 0) > 0 || (row.interceptions ?? 0) > 0) {
       withData.add(row.competitionLabel ?? "");
     }
   }
   return withData;
 }
 
-function AppearanceRow({
+function SoccerAppearanceRow({
   row,
   hasDefensiveData,
 }: {
@@ -72,8 +72,6 @@ function AppearanceRow({
     row.opponentName != null
       ? `${row.isHome ? "vs" : "@"} ${row.opponentName}`
       : row.teamName ?? "Appearance";
-  // Only link when the appearance maps to a real Match row — external event keys
-  // from the boxscore feed cannot be resolved by /matches/[id].
   const href = row.matchId ? `/matches/${row.matchId}` : null;
 
   return (
@@ -92,7 +90,7 @@ function AppearanceRow({
       </span>
       <span className="hidden font-mono text-xs tabular-nums text-muted-foreground sm:inline">
         {hasDefensiveData
-          ? `Tkl ${row.tackles.toFixed(0)} · Int ${row.interceptions.toFixed(0)}`
+          ? `Tkl ${(row.tackles ?? 0).toFixed(0)} · Int ${(row.interceptions ?? 0).toFixed(0)}`
           : "—"}
       </span>
       <span className="font-mono text-xs font-semibold tabular-nums text-primary sm:text-right">
@@ -111,43 +109,151 @@ function AppearanceRow({
   );
 }
 
+/** BB rows prefer native columns; fall back to soccer-column hijack. */
+function BasketballAppearanceRow({ row }: { row: PlayerMatchAppearance }) {
+  const date = row.matchDate
+    ? new Date(row.matchDate).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "—";
+  const vs =
+    row.opponentName != null
+      ? `${row.isHome ? "vs" : "@"} ${row.opponentName}`
+      : row.teamName ?? "Appearance";
+  const points = row.points ?? row.goals;
+  const rebounds = row.rebounds ?? row.passesCompleted;
+  const steals = row.steals ?? row.tackles ?? 0;
+  const blocks = row.blocks ?? row.interceptions ?? 0;
+
+  return (
+    <li className="grid grid-cols-[1fr_auto] gap-2 border-b border-border/60 py-2 last:border-0 sm:grid-cols-[minmax(0,1.4fr)_repeat(5,auto)] sm:items-center">
+      <div className="min-w-0">
+        <p className="truncate text-sm text-foreground">{vs}</p>
+        <p className="text-2xs text-muted-foreground">
+          {row.competitionLabel ?? "NBA"} · {date}
+        </p>
+      </div>
+      <span className="font-mono text-xs tabular-nums text-muted-foreground sm:text-right">
+        {row.minutesPlayed}&apos;
+      </span>
+      <span className="hidden font-mono text-xs tabular-nums sm:inline">
+        {points} / {rebounds} / {row.assists}
+      </span>
+      <span className="hidden font-mono text-xs tabular-nums text-muted-foreground sm:inline">
+        Stl {Number(steals).toFixed(0)} · Blk {Number(blocks).toFixed(0)}
+      </span>
+      <span className="font-mono text-xs font-semibold tabular-nums text-primary sm:text-right">
+        {row.rating != null ? row.rating.toFixed(1) : "—"}
+      </span>
+      <span aria-hidden className="hidden text-2xs text-muted-foreground/50 sm:inline sm:text-right">
+        —
+      </span>
+    </li>
+  );
+}
+
+/** AF rows prefer native columns; fall back to soccer-column hijack. */
+function FootballAppearanceRow({ row }: { row: PlayerMatchAppearance }) {
+  const date = row.matchDate
+    ? new Date(row.matchDate).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "—";
+  const vs =
+    row.opponentName != null
+      ? `${row.isHome ? "vs" : "@"} ${row.opponentName}`
+      : row.teamName ?? "Appearance";
+  const passYds = row.passingYards ?? 0;
+  const rushYds = row.rushingYards ?? row.passesCompleted ?? 0;
+  const recYds = row.receivingYards ?? 0;
+  const tds = row.touchdowns ?? row.goals;
+  const sacks = row.sacks ?? 0;
+
+  return (
+    <li className="grid grid-cols-[1fr_auto] gap-2 border-b border-border/60 py-2 last:border-0 sm:grid-cols-[minmax(0,1.4fr)_repeat(5,auto)] sm:items-center">
+      <div className="min-w-0">
+        <p className="truncate text-sm text-foreground">{vs}</p>
+        <p className="text-2xs text-muted-foreground">
+          {row.competitionLabel ?? "NFL"} · {date}
+        </p>
+      </div>
+      <span className="font-mono text-xs tabular-nums text-muted-foreground sm:text-right">
+        {row.minutesPlayed}&apos;
+      </span>
+      <span className="hidden font-mono text-xs tabular-nums sm:inline">
+        {passYds + rushYds + recYds} yds · {tds} TD
+      </span>
+      <span className="hidden font-mono text-xs tabular-nums text-muted-foreground sm:inline">
+        Tkl {Number(row.tackles ?? 0).toFixed(0)} · Sk {Number(sacks).toFixed(1)}
+      </span>
+      <span className="font-mono text-xs font-semibold tabular-nums text-primary sm:text-right">
+        {row.rating != null ? row.rating.toFixed(1) : "—"}
+      </span>
+      <span aria-hidden className="hidden text-2xs text-muted-foreground/50 sm:inline sm:text-right">
+        —
+      </span>
+    </li>
+  );
+}
+
 export async function PlayerCompetitionContext({ player }: { player: Player }) {
-  if ((player.sport ?? "SOCCER") !== "SOCCER") return null;
+  const sport = player.sport ?? "SOCCER";
+  if (sport !== "SOCCER" && sport !== "BASKETBALL" && sport !== "AMERICAN_FOOTBALL") {
+    return null;
+  }
 
   const [appearances, teamMatches] = await Promise.all([
     getPlayerMatchAppearances(player.id, 12),
-    getRecentMatchesForTeam(player.teamId, 6),
+    sport === "SOCCER" ? getRecentMatchesForTeam(player.teamId, 6) : Promise.resolve([]),
   ]);
   const competition = player.competitionName ?? player.league;
   const defensiveDataCompetitions = competitionsWithDefensiveData(appearances);
 
-  // Only show the appearances panel when we have real per-match rows — never ops/empty noise.
   if (appearances.length === 0 && teamMatches.length === 0) return null;
+
+  const isBasketball = sport === "BASKETBALL";
+  const isFootball = sport === "AMERICAN_FOOTBALL";
 
   return (
     <div className="space-y-4">
       {appearances.length > 0 ? (
         <DataPanel
           title="Recent appearances"
-          description="Minutes, goals/assists, defensive actions, and match rating from recent games."
+          description={
+            isBasketball
+              ? "Minutes, PTS/REB/AST, steals/blocks, and match rating from recent games."
+              : isFootball
+                ? "Yards, TDs, tackles/sacks, and match rating from recent games."
+                : "Minutes, goals/assists, defensive actions, and match rating from recent games."
+          }
           density="dense"
         >
           <div className="mb-1 hidden text-2xs uppercase tracking-wider text-muted-foreground sm:grid sm:grid-cols-[minmax(0,1.4fr)_repeat(5,auto)] sm:gap-2">
             <span>Fixture</span>
             <span className="text-right">Min</span>
-            <span>G / A</span>
-            <span>Def</span>
+            <span>{isBasketball ? "Pts / Reb / Ast" : isFootball ? "Yds / TD" : "G / A"}</span>
+            <span>{isBasketball ? "Stl / Blk" : isFootball ? "Tkl / Sk" : "Def"}</span>
             <span className="text-right">Rating</span>
             <span className="text-right"> </span>
           </div>
           <ul>
-            {appearances.map((row) => (
-              <AppearanceRow
-                key={row.id}
-                row={row}
-                hasDefensiveData={defensiveDataCompetitions.has(row.competitionLabel ?? "")}
-              />
-            ))}
+            {appearances.map((row) =>
+              isBasketball ? (
+                <BasketballAppearanceRow key={row.id} row={row} />
+              ) : isFootball ? (
+                <FootballAppearanceRow key={row.id} row={row} />
+              ) : (
+                <SoccerAppearanceRow
+                  key={row.id}
+                  row={row}
+                  hasDefensiveData={defensiveDataCompetitions.has(row.competitionLabel ?? "")}
+                />
+              )
+            )}
           </ul>
         </DataPanel>
       ) : null}

@@ -2,16 +2,25 @@ import { ShieldCheck, TrendingDown, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataPanel } from "@/components/data/data-panel";
 import { derivePlayingStyle } from "@/features/scouting/lib/playing-style";
-import { deriveStrengthsWeaknesses } from "@/lib/metrics/player-enrichment";
+import {
+  deriveBasketballStrengthsWeaknesses,
+  deriveFootballStrengthsWeaknesses,
+  deriveStrengthsWeaknesses,
+} from "@/lib/metrics/player-enrichment";
 import { localizeScoutLabels } from "@/lib/scout-labels";
 import type { Player } from "@/types";
 
 export function PlayerAnalysisSection({ player }: { player: Player }) {
   const style = derivePlayingStyle(player);
-  const isSoccer = (player.sport ?? "SOCCER") === "SOCCER";
-  const derived = isSoccer
-    ? deriveStrengthsWeaknesses(player.currentSeasonStats, player.position)
-    : null;
+  const sport = player.sport ?? "SOCCER";
+  const derived =
+    sport === "SOCCER"
+      ? deriveStrengthsWeaknesses(player.currentSeasonStats, player.position)
+      : sport === "BASKETBALL"
+        ? deriveBasketballStrengthsWeaknesses(player.currentSeasonStats)
+        : sport === "AMERICAN_FOOTBALL"
+          ? deriveFootballStrengthsWeaknesses(player.currentSeasonStats)
+          : null;
   const strengths = localizeScoutLabels(derived?.strengths ?? player.strengths);
   const weaknesses = localizeScoutLabels(derived?.weaknesses ?? player.weaknesses);
 

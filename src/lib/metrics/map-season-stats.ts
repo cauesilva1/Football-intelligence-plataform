@@ -1,26 +1,11 @@
 import type { PlayerSeasonStats } from "@prisma/client";
 import { toPlayerStatistic, type StatisticInput } from "@/lib/metrics/map-statistic";
 import { computeSoccerRating } from "@/lib/scoring/soccer-rating";
+import { computeBasketballRating } from "@/lib/scoring/basketball-rating";
+import { computeFootballRating } from "@/lib/scoring/football-rating";
 import type { PlayerMetricPer90, PlayerStatistic } from "@/types";
 
 const CALENDAR_SEASONS = new Set(["2024", "2025", "2026", "2027"]);
-
-function estimateBasketballSeasonRating(stat: {
-  points: number;
-  rebounds: number;
-  assists: number;
-  steals: number;
-  blocks: number;
-}): number {
-  const rating =
-    6 +
-    stat.points * 0.08 +
-    stat.rebounds * 0.04 +
-    stat.assists * 0.05 +
-    stat.steals * 0.15 +
-    stat.blocks * 0.12;
-  return Number(Math.min(10, Math.max(5, rating)).toFixed(2));
-}
 
 /** Basquete: stats no banco são médias por jogo; normaliza para taxa por 48 min (padrão NBA). */
 function computeBasketballPer48(stat: PlayerSeasonStats): PlayerMetricPer90 {
@@ -104,7 +89,15 @@ function mapBasketballSeasonStatsRow(
     duelsWonPct: 0,
     yellowCards: 0,
     redCards: 0,
-    rating: estimateBasketballSeasonRating(stat),
+    rating: computeBasketballRating({
+      matchesPlayed: stat.matchesPlayed,
+      minutesPlayed: Math.round(stat.minutesPlayed),
+      points: stat.points,
+      rebounds: stat.rebounds,
+      assists: stat.assists,
+      steals: stat.steals,
+      blocks: stat.blocks,
+    }),
     points: stat.points,
     rebounds: stat.rebounds,
     steals: stat.steals,
@@ -122,42 +115,33 @@ function mapBasketballSeasonStatsRow(
   };
 }
 
-function estimateFootballSeasonRating(stat: {
-  totalYards: number;
-  touchdowns: number;
-  tackles: number;
-  sacks: number;
-  matchesPlayed: number;
-}): number {
-  const games = Math.max(stat.matchesPlayed, 1);
-  const yardsPerGame = stat.totalYards / games;
-  const tdPerGame = stat.touchdowns / games;
-  const rating =
-    6 +
-    yardsPerGame * 0.004 +
-    tdPerGame * 0.35 +
-    (stat.tackles / games) * 0.03 +
-    (stat.sacks / games) * 0.2;
-  return Number(Math.min(10, Math.max(5, rating)).toFixed(2));
-}
-
 function mapAmericanFootballSeasonStatsRow(
   stat: PlayerSeasonStats,
-  team?: { id: string; name: string; shortName: string }
+  team?: { id: string; name: string; shortName: string },
+  position = "WR"
 ): PlayerStatistic {
-  const passingYards = Math.round(stat.threePointsPercent || 0);
-  const rushingYards = stat.rebounds;
-  const receivingYards = stat.blocks;
-  const totalYards = stat.points || passingYards + rushingYards + receivingYards;
-  const touchdowns = stat.goals;
-  const sacks = Number((stat.steals / 10).toFixed(1));
-  const rating = estimateFootballSeasonRating({
-    totalYards,
-    touchdowns,
-    tackles: stat.tackles,
-    sacks,
-    matchesPlayed: stat.matchesPlayed,
-  });
+  const passingYards = stat.passingYards ?? Math.round(stat.threePointsPercent || 0);
+  const rushingYards = stat.rushingYards ?? stat.rebounds;
+  const receivingYards = stat.receivingYards ?? stat.blocks;
+  const totalYards =
+    stat.totalYards ?? (stat.points || passingYards + rushingYards + receivingYards);
+  const touchdowns = stat.touchdowns ?? stat.goals;
+  const sacks =
+    stat.sacks != null ? Number(stat.sacks.toFixed(1)) : Number((stat.steals / 10).toFixed(1));
+  const rating = computeFootballRating(
+    {
+      totalYards,
+      touchdowns,
+      tackles: stat.tackles,
+      sacks,
+      matchesPlayed: stat.matchesPlayed,
+      minutesPlayed: stat.minutesPlayed,
+      passingYards,
+      rushingYards,
+      receivingYards,
+    },
+    position
+  );
 
   return {
     id: stat.id,
