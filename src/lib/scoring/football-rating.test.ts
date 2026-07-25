@@ -53,6 +53,21 @@ describe("computeFootballRating", () => {
     );
     assert.ok(rating >= 7.5);
   });
+
+  it("weights the same production differently by position group", () => {
+    const production = {
+      matchesPlayed: 12,
+      minutesPlayed: 720,
+      totalYards: 800,
+      touchdowns: 4,
+      tackles: 80,
+      sacks: 8,
+      rushingYards: 800,
+    };
+    const asSkill = computeFootballRating(production, "RB");
+    const asDefense = computeFootballRating(production, "LB");
+    assert.notEqual(asSkill, asDefense);
+  });
 });
 
 describe("computeFootballMatchRating", () => {

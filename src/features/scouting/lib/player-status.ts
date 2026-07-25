@@ -1,5 +1,7 @@
 import type { PlayerStatistic } from "@/types";
 import {
+  AF_RATE_MIN_GAMES,
+  AF_RATE_MIN_MINUTES,
   BB_RATE_MIN_GAMES,
   BB_RATE_MIN_MINUTES,
   SOCCER_RATE_MIN_MINUTES,
@@ -57,6 +59,49 @@ export function derivePlayerStatus(
     return {
       label: "Squad Player",
       description: "Reduced minutes this season",
+      variant: "neutral",
+    };
+  }
+
+  if (sport === "AMERICAN_FOOTBALL") {
+    if (
+      appearances > 0 &&
+      (appearances < AF_RATE_MIN_GAMES || minutesPlayed < AF_RATE_MIN_MINUTES)
+    ) {
+      return {
+        label: "Small Sample",
+        description: `Under ${AF_RATE_MIN_GAMES} games or ${AF_RATE_MIN_MINUTES}' proxy — rating is provisional`,
+        variant: "amber",
+      };
+    }
+    if (appearances >= 12 && minutesPlayed >= AF_RATE_MIN_MINUTES * 2) {
+      return {
+        label: "Starter",
+        description: "Consistent snaps this season",
+        variant: "default",
+      };
+    }
+    if (appearances >= 6 && minutesPlayed >= AF_RATE_MIN_MINUTES) {
+      return {
+        label: "Rotation",
+        description: "Regular game involvement",
+        variant: "azure",
+      };
+    }
+    if (
+      rating >= 7.2 &&
+      appearances >= AF_RATE_MIN_GAMES &&
+      minutesPlayed >= AF_RATE_MIN_MINUTES
+    ) {
+      return {
+        label: "Prospect",
+        description: "Strong rating on a reliable sample",
+        variant: "amber",
+      };
+    }
+    return {
+      label: "Squad Player",
+      description: "Limited snaps this season",
       variant: "neutral",
     };
   }

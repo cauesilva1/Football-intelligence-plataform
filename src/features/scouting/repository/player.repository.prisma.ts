@@ -228,7 +228,8 @@ function mapPlayer(record: PrismaPlayerRow, options?: { season?: string }): Play
       record.sport,
       record.team
         ? { id: record.team.id, name: record.team.name, shortName: record.team.shortName }
-        : undefined
+        : undefined,
+      record.position
     )
   );
   const historyRaw = mergeSeasonHistories(legacyHistory, seasonStatsHistory);
@@ -297,15 +298,19 @@ function slimListStats(stats: PlayerStatistic, sport: Player["sport"]): PlayerSt
     return {
       ...base,
       ...shared,
+      appearances: stats.appearances,
+      minutesPlayed: stats.minutesPlayed,
       points: stats.points,
       rebounds: stats.rebounds,
       assists: stats.assists,
+      steals: stats.steals,
+      blocks: stats.blocks,
       perGame: {
         points: stats.perGame?.points ?? stats.points ?? 0,
         rebounds: stats.perGame?.rebounds ?? stats.rebounds ?? 0,
         assists: stats.perGame?.assists ?? stats.assists ?? 0,
-        steals: 0,
-        blocks: 0,
+        steals: stats.perGame?.steals ?? stats.steals ?? 0,
+        blocks: stats.perGame?.blocks ?? stats.blocks ?? 0,
       },
     };
   }
@@ -314,11 +319,14 @@ function slimListStats(stats: PlayerStatistic, sport: Player["sport"]): PlayerSt
     return {
       ...base,
       ...shared,
+      appearances: stats.appearances,
+      minutesPlayed: stats.minutesPlayed,
       passingYards: stats.passingYards,
       rushingYards: stats.rushingYards,
       receivingYards: stats.receivingYards,
       touchdowns: stats.touchdowns,
       tacklesWon: stats.tacklesWon,
+      sacks: stats.sacks,
       totalYards: stats.totalYards,
     };
   }

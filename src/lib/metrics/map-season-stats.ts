@@ -196,13 +196,14 @@ function mapAmericanFootballSeasonStatsRow(
 export function mapSeasonStatsRow(
   stat: PlayerSeasonStats,
   sport: string = "SOCCER",
-  team?: { id: string; name: string; shortName: string }
+  team?: { id: string; name: string; shortName: string },
+  position?: string
 ): PlayerStatistic {
   if (sport === "BASKETBALL") {
     return mapBasketballSeasonStatsRow(stat, team);
   }
   if (sport === "AMERICAN_FOOTBALL") {
-    return mapAmericanFootballSeasonStatsRow(stat, team);
+    return mapAmericanFootballSeasonStatsRow(stat, team, position ?? "WR");
   }
 
   return mapSoccerSeasonStatsRow(stat, team);
