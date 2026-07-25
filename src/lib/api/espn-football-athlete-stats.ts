@@ -199,27 +199,24 @@ export async function fetchFootballAthleteSeasonStats(options: {
 }
 
 /**
- * Encode AF season production into the shared PlayerSeasonStats columns.
- * Decode in map-season-stats.ts.
+ * Encode AF season production into PlayerSeasonStats.
+ * Native yards/TD/sacks columns are the source of truth — no soccer-column hijack.
  */
 export function encodeFootballStatsForPrisma(stats: ParsedFootballSeasonStats) {
   return {
     matchesPlayed: Math.round(stats.matchesPlayed),
     minutesPlayed: Math.round(stats.matchesPlayed * 60),
-    goals: Math.round(stats.touchdowns),
+    goals: 0,
     assists: Math.round(stats.receptions || stats.completions),
-    points: Math.round(stats.totalYards),
-    rebounds: Math.round(stats.rushingYards),
-    blocks: Math.round(stats.receivingYards),
-    // steals stores sacks * 10 so half-sacks survive as Int
-    steals: Math.round(stats.sacks * 10),
-    // threePointsPercent stores passing yards (Float)
-    threePointsPercent: stats.passingYards,
+    points: 0,
+    rebounds: 0,
+    blocks: 0,
+    steals: 0,
+    threePointsPercent: 0,
     fieldGoalsPercent: 0,
     tackles: stats.tackles,
     interceptions: stats.interceptions,
     passingAccuracy: stats.completionPct,
-    // Native dual-write
     passingYards: Math.round(stats.passingYards),
     rushingYards: Math.round(stats.rushingYards),
     receivingYards: Math.round(stats.receivingYards),

@@ -167,7 +167,7 @@ function FootballAppearanceRow({ row }: { row: PlayerMatchAppearance }) {
     row.opponentName != null
       ? `${row.isHome ? "vs" : "@"} ${row.opponentName}`
       : row.teamName ?? "Appearance";
-  const passYds = row.passingYards ?? 0;
+  const passYds = row.passingYards ?? row.passesAttempted ?? 0;
   const rushYds = row.rushingYards ?? row.passesCompleted ?? 0;
   const recYds = row.receivingYards ?? 0;
   const tds = row.touchdowns ?? row.goals;

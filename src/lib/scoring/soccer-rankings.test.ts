@@ -6,6 +6,7 @@ import {
   passesSoccerTopProspect,
   passesSoccerHiddenGem,
 } from "@/lib/scoring/soccer-rankings";
+import { computeSoccerRating } from "@/lib/scoring/soccer-rating";
 import type { Player } from "@/types";
 
 function basePlayer(overrides: {
@@ -89,24 +90,29 @@ describe("reliableSoccerRating", () => {
     assert.ok(rating <= 7);
   });
 
-  it("keeps rate-based rating for reliable samples", () => {
+  it("uses canonical rate-based rating for reliable samples", () => {
     const rating = reliableSoccerRating({
       minutesPlayed: 900,
       goals: 10,
       assists: 5,
-      rating: 7.2,
+      rating: 9.5,
     });
-    assert.ok(rating >= 6.5);
+    assert.equal(
+      rating,
+      computeSoccerRating({ minutesPlayed: 900, goals: 10, assists: 5 })
+    );
+    assert.ok(rating >= 6.4);
     assert.ok(rating <= 10);
   });
 
-  it("damps stored 9.5 when rates imply mediocre output", () => {
+  it("ignores inflated stored ratings when rates are mediocre", () => {
     const rating = reliableSoccerRating({
       minutesPlayed: 900,
       goals: 0,
       assists: 0,
       rating: 9.5,
     });
+    assert.equal(rating, computeSoccerRating({ minutesPlayed: 900, goals: 0, assists: 0 }));
     assert.ok(rating < 7.5);
   });
 });

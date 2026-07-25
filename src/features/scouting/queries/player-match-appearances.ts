@@ -17,6 +17,8 @@ export type PlayerMatchAppearance = {
   interceptions: number | null;
   /** Soccer: passes completed. Basketball fallback hijack: rebounds. */
   passesCompleted: number;
+  /** Soccer: passes attempted. AF legacy hijack: passing yards. */
+  passesAttempted: number;
   /** Basketball native (preferred over hijack). */
   points: number | null;
   rebounds: number | null;
@@ -62,6 +64,7 @@ export async function getPlayerMatchAppearances(
       tackles: row.tackles,
       interceptions: row.interceptions,
       passesCompleted: row.passesCompleted,
+      passesAttempted: row.passesAttempted,
       points: row.points,
       rebounds: row.rebounds,
       steals: row.steals,

@@ -21,6 +21,18 @@ describe("computeSoccerRating", () => {
   });
 });
 
+describe("reliableSoccerRating", () => {
+  it("ignores inflated stored ratings and uses the canonical formula", () => {
+    const rating = reliableSoccerRating({
+      minutesPlayed: 900,
+      goals: 0,
+      assists: 0,
+      rating: 9.5,
+    });
+    assert.equal(rating, computeSoccerRating({ minutesPlayed: 900, goals: 0, assists: 0 }));
+  });
+});
+
 describe("computeReportOverallRating", () => {
   it("matches reliableSoccerRating rounding", () => {
     const stat = { minutesPlayed: 900, goals: 0, assists: 0, rating: 9.5 };

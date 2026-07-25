@@ -1,5 +1,5 @@
 import type { Foot } from "@/types";
-import { computeRatingProxy } from "@/lib/scoring/soccer-rating";
+import { computeSoccerRating } from "@/lib/scoring/soccer-rating";
 
 export interface EnrichableStatistic {
   minutesPlayed: number;
@@ -31,7 +31,7 @@ function per90(total: number, minutesPlayed: number): number {
   return (total / minutesPlayed) * 90;
 }
 
-export { computeRatingProxy };
+export { computeSoccerRating as computeRatingProxy };
 
 /** xG estimado (totais da temporada) — proxy para UI e radar. */
 export function estimateXG(stat: Pick<EnrichableStatistic, "goals" | "shotsOnTarget">): number {
@@ -165,7 +165,7 @@ export function enrichPlayerRecord(
   player: EnrichablePlayer,
   stat: EnrichableStatistic
 ): EnrichedPlayerData {
-  const rating = computeRatingProxy(stat, player.position);
+  const rating = computeSoccerRating(stat);
   const radar = estimateRadarSupport(stat);
   const { strengths, weaknesses } = deriveStrengthsWeaknesses(stat, player.position);
 

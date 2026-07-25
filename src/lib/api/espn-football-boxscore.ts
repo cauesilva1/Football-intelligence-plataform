@@ -264,32 +264,18 @@ async function accumulateSeasonStats(
         playerId,
         season,
         ...encoded,
-        passingYards: Math.round(line.passingYards),
-        rushingYards: Math.round(line.rushingYards),
-        receivingYards: Math.round(line.receivingYards),
-        touchdowns: Math.round(line.touchdowns),
-        sacks: line.sacks,
-        totalYards: Math.round(yards),
       },
     });
     return;
   }
 
-  // Season AF rows store season totals for yards/TDs (not rolling PPG) when from boxscore —
-  // prefer cumulative totals so match backfill is additive.
+  // Season AF rows store season totals for yards/TDs (additive from boxscore).
   await prisma.playerSeasonStats.update({
     where: { playerId_season: { playerId, season } },
     data: {
       matchesPlayed: existing.matchesPlayed + 1,
       minutesPlayed: existing.minutesPlayed + 60,
-      goals: existing.goals + Math.round(line.touchdowns),
       assists: existing.assists + Math.round(line.receptions || line.completions),
-      points: existing.points + Math.round(yards),
-      rebounds: existing.rebounds + Math.round(line.rushingYards),
-      blocks: existing.blocks + Math.round(line.receivingYards),
-      steals: existing.steals + Math.round(line.sacks * 10),
-      threePointsPercent:
-        (existing.threePointsPercent || 0) + line.passingYards,
       tackles: existing.tackles + line.tackles,
       interceptions: existing.interceptions + line.interceptions,
       passingAccuracy: rollingAverage(
@@ -337,14 +323,13 @@ async function upsertMatchLine(
     opponentName: opponentName ?? undefined,
     isHome,
     minutesPlayed: minutes,
-    // Legacy hijack dual-write
-    goals: Math.round(line.touchdowns),
-    assists: Math.round(line.receptions || line.completions),
+    // Soccer-shared columns unused for AF (tackles/ints are real).
+    goals: 0,
+    assists: 0,
     tackles: line.tackles,
     interceptions: line.interceptions,
-    passesCompleted: Math.round(line.rushingYards),
-    passesAttempted: Math.round(line.passingYards),
-    // Basketball columns unused — leave null
+    passesCompleted: 0,
+    passesAttempted: 0,
     // AF native
     passingYards: Math.round(line.passingYards),
     rushingYards: Math.round(line.rushingYards),

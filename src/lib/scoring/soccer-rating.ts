@@ -1,9 +1,8 @@
 /**
  * Single source of truth for soccer player ratings.
  *
- * Display / list / map-season / reports all use these helpers.
- * ETL enrichment may still apply a position-aware proxy (see computeRatingProxy)
- * that is then dampened by reliableSoccerRating when stored values look inflated.
+ * ETL write, list/display, map-season, and reports all use the canonical
+ * productivity formula (methodology / docs): 6 + g90×0.35 + a90×0.25.
  */
 import { SOCCER_RATE_MIN_MINUTES, SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
 
@@ -19,8 +18,6 @@ export type SoccerRatingProxyStat = SoccerRatingStat & {
   yellowCards: number;
   redCards: number;
 };
-
-const DEFENSIVE_BONUS_POSITIONS = new Set(["GK", "CB", "LB", "RB", "CDM", "CM"]);
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -50,7 +47,7 @@ export function soccerRatingFromRates(stat: SoccerRatingStat): number {
   return Number(clamp(rating, 5, 10).toFixed(2));
 }
 
-/** Compute rating from season totals — used by map-season-stats and reports. */
+/** Compute rating from season totals — used by map-season-stats, ETL, and reports. */
 export function computeSoccerRating(stat: SoccerRatingStat): number {
   if (stat.minutesPlayed < SOCCER_RATE_MIN_MINUTES) {
     return soccerRatingSmallSample(stat);
@@ -59,47 +56,19 @@ export function computeSoccerRating(stat: SoccerRatingStat): number {
 }
 
 /**
- * Position-aware proxy for ETL enrichment (defensive bonuses).
- * List/display still run through reliableSoccerRating.
+ * @deprecated Alias of computeSoccerRating — kept so ETL imports keep working.
+ * Position/defense bonuses are no longer applied (methodology is goals/assists only).
  */
-export function computeRatingProxy(stat: SoccerRatingProxyStat, position: string): number {
-  if (stat.minutesPlayed < SOCCER_RATE_MIN_MINUTES) {
-    return soccerRatingSmallSample(stat);
-  }
-
-  const g90 = softCapRate(stat.goals, stat.minutesPlayed);
-  const a90 = softCapRate(stat.assists, stat.minutesPlayed);
-  const tkl90 = softCapRate(stat.tacklesWon, stat.minutesPlayed, 8);
-  const int90 = softCapRate(stat.interceptions, stat.minutesPlayed, 8);
-
-  let rating = 6.0 + g90 * 1.25 + a90 * 0.95;
-
-  if (DEFENSIVE_BONUS_POSITIONS.has(position)) {
-    rating += tkl90 * 0.38 + int90 * 0.28;
-  }
-
-  rating -= stat.redCards * 0.45;
-  rating -= stat.yellowCards * 0.04;
-
-  return Number(clamp(rating, 4.0, 9.5).toFixed(2));
+export function computeRatingProxy(stat: SoccerRatingProxyStat, _position: string): number {
+  return computeSoccerRating(stat);
 }
 
 /**
- * Display / filter rating for list rows.
- * Tiny samples must not keep a stored 9.5 from defensive per-90 noise.
+ * Display / filter rating for list rows — always the canonical formula
+ * (ignores stored proxy values so list/profile/report stay aligned).
  */
 export function reliableSoccerRating(stat: SoccerRatingStat & { rating: number }): number {
-  if (stat.minutesPlayed < SOCCER_RATE_MIN_MINUTES) {
-    return soccerRatingSmallSample(stat);
-  }
-
-  const fromRates = soccerRatingFromRates(stat);
-
-  if (stat.rating >= 8.5 && fromRates < 7.5) {
-    return fromRates;
-  }
-
-  return Number(stat.rating.toFixed(2));
+  return computeSoccerRating(stat);
 }
 
 /** Report overall rating — same rules as list/profile (no parallel AI formula). */
