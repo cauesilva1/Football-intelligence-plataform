@@ -26,10 +26,11 @@ export const METRIC_GLOSSARY = {
   valueScore:
     "Rating per €1M of estimated market value — higher means stronger performance relative to price (Hidden Gems heuristic).",
   capValueScore:
-    "Rating per $1M of Cap Hit — higher means stronger performance relative to salary cost (BB/AF bargains heuristic).",
+    "Rating per $1M of Cap Hit — higher means stronger performance relative to salary cost (NBA / NFL bargains heuristic).",
   ppg: "Points per game (season average as stored for basketball).",
   rpg: "Rebounds per game (season average).",
   apg: "Assists per game (season average).",
   yardsPerGame: "Total yards (pass + rush + rec) divided by games played.",
-  capHit: "Annual Cap Hit in USD — salary impact against the team salary cap.",
+  capHit:
+    "Annual Cap Hit in USD from ESPN roster contracts (NBA and NFL). NCAA, EuroLeague, and CFB usually have no salary feed — Cap Hit stays blank.",
 } as const;

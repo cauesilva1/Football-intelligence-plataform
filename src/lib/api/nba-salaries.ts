@@ -12,7 +12,7 @@ export interface EspnAthleteContract {
 }
 
 export interface EspnRosterAthlete {
-  id: string;
+  id?: string;
   contract?: EspnAthleteContract;
 }
 

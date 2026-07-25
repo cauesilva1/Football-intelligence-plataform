@@ -10,6 +10,7 @@ import {
   zeroFootballStatsForPrisma,
   type ParsedFootballSeasonStats,
 } from "@/lib/api/espn-football-athlete-stats";
+import { parseCapHitFromAthlete } from "@/lib/api/nba-salaries";
 import { footballSeasonLabel, resolveFootballHubSeasonYears } from "@/lib/api/espn-football-seasons";
 
 const ESPN_SITE = "https://site.api.espn.com/apis/site/v2/sports/football";
@@ -27,6 +28,11 @@ interface EspnAthlete {
   headshot?: { href?: string } | null;
   position?: { abbreviation?: string; name?: string; displayName?: string };
   birthPlace?: { country?: string };
+  contract?: {
+    salary?: number;
+    incomingTradeValue?: number;
+    outgoingTradeValue?: number;
+  };
 }
 
 function espnSlugForLeague(league: AmericanFootballLeagueCode): string {
@@ -310,6 +316,8 @@ export async function ensureAmericanFootballTeamRoster(options: {
       height: inchesToCm(athlete.height) ?? 185,
       weight: lbsToKg(athlete.weight) ?? 90,
       photoUrl: athlete.headshot?.href ?? null,
+      // ESPN exposes salary on NFL rosters; CFB has no Cap Hit feed.
+      capHit: leagueCode === "NFL" ? parseCapHitFromAthlete(athlete) : 0,
       apiSportsId: Number.isFinite(espnAthleteId) ? espnAthleteId : null,
       sport: "AMERICAN_FOOTBALL" as const,
       league: leagueCode,

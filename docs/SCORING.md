@@ -112,6 +112,8 @@ Soccer / general:
 
 American Football: Cap Hit ≤ **$5,000,000** (instead of market value), same age/rating idea.
 
+Basketball uses Cap Hit the same way. **Salary coverage:** ESPN roster contracts for **NBA** and **NFL** only — NCAA, EuroLeague, and CFB usually have no Cap Hit, so Market Opportunities stay empty there by design.
+
 Sorted by rating ÷ value (or rating ÷ cap hit). This is a **screening heuristic**, not a valuation model.
 
 ---

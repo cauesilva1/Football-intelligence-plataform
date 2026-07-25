@@ -146,6 +146,13 @@ export function PlayerProfileHeader({
                 <div className="font-display text-2xl font-bold tabular-nums text-white">
                   {formatCapHit(player.capHit ?? 0)}
                 </div>
+                {(player.capHit ?? 0) <= 0 ? (
+                  <p className="mt-0.5 max-w-[10rem] text-2xs leading-snug text-white/45">
+                    {isAmericanFootball
+                      ? "ESPN salary on NFL rosters only"
+                      : "ESPN salary on NBA rosters only"}
+                  </p>
+                ) : null}
               </div>
             ) : (
               <div>

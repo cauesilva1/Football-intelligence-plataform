@@ -8,6 +8,7 @@ import {
   BB_RATE_MIN_GAMES,
   BB_RATE_MIN_MINUTES,
   OPPORTUNITY_MAX_AGE,
+  OPPORTUNITY_MAX_CAP_HIT,
   OPPORTUNITY_MAX_VALUE,
   OPPORTUNITY_MIN_RATING,
   PROSPECT_MIN_RATING,
@@ -126,9 +127,10 @@ export default function MethodologyPage() {
         <DataPanel title="Market Opportunity" density="dense">
           <p className="text-sm text-muted-foreground">{SCORE_DEFINITIONS.marketOpportunities}</p>
           <p className="mt-2 text-xs text-muted-foreground">
-            Thresholds: age ≤ {OPPORTUNITY_MAX_AGE}, rating ≥ {OPPORTUNITY_MIN_RATING}, value ≤ €
-            {(OPPORTUNITY_MAX_VALUE / 1_000_000).toFixed(0)}M, soccer minutes ≥{" "}
-            {SOCCER_RATE_MIN_MINUTES}.
+            Thresholds: age ≤ {OPPORTUNITY_MAX_AGE}, rating ≥ {OPPORTUNITY_MIN_RATING}, soccer value ≤ €
+            {(OPPORTUNITY_MAX_VALUE / 1_000_000).toFixed(0)}M / Cap Hit ≤ $
+            {(OPPORTUNITY_MAX_CAP_HIT / 1_000_000).toFixed(0)}M (NBA &amp; NFL salary feed), soccer
+            minutes ≥ {SOCCER_RATE_MIN_MINUTES}.
           </p>
         </DataPanel>
 

@@ -253,7 +253,7 @@ export async function DashboardRankingsSection() {
           >
             <CapBargainList
               players={overview.marketOpportunities}
-              emptyMessage="No Cap Hit bargains yet — sync salaries or widen filters."
+              emptyMessage="No Cap Hit bargains yet — NBA salaries only (NCAA / EuroLeague have no salary feed)."
             />
           </DataPanel>
         </div>
@@ -318,7 +318,7 @@ export async function DashboardRankingsSection() {
         >
           <CapBargainList
             players={overview.marketOpportunities}
-            emptyMessage="No Cap Hit bargains in the database yet."
+            emptyMessage="No Cap Hit bargains yet — re-sync NFL rosters for ESPN salaries (CFB has no Cap Hit feed)."
           />
         </DataPanel>
       </div>
