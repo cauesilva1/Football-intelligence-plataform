@@ -11,7 +11,7 @@ export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
   return (
     <DataPanel
       title="Similar Players"
-      description="Weighted statistical profile comparison (same position)."
+      description="Weighted statistical profile comparison within the same position group."
       density="dense"
     >
       {similar.length === 0 ? (

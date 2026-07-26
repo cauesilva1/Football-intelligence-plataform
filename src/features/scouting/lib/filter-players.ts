@@ -151,6 +151,12 @@ export function filterAndSortPlayers(
         diff =
           computeXGPer90(sa.minutesPlayed, sa.xG) - computeXGPer90(sb.minutesPlayed, sb.xG);
         break;
+      case "defensiveActionsPer90":
+        diff =
+          sa.per90.tackles +
+          sa.per90.interceptions -
+          (sb.per90.tackles + sb.per90.interceptions);
+        break;
       case "points":
         diff =
           (sa.points ?? sa.perGame?.points ?? 0) - (sb.points ?? sb.perGame?.points ?? 0);

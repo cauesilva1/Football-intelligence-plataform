@@ -21,7 +21,7 @@ export interface PlayerRepository {
   /** Bounded sample for dashboards / similarity — never full-table hydrate. */
   findSample(
     sport?: Sport,
-    options?: { position?: string; take?: number }
+    options?: { position?: string; positions?: string[]; take?: number }
   ): Promise<Player[]>;
   getAll(sport?: Sport): Promise<Player[]>;
 }

@@ -573,6 +573,7 @@ function needsMappedPlayerSort(filters: PlayerFilters): boolean {
     sortBy === "goalsPer90" ||
     sortBy === "assistsPer90" ||
     sortBy === "xGPer90" ||
+    sortBy === "defensiveActionsPer90" ||
     sortBy === "totalYards" ||
     sortBy === "touchdowns" ||
     sortBy === "sacks" ||
@@ -740,6 +741,8 @@ function buildStatOrderBy(filters: PlayerFilters): Prisma.PlayerStatisticOrderBy
       return { assists: dir };
     case "xGPer90":
       return { xG: dir };
+    case "defensiveActionsPer90":
+      return { tacklesWon: dir };
     case "points":
     case "rebounds":
       return { rating: dir };
@@ -941,10 +944,15 @@ export const prismaPlayerRepository: PlayerRepository & {
 
   async findSample(sport: PlayerFilters["sport"] = "SOCCER", options) {
     const take = Math.min(Math.max(options?.take ?? 350, 1), 800);
+    const positions = options?.positions?.filter(Boolean) ?? [];
     const records = await getPrisma().player.findMany({
       where: {
         sport: sport ?? "SOCCER",
-        ...(options?.position ? { position: options.position } : {}),
+        ...(positions.length > 0
+          ? { position: { in: positions } }
+          : options?.position
+            ? { position: options.position }
+            : {}),
       },
       include: playerListInclude,
       take,

@@ -292,6 +292,8 @@ function SoccerScoutingTable({
     !browseMode &&
     (filters.sortBy === "valueScore" || typeof filters.maxMarketValue === "number");
   const showRateColumns = !browseMode;
+  const showDefensiveRates = showRateColumns && filters.sortBy === "defensiveActionsPer90";
+  const showAttackRates = showRateColumns && !showDefensiveRates;
 
   return (
     <Table density="dense" stickyHeader>
@@ -347,7 +349,7 @@ function SoccerScoutingTable({
               </TableHead>
             </>
           ) : null}
-          {showRateColumns ? (
+          {showAttackRates ? (
             <>
               <TableHead sticky>
                 <SortableTableHead label="Goals/90" sortKey="goalsPer90" filters={filters} basePath={basePath} route={route} />
@@ -362,6 +364,17 @@ function SoccerScoutingTable({
                 />
               </TableHead>
             </>
+          ) : null}
+          {showDefensiveRates ? (
+            <TableHead sticky>
+              <SortableTableHead
+                label="Def/90"
+                sortKey="defensiveActionsPer90"
+                filters={filters}
+                basePath={basePath}
+                route={route}
+              />
+            </TableHead>
           ) : null}
           <TableHead sticky className="text-right">
             Actions
@@ -429,7 +442,7 @@ function SoccerScoutingTable({
                   </TableCell>
                 </>
               ) : null}
-              {showRateColumns ? (
+              {showAttackRates ? (
                 <>
                   <TableCell className="font-mono tabular-nums">
                     {reliable ? stats.per90.goals.toFixed(2) : "—"}
@@ -438,6 +451,13 @@ function SoccerScoutingTable({
                     {xg90 != null ? xg90.toFixed(2) : "—"}
                   </TableCell>
                 </>
+              ) : null}
+              {showDefensiveRates ? (
+                <TableCell className="font-mono tabular-nums">
+                  {reliable
+                    ? (stats.per90.tackles + stats.per90.interceptions).toFixed(2)
+                    : "—"}
+                </TableCell>
               ) : null}
               <TableCell className="text-right">
                 <div className="inline-flex items-center justify-end gap-0.5">

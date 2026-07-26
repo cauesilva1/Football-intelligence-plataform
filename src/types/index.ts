@@ -206,6 +206,7 @@ export interface PlayerFilters {
     | "assistsPer90"
     | "goalsPer90"
     | "xGPer90"
+    | "defensiveActionsPer90"
     | "points"
     | "rebounds"
     | "steals"

@@ -22,6 +22,7 @@ const SORT_KEYS: NonNullable<PlayerFilters["sortBy"]>[] = [
   "assistsPer90",
   "goalsPer90",
   "xGPer90",
+  "defensiveActionsPer90",
   "points",
   "rebounds",
   "steals",

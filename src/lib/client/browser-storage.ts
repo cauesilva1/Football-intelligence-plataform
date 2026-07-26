@@ -47,27 +47,7 @@ export interface StoredPlayerFilterPrefs {
   minYardsPerGame?: number;
   minTouchdownsPerGame?: number;
   minSacksPerGame?: number;
-  sortBy?:
-    | "rating"
-    | "goals"
-    | "assists"
-    | "assistsPer90"
-    | "goalsPer90"
-    | "xGPer90"
-    | "points"
-    | "rebounds"
-    | "steals"
-    | "blocks"
-    | "totalYards"
-    | "touchdowns"
-    | "sacks"
-    | "yardsPerGame"
-    | "age"
-    | "marketValue"
-    | "valueScore"
-    | "name"
-    | "position"
-    | "club";
+  sortBy?: NonNullable<import("@/types").PlayerFilters["sortBy"]>;
   sortDir?: "asc" | "desc";
   pageSize?: number;
 }

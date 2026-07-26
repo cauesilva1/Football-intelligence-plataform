@@ -14,6 +14,7 @@ import {
   buildBasketballPositionScorecard,
   buildFootballPositionScorecard,
   soccerPositionGroupLabel,
+  type SoccerPositionGroup,
 } from "@/features/scouting/lib/position-scorecard";
 import { toRadarProfile } from "@/lib/normalize";
 import {
@@ -46,6 +47,7 @@ function SoccerPerformanceSection({
   const roleMetrics = scorecard.metrics.filter(
     (m) => m.key !== "minutes" && m.key !== "apps" && m.key !== "rating"
   );
+  const detailedMetrics = buildSoccerDetailedMetrics(scorecard.group, s, smallSample);
 
   return (
     <>
@@ -144,59 +146,13 @@ function SoccerPerformanceSection({
 
       <DataPanel
         title="Detailed Metrics"
-        description={`Season totals and per-90 rates for ${player.selectedSeason}.`}
+        description={`${soccerPositionGroupLabel(scorecard.group)}-first order for ${player.selectedSeason} — season totals and per-90 rates.`}
         density="dense"
         className="border"
         style={{ borderColor: `${theme.primaryColor}33` }}
       >
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-          {[
-            { label: "Appearances", value: String(s.appearances) },
-            { label: "Goals", value: String(s.goals) },
-            { label: "Assists", value: String(s.assists) },
-            { label: "Shots", value: String(s.shots) },
-            { label: "Shots on Target", value: String(s.shotsOnTarget) },
-            {
-              label: "Shots / 90",
-              value: smallSample ? "—" : s.per90.shots.toFixed(2),
-            },
-            { label: "Key Passes", value: String(s.keyPasses) },
-            {
-              label: "Key Passes / 90",
-              value: smallSample ? "—" : s.per90.keyPasses.toFixed(2),
-            },
-            {
-              label: "Passes",
-              value: s.passes > 0 ? String(s.passes) : "—",
-            },
-            {
-              label: "Pass Accuracy",
-              value: s.passAccuracy > 0 ? `${s.passAccuracy.toFixed(0)}%` : "—",
-            },
-            { label: "Dribbles Completed", value: String(s.dribblesCompleted) },
-            {
-              label: "Dribbles / 90",
-              value: smallSample ? "—" : s.per90.dribbles.toFixed(2),
-            },
-            { label: "xG total", value: s.xG.toFixed(2), glossary: METRIC_GLOSSARY.xG },
-            { label: "xA total", value: s.xA.toFixed(2), glossary: METRIC_GLOSSARY.xA },
-            {
-              label: "Duels Won",
-              value: s.duelsWonPct > 0 ? `${s.duelsWonPct.toFixed(0)}%` : "—",
-            },
-            { label: "Tackles Won", value: String(s.tacklesWon) },
-            {
-              label: "Tackles Won / 90",
-              value: smallSample ? "—" : s.per90.tackles.toFixed(2),
-            },
-            { label: "Interceptions", value: String(s.interceptions) },
-            {
-              label: "Interceptions / 90",
-              value: smallSample ? "—" : s.per90.interceptions.toFixed(2),
-            },
-            { label: "Yellow Cards", value: String(s.yellowCards) },
-            { label: "Red Cards", value: String(s.redCards) },
-          ].map((item) => (
+          {detailedMetrics.map((item) => (
             <div
               key={item.label}
               className="rounded-lg border bg-surface-muted/40 px-3 py-2.5"
@@ -219,6 +175,128 @@ function SoccerPerformanceSection({
       </DataPanel>
     </>
   );
+}
+
+type SoccerDetailedMetric = {
+  label: string;
+  value: string;
+  glossary?: string;
+};
+
+const DETAILED_PRIORITY: Record<SoccerPositionGroup, string[]> = {
+  ATT: [
+    "Appearances",
+    "Goals",
+    "Assists",
+    "Shots",
+    "Shots on Target",
+    "Shots / 90",
+    "xG total",
+    "xA total",
+    "Key Passes",
+    "Key Passes / 90",
+    "Dribbles Completed",
+    "Dribbles / 90",
+  ],
+  MID: [
+    "Appearances",
+    "Assists",
+    "Key Passes",
+    "Key Passes / 90",
+    "Pass Accuracy",
+    "Passes",
+    "Tackles Won",
+    "Tackles Won / 90",
+    "xA total",
+    "Goals",
+    "Dribbles Completed",
+    "Dribbles / 90",
+  ],
+  DEF: [
+    "Appearances",
+    "Tackles Won",
+    "Tackles Won / 90",
+    "Interceptions",
+    "Interceptions / 90",
+    "Duels Won",
+    "Pass Accuracy",
+    "Passes",
+    "Key Passes",
+    "Key Passes / 90",
+  ],
+  GK: [
+    "Appearances",
+    "Pass Accuracy",
+    "Passes",
+    "Interceptions",
+    "Interceptions / 90",
+    "Duels Won",
+    "Tackles Won",
+    "Tackles Won / 90",
+  ],
+};
+
+function buildSoccerDetailedMetrics(
+  group: SoccerPositionGroup,
+  s: Player["currentSeasonStats"],
+  smallSample: boolean
+): SoccerDetailedMetric[] {
+  const items: SoccerDetailedMetric[] = [
+    { label: "Appearances", value: String(s.appearances) },
+    { label: "Goals", value: String(s.goals) },
+    { label: "Assists", value: String(s.assists) },
+    { label: "Shots", value: String(s.shots) },
+    { label: "Shots on Target", value: String(s.shotsOnTarget) },
+    {
+      label: "Shots / 90",
+      value: smallSample ? "—" : s.per90.shots.toFixed(2),
+    },
+    { label: "Key Passes", value: String(s.keyPasses) },
+    {
+      label: "Key Passes / 90",
+      value: smallSample ? "—" : s.per90.keyPasses.toFixed(2),
+    },
+    {
+      label: "Passes",
+      value: s.passes > 0 ? String(s.passes) : "—",
+    },
+    {
+      label: "Pass Accuracy",
+      value: s.passAccuracy > 0 ? `${s.passAccuracy.toFixed(0)}%` : "—",
+    },
+    { label: "Dribbles Completed", value: String(s.dribblesCompleted) },
+    {
+      label: "Dribbles / 90",
+      value: smallSample ? "—" : s.per90.dribbles.toFixed(2),
+    },
+    { label: "xG total", value: s.xG.toFixed(2), glossary: METRIC_GLOSSARY.xG },
+    { label: "xA total", value: s.xA.toFixed(2), glossary: METRIC_GLOSSARY.xA },
+    {
+      label: "Duels Won",
+      value: s.duelsWonPct > 0 ? `${s.duelsWonPct.toFixed(0)}%` : "—",
+    },
+    { label: "Tackles Won", value: String(s.tacklesWon) },
+    {
+      label: "Tackles Won / 90",
+      value: smallSample ? "—" : s.per90.tackles.toFixed(2),
+    },
+    { label: "Interceptions", value: String(s.interceptions) },
+    {
+      label: "Interceptions / 90",
+      value: smallSample ? "—" : s.per90.interceptions.toFixed(2),
+    },
+    { label: "Yellow Cards", value: String(s.yellowCards) },
+    { label: "Red Cards", value: String(s.redCards) },
+  ];
+
+  const priority = DETAILED_PRIORITY[group];
+  const rank = new Map(priority.map((label, i) => [label, i]));
+  return [...items].sort((a, b) => {
+    const ra = rank.get(a.label) ?? priority.length + 1;
+    const rb = rank.get(b.label) ?? priority.length + 1;
+    if (ra !== rb) return ra - rb;
+    return 0;
+  });
 }
 
 function BasketballPerformanceSection({

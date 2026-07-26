@@ -5,6 +5,7 @@ import {
   similarPositionGroup,
   basketballPositionGroup,
   footballPositionGroup,
+  soccerPositionGroup,
 } from "@/features/scouting/lib/position-scorecard";
 import type { Player } from "@/types";
 
@@ -109,9 +110,10 @@ const AF_SPECIALIST_WEIGHTS: WeightMap = {
 };
 
 function soccerWeightsForPosition(position: string): WeightMap {
-  if (position === "GK") return GK_WEIGHTS;
-  if (["ST", "LW", "RW", "CAM"].includes(position)) return ATTACK_WEIGHTS;
-  if (["CM", "CDM"].includes(position)) return MID_WEIGHTS;
+  const group = soccerPositionGroup(position);
+  if (group === "GK") return GK_WEIGHTS;
+  if (group === "ATT") return ATTACK_WEIGHTS;
+  if (group === "MID") return MID_WEIGHTS;
   return DEF_WEIGHTS;
 }
 

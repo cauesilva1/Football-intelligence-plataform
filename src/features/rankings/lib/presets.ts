@@ -79,13 +79,13 @@ const SOCCER_PRESETS: RankingPreset[] = [
     slug: "defenders",
     title: "Defensive Actions",
     description:
-      "Centre-backs and full-backs with reliable minutes — role-aware list (tackles/ints on the profile scorecard).",
+      "Centre-backs and full-backs ranked by tackles + interceptions per 90 (≥450′).",
     href: "/rankings/defenders",
     filters: {
       position: "CB,LB,RB,LWB,RWB",
       minMinutes: 450,
       minRating: 6.5,
-      sortBy: "rating",
+      sortBy: "defensiveActionsPer90",
       sortDir: "desc",
       page: 1,
       pageSize: 20,

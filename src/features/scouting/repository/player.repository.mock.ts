@@ -81,7 +81,11 @@ export const mockPlayerRepository: PlayerRepository = {
   async findSample(sport: Sport = "SOCCER", options) {
     const take = options?.take ?? 350;
     let pool = filterBySport(players, sport);
-    if (options?.position) {
+    const positions = options?.positions?.filter(Boolean) ?? [];
+    if (positions.length > 0) {
+      const set = new Set(positions);
+      pool = pool.filter((p) => set.has(p.position));
+    } else if (options?.position) {
       pool = pool.filter((p) => p.position === options.position);
     }
     return pool.slice(0, take);
