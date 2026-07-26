@@ -540,12 +540,12 @@ export function ScoutingFiltersPanel({
         {clearButton(hasActiveFootballFilters(filters))}
       </>
     ) : null
-  ) : (
+  ) : isScoutingRoute ? (
     <>
       {soccerAdvancedFields}
       {clearButton(hasActiveFilters(filters))}
     </>
-  );
+  ) : null;
 
   const positionOptions = isBasketball
     ? BASKETBALL_POSITIONS
@@ -574,7 +574,7 @@ export function ScoutingFiltersPanel({
     </div>
   ) : null;
 
-  const hasBasicFranchiseFilters = Boolean(
+  const hasBasicBrowseFilters = Boolean(
     filters.search ||
       filters.position ||
       filters.league ||
@@ -585,7 +585,7 @@ export function ScoutingFiltersPanel({
   );
 
   const playersClearButton =
-    isFranchiseSport && !isScoutingRoute && hasBasicFranchiseFilters ? (
+    !isScoutingRoute && hasBasicBrowseFilters ? (
       <div className="mt-3 flex justify-end">
         <Button type="button" variant="outline" size="sm" onClick={clearFilters}>
           <X className="h-3.5 w-3.5" /> Clear filters
@@ -602,7 +602,7 @@ export function ScoutingFiltersPanel({
   return (
     <div>
       {archetypeBar}
-      <FilterBar pending={isPending} footer={!isFranchiseSport && route === "players" ? advancedFields : undefined}>
+      <FilterBar pending={isPending}>
         <FilterField label="Search" className="min-w-[220px] flex-[2]">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

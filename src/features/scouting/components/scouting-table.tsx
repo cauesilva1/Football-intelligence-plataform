@@ -287,8 +287,11 @@ function SoccerScoutingTable({
   basePath: string;
   route: ScoutingRoute;
 }) {
+  const browseMode = route === "players";
   const showValue =
-    filters.sortBy === "valueScore" || typeof filters.maxMarketValue === "number";
+    !browseMode &&
+    (filters.sortBy === "valueScore" || typeof filters.maxMarketValue === "number");
+  const showRateColumns = !browseMode;
 
   return (
     <Table density="dense" stickyHeader>
@@ -344,18 +347,22 @@ function SoccerScoutingTable({
               </TableHead>
             </>
           ) : null}
-          <TableHead sticky>
-            <SortableTableHead label="Goals/90" sortKey="goalsPer90" filters={filters} basePath={basePath} route={route} />
-          </TableHead>
-          <TableHead sticky className="overflow-visible">
-            <GlossaryTooltip
-              label={
-                <SortableTableHead label="xG/90" sortKey="xGPer90" filters={filters} basePath={basePath} route={route} />
-              }
-              description={METRIC_GLOSSARY.xG}
-              placement="bottom"
-            />
-          </TableHead>
+          {showRateColumns ? (
+            <>
+              <TableHead sticky>
+                <SortableTableHead label="Goals/90" sortKey="goalsPer90" filters={filters} basePath={basePath} route={route} />
+              </TableHead>
+              <TableHead sticky className="overflow-visible">
+                <GlossaryTooltip
+                  label={
+                    <SortableTableHead label="xG/90" sortKey="xGPer90" filters={filters} basePath={basePath} route={route} />
+                  }
+                  description={METRIC_GLOSSARY.xG}
+                  placement="bottom"
+                />
+              </TableHead>
+            </>
+          ) : null}
           <TableHead sticky className="text-right">
             Actions
           </TableHead>
@@ -422,12 +429,16 @@ function SoccerScoutingTable({
                   </TableCell>
                 </>
               ) : null}
-              <TableCell className="font-mono tabular-nums">
-                {reliable ? stats.per90.goals.toFixed(2) : "—"}
-              </TableCell>
-              <TableCell className="font-mono tabular-nums">
-                {xg90 != null ? xg90.toFixed(2) : "—"}
-              </TableCell>
+              {showRateColumns ? (
+                <>
+                  <TableCell className="font-mono tabular-nums">
+                    {reliable ? stats.per90.goals.toFixed(2) : "—"}
+                  </TableCell>
+                  <TableCell className="font-mono tabular-nums">
+                    {xg90 != null ? xg90.toFixed(2) : "—"}
+                  </TableCell>
+                </>
+              ) : null}
               <TableCell className="text-right">
                 <div className="inline-flex items-center justify-end gap-0.5">
                   <ShortlistButton playerId={player.id} compact />
