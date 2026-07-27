@@ -184,8 +184,8 @@ Referência: [statsperform.com](https://www.statsperform.com/)
 - [ ] `DATA_SOURCE=mock` default — demo vs prod
 - [ ] Testes só em scoring/export — sem E2E
 - [x] BB intelligence profile (Wave 1) — `src/lib/intelligence/basketball/` + shared registry
-- [ ] AF intelligence depth — próximo após BB recruitment / polish
-- [ ] BB recruitment fit (Wave 2)
+- [x] BB recruitment fit (Wave 2) — shared brief + `/recruitment` sport-aware
+- [ ] AF intelligence depth — próximo após BB polish
 - [ ] BB/AF tactical fit (Wave 4)
 
 ---

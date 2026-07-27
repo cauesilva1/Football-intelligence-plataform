@@ -3,12 +3,12 @@
  *
  * Usage:
  *   npm run intel:recruitment -- --position=ST --maxAge=23 --maxValue=5000000
- *   npm run intel:recruitment -- --position=CM --league=<competitionId> --limit=10
+ *   npm run intel:recruitment -- --sport=BASKETBALL --position=PG --league=NBA --limit=10
  */
 import { queryRecruitmentCandidates } from "@/features/scouting/queries/recruitment-candidates";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
 import { CURRENT_SEASON } from "@/lib/data/generators";
-import type { RecruitmentBrief } from "@/lib/intelligence/soccer/recruitment-types";
+import type { RecruitmentBrief } from "@/lib/intelligence/recruitment-types";
 
 function argValue(flag: string): string | undefined {
   const hit = process.argv.find((a) => a.startsWith(`${flag}=`));
@@ -28,15 +28,19 @@ function numberArg(flag: string): number | undefined {
 }
 
 async function main() {
-  const position = argValue("--position") ?? "ST";
+  const sportRaw = argValue("--sport") ?? "SOCCER";
+  const sport = sportRaw === "BASKETBALL" ? "BASKETBALL" : "SOCCER";
+  const position = argValue("--position") ?? (sport === "BASKETBALL" ? "PG" : "ST");
+
   const brief: RecruitmentBrief = {
-    sport: "SOCCER",
+    sport,
     position,
     league: argValue("--league"),
     season: argValue("--season") ?? CURRENT_SEASON,
     minAge: numberArg("--minAge"),
     maxAge: numberArg("--maxAge"),
     maxMarketValue: numberArg("--maxValue"),
+    maxCapHit: numberArg("--maxCapHit"),
     minMinutes: numberArg("--minMinutes"),
     minRating: numberArg("--minRating"),
     limit: numberArg("--limit") ?? 15,

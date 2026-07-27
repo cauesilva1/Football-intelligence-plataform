@@ -1,5 +1,5 @@
 import type { Prisma } from "@prisma/client";
-import type { RecruitmentBrief } from "@/lib/intelligence/soccer/recruitment-types";
+import type { RecruitmentBrief } from "@/lib/intelligence/recruitment-types";
 import { getPrisma, withPrismaRetry } from "@/lib/prisma";
 import { isDbSource } from "@/lib/data-source";
 

@@ -15,7 +15,7 @@ import {
   replaceWorkspaceShortlist,
   upsertWorkspaceShortlistEntry,
 } from "@/lib/workspace/shortlist-store";
-import type { RecruitmentBrief } from "@/lib/intelligence/soccer/recruitment-types";
+import type { RecruitmentBrief } from "@/lib/intelligence/recruitment-types";
 
 export async function fetchWorkspaceShortlist(): Promise<ShortlistEntry[]> {
   if (!isDbSource()) return [];

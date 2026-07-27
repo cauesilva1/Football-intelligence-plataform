@@ -80,7 +80,7 @@ Isto é o **shared desk** — funcional hoje para Soccer, Basketball e American 
 | Shared desk (list/compare/shortlist/report) | ✅ | ✅ | ✅ |
 | **Intelligence profile** (role, dimensions, trajectory, limits) | ✅ `src/lib/intelligence/soccer/` | ✅ `src/lib/intelligence/basketball/` | ❌ |
 | **Percentis de liga/posição** | ✅ | ✅ (NBA/NCAA/EuroLeague isolados) | ❌ |
-| **Recruitment fit engine** | ✅ + UI `/recruitment` | ❌ (Wave 2) | ❌ |
+| **Recruitment fit engine** | ✅ + UI `/recruitment` | ✅ + UI sport-aware | ❌ |
 | **Tactical / team fit** | ✅ MVP + panel | ❌ | ❌ |
 | **Similarity “why”** | ✅ | ✅ | Similarity sem `why` rico |
 | Painéis no perfil | Intelligence + Tactical | Intelligence | Scorecard + similar |

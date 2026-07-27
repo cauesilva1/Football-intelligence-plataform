@@ -2,13 +2,18 @@ import Link from "next/link";
 import { queryRecruitmentCandidates } from "@/features/scouting/queries/recruitment-candidates";
 import { recordRecruitmentBriefRun } from "@/lib/actions/workspace";
 import { getOrCreateDeviceId } from "@/lib/workspace/device-id";
-import type { RecruitmentBrief } from "@/lib/intelligence/soccer/recruitment-types";
+import type { RecruitmentBrief } from "@/lib/intelligence/recruitment-types";
 import { Badge } from "@/components/ui/badge";
 import { formatMarketValue, ratingColor } from "@/lib/utils";
 
-function parseBrief(searchParams: Record<string, string | string[] | undefined>): RecruitmentBrief | null {
+function parseBrief(
+  searchParams: Record<string, string | string[] | undefined>
+): RecruitmentBrief | null {
   const position = typeof searchParams.position === "string" ? searchParams.position : undefined;
   if (!position) return null;
+
+  const sportRaw = typeof searchParams.sport === "string" ? searchParams.sport : "SOCCER";
+  const sport = sportRaw === "BASKETBALL" ? "BASKETBALL" : "SOCCER";
 
   const num = (key: string) => {
     const raw = searchParams[key];
@@ -17,11 +22,12 @@ function parseBrief(searchParams: Record<string, string | string[] | undefined>)
   };
 
   return {
-    sport: "SOCCER",
+    sport,
     position,
     league: typeof searchParams.league === "string" ? searchParams.league : undefined,
     maxAge: num("maxAge"),
     maxMarketValue: num("maxValue"),
+    maxCapHit: num("maxCapHit"),
     minRating: num("minRating"),
     limit: num("limit") ?? 15,
     trajectory: "any",
@@ -89,6 +95,7 @@ export async function RecruitmentResults({
               <div className="mt-2 flex flex-wrap gap-2">
                 <Badge variant="secondary">{candidate.matchedRole}</Badge>
                 <Badge variant="outline">Trajectory: {candidate.trajectory}</Badge>
+                <Badge variant="outline">Confidence: {candidate.dataConfidence}</Badge>
               </div>
               <ul className="mt-2 space-y-1">
                 {candidate.reasons.map((reason) => (
