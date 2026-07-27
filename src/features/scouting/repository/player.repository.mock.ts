@@ -88,6 +88,12 @@ export const mockPlayerRepository: PlayerRepository = {
     } else if (options?.position) {
       pool = pool.filter((p) => p.position === options.position);
     }
+    if (options?.league) {
+      pool = pool.filter((p) => p.league === options.league);
+    }
+    if (typeof options?.minMinutes === "number") {
+      pool = pool.filter((p) => p.currentSeasonStats.minutesPlayed >= options.minMinutes!);
+    }
     return pool.slice(0, take);
   },
 

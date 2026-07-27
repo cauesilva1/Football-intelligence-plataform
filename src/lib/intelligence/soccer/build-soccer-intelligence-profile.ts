@@ -4,6 +4,8 @@ import { classifySoccerRole } from "@/lib/intelligence/soccer/classify-soccer-ro
 import { computeSoccerDimensions } from "@/lib/intelligence/soccer/compute-soccer-dimensions";
 import { computeSoccerTrajectory } from "@/lib/intelligence/soccer/compute-soccer-trajectory";
 import { explainSoccerSimilarity } from "@/lib/intelligence/soccer/explain-similarity";
+import type { LeaguePositionPercentileTable } from "@/lib/intelligence/soccer/league-percentiles";
+import { lookupPlayerPercentileScores } from "@/lib/intelligence/soccer/league-percentiles";
 import type { PlayerIntelligenceProfile } from "@/lib/intelligence/soccer/types";
 import { hasReliableSoccerSample } from "@/lib/metrics/per90";
 import type { Player } from "@/types";
@@ -11,6 +13,7 @@ import type { Player } from "@/types";
 export interface BuildSoccerIntelligenceProfileOptions {
   comparablesPool?: Player[];
   comparablesLimit?: number;
+  percentileTable?: LeaguePositionPercentileTable | null;
 }
 
 function buildLimitations(player: Player): string[] {
@@ -49,14 +52,23 @@ export function buildSoccerIntelligenceProfile(
   const similar =
     pool.length > 0 ? findSimilarPlayers(player, pool, comparablesLimit) : [];
 
+  const season = player.selectedSeason ?? player.currentSeasonStats.season;
+  const percentileScores = options.percentileTable
+    ? lookupPlayerPercentileScores(player, options.percentileTable)
+    : null;
+  const leagueLabel = player.competitionName ?? options.percentileTable?.league;
+
   return {
     playerId: player.id,
     sport: "SOCCER",
-    season: player.selectedSeason ?? player.currentSeasonStats.season,
+    season,
     role: classifySoccerRole(player),
     styleLabel: style.label,
     styleTraits: style.traits,
-    dimensions: computeSoccerDimensions(player),
+    dimensions: computeSoccerDimensions(player, {
+      percentileScores: percentileScores ?? undefined,
+      leagueLabel: percentileScores ? leagueLabel : undefined,
+    }),
     trajectory: computeSoccerTrajectory(player),
     limitations: buildLimitations(player),
     comparables: similar.map(({ player: match, score }) => ({
@@ -64,5 +76,15 @@ export function buildSoccerIntelligenceProfile(
       score: Number(score.toFixed(1)),
       why: explainSoccerSimilarity(player, match),
     })),
+    leagueContext: options.percentileTable
+      ? {
+          league: options.percentileTable.league,
+          leagueName: player.competitionName,
+          position: options.percentileTable.position,
+          season: options.percentileTable.season,
+          cohortSize: options.percentileTable.cohortSize,
+          scoringMethod: percentileScores ? "league_percentile" : "absolute",
+        }
+      : undefined,
   };
 }

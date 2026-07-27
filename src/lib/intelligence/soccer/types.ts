@@ -23,6 +23,15 @@ export interface IntelligenceComparable {
   why: string[];
 }
 
+export interface PlayerIntelligenceLeagueContext {
+  league: string;
+  leagueName?: string;
+  position: string;
+  season: string;
+  cohortSize: number;
+  scoringMethod: "league_percentile" | "absolute";
+}
+
 export interface PlayerIntelligenceProfile {
   playerId: string;
   sport: Extract<Sport, "SOCCER">;
@@ -34,4 +43,5 @@ export interface PlayerIntelligenceProfile {
   trajectory: SoccerTrajectory;
   limitations: string[];
   comparables: IntelligenceComparable[];
+  leagueContext?: PlayerIntelligenceLeagueContext;
 }

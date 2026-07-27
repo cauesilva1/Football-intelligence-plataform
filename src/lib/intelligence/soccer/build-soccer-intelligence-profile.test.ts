@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { buildSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/build-soccer-intelligence-profile";
+import { buildLeaguePositionPercentileTable } from "@/lib/intelligence/soccer/league-percentiles";
 import { classifySoccerRole } from "@/lib/intelligence/soccer/classify-soccer-role";
 import { explainSoccerSimilarity } from "@/lib/intelligence/soccer/explain-similarity";
 import type { Player, PlayerStatistic } from "@/types";
@@ -211,6 +212,40 @@ describe("buildSoccerIntelligenceProfile", () => {
     const profile = buildSoccerIntelligenceProfile(striker, { comparablesPool: pool, comparablesLimit: 1 });
     assert.equal(profile.comparables.length, 1);
     assert.equal(profile.comparables[0].why.length, 3);
+  });
+
+  it("uses league percentiles when a cohort table is supplied", () => {
+    const cohort = [
+      striker,
+      ...Array.from({ length: 8 }, (_, index) =>
+        soccerPlayer("ST", {
+          goals: index + 2,
+          xG: index + 1.5,
+          shots: 30 + index * 5,
+          per90: {
+            goals: (index + 2) / 10,
+            assists: 0.1 + index * 0.05,
+            shots: 3 + index * 0.5,
+            keyPasses: 0.5 + index * 0.1,
+            dribbles: 1 + index * 0.1,
+            tackles: 0.2,
+            interceptions: 0.1,
+          },
+        })
+      ),
+    ];
+
+    const table = buildLeaguePositionPercentileTable(cohort, {
+      sport: "SOCCER",
+      league: "liga-test",
+      position: "ST",
+      season: "2025/26",
+    });
+    assert.ok(table);
+
+    const relativeProfile = buildSoccerIntelligenceProfile(striker, { percentileTable: table });
+    assert.equal(relativeProfile.leagueContext?.scoringMethod, "league_percentile");
+    assert.ok(relativeProfile.dimensions.every((dimension) => dimension.evidence.some((e) => e.label === "League percentile")));
   });
 });
 

@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { buildSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/build-soccer-intelligence-profile";
 import { similarPositionGroup } from "@/features/scouting/lib/position-scorecard";
+import { loadLeaguePercentileContext } from "@/features/scouting/queries/league-percentiles";
 import { getPlayerRepository } from "@/features/scouting/repository";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
 import type { PlayerIntelligenceProfile } from "@/lib/intelligence/soccer/types";
@@ -19,11 +20,17 @@ export const queryPlayerIntelligenceProfile = cache(
       throw new Error(`Player intelligence profile is soccer-only (got ${sport}).`);
     }
 
-    const pool = await repo.findSample("SOCCER", {
-      positions: similarPositionGroup(player.position),
-      take: INTELLIGENCE_POOL_TAKE,
-    });
+    const [pool, percentileTable] = await Promise.all([
+      repo.findSample("SOCCER", {
+        positions: similarPositionGroup(player.position),
+        take: INTELLIGENCE_POOL_TAKE,
+      }),
+      loadLeaguePercentileContext(player),
+    ]);
 
-    return buildSoccerIntelligenceProfile(player, { comparablesPool: pool });
+    return buildSoccerIntelligenceProfile(player, {
+      comparablesPool: pool,
+      percentileTable,
+    });
   }
 );

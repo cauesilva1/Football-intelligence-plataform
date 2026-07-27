@@ -945,14 +945,26 @@ export const prismaPlayerRepository: PlayerRepository & {
   async findSample(sport: PlayerFilters["sport"] = "SOCCER", options) {
     const take = Math.min(Math.max(options?.take ?? 350, 1), 800);
     const positions = options?.positions?.filter(Boolean) ?? [];
+    const minMinutes = options?.minMinutes;
     const records = await getPrisma().player.findMany({
       where: {
         sport: sport ?? "SOCCER",
+        ...(options?.league ? { team: { competitionId: options.league } } : {}),
         ...(positions.length > 0
           ? { position: { in: positions } }
           : options?.position
             ? { position: options.position }
             : {}),
+        ...(typeof minMinutes === "number"
+          ? {
+              statistics: {
+                some: {
+                  season: CURRENT_SEASON,
+                  minutesPlayed: { gte: minMinutes },
+                },
+              },
+            }
+          : {}),
       },
       include: playerListInclude,
       take,

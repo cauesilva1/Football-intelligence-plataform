@@ -1,11 +1,14 @@
 import { toRadarProfile } from "@/lib/normalize";
 import { hasReliableSoccerSample } from "@/lib/metrics/per90";
 import { soccerPositionGroup } from "@/features/scouting/lib/position-scorecard";
-import type { IntelligenceDimension } from "@/lib/intelligence/soccer/types";
+import { extractSoccerDimensionRawScores } from "@/lib/intelligence/soccer/soccer-dimension-raw-scores";
+import type { IntelligenceDimension, SoccerDimensionKey } from "@/lib/intelligence/soccer/types";
 import type { Player } from "@/types";
 
-function clamp(value: number, min = 0, max = 100): number {
-  return Math.min(max, Math.max(min, value));
+export interface ComputeSoccerDimensionsOptions {
+  /** When set, dimension scores use league-relative percentiles (0–100). */
+  percentileScores?: Partial<Record<SoccerDimensionKey, number>>;
+  leagueLabel?: string;
 }
 
 function sampleConfidence(minutesPlayed: number): number {
@@ -28,30 +31,28 @@ function defensiveDataGap(stats: Player["currentSeasonStats"]): boolean {
   );
 }
 
+function resolveScore(
+  key: SoccerDimensionKey,
+  absoluteScore: number,
+  options: ComputeSoccerDimensionsOptions
+): number {
+  const percentile = options.percentileScores?.[key];
+  return typeof percentile === "number" ? Math.round(percentile) : Math.round(absoluteScore);
+}
+
 /** Four soccer intelligence dimensions with score, confidence, and evidence lines. */
-export function computeSoccerDimensions(player: Player): IntelligenceDimension[] {
+export function computeSoccerDimensions(
+  player: Player,
+  options: ComputeSoccerDimensionsOptions = {}
+): IntelligenceDimension[] {
   const stats = player.currentSeasonStats;
   const radar = toRadarProfile(stats);
   const p90 = stats.per90;
   const confidence = sampleConfidence(stats.minutesPlayed);
   const group = soccerPositionGroup(player.position);
   const defConfidence = defensiveDataGap(stats) ? Math.min(confidence, 0.35) : confidence;
-
-  const productionScore = clamp(
-    radar.Finishing * 0.55 + Math.min(100, p90.goals * 55) * 0.25 + Math.min(100, (stats.xG / Math.max(stats.minutesPlayed, 1)) * 90 * 50) * 0.2
-  );
-
-  const creationScore = clamp(
-    radar.Creation * 0.5 + Math.min(100, p90.assists * 70) * 0.25 + Math.min(100, p90.keyPasses * 22) * 0.25
-  );
-
-  const defenseScore = clamp(
-    radar.Defense * 0.55 + Math.min(100, p90.tackles * 28) * 0.225 + Math.min(100, p90.interceptions * 32) * 0.225
-  );
-
-  const ballProgressionScore = clamp(
-    radar.Passing * 0.45 + radar.Dribbling * 0.35 + Math.min(100, p90.keyPasses * 18) * 0.2
-  );
+  const raw = extractSoccerDimensionRawScores(player);
+  const usingPercentiles = Boolean(options.percentileScores && options.leagueLabel);
 
   const productionEvidence = [
     { label: "Goals / 90", value: formatRate(p90.goals) },
@@ -77,32 +78,47 @@ export function computeSoccerDimensions(player: Player): IntelligenceDimension[]
     { label: "Passing index", value: `${Math.round(radar.Passing)}/100` },
   ];
 
+  if (usingPercentiles && options.leagueLabel) {
+    const leagueLine = {
+      label: "League percentile",
+      value: `${options.leagueLabel} cohort`,
+    };
+    productionEvidence.push(leagueLine);
+    creationEvidence.push(leagueLine);
+    defenseEvidence.push(leagueLine);
+    ballProgressionEvidence.push(leagueLine);
+  }
+
   const dimensions: IntelligenceDimension[] = [
     {
       key: "production",
       label: group === "DEF" || group === "GK" ? "Defensive contribution" : "Production",
-      score: Math.round(group === "DEF" || group === "GK" ? defenseScore : productionScore),
+      score: resolveScore(
+        group === "DEF" || group === "GK" ? "defense" : "production",
+        group === "DEF" || group === "GK" ? raw.defense : raw.production,
+        options
+      ),
       confidence: group === "DEF" || group === "GK" ? defConfidence : confidence,
       evidence: group === "DEF" || group === "GK" ? defenseEvidence : productionEvidence,
     },
     {
       key: "creation",
       label: "Creation",
-      score: Math.round(creationScore),
+      score: resolveScore("creation", raw.creation, options),
       confidence,
       evidence: creationEvidence,
     },
     {
       key: "defense",
       label: "Defense",
-      score: Math.round(defenseScore),
+      score: resolveScore("defense", raw.defense, options),
       confidence: defConfidence,
       evidence: defenseEvidence,
     },
     {
       key: "ball_progression",
       label: "Ball progression",
-      score: Math.round(ballProgressionScore),
+      score: resolveScore("ball_progression", raw.ball_progression, options),
       confidence,
       evidence: ballProgressionEvidence,
     },
@@ -112,7 +128,7 @@ export function computeSoccerDimensions(player: Player): IntelligenceDimension[]
     dimensions[0] = {
       key: "production",
       label: "Production",
-      score: Math.round(productionScore),
+      score: resolveScore("production", raw.production, options),
       confidence,
       evidence: productionEvidence,
     };
