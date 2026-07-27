@@ -166,8 +166,8 @@ Portar o padrão das 4 suítes soccer para cada sport (role tipico, small sample
 | Contagens | Documentadas em `docs/DATA-COVERAGE.md` + CLI `npm run data:coverage` |
 | Honesty floors | `src/lib/intelligence/data-depth.ts` alinhado a trajectory |
 | UI badges | Header + intelligence panel |
-| Basketball | EuroLeague still roster-only; NBA/NCAA mostly 1 productive season |
-| American Football | NFL/CFB counts OK; multi-season backfill still ops work |
+| Basketball | EuroLeague: 62/259 with season stats (playoff window); NBA ~19% trajectory-eligible after dual-season backfill |
+| American Football | NFL/CFB counts OK; multi-season backfill still ops work (trajectory ~0%) |
 
 ### Ordem de entrega (histórico Waves 1–4 + ponto 1)
 

@@ -505,6 +505,10 @@ export async function syncEuroLeagueRecentBoxscores(options: {
   let failed = 0;
   let statsUpdated = 0;
 
+      console.log(
+        `${LOG} boxscores — ${recent.length} games in window · processing…`
+      );
+
   for (const game of recent) {
     try {
       const result = await processEuroLeagueGame(game.gameCode, {

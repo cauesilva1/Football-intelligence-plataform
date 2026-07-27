@@ -1,17 +1,24 @@
 /**
- * Carga leve — histórico NBA 202526 para jogadores já cadastrados.
+ * Carga leve — histórico NBA multi-season (2024-25 + 2025-26) para jogadores já cadastrados.
  * Limita a N franquias (padrão: 3) para teste local sem rate limit.
  *
  * Uso: npm run data:sync-nba-teste
- *      npm run data:sync-nba-teste -- --teams=5
+ *      npm run data:sync-nba-teste -- --teams=8
+ *      npm run data:sync-nba-teste -- --teams=30
  */
 import fs from "fs";
 import path from "path";
 import { PrismaClient } from "@prisma/client";
 
-const SEASON_PAST = 202526;
-const PAST_SEASON_LABEL = "2025-26";
-const PAST_SEASON_FALLBACK_LABEL = "2024-25";
+const SEASON_TARGETS: Array<{
+  key: number;
+  labels: string[];
+  years: number[];
+}> = [
+  { key: 202526, labels: ["2025-26", "2025"], years: [2026] },
+  { key: 202425, labels: ["2024-25", "2024"], years: [2025] },
+];
+
 const DEFAULT_TEAM_LIMIT = 3;
 const FETCH_DELAY_MIN_MS = 50;
 const FETCH_DELAY_MAX_MS = 75;
@@ -105,6 +112,7 @@ async function fetchJson<T>(url: string): Promise<T | null> {
   });
 
   if (response.status === 404) return null;
+  if (response.status >= 500) return null;
   if (!response.ok) throw new Error(`ESPN HTTP ${response.status} — ${url}`);
   return (await response.json()) as T;
 }
@@ -120,10 +128,13 @@ function seasonMatchesLabel(season: EspnSeasonRef | undefined, label: string): b
   return display === label || display.includes(label);
 }
 
-function isPastSeasonRow(season: EspnSeasonRef | undefined): boolean {
+function matchesSeasonTarget(
+  season: EspnSeasonRef | undefined,
+  target: (typeof SEASON_TARGETS)[number]
+): boolean {
   if (!season) return false;
-  if (seasonMatchesLabel(season, PAST_SEASON_LABEL)) return true;
-  return season.year === 2026;
+  if (typeof season.year === "number" && target.years.includes(season.year)) return true;
+  return target.labels.some((label) => seasonMatchesLabel(season, label));
 }
 
 function findSeasonRow(
@@ -170,43 +181,54 @@ async function fetchStatsCategories(
   return payload?.categories ?? null;
 }
 
-async function resolvePastSeasonStats(espnId: string): Promise<ParsedBasketballStats | null> {
+/** Resolve up to two completed seasons so trajectory can leave insufficient_data. */
+async function resolveHistoricalSeasons(
+  espnId: string
+): Promise<Array<{ seasonKey: number; stats: ParsedBasketballStats }>> {
   const nbaCategories = await fetchStatsCategories(espnId, "nba");
-  const nbaRow =
-    findSeasonRow(nbaCategories, isPastSeasonRow) ??
-    findSeasonRow(nbaCategories, (season) => seasonMatchesLabel(season, "2025"));
+  const nbaNames = nbaCategories?.find((category) => category.name === "averages")?.names ?? [];
+  const resolved: Array<{ seasonKey: number; stats: ParsedBasketballStats }> = [];
 
-  if (nbaRow) {
-    const names = nbaCategories?.find((category) => category.name === "averages")?.names ?? [];
-    const parsed = parseStatsRow(nbaRow, names);
-    if (parsed) return parsed;
+  for (const target of SEASON_TARGETS) {
+    const nbaRow = findSeasonRow(nbaCategories, (season) => matchesSeasonTarget(season, target));
+    if (nbaRow) {
+      const parsed = parseStatsRow(nbaRow, nbaNames);
+      if (parsed) {
+        resolved.push({ seasonKey: target.key, stats: parsed });
+        continue;
+      }
+    }
   }
 
+  if (resolved.length >= 2) return resolved;
+
   const ncaaCategories = await fetchStatsCategories(espnId, "mens-college-basketball");
-  const ncaaRow =
-    findSeasonRow(ncaaCategories, isPastSeasonRow) ??
-    findSeasonRow(ncaaCategories, (season) =>
-      seasonMatchesLabel(season, PAST_SEASON_FALLBACK_LABEL)
-    );
+  const ncaaNames = ncaaCategories?.find((category) => category.name === "averages")?.names ?? [];
 
-  if (!ncaaRow) return null;
+  for (const target of SEASON_TARGETS) {
+    if (resolved.some((row) => row.seasonKey === target.key)) continue;
+    const ncaaRow = findSeasonRow(ncaaCategories, (season) => matchesSeasonTarget(season, target));
+    if (!ncaaRow) continue;
+    const parsed = parseStatsRow(ncaaRow, ncaaNames);
+    if (parsed) resolved.push({ seasonKey: target.key, stats: parsed });
+  }
 
-  const names = ncaaCategories?.find((category) => category.name === "averages")?.names ?? [];
-  return parseStatsRow(ncaaRow, names);
+  return resolved;
 }
 
-async function upsertPastSeasonStats(
+async function upsertSeasonStats(
   prisma: PrismaClient,
   playerId: string,
+  season: number,
   stats: ParsedBasketballStats
 ): Promise<void> {
   await prisma.playerSeasonStats.upsert({
     where: {
-      playerId_season: { playerId, season: SEASON_PAST },
+      playerId_season: { playerId, season },
     },
     create: {
       playerId,
-      season: SEASON_PAST,
+      season,
       goals: 0,
       assists: stats.assists,
       tackles: 0,
@@ -244,7 +266,9 @@ async function main(): Promise<void> {
   const prisma = new PrismaClient();
 
   try {
-    console.log(`[NBA-HIST-TEST] Histórico ${SEASON_PAST} — limite: ${teamLimit} franquias`);
+    console.log(
+      `[NBA-HIST-TEST] Histórico ${SEASON_TARGETS.map((t) => t.key).join(" + ")} — limite: ${teamLimit} franquias`
+    );
 
     const teams = await prisma.team.findMany({
       where: { competition: { name: "NBA" } },
@@ -259,6 +283,7 @@ async function main(): Promise<void> {
 
     let processed = 0;
     let updated = 0;
+    let multiSeason = 0;
     let skipped = 0;
     let failed = 0;
 
@@ -283,16 +308,19 @@ async function main(): Promise<void> {
 
         try {
           const espnId = String(player.apiSportsId);
-          const stats = await resolvePastSeasonStats(espnId);
+          const seasons = await resolveHistoricalSeasons(espnId);
 
-          if (!stats) {
+          if (!seasons.length) {
             skipped += 1;
             continue;
           }
 
-          await upsertPastSeasonStats(prisma, player.id, stats);
+          for (const row of seasons) {
+            await upsertSeasonStats(prisma, player.id, row.seasonKey, row.stats);
+          }
           updated += 1;
           teamUpdated += 1;
+          if (seasons.length >= 2) multiSeason += 1;
         } catch (error) {
           failed += 1;
           console.warn(`[NBA-HIST-TEST] FAIL ${player.fullName}:`, error);
@@ -305,7 +333,7 @@ async function main(): Promise<void> {
     }
 
     console.log(
-      `[NBA-HIST-TEST] Concluído — processados: ${processed} · atualizados: ${updated} · sem dados: ${skipped} · falhas: ${failed}`
+      `[NBA-HIST-TEST] Concluído — processados: ${processed} · atualizados: ${updated} · multi-season: ${multiSeason} · sem dados: ${skipped} · falhas: ${failed}`
     );
   } finally {
     await prisma.$disconnect();

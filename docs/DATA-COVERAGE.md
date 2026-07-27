@@ -4,13 +4,15 @@
 > **Source of truth:** `npm run data:coverage` (live DB, `DATA_SOURCE=db`)  
 > **Honesty rule:** trajectory needs **≥2 productive seasons**; we never invent slopes from stubs.
 
-## Snapshot (2026-07-27)
+## Snapshot (2026-07-27, pós backfill)
 
 | Sport | Players | 0 productive / stub | 1 productive | ≥2 (trajectory-eligible) |
 |-------|--------:|--------------------:|-------------:|-------------------------:|
 | Soccer | 3 921 | 1 575 | 1 550 | **796 (20.3%)** |
-| Basketball | 2 320 | 1 809 | 511 | **0 (0%)** |
+| Basketball | 2 320 | 1 767 | 110 | **443 (19.1%)** |
 | American Football | 9 792 | 8 366 | 1 426 | **0 (0%)** |
+
+NBA dual-season backfill (`data:sync-nba-teste -- --teams=30`) unlocked BB trajectory for ~443 players. EuroLeague boxscore window (`--days=90`): **62/259** with any season stats.
 
 ### By league (players)
 
@@ -40,9 +42,10 @@ Trajectory compute functions share these floors — UI badges and limitations us
 
 ## Known gaps (honest)
 
-1. **EuroLeague:** 259 roster players, **0** with any season-stat rows. Rosters only until boxscore/season sync.
-2. **Basketball / AF multi-season:** virtually all productive players have **one** usable season line → trajectory almost always `insufficient_data`. Expected until NBA multi-season / AF season backfill.
-3. **Soccer:** ~20% trajectory-eligible; many rows still stub or single-season — badges surface this on profile.
+1. **EuroLeague:** Rosters always sync; season stats come from boxscores. In off-season use a wide window (`--days=90`) — Finals typically end in May. After 2026-07-27 backfill: **62/259** players with season-stat rows (playoff window), not full regular season.
+2. **Basketball multi-season:** Use `npm run data:sync-nba-teste -- --teams=30` to write **2024-25 + 2025-26** productive lines (stubs for 2026-27 alone do not unlock trajectory).
+3. **American Football:** NFL/CFB counts OK; multi-season still mostly single productive line until broader `data:backfill-af-season-stats`.
+4. **Soccer:** ~20% trajectory-eligible; many rows still stub or single-season — badges surface this on profile.
 
 ## Ops commands
 
@@ -50,15 +53,15 @@ Trajectory compute functions share these floors — UI badges and limitations us
 npm run data:coverage
 npm run data:coverage -- --json
 
-# EuroLeague season depth
-npm run data:sync-euroleague -- --days=30
+# EuroLeague season depth (off-season: widen the window)
+npm run data:sync-euroleague -- --days=90
+
+# NBA two completed seasons for trajectory
+npm run data:sync-nba-teste -- --teams=30
 
 # AF multi-season (when ESPN season lines available)
-npm run data:backfill-af-season-stats -- --league=nfl
+npm run data:backfill-af-season-stats -- --league=nfl --limit=200
 npm run data:backfill-af-season-stats -- --league=cfb --limit=200
-
-# NBA multi-season history (when scripted path is available)
-npm run data:sync-nba-teste
 ```
 
 ## Product surface

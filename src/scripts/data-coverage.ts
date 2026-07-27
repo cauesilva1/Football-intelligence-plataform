@@ -207,10 +207,10 @@ async function main() {
       cfbPlayers,
     },
     opsHints: [
-      "npm run data:sync-euroleague -- --days=30",
-      "npm run data:backfill-af-season-stats -- --league=nfl",
+      "npm run data:sync-euroleague -- --days=90",
+      "npm run data:sync-nba-teste -- --teams=30",
+      "npm run data:backfill-af-season-stats -- --league=nfl --limit=200",
       "npm run data:backfill-af-season-stats -- --league=cfb --limit=200",
-      "npm run data:sync-nba-teste  # multi-season NBA history when available",
     ],
   };
 
