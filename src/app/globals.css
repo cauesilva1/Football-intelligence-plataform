@@ -455,7 +455,6 @@
     line-height: 0.92;
     letter-spacing: -0.045em;
     color: #fff;
-    opacity: 1 !important;
   }
 
   .landing-headline {
@@ -831,11 +830,6 @@
   .landing-reveal-delay-2 { animation-delay: 140ms; }
   .landing-reveal-delay-3 { animation-delay: 200ms; }
 
-  @media (prefers-reduced-motion: no-preference) {
-    .landing-hero-copy .landing-reveal {
-      /* keep animation */
-    }
-  }
 
   @media (prefers-reduced-motion: reduce) {
     html.sport-theme-ready body,
