@@ -8,7 +8,7 @@ export type RecruitmentDataConfidence = "HIGH" | "MEDIUM" | "LOW";
 
 /** Cross-sport recruitment brief — dimension priority keys are sport-owned. */
 export interface RecruitmentBrief {
-  sport: Extract<Sport, "SOCCER" | "BASKETBALL">;
+  sport: Sport;
   position: string;
   league?: string;
   season?: string;

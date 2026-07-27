@@ -185,7 +185,7 @@ Referência: [statsperform.com](https://www.statsperform.com/)
 - [ ] Testes só em scoring/export — sem E2E
 - [x] BB intelligence profile (Wave 1) — `src/lib/intelligence/basketball/` + shared registry
 - [x] BB recruitment fit (Wave 2) — shared brief + `/recruitment` sport-aware
-- [ ] AF intelligence depth — próximo após BB polish
+- [x] AF intelligence profile + recruitment (Wave 3) — `src/lib/intelligence/american-football/`
 - [ ] BB/AF tactical fit (Wave 4)
 
 ---

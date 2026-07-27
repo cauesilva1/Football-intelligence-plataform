@@ -1,6 +1,7 @@
 import { derivePlayingStyle } from "@/features/scouting/lib/playing-style";
 import { withBriefContext } from "@/lib/export/scout-brief-context";
 import { toBriefIntelligenceSnapshot } from "@/lib/export/scout-brief-intelligence";
+import { buildAmericanFootballIntelligenceProfile } from "@/lib/intelligence/american-football/build-american-football-intelligence-profile";
 import { adaptSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/adapter";
 import { buildSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/build-soccer-intelligence-profile";
 import { buildBasketballIntelligenceProfile } from "@/lib/intelligence/basketball/build-basketball-intelligence-profile";
@@ -481,7 +482,13 @@ function buildPlayerContext(player: Player): string {
                 buildBasketballIntelligenceProfile(player)
               ),
             }
-          : {}),
+          : sport === "AMERICAN_FOOTBALL"
+            ? {
+                intelligence: toBriefIntelligenceSnapshot(
+                  buildAmericanFootballIntelligenceProfile(player)
+                ),
+              }
+            : {}),
     },
     null,
     2

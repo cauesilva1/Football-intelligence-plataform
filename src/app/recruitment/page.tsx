@@ -28,8 +28,9 @@ export default async function RecruitmentPage({
         <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-6">
           <h1 className="font-display text-xl font-bold text-foreground md:text-2xl">Recruitment</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Headless fit engine with ranked candidates for soccer and basketball — decision
-            support, not certainty. Switch sport in the shell to change the brief vocabulary.
+            Headless fit engine with ranked candidates for soccer, basketball, and American
+            football — decision support, not certainty. Switch sport in the shell to change the
+            brief vocabulary.
           </p>
         </div>
         <Suspense fallback={<ResultsSkeleton />}>

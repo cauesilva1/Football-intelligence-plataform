@@ -29,8 +29,15 @@ function numberArg(flag: string): number | undefined {
 
 async function main() {
   const sportRaw = argValue("--sport") ?? "SOCCER";
-  const sport = sportRaw === "BASKETBALL" ? "BASKETBALL" : "SOCCER";
-  const position = argValue("--position") ?? (sport === "BASKETBALL" ? "PG" : "ST");
+  const sport =
+    sportRaw === "BASKETBALL"
+      ? "BASKETBALL"
+      : sportRaw === "AMERICAN_FOOTBALL"
+        ? "AMERICAN_FOOTBALL"
+        : "SOCCER";
+  const position =
+    argValue("--position") ??
+    (sport === "BASKETBALL" ? "PG" : sport === "AMERICAN_FOOTBALL" ? "WR" : "ST");
 
   const brief: RecruitmentBrief = {
     sport,

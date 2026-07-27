@@ -13,7 +13,12 @@ function parseBrief(
   if (!position) return null;
 
   const sportRaw = typeof searchParams.sport === "string" ? searchParams.sport : "SOCCER";
-  const sport = sportRaw === "BASKETBALL" ? "BASKETBALL" : "SOCCER";
+  const sport =
+    sportRaw === "BASKETBALL"
+      ? "BASKETBALL"
+      : sportRaw === "AMERICAN_FOOTBALL"
+        ? "AMERICAN_FOOTBALL"
+        : "SOCCER";
 
   const num = (key: string) => {
     const raw = searchParams[key];

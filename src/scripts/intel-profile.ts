@@ -1,11 +1,12 @@
 /**
- * Print a headless intelligence profile as JSON (soccer / basketball).
+ * Print a headless intelligence profile as JSON (soccer / basketball / AF).
  *
  * Usage:
  *   npm run intel:profile -- <playerId>
  */
 import {
   similarBasketballPositionGroup,
+  similarFootballPositionGroup,
   similarPositionGroup,
 } from "@/features/scouting/lib/position-scorecard";
 import { getPlayerRepository } from "@/features/scouting/repository";
@@ -38,7 +39,9 @@ async function main() {
   const positions =
     sport === "BASKETBALL"
       ? similarBasketballPositionGroup(player.position)
-      : similarPositionGroup(player.position);
+      : sport === "AMERICAN_FOOTBALL"
+        ? similarFootballPositionGroup(player.position)
+        : similarPositionGroup(player.position);
 
   const pool = await repo.findSample(sport, {
     positions,

@@ -78,13 +78,13 @@ Isto é o **shared desk** — funcional hoje para Soccer, Basketball e American 
 | Rating + honesty | ✅ | ✅ | ✅ |
 | Scorecards | ✅ | ✅ | ✅ |
 | Shared desk (list/compare/shortlist/report) | ✅ | ✅ | ✅ |
-| **Intelligence profile** (role, dimensions, trajectory, limits) | ✅ `src/lib/intelligence/soccer/` | ✅ `src/lib/intelligence/basketball/` | ❌ |
-| **Percentis de liga/posição** | ✅ | ✅ (NBA/NCAA/EuroLeague isolados) | ❌ |
-| **Recruitment fit engine** | ✅ + UI `/recruitment` | ✅ + UI sport-aware | ❌ |
+| **Intelligence profile** (role, dimensions, trajectory, limits) | ✅ `src/lib/intelligence/soccer/` | ✅ `src/lib/intelligence/basketball/` | ✅ `src/lib/intelligence/american-football/` |
+| **Percentis de liga/posição** | ✅ | ✅ (NBA/NCAA/EuroLeague isolados) | ✅ (NFL/CFB isolados) |
+| **Recruitment fit engine** | ✅ + UI `/recruitment` | ✅ + UI sport-aware | ✅ + UI sport-aware |
 | **Tactical / team fit** | ✅ MVP + panel | ❌ | ❌ |
-| **Similarity “why”** | ✅ | ✅ | Similarity sem `why` rico |
-| Painéis no perfil | Intelligence + Tactical | Intelligence | Scorecard + similar |
-| Testes de intelligence | 4 suítes | 1 suíte (7 casos) | — |
+| **Similarity “why”** | ✅ | ✅ | ✅ |
+| Painéis no perfil | Intelligence + Tactical | Intelligence | Intelligence |
+| Testes de intelligence | 4 suítes | 2 suítes | 2 suítes |
 | Testes de scoring | ✅ | ✅ | ✅ |
 | CLI intel (`intel:profile` etc.) | ✅ soccer | — | — |
 

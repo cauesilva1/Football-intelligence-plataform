@@ -1,4 +1,5 @@
 import type { Sport } from "@/lib/sport";
+import { americanFootballIntelligenceEngine } from "@/lib/intelligence/american-football/engine";
 import { soccerIntelligenceEngine } from "@/lib/intelligence/soccer/engine";
 import { basketballIntelligenceEngine } from "@/lib/intelligence/basketball/engine";
 import type { IntelligenceEngine } from "@/lib/intelligence/types";
@@ -6,6 +7,7 @@ import type { IntelligenceEngine } from "@/lib/intelligence/types";
 const ENGINES: Partial<Record<Sport, IntelligenceEngine>> = {
   SOCCER: soccerIntelligenceEngine,
   BASKETBALL: basketballIntelligenceEngine,
+  AMERICAN_FOOTBALL: americanFootballIntelligenceEngine,
 };
 
 export function getIntelligenceEngine(sport: Sport): IntelligenceEngine | null {

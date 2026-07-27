@@ -1,8 +1,13 @@
 import {
   similarBasketballPositionGroup,
+  similarFootballPositionGroup,
   similarPositionGroup,
 } from "@/features/scouting/lib/position-scorecard";
 import { getPlayerRepository } from "@/features/scouting/repository";
+import {
+  computeAmericanFootballLeaguePositionPercentiles,
+  type AmericanFootballLeaguePositionPercentileTable,
+} from "@/lib/intelligence/american-football/league-percentiles";
 import {
   computeBasketballLeaguePositionPercentiles,
   type BasketballLeaguePositionPercentileTable,
@@ -11,7 +16,11 @@ import {
   computeLeaguePositionPercentiles,
   type LeaguePositionPercentileTable,
 } from "@/lib/intelligence/soccer/league-percentiles";
-import { BB_RATE_MIN_MINUTES, SOCCER_RATE_MIN_MINUTES } from "@/lib/scoring";
+import {
+  AF_RATE_MIN_MINUTES,
+  BB_RATE_MIN_MINUTES,
+  SOCCER_RATE_MIN_MINUTES,
+} from "@/lib/scoring";
 import { CURRENT_SEASON } from "@/lib/data/generators";
 import type { Player } from "@/types";
 
@@ -19,7 +28,8 @@ const LEAGUE_COHORT_TAKE = 800;
 
 export type AnyLeaguePercentileTable =
   | LeaguePositionPercentileTable
-  | BasketballLeaguePositionPercentileTable;
+  | BasketballLeaguePositionPercentileTable
+  | AmericanFootballLeaguePositionPercentileTable;
 
 export async function loadLeaguePercentileTable(
   league: string,
@@ -59,6 +69,30 @@ export async function loadBasketballLeaguePercentileTable(
   });
 }
 
+export async function loadAmericanFootballLeaguePercentileTable(
+  league: string,
+  position: string,
+  season: string = CURRENT_SEASON
+): Promise<AmericanFootballLeaguePositionPercentileTable | null> {
+  const repo = getPlayerRepository();
+  const cohort = await repo.findSample("AMERICAN_FOOTBALL", {
+    league,
+    positions: similarFootballPositionGroup(position),
+    minMinutes: AF_RATE_MIN_MINUTES,
+    take: LEAGUE_COHORT_TAKE,
+  });
+
+  return computeAmericanFootballLeaguePositionPercentiles(
+    "AMERICAN_FOOTBALL",
+    league,
+    position,
+    {
+      season,
+      cohort,
+    }
+  );
+}
+
 export async function loadLeaguePercentileContext(
   player: Player
 ): Promise<AnyLeaguePercentileTable | null> {
@@ -70,6 +104,9 @@ export async function loadLeaguePercentileContext(
 
   if (sport === "BASKETBALL") {
     return loadBasketballLeaguePercentileTable(league, player.position, season);
+  }
+  if (sport === "AMERICAN_FOOTBALL") {
+    return loadAmericanFootballLeaguePercentileTable(league, player.position, season);
   }
   if (sport === "SOCCER") {
     return loadLeaguePercentileTable(league, player.position, season);

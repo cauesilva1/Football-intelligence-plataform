@@ -3,6 +3,7 @@ import {
   buildFootballPositionScorecard,
   buildPositionScorecard,
 } from "@/features/scouting/lib/position-scorecard";
+import { buildAmericanFootballIntelligenceProfile } from "@/lib/intelligence/american-football/build-american-football-intelligence-profile";
 import { buildBasketballIntelligenceProfile } from "@/lib/intelligence/basketball/build-basketball-intelligence-profile";
 import { buildSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/build-soccer-intelligence-profile";
 import { adaptSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/adapter";
@@ -70,6 +71,9 @@ export function buildScoutBriefContext(player: Player): ScoutingReportBriefConte
       minutesPlayed: s.minutesPlayed,
     });
     const scorecard = buildFootballPositionScorecard(player.position, s);
+    const intelligence = toBriefIntelligenceSnapshot(
+      buildAmericanFootballIntelligenceProfile(player)
+    );
     return {
       minutesPlayed: s.minutesPlayed,
       appearances: s.appearances,
@@ -77,7 +81,11 @@ export function buildScoutBriefContext(player: Player): ScoutingReportBriefConte
       sampleNote: smallSample
         ? "Provisional rating — need ≥6 games and ≥360′ proxy minutes."
         : "Reliable sample — rates match profile methodology.",
-      keyRates: scorecardToKeyRates(scorecard.metrics),
+      keyRates: [
+        ...scorecardToKeyRates(scorecard.metrics),
+        ...formatBriefIntelligenceLines(intelligence),
+      ],
+      intelligence,
     };
   }
 

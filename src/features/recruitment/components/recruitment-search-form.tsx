@@ -3,27 +3,50 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { useSport } from "@/context/sport-context";
-import { BASKETBALL_POSITIONS } from "@/lib/positions";
+import { AMERICAN_FOOTBALL_POSITIONS, BASKETBALL_POSITIONS } from "@/lib/positions";
+import type { Sport } from "@/lib/sport";
 
 const SOCCER_POSITIONS = ["ST", "LW", "RW", "CF", "CAM", "CM", "CDM", "CB", "LB", "RB"];
 const BB_POSITIONS = [...BASKETBALL_POSITIONS, "GUARD", "WING", "BIG"] as const;
+const AF_POSITIONS = [
+  ...AMERICAN_FOOTBALL_POSITIONS,
+  "SKILL",
+  "DEFENSE",
+  "SPECIALIST",
+] as const;
+
+function resolveSport(currentSport: Sport): Sport {
+  if (currentSport === "BASKETBALL") return "BASKETBALL";
+  if (currentSport === "AMERICAN_FOOTBALL") return "AMERICAN_FOOTBALL";
+  return "SOCCER";
+}
+
+function positionsForSport(sport: Sport): string[] {
+  if (sport === "BASKETBALL") return [...BB_POSITIONS];
+  if (sport === "AMERICAN_FOOTBALL") return [...AF_POSITIONS];
+  return SOCCER_POSITIONS;
+}
+
+function defaultPositionForSport(sport: Sport): string {
+  if (sport === "BASKETBALL") return "PG";
+  if (sport === "AMERICAN_FOOTBALL") return "WR";
+  return "ST";
+}
 
 export function RecruitmentSearchForm() {
   const router = useRouter();
   const params = useSearchParams();
   const { currentSport } = useSport();
-  const sportSupported = currentSport === "BASKETBALL" || currentSport === "SOCCER";
-  const sport = currentSport === "BASKETBALL" ? "BASKETBALL" : "SOCCER";
-  const positions = useMemo(
-    () => (sport === "BASKETBALL" ? [...BB_POSITIONS] : SOCCER_POSITIONS),
-    [sport]
+  const sport = resolveSport(currentSport);
+  const positions = useMemo(() => positionsForSport(sport), [sport]);
+  const defaultPosition = defaultPositionForSport(sport);
+  const allKnown = useMemo(
+    () => [...SOCCER_POSITIONS, ...BB_POSITIONS, ...AF_POSITIONS],
+    []
   );
-  const defaultPosition = sport === "BASKETBALL" ? "PG" : "ST";
   const [position, setPosition] = useState(() => {
     const fromUrl = params.get("position");
-    if (fromUrl && (SOCCER_POSITIONS.includes(fromUrl) || (BB_POSITIONS as readonly string[]).includes(fromUrl))) {
-      return fromUrl;
-    }
+    if (fromUrl && allKnown.includes(fromUrl)) return fromUrl;
     return defaultPosition;
   });
 
@@ -39,22 +62,21 @@ export function RecruitmentSearchForm() {
     router.push(`/recruitment?${query.toString()}`);
   }
 
+  const sportLabel =
+    sport === "BASKETBALL"
+      ? "basketball"
+      : sport === "AMERICAN_FOOTBALL"
+        ? "American football"
+        : "soccer";
+
   return (
     <form
       onSubmit={onSubmit}
       className="grid gap-3 rounded-xl border border-border bg-surface-muted/20 p-4 md:grid-cols-2 lg:grid-cols-3"
     >
-      {!sportSupported ? (
-        <p className="md:col-span-2 lg:col-span-3 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-100/90">
-          American Football recruitment fit is not live yet — this form runs soccer briefs until the
-          AF engine ships.
-        </p>
-      ) : null}
       <input type="hidden" name="sport" value={sport} />
       <label className="space-y-1 text-xs">
-        <span className="font-medium text-muted-foreground">
-          Position {sport === "BASKETBALL" ? "(basketball)" : "(soccer)"}
-        </span>
+        <span className="font-medium text-muted-foreground">Position ({sportLabel})</span>
         <select
           name="position"
           value={positions.includes(position) ? position : defaultPosition}
@@ -75,20 +97,21 @@ export function RecruitmentSearchForm() {
           type="number"
           min={16}
           max={40}
-          defaultValue={params.get("maxAge") ?? (sport === "BASKETBALL" ? "26" : "23")}
+          defaultValue={
+            params.get("maxAge") ??
+            (sport === "BASKETBALL" ? "26" : sport === "AMERICAN_FOOTBALL" ? "28" : "23")
+          }
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
         />
       </label>
       <label className="space-y-1 text-xs">
-        <span className="font-medium text-muted-foreground">
-          {sport === "BASKETBALL" ? "Max market / listed value (USD)" : "Max value (USD)"}
-        </span>
+        <span className="font-medium text-muted-foreground">Max value (USD)</span>
         <input
           name="maxValue"
           type="number"
           min={0}
           step={100000}
-          defaultValue={params.get("maxValue") ?? (sport === "BASKETBALL" ? "" : "5000000")}
+          defaultValue={params.get("maxValue") ?? (sport === "SOCCER" ? "5000000" : "")}
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
         />
       </label>
@@ -119,13 +142,24 @@ export function RecruitmentSearchForm() {
       </label>
       <label className="space-y-1 text-xs">
         <span className="font-medium text-muted-foreground">
-          League {sport === "BASKETBALL" ? "(NBA / NCAA / EuroLeague)" : "(optional)"}
+          League{" "}
+          {sport === "BASKETBALL"
+            ? "(NBA / NCAA / EuroLeague)"
+            : sport === "AMERICAN_FOOTBALL"
+              ? "(NFL / College Football)"
+              : "(optional)"}
         </span>
         <input
           name="league"
           type="text"
           defaultValue={params.get("league") ?? ""}
-          placeholder={sport === "BASKETBALL" ? "NBA" : "competitionId"}
+          placeholder={
+            sport === "BASKETBALL"
+              ? "NBA"
+              : sport === "AMERICAN_FOOTBALL"
+                ? "NFL"
+                : "competitionId"
+          }
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
         />
       </label>
@@ -145,7 +179,7 @@ export function RecruitmentSearchForm() {
           type="submit"
           className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
-          Run {sport === "BASKETBALL" ? "basketball" : "soccer"} recruitment search
+          Run {sportLabel} recruitment search
         </button>
       </div>
     </form>
