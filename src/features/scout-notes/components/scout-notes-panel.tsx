@@ -90,8 +90,8 @@ export function ScoutNotesPanel({ playerId }: { playerId: string }) {
       title="Scout Notes"
       description={
         onShortlist
-          ? "Tied to this player on My Players — saved on this device only."
-          : "Save to My Players to keep this note with the shortlist entry (this device only)."
+          ? "Tied to this player on My Players — synced to your anonymous workspace when the database is enabled."
+          : "Save to My Players to keep this note with the shortlist entry."
       }
       density="dense"
     >

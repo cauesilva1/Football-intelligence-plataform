@@ -407,7 +407,7 @@ Referência: `docs/SOCCER-SCOUT-PLAN.md` Stages 0–7 + Stage 8 data.
 ### PHASE 5 — Memory, Auth, Outcomes
 **Estimativa:** 8+ semanas — **Phase 5a em andamento (demo, sem signup público)**
 
-#### Phase 5a — Persistência anônima (demo) ✅ em progresso
+#### Phase 5a — Persistência anônima (demo) ✅
 **Objetivo:** memória no servidor sem tela de cadastro — cookie `omniscout_device` + `deviceId`.
 
 - [x] Cookie httpOnly + middleware para `deviceId` anônimo
@@ -415,14 +415,18 @@ Referência: `docs/SOCCER-SCOUT-PLAN.md` Stages 0–7 + Stage 8 data.
 - [x] `scouting_reports` — reports com `deviceId` + `payload` JSON
 - [x] `recruitment_brief_runs` — histórico de buscas em `/recruitment`
 - [x] Fallback: `DATA_SOURCE=mock` ou DB indisponível → localStorage / file store
-- [ ] `prisma db push` / migrate em ambientes com Supabase
+- [x] `prisma db push` / migrate em ambientes com Supabase
 
-**Regra demo:** nenhum signup público; workspace é anônimo por dispositivo.
+**Regra demo (permanente até decisão explícita):** nenhum signup público; workspace anônimo por dispositivo.
 
-#### Phase 5b — Auth fechado (quando houver piloto)
-- [ ] Invite-only / allowlist — **sem** página de registro público
+#### Phase 5b — Auth fechado (opcional — só com piloto real)
+**Não contradiz a Opção B.** A 5a continua válida para demo/portfolio; a 5b só entra quando existir clube ou analista pagante que precise de **conta + multi-dispositivo + equipe**. Ainda **sem** página “Criar conta” aberta ao público.
+
+- [ ] Invite-only / allowlist (admin convida por e-mail)
 - [ ] Migrar `deviceId` → `User` (merge shortlist, reports, recruitment history)
 - [ ] Roles `SCOUT` / `ANALYST` / `ADMIN`
+
+**Se não houver piloto:** pular 5b e seguir para Phase 6 ou Phase M.
 
 #### Phase 5c — Outcomes (comercial)
 - [ ] Shortlist + notes já em DB (5a) — polish multi-device após 5b
@@ -433,6 +437,8 @@ Referência: `docs/SOCCER-SCOUT-PLAN.md` Stages 0–7 + Stage 8 data.
 ---
 
 ### PHASE 6 — Comercial
+> **Demo stance:** skip full Phase 6 until a real pilot. Prefer Phase M for portfolio surface.
+
 - [ ] Multi-tenant / org
 - [ ] API pública
 - [ ] White-label reports
@@ -440,40 +446,40 @@ Referência: `docs/SOCCER-SCOUT-PLAN.md` Stages 0–7 + Stage 8 data.
 
 ---
 
-### PHASE M — Public Landing & Brand Surface (última fase do roadmap)
+### PHASE M — Public Landing & Brand Surface ✅ (MVP)
 **Objetivo:** página inicial pública profissional — credibilidade, posicionamento e CTA — **inspirada na estrutura** do site [Stats Perform](https://www.statsperform.com/), com identidade OmniScout.  
-**Não é** Phase 2b nem polish do app interno — **implementar depois de Phases 5–6 estáveis.**  
-**Branch:** `experiments` (ou `marketing` se quiser isolar)  
-**Estimativa:** 1–2 semanas
+**Branch:** `experiments`  
+**Estimativa:** 1–2 semanas — **MVP landing + polish leve**
 
-#### M.1 Landing (`/` ou `/home`)
-- [ ] Substituir redirect ` /` → `/dashboard` por landing pública (dashboard continua em `/dashboard`)
-- [ ] Hero: proposta (“decision layer para scouts”, não feed Opta)
-- [ ] Segmentos: analista independente, clube, academia
-- [ ] Bloco “Como funciona”: dados → inteligência → decisão (workflow scout)
-- [ ] Trust: metodologia, honestidade de amostra, prototype disclaimer
-- [ ] CTA: Entrar no app / Scouting / Methodology
+#### M.1 Landing (`/`)
+- [x] Substituir redirect `/` → `/dashboard` por landing pública (dashboard continua em `/dashboard`)
+- [x] Hero: proposta (“decision layer para scouts”, não feed Opta)
+- [x] Segmentos: analista independente, clube, academia
+- [x] Bloco “Como funciona”: dados → inteligência → decisão (workflow scout)
+- [x] Trust: metodologia, honestidade de amostra, prototype disclaimer
+- [x] CTA: Enter scouting / Methodology / Request access (mailto — sem signup)
 
 #### M.2 Tom visual (só landing + layout público)
-- [ ] Tipografia e espaçamento mais “enterprise” na landing
-- [ ] Paleta sóbria (dark/neutral) — **sem** rebranding global do app ainda
-- [ ] Sem animações pesadas (opcional: motion leve no hero)
+- [x] Tipografia Syne + Source Sans 3 só na landing
+- [x] Paleta sóbria pitch/dark — sem rebranding global do app
+- [x] Motion leve: reveal no hero + drift no visual de fundo
 
 #### M.3 Critério de done
-- [ ] Visitante entende o produto em &lt;30s
-- [ ] Links claros para `/methodology`, `/scouting`, `/dashboard`
-- [ ] Mobile-first responsivo
-- [ ] Não prometer feed/live data que não existe
+- [x] Visitante entende o produto em &lt;30s
+- [x] Links claros para `/methodology`, `/scouting`, `/dashboard`
+- [x] Mobile-first responsivo
+- [x] Não promete feed/live data que não existe
 
-#### M.4 Polish transversal (depois de M + app interno estável)
-- [ ] Unificar tokens visuais landing ↔ app interno
-- [ ] Micro-interações consistentes (hover, transições)
+#### M.4 Polish transversal (leve)
+- [x] Copy shortlist / scout notes alinhada ao workspace anônimo (5a)
+- [x] Empty states com hover transition
+- [ ] Unificar tokens visuais landing ↔ app interno (opcional depois)
 - [ ] Revisão de copy PT/EN se necessário
 
-**Arquivos prováveis:**
-- `src/app/page.tsx` (landing)
-- `src/features/marketing/components/` (novo)
-- `src/components/layout/marketing-shell.tsx` (opcional)
+**Arquivos:**
+- `src/app/page.tsx` ✅
+- `src/features/marketing/components/` ✅
+- `src/features/marketing/components/marketing-shell.tsx` ✅
 
 ---
 
@@ -570,4 +576,4 @@ Eles são infraestrutura de dados + AI em escala enterprise. OmniScout é **work
 
 ---
 
-*Última atualização: 2026-07-27 — Phase 5a: workspace anônimo (deviceId) sem signup público.*
+*Última atualização: 2026-07-27 — Phase M landing MVP + polish leve; Phase 6 adiada até piloto.*

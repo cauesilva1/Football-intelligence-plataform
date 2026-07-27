@@ -149,7 +149,7 @@ export function ShortlistView() {
       <ScoutWorkflowNav current="shortlist" />
       <PageHeader
         title="My Players"
-        description={`${players.length} ${players.length === 1 ? "player" : "players"} saved on this device — tag, note, then open a scout brief.`}
+        description={`${players.length} ${players.length === 1 ? "player" : "players"} in your workspace — tag, note, then open a scout brief.`}
       />
 
       <div className="flex flex-wrap gap-1.5">

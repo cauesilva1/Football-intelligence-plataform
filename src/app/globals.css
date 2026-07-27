@@ -367,6 +367,100 @@
     overflow: hidden;
   }
 
+  /* ── Phase M: public landing ───────────────────────────── */
+  .landing {
+    font-family: var(--font-landing-body), "Source Sans 3", system-ui, sans-serif;
+  }
+
+  .landing .landing-brand {
+    font-family: var(--font-landing-display), Syne, system-ui, sans-serif;
+  }
+
+  .landing-hero-visual {
+    background:
+      radial-gradient(ellipse 70% 55% at 78% 35%, hsl(142 71% 45% / 0.22), transparent 58%),
+      radial-gradient(ellipse 50% 40% at 12% 80%, hsl(150 30% 12% / 0.9), transparent 55%),
+      linear-gradient(165deg, hsl(150 22% 6%) 0%, hsl(155 25% 4%) 42%, hsl(150 30% 3%) 100%);
+  }
+
+  .landing-hero-visual::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.35;
+    background-image:
+      linear-gradient(
+        90deg,
+        transparent 0%,
+        transparent 48.6%,
+        hsl(142 71% 45% / 0.35) 49.4%,
+        hsl(142 71% 45% / 0.35) 50.6%,
+        transparent 51.4%,
+        transparent 100%
+      ),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 47px,
+        hsl(142 40% 40% / 0.07) 48px
+      );
+    mask-image: linear-gradient(180deg, transparent 0%, black 28%, black 72%, transparent 100%);
+    animation: landing-pitch-drift 28s ease-in-out infinite alternate;
+  }
+
+  .landing-hero-visual::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 72% 28%, hsl(142 71% 55% / 0.12), transparent 22%),
+      linear-gradient(180deg, transparent 40%, hsl(150 18% 4% / 0.85) 88%, hsl(150 18% 4%) 100%);
+  }
+
+  @keyframes landing-pitch-drift {
+    from {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    to {
+      transform: translate3d(-1.5%, 1%, 0) scale(1.03);
+    }
+  }
+
+  @keyframes landing-reveal {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 14px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  .landing-reveal {
+    animation: landing-reveal 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .landing-reveal-delay-1 {
+    animation-delay: 90ms;
+  }
+
+  .landing-reveal-delay-2 {
+    animation-delay: 160ms;
+  }
+
+  .landing-reveal-delay-3 {
+    animation-delay: 240ms;
+  }
+
+  .landing-step {
+    transition: border-color 300ms ease;
+  }
+
+  .landing-step:hover {
+    border-color: hsl(142 71% 45% / 0.45);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     html.sport-theme-ready body,
     html.sport-theme-ready .sport-ambient,
@@ -378,7 +472,9 @@
 
     .motion-enter,
     .sport-hero,
-    .sport-switcher-icon-active {
+    .sport-switcher-icon-active,
+    .landing-reveal,
+    .landing-hero-visual::before {
       animation: none;
     }
 
