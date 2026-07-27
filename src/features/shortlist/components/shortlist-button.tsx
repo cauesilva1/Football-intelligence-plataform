@@ -30,8 +30,8 @@ export function ShortlistButton({
   }, [playerId]);
 
   const saveLabel = saved
-    ? "Saved on this device — click to remove"
-    : "Save to My Players on this device";
+    ? "Saved to workspace — click to remove"
+    : "Save to My Players";
 
   return (
     <div className={cn("inline-flex items-center gap-1", !compact && "flex-col items-stretch sm:flex-row sm:items-center")}>

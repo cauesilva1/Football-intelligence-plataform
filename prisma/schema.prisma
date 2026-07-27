@@ -108,6 +108,7 @@ model Player {
   stats             PlayerSeasonStats[]
   matchStats        PlayerMatchStat[]
   reports           ScoutingReport[]
+  shortlistEntries  WorkspaceShortlistEntry[]
   strengths         String[]
   weaknesses        String[]
   createdAt         DateTime          @default(now())
@@ -299,16 +300,52 @@ model ScoutingReport {
   player         Player   @relation(fields: [playerId], references: [id])
   authorId       String?
   author         User?    @relation(fields: [authorId], references: [id])
+  /// Anonymous demo workspace — Phase 5a (no public signup).
+  deviceId       String?
   summary        String
   strengths      String[]
   weaknesses     String[]
   recommendation String
   overallRating  Float
   generatedBy    String   @default("mock-ai")
+  /// playingStyle, tacticalFit, briefContext — full app payload beyond scalar columns.
+  payload        Json?
   createdAt      DateTime @default(now())
 
   @@index([playerId])
+  @@index([deviceId])
+  @@index([playerId, deviceId])
   @@map("scouting_reports")
+}
+
+/// Device-scoped shortlist — Phase 5a persistence without auth.
+model WorkspaceShortlistEntry {
+  id          String    @id @default(uuid())
+  deviceId    String
+  playerId    String
+  player      Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  tag         String    @default("watch")
+  note        String    @default("")
+  lastBriefAt DateTime?
+  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now())
+
+  @@unique([deviceId, playerId])
+  @@index([deviceId])
+  @@map("workspace_shortlist_entries")
+}
+
+/// Saved recruitment brief runs per anonymous device.
+model RecruitmentBriefRun {
+  id             String   @id @default(uuid())
+  deviceId       String
+  brief          Json
+  totalEvaluated Int      @default(0)
+  resultCount    Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  @@index([deviceId, createdAt])
+  @@map("recruitment_brief_runs")
 }
 
 model SystemCache {

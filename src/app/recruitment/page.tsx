@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { DataPanel } from "@/components/data/data-panel";
 import { ScoutWorkflowNav } from "@/features/scouting/components/scout-workflow-nav";
+import { RecruitmentHistoryPanel } from "@/features/recruitment/components/recruitment-history-panel";
 import { RecruitmentResults } from "@/features/recruitment/components/recruitment-results";
 import { RecruitmentSearchForm } from "@/features/recruitment/components/recruitment-search-form";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,6 +33,9 @@ export default async function RecruitmentPage({
         </div>
         <Suspense fallback={<ResultsSkeleton />}>
           <RecruitmentSearchForm />
+        </Suspense>
+        <Suspense fallback={<ResultsSkeleton />}>
+          <RecruitmentHistoryPanel />
         </Suspense>
         <DataPanel title="Ranked candidates" description="Server-scored list for your brief." density="dense">
           <Suspense fallback={<ResultsSkeleton />}>

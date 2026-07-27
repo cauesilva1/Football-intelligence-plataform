@@ -19,6 +19,7 @@ import {
   type ShortlistEntry,
   type ShortlistTag,
 } from "@/lib/client/browser-storage";
+import { ensureWorkspaceShortlistHydrated } from "@/lib/client/workspace-sync";
 import { cn } from "@/lib/utils";
 import type { Player, PlayerFilters } from "@/types";
 
@@ -49,6 +50,7 @@ export function ShortlistView() {
   const [filterTag, setFilterTag] = useState<ShortlistTag | "all">("all");
 
   const loadShortlist = useCallback(async () => {
+    await ensureWorkspaceShortlistHydrated();
     const nextEntries = getShortlistEntries();
     setEntries(nextEntries);
     setDraftNotes(Object.fromEntries(nextEntries.map((e) => [e.playerId, e.note])));
@@ -117,7 +119,7 @@ export function ShortlistView() {
         <ScoutWorkflowNav current="shortlist" />
         <PageHeader
           title="My Players"
-          description="Working shortlist — tag targets, write notes, then generate a staff brief. Saved on this device."
+          description="Working shortlist — tag targets, write notes, then generate a staff brief. Synced to your anonymous workspace when the database is enabled."
         />
         <Skeleton className="h-64 w-full rounded-xl" />
       </div>
@@ -130,7 +132,7 @@ export function ShortlistView() {
         <ScoutWorkflowNav current="shortlist" />
         <PageHeader
           title="My Players"
-          description="Working shortlist — tag targets, write notes, then generate a staff brief. Saved on this device."
+          description="Working shortlist — tag targets, write notes, then generate a staff brief. Synced to your anonymous workspace when the database is enabled."
         />
         <EmptyState
           icon="bookmark"

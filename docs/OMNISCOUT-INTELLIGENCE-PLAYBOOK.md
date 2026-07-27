@@ -162,9 +162,9 @@ Referência: [statsperform.com](https://www.statsperform.com/)
 - [x] Metodologia documentada (`SCORING.md`, `/methodology`)
 
 ### Parcial ⚠️
-- [ ] Shortlist/notes — só localStorage (device)
-- [ ] Reports — file store, não tabela `scouting_reports`
-- [ ] Auth — schema `User` existe, UI não
+- [x] Shortlist/notes — localStorage + sync anônimo para DB (Phase 5a)
+- [x] Reports — Prisma quando `DATA_SOURCE=db` (Phase 5a)
+- [ ] Auth — schema `User` existe; UI invite-only na Phase 5b
 - [ ] Defensive data — depende enrich + quota API-Football
 - [ ] Appearances vazias até cron/backfill
 - [x] Similar players — explicação “why” na UI (Phase 2)
@@ -405,14 +405,30 @@ Referência: `docs/SOCCER-SCOUT-PLAN.md` Stages 0–7 + Stage 8 data.
 ---
 
 ### PHASE 5 — Memory, Auth, Outcomes
-**Estimativa:** 8+ semanas
+**Estimativa:** 8+ semanas — **Phase 5a em andamento (demo, sem signup público)**
 
-- [ ] Auth (NextAuth ou similar) + roles SCOUT/ANALYST
-- [ ] Shortlist + notes em DB
-- [ ] Reports em `scouting_reports` Prisma
-- [ ] Histórico de recruitment briefs
-- [ ] RAG opcional sobre notas do clube (só se agregar valor)
+#### Phase 5a — Persistência anônima (demo) ✅ em progresso
+**Objetivo:** memória no servidor sem tela de cadastro — cookie `omniscout_device` + `deviceId`.
+
+- [x] Cookie httpOnly + middleware para `deviceId` anônimo
+- [x] `workspace_shortlist_entries` — shortlist sincronizada (local + server merge)
+- [x] `scouting_reports` — reports com `deviceId` + `payload` JSON
+- [x] `recruitment_brief_runs` — histórico de buscas em `/recruitment`
+- [x] Fallback: `DATA_SOURCE=mock` ou DB indisponível → localStorage / file store
+- [ ] `prisma db push` / migrate em ambientes com Supabase
+
+**Regra demo:** nenhum signup público; workspace é anônimo por dispositivo.
+
+#### Phase 5b — Auth fechado (quando houver piloto)
+- [ ] Invite-only / allowlist — **sem** página de registro público
+- [ ] Migrar `deviceId` → `User` (merge shortlist, reports, recruitment history)
+- [ ] Roles `SCOUT` / `ANALYST` / `ADMIN`
+
+#### Phase 5c — Outcomes (comercial)
+- [ ] Shortlist + notes já em DB (5a) — polish multi-device após 5b
+- [ ] Histórico recruitment com conta (5b)
 - [ ] `RecruitmentOutcome` para aprendizado comercial
+- [ ] RAG opcional sobre notas do clube
 
 ---
 
@@ -554,4 +570,4 @@ Eles são infraestrutura de dados + AI em escala enterprise. OmniScout é **work
 
 ---
 
-*Última atualização: 2026-07-27 — Phase 2 recruitment UI + Phase 3 tactical fit MVP; Phase M movida para última fase do roadmap.*
+*Última atualização: 2026-07-27 — Phase 5a: workspace anônimo (deviceId) sem signup público.*

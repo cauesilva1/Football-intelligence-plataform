@@ -1,3 +1,11 @@
+"use client";
+
+import {
+  removeWorkspaceShortlistPlayer,
+  syncWorkspaceShortlist,
+  syncWorkspaceShortlistEntry,
+} from "@/lib/actions/workspace";
+
 export const SHORTLIST_STORAGE_KEY = "football-intel:shortlist";
 export const SHORTLIST_CHANGED_EVENT = "football-intel:shortlist-changed";
 
@@ -143,10 +151,24 @@ export function setShortlistEntries(entries: ShortlistEntry[]): void {
   for (const entry of entries) {
     byId.set(entry.playerId, entry);
   }
-  writeJson(SHORTLIST_STORAGE_KEY, [...byId.values()]);
+  const next = [...byId.values()];
+  writeJson(SHORTLIST_STORAGE_KEY, next);
   if (isBrowser()) {
     window.dispatchEvent(new CustomEvent(SHORTLIST_CHANGED_EVENT));
   }
+  queueWorkspaceShortlistSync(next);
+}
+
+function queueWorkspaceShortlistSync(entries: ShortlistEntry[]): void {
+  void syncWorkspaceShortlist(entries).catch(() => undefined);
+}
+
+function queueWorkspaceShortlistEntrySync(entry: ShortlistEntry): void {
+  void syncWorkspaceShortlistEntry(entry).catch(() => undefined);
+}
+
+function queueWorkspaceShortlistRemoval(playerId: string): void {
+  void removeWorkspaceShortlistPlayer(playerId).catch(() => undefined);
 }
 
 export function getShortlistIds(): string[] {
@@ -197,6 +219,7 @@ export function toggleShortlistId(playerId: string): boolean {
 
 export function removeFromShortlist(playerId: string): void {
   setShortlistEntries(getShortlistEntries().filter((e) => e.playerId !== playerId));
+  queueWorkspaceShortlistRemoval(playerId);
 }
 
 export function setShortlistTag(playerId: string, tag: ShortlistTag): void {
@@ -237,6 +260,7 @@ export function setShortlistNote(playerId: string, note: string): ShortlistEntry
     setShortlistEntries(next);
   }
   writeJson(scoutNoteStorageKey(playerId), { text: note, updatedAt } satisfies ScoutNoteRecord);
+  queueWorkspaceShortlistEntrySync(entry);
   return entry;
 }
 

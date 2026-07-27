@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { queryRecruitmentCandidates } from "@/features/scouting/queries/recruitment-candidates";
+import { recordRecruitmentBriefRun } from "@/lib/actions/workspace";
+import { getOrCreateDeviceId } from "@/lib/workspace/device-id";
 import type { RecruitmentBrief } from "@/lib/intelligence/soccer/recruitment-types";
 import { Badge } from "@/components/ui/badge";
 import { formatMarketValue, ratingColor } from "@/lib/utils";
@@ -41,6 +43,15 @@ export async function RecruitmentResults({
   }
 
   const result = await queryRecruitmentCandidates(brief);
+
+  const deviceId = await getOrCreateDeviceId();
+  if (deviceId) {
+    await recordRecruitmentBriefRun({
+      brief,
+      totalEvaluated: result.totalEvaluated,
+      resultCount: result.candidates.length,
+    }).catch(() => undefined);
+  }
 
   return (
     <div className="space-y-4">
