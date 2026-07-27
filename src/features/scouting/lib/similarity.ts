@@ -1,56 +1,26 @@
 import { toRadarProfile } from "@/lib/normalize";
 import {
+  explainSoccerSimilarity,
+  soccerSimilarityFeatureVector,
+  soccerSimilarityWeightsForPosition,
+  soccerWeightedSimilarity,
+} from "@/lib/intelligence/soccer/soccer-similarity-features";
+import {
   similarBasketballPositionGroup,
   similarFootballPositionGroup,
   similarPositionGroup,
   basketballPositionGroup,
   footballPositionGroup,
-  soccerPositionGroup,
 } from "@/features/scouting/lib/position-scorecard";
 import type { Player } from "@/types";
 
 export interface SimilarPlayerResult {
   player: Player;
   score: number;
+  why?: string[];
 }
 
 type WeightMap = Record<string, number>;
-
-const ATTACK_WEIGHTS: WeightMap = {
-  Finishing: 0.3,
-  Creation: 0.15,
-  xG: 0.25,
-  shots: 0.15,
-  Passing: 0.05,
-  Physical: 0.1,
-};
-
-const MID_WEIGHTS: WeightMap = {
-  Creation: 0.25,
-  Passing: 0.25,
-  Finishing: 0.1,
-  Defense: 0.15,
-  Dribbling: 0.1,
-  Physical: 0.15,
-};
-
-const DEF_WEIGHTS: WeightMap = {
-  Defense: 0.35,
-  Physical: 0.25,
-  Passing: 0.2,
-  Finishing: 0.05,
-  Creation: 0.05,
-  Dribbling: 0.1,
-};
-
-const GK_WEIGHTS: WeightMap = {
-  Defense: 0.4,
-  Passing: 0.25,
-  Physical: 0.2,
-  Finishing: 0.05,
-  Creation: 0.05,
-  Dribbling: 0.05,
-};
 
 const BB_GUARD_WEIGHTS: WeightMap = {
   Scoring: 0.25,
@@ -109,14 +79,6 @@ const AF_SPECIALIST_WEIGHTS: WeightMap = {
   Tackles: 0.2,
 };
 
-function soccerWeightsForPosition(position: string): WeightMap {
-  const group = soccerPositionGroup(position);
-  if (group === "GK") return GK_WEIGHTS;
-  if (group === "ATT") return ATTACK_WEIGHTS;
-  if (group === "MID") return MID_WEIGHTS;
-  return DEF_WEIGHTS;
-}
-
 function basketballWeightsForPosition(position: string): WeightMap {
   const group = basketballPositionGroup(position);
   if (group === "GUARD") return BB_GUARD_WEIGHTS;
@@ -130,24 +92,6 @@ function footballWeightsForPosition(position: string): WeightMap {
   if (group === "SKILL" || group === "OL") return AF_SKILL_WEIGHTS;
   if (group === "SPECIALIST") return AF_SPECIALIST_WEIGHTS;
   return AF_DEFENSE_WEIGHTS;
-}
-
-function soccerFeatureVector(player: Player): Record<string, number> {
-  const radar = toRadarProfile(player.currentSeasonStats);
-  const s = player.currentSeasonStats;
-  const minutes = Math.max(s.minutesPlayed, 1);
-
-  return {
-    Finishing: radar.Finishing,
-    Creation: radar.Creation,
-    Passing: radar.Passing,
-    Dribbling: radar.Dribbling,
-    Defense: radar.Defense,
-    Physical: radar.Physical,
-    xG: Math.min(100, (s.xG / minutes) * 90 * 40),
-    shots: Math.min(100, (s.shots / minutes) * 90 * 8),
-    age: Math.max(0, 100 - Math.abs(player.age - 24) * 6),
-  };
 }
 
 function basketballFeatureVector(player: Player): Record<string, number> {
@@ -185,18 +129,7 @@ function weightedSimilarity(
   b: Record<string, number>,
   weights: WeightMap
 ): number {
-  let totalWeight = 0;
-  let score = 0;
-
-  for (const [key, weight] of Object.entries(weights)) {
-    const av = a[key] ?? 0;
-    const bv = b[key] ?? 0;
-    const diff = Math.abs(av - bv) / 100;
-    score += (1 - diff) * weight;
-    totalWeight += weight;
-  }
-
-  return totalWeight > 0 ? (score / totalWeight) * 100 : 0;
+  return soccerWeightedSimilarity(a, b, weights);
 }
 
 /** Weighted similarity — same position group, role-aware weights. */
@@ -213,13 +146,13 @@ export function findSimilarPlayers(
     ? basketballWeightsForPosition(target.position)
     : isFootball
       ? footballWeightsForPosition(target.position)
-      : soccerWeightsForPosition(target.position);
+      : soccerSimilarityWeightsForPosition(target.position);
 
   const featureFn = isBasketball
     ? basketballFeatureVector
     : isFootball
       ? footballFeatureVector
-      : soccerFeatureVector;
+      : soccerSimilarityFeatureVector;
 
   const targetVector = featureFn(target);
   const groupPositions = isBasketball
@@ -229,11 +162,14 @@ export function findSimilarPlayers(
       : similarPositionGroup(target.position);
   const group = new Set(groupPositions);
 
+  const isSoccer = !isBasketball && !isFootball;
+
   return pool
     .filter((p) => p.id !== target.id && group.has(p.position))
     .map((player) => ({
       player,
       score: weightedSimilarity(targetVector, featureFn(player), weights),
+      why: isSoccer ? explainSoccerSimilarity(target, player) : undefined,
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);

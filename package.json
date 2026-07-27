@@ -23,6 +23,7 @@
     "data:enrich-defense": "tsx src/scripts/enrich-defensive-stats.ts",
     "data:ensure-team-apisports": "tsx src/scripts/ensure-team-api-sports-ids.ts",
     "data:enrich-season-defense": "tsx src/scripts/enrich-season-defense.ts",
+    "intel:profile": "tsx src/scripts/intel-profile.ts",
     "data:sync-basquete": "tsx src/scripts/sync-basketball-ecosystem.ts",
     "data:sync-nba-teste": "tsx src/scripts/sync-nba-only-history.ts",
     "data:sync-boxscore-basquete": "tsx src/scripts/sync-basketball-boxscores.ts",
@@ -41,7 +42,7 @@
     "perf:routes": "node scripts/measure-routes.mjs",
     "fetch:wc2026": "node scripts/fetch-wc2026.js",
     "data:seed-wc2026": "tsx src/scripts/seed-world-cup-2026.ts",
-    "test": "tsx --test src/lib/scoring/soccer-rankings.test.ts src/lib/scoring/soccer-rating.test.ts src/lib/scoring/basketball-rating.test.ts src/lib/scoring/football-rating.test.ts src/lib/metrics/per90.test.ts src/lib/export/scout-brief-context.test.ts src/lib/export/scout-brief-pdf.test.ts"
+    "test": "tsx --test src/lib/scoring/soccer-rankings.test.ts src/lib/scoring/soccer-rating.test.ts src/lib/scoring/basketball-rating.test.ts src/lib/scoring/football-rating.test.ts src/lib/metrics/per90.test.ts src/lib/export/scout-brief-context.test.ts src/lib/export/scout-brief-pdf.test.ts src/lib/intelligence/soccer/build-soccer-intelligence-profile.test.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.19.1",
