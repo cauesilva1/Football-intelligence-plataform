@@ -1,14 +1,17 @@
 import { cookies } from "next/headers";
-import { randomUUID } from "crypto";
+import {
+  DEVICE_COOKIE_MAX_AGE,
+  DEVICE_COOKIE_NAME,
+  createDeviceId,
+  isValidDeviceId,
+} from "@/lib/workspace/device-cookie";
 
-export const DEVICE_COOKIE_NAME = "omniscout_device";
-const DEVICE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365 * 2;
-
-const DEVICE_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-export function isValidDeviceId(value: string | undefined | null): value is string {
-  return typeof value === "string" && DEVICE_ID_PATTERN.test(value);
-}
+export {
+  DEVICE_COOKIE_NAME,
+  DEVICE_COOKIE_MAX_AGE,
+  isValidDeviceId,
+  createDeviceId,
+} from "@/lib/workspace/device-cookie";
 
 /** Read or issue an anonymous workspace device id (httpOnly cookie). */
 export async function getOrCreateDeviceId(): Promise<string | null> {
@@ -16,7 +19,7 @@ export async function getOrCreateDeviceId(): Promise<string | null> {
   const existing = jar.get(DEVICE_COOKIE_NAME)?.value;
   if (isValidDeviceId(existing)) return existing;
 
-  const next = randomUUID();
+  const next = createDeviceId();
   jar.set(DEVICE_COOKIE_NAME, next, {
     httpOnly: true,
     sameSite: "lax",
