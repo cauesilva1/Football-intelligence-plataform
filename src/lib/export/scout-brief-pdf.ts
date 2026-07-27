@@ -39,6 +39,12 @@ export type ScoutBriefPdfInput = {
   risks: string[];
   recommendation: string;
   keyRates: string[];
+  intelligence?: {
+    role: string;
+    trajectory: string;
+    dimensions: { label: string; score: number }[];
+    limitations: string[];
+  };
 };
 
 export function buildScoutBriefPdf(input: ScoutBriefPdfInput): Blob {
@@ -80,6 +86,17 @@ export function buildScoutBriefPdf(input: ScoutBriefPdfInput): Blob {
   push("KEY RATES", 12);
   for (const k of input.keyRates.slice(0, 8)) push(`• ${k}`);
   if (input.keyRates.length === 0) push("• —");
+  if (input.intelligence) {
+    push("");
+    push("INTELLIGENCE", 12);
+    push(`Role: ${input.intelligence.role} · Trajectory: ${input.intelligence.trajectory}`);
+    for (const dimension of input.intelligence.dimensions.slice(0, 4)) {
+      push(`• ${dimension.label}: ${dimension.score}/100`);
+    }
+    for (const limitation of input.intelligence.limitations.slice(0, 2)) {
+      push(`• ${limitation}`);
+    }
+  }
   push("");
   push("RECOMMENDATION", 12);
   push(input.recommendation || "—");

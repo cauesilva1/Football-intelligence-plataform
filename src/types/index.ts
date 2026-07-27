@@ -175,6 +175,18 @@ export interface ScoutingReport {
     smallSample: boolean;
     sampleNote: string;
     keyRates: string[];
+    intelligence?: {
+      role: string;
+      trajectory: string;
+      styleLabel: string;
+      dimensions: {
+        label: string;
+        score: number;
+        confidence: number;
+        evidence: string[];
+      }[];
+      limitations: string[];
+    };
   };
 }
 

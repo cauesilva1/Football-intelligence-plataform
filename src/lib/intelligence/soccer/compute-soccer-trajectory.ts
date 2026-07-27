@@ -6,7 +6,8 @@ const MIN_TRAJECTORY_MINUTES = 270;
 
 /** Trend from multi-season history — rating and goals/90 slope over the last two seasons. */
 export function computeSoccerTrajectory(player: Player): SoccerTrajectory {
-  const timeline = aggregateSeasonTimeline(player.history, "SOCCER").filter(
+  const history = player.history ?? [];
+  const timeline = aggregateSeasonTimeline(history, "SOCCER").filter(
     (point) => point.minutes >= MIN_TRAJECTORY_MINUTES
   );
 

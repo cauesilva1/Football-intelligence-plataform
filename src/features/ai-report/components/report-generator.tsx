@@ -102,6 +102,19 @@ export function ReportGenerator({
       ctx && ctx.keyRates.length > 0
         ? ["", "KEY RATES (PROFILE PACK)", ...ctx.keyRates.map((r) => `- ${r}`), ""]
         : [];
+    const intelligenceBlock =
+      ctx?.intelligence
+        ? [
+            "",
+            "INTELLIGENCE",
+            `Role: ${ctx.intelligence.role} · Trajectory: ${ctx.intelligence.trajectory}`,
+            ...ctx.intelligence.dimensions.map(
+              (dimension) => `- ${dimension.label}: ${dimension.score}/100`
+            ),
+            ...ctx.intelligence.limitations.map((line) => `- Limitation: ${line}`),
+            "",
+          ]
+        : [];
     const text = [
       `SCOUT REPORT — ${selectedPlayer.fullName}`,
       `Rating: ${report.overallRating.toFixed(1)}${
@@ -114,6 +127,7 @@ export function ReportGenerator({
       report.summary,
       ...noteBlock,
       ...ratesBlock,
+      ...intelligenceBlock,
       "STRENGTHS",
       ...report.strengths.map((s) => `- ${s}`),
       "",
@@ -166,6 +180,17 @@ export function ReportGenerator({
       risks: report.weaknesses,
       recommendation: report.recommendation,
       keyRates,
+      intelligence: ctx?.intelligence
+        ? {
+            role: ctx.intelligence.role,
+            trajectory: ctx.intelligence.trajectory,
+            dimensions: ctx.intelligence.dimensions.map((dimension) => ({
+              label: dimension.label,
+              score: dimension.score,
+            })),
+            limitations: ctx.intelligence.limitations,
+          }
+        : undefined,
     });
     downloadBlob(blob, `scout-brief-${selectedPlayer.knownAs.toLowerCase()}.pdf`);
   }, [report, selectedPlayer, shortlistEntry]);

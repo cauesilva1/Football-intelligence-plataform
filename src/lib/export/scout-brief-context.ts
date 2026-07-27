@@ -3,10 +3,18 @@ import {
   buildFootballPositionScorecard,
   buildPositionScorecard,
 } from "@/features/scouting/lib/position-scorecard";
+import { buildSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/build-soccer-intelligence-profile";
+import {
+  formatBriefIntelligenceLines,
+  toBriefIntelligenceSnapshot,
+  type ScoutingReportBriefIntelligence,
+} from "@/lib/export/scout-brief-intelligence";
 import { hasReliableSoccerSample } from "@/lib/metrics/per90";
 import { hasReliableBasketballSample } from "@/lib/scoring/basketball-rating";
 import { hasReliableFootballSample } from "@/lib/scoring/football-rating";
 import type { Player, ScoutingReport } from "@/types";
+
+export type { ScoutingReportBriefIntelligence };
 
 export interface ScoutingReportBriefContext {
   minutesPlayed: number;
@@ -14,6 +22,8 @@ export interface ScoutingReportBriefContext {
   smallSample: boolean;
   sampleNote: string;
   keyRates: string[];
+  /** Soccer intelligence snapshot — aligned with headless profile engine. */
+  intelligence?: ScoutingReportBriefIntelligence;
 }
 
 function scorecardToKeyRates(
@@ -64,6 +74,7 @@ export function buildScoutBriefContext(player: Player): ScoutingReportBriefConte
 
   const smallSample = !hasReliableSoccerSample(s.minutesPlayed);
   const scorecard = buildPositionScorecard(player.position, s);
+  const intelligence = toBriefIntelligenceSnapshot(buildSoccerIntelligenceProfile(player));
   return {
     minutesPlayed: s.minutesPlayed,
     appearances: s.appearances,
@@ -71,7 +82,11 @@ export function buildScoutBriefContext(player: Player): ScoutingReportBriefConte
     sampleNote: smallSample
       ? "Provisional rating — per-90 rates after ≥450′ (season totals shown on profile)."
       : "Reliable sample — per-90 rates match profile scorecard.",
-    keyRates: scorecardToKeyRates(scorecard.metrics),
+    keyRates: [
+      ...scorecardToKeyRates(scorecard.metrics),
+      ...formatBriefIntelligenceLines(intelligence),
+    ],
+    intelligence,
   };
 }
 
