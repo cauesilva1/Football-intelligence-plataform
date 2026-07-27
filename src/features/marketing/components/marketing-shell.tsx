@@ -10,16 +10,16 @@ const NAV = [
 
 export function MarketingShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="landing min-h-screen bg-[hsl(150_18%_4%)] text-[hsl(140_20%_92%)]">
-      <header className="absolute inset-x-0 top-0 z-20">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5 md:px-8">
-          <Link href="/" className="landing-nav-brand flex items-center gap-2.5">
-            <OmniScoutMark sport="SOCCER" className="h-9 w-9 rounded-md" />
-            <span className="landing-brand text-sm font-semibold tracking-wide text-white">
+    <div className="landing min-h-screen bg-[hsl(152_28%_3%)] text-[hsl(140_18%_92%)]">
+      <header className="absolute inset-x-0 top-0 z-30">
+        <div className="mx-auto flex max-w-[88rem] items-center justify-between gap-4 px-5 py-6 md:px-10">
+          <Link href="/" className="flex items-center gap-3">
+            <OmniScoutMark sport="SOCCER" className="h-10 w-10 rounded-md shadow-none" />
+            <span className="landing-brand text-[0.95rem] font-bold tracking-[0.04em] text-white">
               {APP_NAME}
             </span>
           </Link>
-          <nav className="hidden items-center gap-6 text-xs font-medium text-white/65 sm:flex">
+          <nav className="hidden items-center gap-8 text-[0.8rem] font-medium tracking-wide text-white/55 md:flex">
             {NAV.map((item) => (
               <Link
                 key={item.href}
@@ -30,30 +30,29 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
-          <Link
-            href="/dashboard"
-            className="rounded-md border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/90 transition-colors duration-300 hover:border-white/30 hover:bg-white/10"
-          >
+          <Link href="/dashboard" className="landing-btn-nav">
             Open app
           </Link>
         </div>
       </header>
       <main>{children}</main>
-      <footer className="border-t border-white/8 px-5 py-10 md:px-8">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <footer className="border-t border-white/[0.07] px-5 py-12 md:px-10">
+        <div className="mx-auto flex max-w-[88rem] flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="landing-brand text-sm font-semibold text-white">{APP_NAME}</p>
-            <p className="mt-1 max-w-md text-xs leading-relaxed text-white/45">
-              Decision support for scouts — not a live data feed. Prototype with honest sample
-              limits.
+            <p className="landing-brand text-lg font-bold tracking-tight text-white">{APP_NAME}</p>
+            <p className="mt-2 max-w-md text-sm leading-relaxed text-white/40">
+              Explainable scouting intelligence. Decision support — not a live Opta feed.
             </p>
           </div>
-          <div className="flex flex-wrap gap-4 text-xs text-white/50">
+          <div className="flex flex-wrap gap-6 text-sm text-white/45">
             <Link href="/methodology" className="transition-colors hover:text-white">
               Methodology
             </Link>
             <Link href="/scouting" className="transition-colors hover:text-white">
               Scouting
+            </Link>
+            <Link href="/recruitment" className="transition-colors hover:text-white">
+              Recruitment
             </Link>
             <Link href="/dashboard" className="transition-colors hover:text-white">
               Dashboard

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Syne, Source_Sans_3 } from "next/font/google";
 import { MarketingShell } from "@/features/marketing/components/marketing-shell";
+import { LandingHeroPlane } from "@/features/marketing/components/landing-hero-plane";
 import { APP_NAME } from "@/lib/config";
 
 const landingDisplay = Syne({
@@ -12,179 +13,154 @@ const landingDisplay = Syne({
 
 const landingBody = Source_Sans_3({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-landing-body",
   display: "swap",
 });
 
 const ACCESS_MAIL = "mailto:access@omniscout.app?subject=OmniScout%20access%20request";
 
+function CtaRow({ primary = "Enter scouting" }: { primary?: string }) {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <Link href="/scouting" className="landing-btn-primary">
+        {primary}
+      </Link>
+      <Link href="/methodology" className="landing-btn-ghost">
+        Methodology
+      </Link>
+      <a href={ACCESS_MAIL} className="landing-btn-text">
+        Request access
+      </a>
+    </div>
+  );
+}
+
 export function LandingPage() {
   return (
     <div className={`${landingDisplay.variable} ${landingBody.variable}`}>
       <MarketingShell>
-        {/* Hero — one composition: brand, headline, sentence, CTAs, full-bleed visual */}
         <section className="landing-hero relative isolate min-h-[100svh] overflow-hidden">
-          <div className="landing-hero-visual absolute inset-0" aria-hidden />
-          <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-16 pt-28 md:px-8 md:pb-24 md:pt-32">
-            <p className="landing-reveal landing-brand text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-7xl lg:text-8xl">
-              {APP_NAME}
-            </p>
-            <h1 className="landing-reveal landing-reveal-delay-1 mt-5 max-w-2xl text-xl font-semibold leading-snug text-white/95 sm:text-2xl md:text-3xl">
-              The decision layer for scouts.
+          <div className="landing-hero-bg" aria-hidden />
+
+          {/* Product is always the dominant visual plane */}
+          <div className="landing-hero-visual-slot" aria-hidden>
+            <LandingHeroPlane />
+          </div>
+
+          <div className="landing-hero-copy relative z-10 flex min-h-[100svh] flex-col justify-end pb-14 pt-28 md:pb-20 lg:pb-24">
+            <p className="landing-brand landing-wordmark">{APP_NAME}</p>
+            <h1 className="landing-brand landing-headline">
+              Intelligence you can defend in a recruitment room.
             </h1>
-            <p className="landing-reveal landing-reveal-delay-2 mt-4 max-w-xl text-sm leading-relaxed text-white/65 md:text-base">
-              Role, trajectory, fit, and evidence — so recruitment briefs are explainable, not
-              opaque overall ratings.
+            <p className="landing-lede">
+              Roles, dimensions, trajectory, and fit — with evidence and sample limits visible.
+              Built for scouts, not highlight reels.
             </p>
-            <div className="landing-reveal landing-reveal-delay-3 mt-8 flex flex-wrap items-center gap-3">
-              <Link
-                href="/scouting"
-                className="inline-flex items-center rounded-md bg-[hsl(142_71%_45%)] px-5 py-2.5 text-sm font-semibold text-[hsl(150_18%_5%)] transition-transform duration-300 hover:scale-[1.02] hover:bg-[hsl(142_71%_50%)]"
-              >
-                Enter scouting
-              </Link>
-              <Link
-                href="/methodology"
-                className="inline-flex items-center rounded-md border border-white/20 px-5 py-2.5 text-sm font-medium text-white/85 transition-colors duration-300 hover:border-white/40 hover:bg-white/5"
-              >
-                Read methodology
-              </Link>
-              <a
-                href={ACCESS_MAIL}
-                className="inline-flex items-center px-2 py-2.5 text-sm font-medium text-white/55 underline-offset-4 transition-colors duration-300 hover:text-white hover:underline"
-              >
-                Request access
-              </a>
+            <div className="mt-9">
+              <CtaRow />
             </div>
           </div>
         </section>
 
-        {/* How it works — one job */}
-        <section className="border-t border-white/8 px-5 py-20 md:px-8 md:py-28">
-          <div className="mx-auto max-w-6xl">
-            <h2 className="landing-brand text-2xl font-bold tracking-tight text-white md:text-3xl">
-              How it works
+        <section className="landing-section border-t border-white/[0.07]">
+          <div className="mx-auto max-w-[88rem] px-5 md:px-10">
+            <p className="landing-kicker">Workflow</p>
+            <h2 className="landing-brand landing-section-title max-w-3xl">
+              Data becomes a decision — with the why attached.
             </h2>
-            <p className="mt-3 max-w-xl text-sm text-white/55">
-              From raw season data to a staff-ready recommendation — always with limitations
-              declared.
-            </p>
-            <ol className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
+            <ol className="landing-flow mt-14">
               {[
                 {
                   step: "01",
-                  title: "Data",
-                  body: "Season lines, appearances, and market context — no pretended live Opta feed.",
+                  title: "Ingest the season",
+                  body: "Appearances, rates, market context. No fake live feed.",
                 },
                 {
                   step: "02",
-                  title: "Intelligence",
-                  body: "Role labels, dimensions, trajectory, similarity why, and tactical fit heuristics.",
+                  title: "Score the profile",
+                  body: "Role, dimensions, trajectory, similarity reasons, tactical fit.",
                 },
                 {
                   step: "03",
-                  title: "Decision",
-                  body: "Shortlist, recruitment search, and scout briefs built as decision support.",
+                  title: "Brief the staff",
+                  body: "Shortlist, recruitment search, and staff-ready reports.",
                 },
               ].map((item) => (
-                <li key={item.step} className="landing-step border-t border-white/12 pt-6">
-                  <p className="font-mono text-xs tracking-widest text-[hsl(142_71%_45%)]">
-                    {item.step}
-                  </p>
-                  <h3 className="landing-brand mt-3 text-lg font-semibold text-white">
-                    {item.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-white/55">{item.body}</p>
+                <li key={item.step} className="landing-flow-item">
+                  <span className="landing-flow-step">{item.step}</span>
+                  <h3 className="landing-brand landing-flow-title">{item.title}</h3>
+                  <p className="landing-flow-body">{item.body}</p>
                 </li>
               ))}
             </ol>
           </div>
         </section>
 
-        {/* Audiences — one job */}
-        <section className="border-t border-white/8 bg-[hsl(150_14%_6%)] px-5 py-20 md:px-8 md:py-28">
-          <div className="mx-auto max-w-6xl">
-            <h2 className="landing-brand text-2xl font-bold tracking-tight text-white md:text-3xl">
-              Built for the scouting desk
+        <section className="landing-section landing-section-muted border-t border-white/[0.07]">
+          <div className="mx-auto max-w-[88rem] px-5 md:px-10">
+            <p className="landing-kicker">Who it serves</p>
+            <h2 className="landing-brand landing-section-title max-w-3xl">
+              For desks that need explainable shortlists — not another Sofascore clone.
             </h2>
-            <p className="mt-3 max-w-xl text-sm text-white/55">
-              Workflow first — for people who need explainable shortlists, not another stats
-              browser.
-            </p>
-            <div className="mt-12 grid gap-12 md:grid-cols-3">
+            <div className="landing-audiences mt-16">
               {[
                 {
                   title: "Independent analysts",
-                  body: "Run recruitment briefs and compare profiles without enterprise contracts.",
+                  body: "Run recruitment briefs and compare profiles without an enterprise data contract.",
                 },
                 {
-                  title: "Clubs",
-                  body: "A practical decision layer for smaller recruitment rooms — honest about coverage.",
+                  title: "Club recruitment",
+                  body: "A decision layer for smaller rooms — honest about coverage and sample size.",
                 },
                 {
                   title: "Academies",
                   body: "Track trajectory and role fit as players move through pathways.",
                 },
-              ].map((item) => (
-                <div key={item.title}>
-                  <h3 className="landing-brand text-base font-semibold text-white">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-white/55">{item.body}</p>
+              ].map((item, index) => (
+                <div key={item.title} className="landing-audience">
+                  <span className="landing-audience-index">0{index + 1}</span>
+                  <h3 className="landing-brand">{item.title}</h3>
+                  <p>{item.body}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Trust — one job */}
-        <section className="border-t border-white/8 px-5 py-20 md:px-8 md:py-28">
-          <div className="mx-auto max-w-6xl">
-            <h2 className="landing-brand text-2xl font-bold tracking-tight text-white md:text-3xl">
-              Trust before flair
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/55">
-              Every score should show evidence and limits — small samples, missing defensive data,
-              provisional ratings. This is a working prototype, not a prediction engine.
-            </p>
-            <div className="mt-10 flex flex-wrap gap-3">
-              <Link
-                href="/methodology"
-                className="rounded-md border border-white/15 px-4 py-2 text-sm text-white/80 transition-colors duration-300 hover:border-primary/40 hover:text-white"
-              >
-                Scoring methodology →
+        <section className="landing-section border-t border-white/[0.07]">
+          <div className="mx-auto grid max-w-[88rem] gap-12 px-5 md:grid-cols-[1.2fr_0.8fr] md:items-end md:px-10">
+            <div>
+              <p className="landing-kicker">Trust</p>
+              <h2 className="landing-brand landing-section-title">
+                Small sample. Missing tackles. Say it out loud.
+              </h2>
+              <p className="landing-section-copy mt-6 max-w-xl">
+                OmniScout surfaces provisional ratings, data gaps, and limitations instead of
+                inventing certainty. Methodology is public. Predictions are not the product —
+                explainable decision support is.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 md:items-end">
+              <Link href="/methodology" className="landing-btn-primary">
+                Read the methodology
               </Link>
-              <Link
-                href="/dashboard"
-                className="rounded-md border border-white/15 px-4 py-2 text-sm text-white/80 transition-colors duration-300 hover:border-white/30 hover:text-white"
-              >
-                Open dashboard →
+              <Link href="/dashboard" className="landing-btn-ghost">
+                Open the app
               </Link>
             </div>
           </div>
         </section>
 
-        {/* Closing CTA */}
-        <section className="border-t border-white/8 bg-[linear-gradient(180deg,hsl(150_14%_6%),hsl(150_20%_5%))] px-5 py-20 md:px-8 md:py-24">
-          <div className="mx-auto max-w-6xl">
-            <h2 className="landing-brand text-2xl font-bold text-white md:text-4xl">
-              Start with the workflow.
-            </h2>
-            <p className="mt-3 max-w-lg text-sm text-white/55">
-              No public signup. Explore the soccer intelligence layer, or request a guided walkthrough.
+        <section className="landing-close border-t border-white/[0.07]">
+          <div className="mx-auto max-w-[88rem] px-5 py-24 md:px-10 md:py-32">
+            <p className="landing-brand landing-close-brand">{APP_NAME}</p>
+            <h2 className="landing-brand landing-close-title">Start on the pitch desk.</h2>
+            <p className="landing-section-copy mt-5 max-w-lg">
+              No public signup. Explore soccer intelligence now, or request a guided walkthrough.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/scouting"
-                className="inline-flex items-center rounded-md bg-[hsl(142_71%_45%)] px-5 py-2.5 text-sm font-semibold text-[hsl(150_18%_5%)] transition-transform duration-300 hover:scale-[1.02]"
-              >
-                Open Scouting
-              </Link>
-              <a
-                href={ACCESS_MAIL}
-                className="inline-flex items-center rounded-md border border-white/20 px-5 py-2.5 text-sm font-medium text-white/85 transition-colors duration-300 hover:bg-white/5"
-              >
-                Request access
-              </a>
+            <div className="mt-10">
+              <CtaRow primary="Open Scouting" />
             </div>
           </div>
         </section>
