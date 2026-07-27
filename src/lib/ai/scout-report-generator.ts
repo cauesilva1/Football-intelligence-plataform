@@ -1,4 +1,5 @@
 import { derivePlayingStyle } from "@/features/scouting/lib/playing-style";
+import { withBriefContext } from "@/lib/export/scout-brief-context";
 import { computeReportOverallRating } from "@/lib/scoring/soccer-rating";
 import { computeBasketballReportOverallRating } from "@/lib/scoring/basketball-rating";
 import { computeFootballReportOverallRating } from "@/lib/scoring/football-rating";
@@ -27,11 +28,10 @@ Return ONLY valid JSON matching this schema:
     "roles": ["string", "..."],
     "narrative": "string"
   },
-  "recommendation": "string — scouting verdict for recruitment",
-  "overallRating": number
+  "recommendation": "string — scouting verdict for recruitment"
 }
 
-Use industry-standard analytics language (per 90, xG, xA, rating). overallRating must be between 4.0 and 9.5.`;
+Use industry-standard analytics language (per 90, xG, xA). Do not invent overall rating — it is computed server-side from the same rules as the player profile.`;
 
 const SYSTEM_PROMPT_BASKETBALL = `You are a professional basketball scout analyst writing structured scouting reports for an analytics platform.
 
@@ -52,11 +52,10 @@ Return ONLY valid JSON matching this schema:
     "roles": ["string", "..."],
     "narrative": "string"
   },
-  "recommendation": "string — scouting verdict for recruitment / draft / free agency",
-  "overallRating": number
+  "recommendation": "string — scouting verdict for recruitment / draft / free agency"
 }
 
-Use basketball analytics language (PPG, RPG, APG, FG%, 3P%, SPG, BPG, MPG). overallRating must be between 4.0 and 9.5.`;
+Use basketball analytics language (PPG, RPG, APG, FG%, 3P%, SPG, BPG, MPG). Do not invent overall rating — it is computed server-side.`;
 
 const SYSTEM_PROMPT_FOOTBALL = `You are a professional American football scout analyst writing structured scouting reports for an analytics platform.
 
@@ -77,11 +76,10 @@ Return ONLY valid JSON matching this schema:
     "roles": ["string", "..."],
     "narrative": "string"
   },
-  "recommendation": "string — scouting verdict for draft / free agency / trade",
-  "overallRating": number
+  "recommendation": "string — scouting verdict for draft / free agency / trade"
 }
 
-Use football analytics language (yards, TDs, sacks, tackles, completion rate when relevant, Cap Hit). overallRating must be between 4.0 and 9.5.`;
+Use football analytics language (yards, TDs, sacks, tackles, completion rate when relevant, Cap Hit). Do not invent overall rating — it is computed server-side.`;
 
 function playerSport(player: Player): "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL" {
   const sport = player.sport ?? "SOCCER";
@@ -381,23 +379,26 @@ function buildMockReport(player: Player): ScoutingReport {
   const playingStyle = derivePlayingStyle(player);
   const rating = computeOverallRating(player);
 
-  return {
-    id: `report-${player.id}-${Date.now()}`,
-    playerId: player.id,
-    summary: buildMockSummary(player),
-    strengths: player.strengths,
-    weaknesses: player.weaknesses,
-    playingStyle: {
-      label: playingStyle.label,
-      description: playingStyle.description,
-      traits: playingStyle.traits,
+  return withBriefContext(
+    {
+      id: `report-${player.id}-${Date.now()}`,
+      playerId: player.id,
+      summary: buildMockSummary(player),
+      strengths: player.strengths,
+      weaknesses: player.weaknesses,
+      playingStyle: {
+        label: playingStyle.label,
+        description: playingStyle.description,
+        traits: playingStyle.traits,
+      },
+      tacticalFit: resolveTacticalFit(player),
+      recommendation: buildRecommendation(rating, player.age),
+      overallRating: rating,
+      generatedBy: "mock-ai-v2",
+      createdAt: new Date().toISOString(),
     },
-    tacticalFit: resolveTacticalFit(player),
-    recommendation: buildRecommendation(rating, player.age),
-    overallRating: rating,
-    generatedBy: "mock-ai-v2",
-    createdAt: new Date().toISOString(),
-  };
+    player
+  );
 }
 
 function buildPlayerContext(player: Player): string {
@@ -528,29 +529,32 @@ async function generateWithOpenRouter(player: Player): Promise<ScoutingReport | 
   // Always use unified sport rating — do not trust a parallel LLM score.
   const rating = computeOverallRating(player);
 
-  return {
-    id: `report-${player.id}-${Date.now()}`,
-    playerId: player.id,
-    summary: payload.summary,
-    strengths: payload.strengths?.length ? payload.strengths : player.strengths,
-    weaknesses: payload.weaknesses?.length ? payload.weaknesses : player.weaknesses,
-    playingStyle: {
-      label: payload.playingStyle?.label ?? fallbackStyle.label,
-      description: payload.playingStyle?.description ?? fallbackStyle.description,
-      traits: payload.playingStyle?.traits?.length ? payload.playingStyle.traits : fallbackStyle.traits,
+  return withBriefContext(
+    {
+      id: `report-${player.id}-${Date.now()}`,
+      playerId: player.id,
+      summary: payload.summary,
+      strengths: payload.strengths?.length ? payload.strengths : player.strengths,
+      weaknesses: payload.weaknesses?.length ? payload.weaknesses : player.weaknesses,
+      playingStyle: {
+        label: payload.playingStyle?.label ?? fallbackStyle.label,
+        description: payload.playingStyle?.description ?? fallbackStyle.description,
+        traits: payload.playingStyle?.traits?.length ? payload.playingStyle.traits : fallbackStyle.traits,
+      },
+      tacticalFit: {
+        systems: payload.tacticalFit?.systems?.length
+          ? payload.tacticalFit.systems
+          : fallbackFit.systems,
+        roles: payload.tacticalFit?.roles?.length ? payload.tacticalFit.roles : fallbackFit.roles,
+        narrative: payload.tacticalFit?.narrative ?? fallbackFit.narrative,
+      },
+      recommendation: payload.recommendation,
+      overallRating: rating,
+      generatedBy: OPENROUTER_MODEL,
+      createdAt: new Date().toISOString(),
     },
-    tacticalFit: {
-      systems: payload.tacticalFit?.systems?.length
-        ? payload.tacticalFit.systems
-        : fallbackFit.systems,
-      roles: payload.tacticalFit?.roles?.length ? payload.tacticalFit.roles : fallbackFit.roles,
-      narrative: payload.tacticalFit?.narrative ?? fallbackFit.narrative,
-    },
-    recommendation: payload.recommendation,
-    overallRating: rating,
-    generatedBy: OPENROUTER_MODEL,
-    createdAt: new Date().toISOString(),
-  };
+    player
+  );
 }
 
 export async function generateScoutingReport(player: Player): Promise<ScoutingReport> {

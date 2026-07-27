@@ -16,6 +16,8 @@ export interface ShortlistEntry {
   tag: ShortlistTag;
   note: string;
   updatedAt: string;
+  /** Set when a scout brief was generated from this shortlist player (device-local). */
+  lastBriefAt?: string;
 }
 
 export interface ScoutNoteRecord {
@@ -130,6 +132,7 @@ export function getShortlistEntries(): ShortlistEntry[] {
         note: typeof row.note === "string" ? row.note : "",
         updatedAt:
           typeof row.updatedAt === "string" ? row.updatedAt : new Date(0).toISOString(),
+        ...(typeof row.lastBriefAt === "string" ? { lastBriefAt: row.lastBriefAt } : {}),
       } satisfies ShortlistEntry;
     })
     .filter((entry): entry is ShortlistEntry => entry != null);
@@ -253,6 +256,29 @@ export function saveScoutNote(playerId: string, text: string): ScoutNoteRecord {
   const note: ScoutNoteRecord = { text, updatedAt: new Date().toISOString() };
   writeJson(scoutNoteStorageKey(playerId), note);
   return note;
+}
+
+/** Stamp shortlist entry when a staff brief is generated (device-local workflow glue). */
+export function markShortlistBriefGenerated(playerId: string): void {
+  const entries = getShortlistEntries();
+  const idx = entries.findIndex((e) => e.playerId === playerId);
+  const now = new Date().toISOString();
+  if (idx < 0) {
+    setShortlistEntries([
+      ...entries,
+      {
+        playerId,
+        tag: "watch",
+        note: readLegacyNoteRecord(playerId)?.text ?? "",
+        updatedAt: now,
+        lastBriefAt: now,
+      },
+    ]);
+    return;
+  }
+  const next = [...entries];
+  next[idx] = { ...next[idx], lastBriefAt: now, updatedAt: now };
+  setShortlistEntries(next);
 }
 
 function filterPrefsKey(sport: string, route: string): string {

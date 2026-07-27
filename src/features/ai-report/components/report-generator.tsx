@@ -18,6 +18,7 @@ import { buildScoutBriefPdf, downloadBlob } from "@/lib/export/scout-brief-pdf";
 import {
   getShortlistEntry,
   isInShortlist,
+  markShortlistBriefGenerated,
   SHORTLIST_CHANGED_EVENT,
   type ShortlistEntry,
 } from "@/lib/client/browser-storage";
@@ -64,6 +65,7 @@ export function ReportGenerator({
     try {
       const r = await createScoutingReport(playerId);
       setReport(r);
+      markShortlistBriefGenerated(playerId);
       setStatus("idle");
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
@@ -91,18 +93,27 @@ export function ReportGenerator({
 
   const exportTxt = useCallback(() => {
     if (!report || !selectedPlayer) return;
+    const ctx = report.briefContext;
     const noteBlock =
       shortlistEntry?.note?.trim()
         ? ["", "SCOUT NOTE (DEVICE)", shortlistEntry.note.trim(), ""]
         : [];
+    const ratesBlock =
+      ctx && ctx.keyRates.length > 0
+        ? ["", "KEY RATES (PROFILE PACK)", ...ctx.keyRates.map((r) => `- ${r}`), ""]
+        : [];
     const text = [
       `SCOUT REPORT — ${selectedPlayer.fullName}`,
-      `Rating: ${report.overallRating.toFixed(1)}`,
+      `Rating: ${report.overallRating.toFixed(1)}${
+        ctx?.smallSample ? " (provisional — small sample)" : ""
+      }`,
+      ctx ? `Minutes: ${ctx.minutesPlayed} · Apps: ${ctx.appearances}` : null,
       shortlistEntry?.tag ? `Shortlist tag: ${shortlistEntry.tag}` : null,
       "",
       "PLAYER SUMMARY",
       report.summary,
       ...noteBlock,
+      ...ratesBlock,
       "STRENGTHS",
       ...report.strengths.map((s) => `- ${s}`),
       "",
@@ -130,35 +141,31 @@ export function ReportGenerator({
 
   const exportPdf = useCallback(() => {
     if (!report || !selectedPlayer) return;
+    const ctx = report.briefContext;
     const note = shortlistEntry?.note?.trim();
-    const isBasketball = selectedPlayer.sport === "BASKETBALL";
-    const isAmericanFootball = selectedPlayer.sport === "AMERICAN_FOOTBALL";
-    const methodologyLabel = isBasketball
-      ? "basketball"
-      : isAmericanFootball
-        ? "American football"
-        : "soccer";
+    const keyRates = [
+      ...(ctx?.keyRates ?? []),
+      shortlistEntry?.tag ? `Shortlist tag: ${shortlistEntry.tag}` : null,
+      note ? `Scout note: ${note.slice(0, 120)}${note.length > 120 ? "…" : ""}` : null,
+      `Style: ${report.playingStyle.label}`,
+      `Roles: ${report.tacticalFit.roles.join(", ") || "—"}`,
+    ].filter((line): line is string => line != null);
+
     const blob = buildScoutBriefPdf({
       playerName: selectedPlayer.fullName,
       position: selectedPlayer.position,
       club: selectedPlayer.teamShortName ?? selectedPlayer.teamName ?? "—",
       age: selectedPlayer.age,
       rating: report.overallRating,
-      minutes: 0,
+      minutes: ctx?.minutesPlayed ?? 0,
+      appearances: ctx?.appearances,
+      smallSample: ctx?.smallSample,
+      sampleNote: ctx?.sampleNote,
       summary: report.summary,
       strengths: report.strengths,
       risks: report.weaknesses,
       recommendation: report.recommendation,
-      keyRates: [
-        `Overall rating: ${report.overallRating.toFixed(1)} (same rules as profile / ${methodologyLabel} methodology)`,
-        shortlistEntry?.tag ? `Shortlist: ${shortlistEntry.tag}` : null,
-        note ? `Scout note: ${note.slice(0, 160)}${note.length > 160 ? "…" : ""}` : null,
-        `Style: ${report.playingStyle.label}`,
-        isBasketball || isAmericanFootball
-          ? `Schemes: ${report.tacticalFit.systems.join(", ") || "—"}`
-          : `Systems: ${report.tacticalFit.systems.join(", ") || "—"}`,
-        `Roles: ${report.tacticalFit.roles.join(", ") || "—"}`,
-      ].filter((line): line is string => line != null),
+      keyRates,
     });
     downloadBlob(blob, `scout-brief-${selectedPlayer.knownAs.toLowerCase()}.pdf`);
   }, [report, selectedPlayer, shortlistEntry]);

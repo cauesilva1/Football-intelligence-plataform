@@ -201,6 +201,11 @@ export function ShortlistView() {
                       <Badge variant={TAG_OPTIONS.find((t) => t.value === tag)?.variant ?? "azure"}>
                         {tag}
                       </Badge>
+                      {entry?.lastBriefAt ? (
+                        <Badge variant="secondary" className="text-2xs">
+                          Brief ready
+                        </Badge>
+                      ) : null}
                       <span className="text-2xs text-muted-foreground">
                         {p.position} · {p.teamName ?? "—"} · {s.rating.toFixed(1)} rating ·{" "}
                         {s.minutesPlayed.toLocaleString("en-US")}′

@@ -168,6 +168,14 @@ export interface ScoutingReport {
   overallRating: number;
   generatedBy: string;
   createdAt: string;
+  /** Snapshot at generation time — same rules as profile (rating, sample, role rates). */
+  briefContext?: {
+    minutesPlayed: number;
+    appearances: number;
+    smallSample: boolean;
+    sampleNote: string;
+    keyRates: string[];
+  };
 }
 
 export interface PlayerFilters {

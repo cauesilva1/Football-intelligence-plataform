@@ -1,9 +1,10 @@
 "use client";
 
-import { Download, FileText, ShieldCheck, Sparkles, Target, TrendingDown } from "lucide-react";
+import Link from "next/link";
+import { Download, ExternalLink, FileText, ShieldCheck, Sparkles, Target, TrendingDown } from "lucide-react";
 import { DataPanel } from "@/components/data/data-panel";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { ratingColor } from "@/lib/utils";
 import type { PlayerLite, ScoutingReport } from "@/types";
 
@@ -18,6 +19,8 @@ export function ReportView({
   onExport: () => void;
   onExportPdf?: () => void;
 }) {
+  const ctx = report.briefContext;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -33,13 +36,31 @@ export function ReportView({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <div className="text-right">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">Overall Rating</p>
-            <p className={`font-display text-2xl font-bold ${ratingColor(report.overallRating)}`}>
-              {report.overallRating.toFixed(1)}
-            </p>
+            <div className="flex items-center justify-end gap-2">
+              <p className={`font-display text-2xl font-bold ${ratingColor(report.overallRating)}`}>
+                {report.overallRating.toFixed(1)}
+              </p>
+              {ctx?.smallSample ? (
+                <Badge variant="amber" className="text-2xs">
+                  Small sample
+                </Badge>
+              ) : null}
+            </div>
+            {ctx ? (
+              <p className="text-2xs text-muted-foreground">
+                {ctx.minutesPlayed.toLocaleString("en-US")}&apos; · {ctx.appearances} apps
+              </p>
+            ) : null}
           </div>
+          <Link
+            href={`/players/${player.id}`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            <ExternalLink className="h-3.5 w-3.5" /> Profile
+          </Link>
           {onExportPdf ? (
             <Button variant="default" size="sm" onClick={onExportPdf}>
               <Download className="h-3.5 w-3.5" /> PDF brief
@@ -50,6 +71,37 @@ export function ReportView({
           </Button>
         </div>
       </div>
+
+      {ctx?.sampleNote ? (
+        <p
+          className={
+            ctx.smallSample
+              ? "rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90"
+              : "rounded-lg border border-border bg-surface-muted/30 px-3 py-2 text-xs text-muted-foreground"
+          }
+        >
+          {ctx.sampleNote}
+        </p>
+      ) : null}
+
+      {ctx && ctx.keyRates.length > 0 ? (
+        <DataPanel
+          title="Key rates"
+          description="Role-aware metrics — same pack as the player profile scorecard."
+          density="dense"
+        >
+          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {ctx.keyRates.map((line) => (
+              <li
+                key={line}
+                className="rounded-lg border border-border bg-surface-muted/30 px-3 py-2 font-mono text-xs tabular-nums text-foreground"
+              >
+                {line}
+              </li>
+            ))}
+          </ul>
+        </DataPanel>
+      ) : null}
 
       <DataPanel
         title="Player Summary"

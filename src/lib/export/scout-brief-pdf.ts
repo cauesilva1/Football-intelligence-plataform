@@ -31,6 +31,9 @@ export type ScoutBriefPdfInput = {
   age?: number;
   rating: number;
   minutes: number;
+  appearances?: number;
+  smallSample?: boolean;
+  sampleNote?: string;
   summary: string;
   strengths: string[];
   risks: string[];
@@ -56,9 +59,12 @@ export function buildScoutBriefPdf(input: ScoutBriefPdfInput): Blob {
   push(
     `Rating ${input.rating.toFixed(1)}${
       input.minutes > 0 ? `  ·  Minutes ${input.minutes.toLocaleString("en-US")}` : ""
+    }${input.appearances != null ? `  ·  Apps ${input.appearances}` : ""}${
+      input.smallSample ? "  ·  Provisional (small sample)" : ""
     }`,
     11
   );
+  if (input.sampleNote) push(input.sampleNote, 9);
   push("");
   push("SUMMARY", 12);
   push(input.summary || "—");
@@ -72,7 +78,7 @@ export function buildScoutBriefPdf(input: ScoutBriefPdfInput): Blob {
   if (input.risks.length === 0) push("• —");
   push("");
   push("KEY RATES", 12);
-  for (const k of input.keyRates.slice(0, 6)) push(`• ${k}`);
+  for (const k of input.keyRates.slice(0, 8)) push(`• ${k}`);
   if (input.keyRates.length === 0) push("• —");
   push("");
   push("RECOMMENDATION", 12);
