@@ -124,11 +124,11 @@ async function upsertSeasonRow(
 }
 
 /**
- * Dual-season rows like basketball: past (with ESPN production when available)
- * + current/upcoming stub for the season about to start.
+ * Dual/triple season rows: older past + past (ESPN production when requested)
+ * + current/upcoming stub.
  *
  * Mass sync should pass fetchPastStats=false (stubs only).
- * Player profile should pass fetchPastStats=true (one ESPN call).
+ * Player profile / seasons-only --with-stats should pass fetchPastStats=true.
  */
 export async function ensureAmericanFootballPlayerSeasons(options: {
   playerId: string;
@@ -136,62 +136,66 @@ export async function ensureAmericanFootballPlayerSeasons(options: {
   league: AmericanFootballLeagueCode;
   /** Fetch ESPN past-season stats. Default false (stubs only — fast). */
   fetchPastStats?: boolean;
+  /** How many completed seasons to backfill (1–3). Default 2 for trajectory. */
+  priorSeasonCount?: number;
   timeoutMs?: number;
 }): Promise<boolean> {
   if (!canUseDatabase()) return false;
 
   const prisma = getPrisma();
   const { pastYear, currentYear } = resolveFootballHubSeasonYears();
+  const priorCount = Math.max(1, Math.min(options.priorSeasonCount ?? 2, 3));
+  const priorYears = Array.from({ length: priorCount }, (_, i) => pastYear - i);
   const fetchPast = options.fetchPastStats === true && options.espnAthleteId != null;
 
-  const existingPast = await prisma.playerSeasonStats.findUnique({
-    where: { playerId_season: { playerId: options.playerId, season: pastYear } },
-    select: {
-      points: true,
-      goals: true,
-      tackles: true,
-      steals: true,
-      totalYards: true,
-      touchdowns: true,
-      sacks: true,
-      passingYards: true,
-      rushingYards: true,
-      receivingYards: true,
-    },
-  });
   const existingCurrent = await prisma.playerSeasonStats.findUnique({
     where: { playerId_season: { playerId: options.playerId, season: currentYear } },
     select: { id: true },
   });
-  const pastHasSignal = footballSeasonRowHasSignal(existingPast);
-
-  // Both season rows already present and we are not fetching ESPN — nothing to do.
-  if (existingPast && existingCurrent && (!fetchPast || pastHasSignal)) {
-    return false;
-  }
 
   // Always ensure upcoming stub exists.
   if (!existingCurrent) {
     await upsertSeasonRow(options.playerId, currentYear, null);
   }
 
-  if (pastHasSignal) {
-    return false;
-  }
+  const signalSelect = {
+    points: true,
+    goals: true,
+    tackles: true,
+    steals: true,
+    totalYards: true,
+    touchdowns: true,
+    sacks: true,
+    passingYards: true,
+    rushingYards: true,
+    receivingYards: true,
+  } as const;
 
-  let pastStats: ParsedFootballSeasonStats | null = null;
-  let fetched = false;
-  if (fetchPast && options.espnAthleteId != null) {
-    pastStats = await fetchFootballAthleteSeasonStats({
+  let fetchedAny = false;
+
+  for (const seasonYear of priorYears) {
+    const existing = await prisma.playerSeasonStats.findUnique({
+      where: { playerId_season: { playerId: options.playerId, season: seasonYear } },
+      select: signalSelect,
+    });
+    const hasSignal = footballSeasonRowHasSignal(existing);
+
+    if (hasSignal) continue;
+
+    if (!fetchPast || options.espnAthleteId == null) {
+      if (!existing) await upsertSeasonRow(options.playerId, seasonYear, null);
+      continue;
+    }
+
+    const stats = await fetchFootballAthleteSeasonStats({
       espnAthleteId: options.espnAthleteId,
       league: options.league,
-      seasonYear: pastYear,
+      seasonYear,
       timeoutMs: options.timeoutMs ?? 12_000,
     });
-    fetched = pastStats != null;
+    if (stats) fetchedAny = true;
+    await upsertSeasonRow(options.playerId, seasonYear, stats);
   }
-
-  await upsertSeasonRow(options.playerId, pastYear, pastStats);
 
   await prisma.player.update({
     where: { id: options.playerId },
@@ -201,7 +205,7 @@ export async function ensureAmericanFootballPlayerSeasons(options: {
     },
   });
 
-  return fetched;
+  return fetchedAny;
 }
 
 /**

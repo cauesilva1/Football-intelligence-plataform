@@ -122,6 +122,8 @@ async function main() {
     const { resolveFootballHubSeasonYears } = await import("@/lib/api/espn-football-seasons");
     const { footballSeasonRowHasSignal } = await import("@/lib/api/espn-football-athlete-stats");
     const { pastYear } = resolveFootballHubSeasonYears();
+    const olderYear = pastYear - 1;
+    const priorYears = [pastYear, olderYear];
 
     let players = await prisma.player.findMany({
       where: {
@@ -135,8 +137,9 @@ async function main() {
         apiSportsId: true,
         team: { select: { competition: { select: { name: true } } } },
         stats: {
-          where: { season: pastYear },
+          where: { season: { in: priorYears } },
           select: {
+            season: true,
             points: true,
             goals: true,
             tackles: true,
@@ -148,14 +151,16 @@ async function main() {
             rushingYards: true,
             receivingYards: true,
           },
-          take: 1,
         },
       },
       orderBy: { fullName: "asc" },
     });
 
     if (!skipStats) {
-      players = players.filter((p) => !footballSeasonRowHasSignal(p.stats[0]));
+      players = players.filter((player) => {
+        const bySeason = new Map(player.stats.map((row) => [row.season, row]));
+        return priorYears.some((year) => !footballSeasonRowHasSignal(bySeason.get(year)));
+      });
     }
     if (limit != null) {
       players = players.slice(0, limit);
@@ -163,7 +168,9 @@ async function main() {
 
     console.log(
       `[af-rosters] seasons-only · ${players.length} players` +
-        (skipStats ? " (stubs)" : " missing past production → ESPN fetch")
+        (skipStats
+          ? " (stubs)"
+          : ` missing ${priorYears.join("/")}/production → ESPN fetch`)
     );
 
     let ok = 0;
@@ -188,6 +195,7 @@ async function main() {
               espnAthleteId: player.apiSportsId,
               league: leagueCode,
               fetchPastStats: !skipStats,
+              priorSeasonCount: 2,
             });
             ok += 1;
             if (didFetch) fetched += 1;

@@ -4,15 +4,15 @@
 > **Source of truth:** `npm run data:coverage` (live DB, `DATA_SOURCE=db`)  
 > **Honesty rule:** trajectory needs **≥2 productive seasons**; we never invent slopes from stubs.
 
-## Snapshot (2026-07-27, pós backfill)
+## Snapshot (2026-07-27, pós backfills)
 
 | Sport | Players | 0 productive / stub | 1 productive | ≥2 (trajectory-eligible) |
 |-------|--------:|--------------------:|-------------:|-------------------------:|
 | Soccer | 3 921 | 1 575 | 1 550 | **796 (20.3%)** |
 | Basketball | 2 320 | 1 767 | 110 | **443 (19.1%)** |
-| American Football | 9 792 | 8 366 | 1 426 | **0 (0%)** |
+| American Football | 9 792 | 8 300 | 1 156 | **336 (3.4%)** |
 
-NBA dual-season backfill (`data:sync-nba-teste -- --teams=30`) unlocked BB trajectory for ~443 players. EuroLeague boxscore window (`--days=90`): **62/259** with any season stats.
+NBA dual-season backfill unlocked BB trajectory (~443). AF dual prior seasons (2024+2025) after NFL/CFB batches: **336** trajectory-eligible. EuroLeague boxscore window (`--days=90`): **62/259** with any season stats.
 
 ### By league (players)
 
@@ -44,7 +44,7 @@ Trajectory compute functions share these floors — UI badges and limitations us
 
 1. **EuroLeague:** Rosters always sync; season stats come from boxscores. In off-season use a wide window (`--days=90`) — Finals typically end in May. After 2026-07-27 backfill: **62/259** players with season-stat rows (playoff window), not full regular season.
 2. **Basketball multi-season:** Use `npm run data:sync-nba-teste -- --teams=30` to write **2024-25 + 2025-26** productive lines (stubs for 2026-27 alone do not unlock trajectory).
-3. **American Football:** NFL/CFB counts OK; multi-season still mostly single productive line until broader `data:backfill-af-season-stats`.
+3. **American Football:** Dual prior seasons (2024+2025) via `data:backfill-af-season-stats -- --with-stats`; ~3.4% trajectory-eligible after first NFL/CFB batches — keep running with higher `--limit=` to climb.
 4. **Soccer:** ~20% trajectory-eligible; many rows still stub or single-season — badges surface this on profile.
 
 ## Ops commands
