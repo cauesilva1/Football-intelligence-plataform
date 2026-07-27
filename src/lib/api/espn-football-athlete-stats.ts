@@ -179,6 +179,25 @@ export async function fetchFootballAthleteSeasonStats(options: {
   /** Profile path should stay snappy — default 12s. */
   timeoutMs?: number;
 }): Promise<ParsedFootballSeasonStats | null> {
+  const byYear = await fetchFootballAthleteSeasonStatsMap({
+    espnAthleteId: options.espnAthleteId,
+    league: options.league,
+    seasonYears: [options.seasonYear],
+    timeoutMs: options.timeoutMs,
+  });
+  return byYear.get(options.seasonYear) ?? null;
+}
+
+/** One ESPN call → parse multiple season years (trajectory backfill). */
+export async function fetchFootballAthleteSeasonStatsMap(options: {
+  espnAthleteId: number | string;
+  league: AmericanFootballLeagueCode;
+  seasonYears: number[];
+  timeoutMs?: number;
+}): Promise<Map<number, ParsedFootballSeasonStats>> {
+  const out = new Map<number, ParsedFootballSeasonStats>();
+  if (!options.seasonYears.length) return out;
+
   const url = `${ESPN_WEB}/${espnLeaguePath(options.league)}/athletes/${options.espnAthleteId}/stats`;
   const timeoutMs = options.timeoutMs ?? 12_000;
   try {
@@ -190,12 +209,16 @@ export async function fetchFootballAthleteSeasonStats(options: {
       next: { revalidate: 0 },
       signal: AbortSignal.timeout(timeoutMs),
     });
-    if (!response.ok) return null;
+    if (!response.ok) return out;
     const payload = (await response.json()) as EspnV3StatsResponse;
-    return parseFootballSeasonFromCategories(payload.categories, options.seasonYear);
+    for (const year of options.seasonYears) {
+      const parsed = parseFootballSeasonFromCategories(payload.categories, year);
+      if (parsed) out.set(year, parsed);
+    }
   } catch {
-    return null;
+    return out;
   }
+  return out;
 }
 
 /**

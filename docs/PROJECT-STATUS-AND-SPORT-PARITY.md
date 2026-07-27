@@ -167,7 +167,7 @@ Portar o padrão das 4 suítes soccer para cada sport (role tipico, small sample
 | Honesty floors | `src/lib/intelligence/data-depth.ts` alinhado a trajectory |
 | UI badges | Header + intelligence panel |
 | Basketball | EuroLeague: 62/259 with season stats (playoff window); NBA ~19% trajectory-eligible after dual-season backfill |
-| American Football | Dual prior seasons wired; ~3.4% trajectory-eligible after NFL/CFB batches — keep backfilling |
+| American Football | Dual prior seasons + faster ESPN map; ~6.7% trajectory-eligible — continue backfill |
 
 ### Ordem de entrega (histórico Waves 1–4 + ponto 1)
 

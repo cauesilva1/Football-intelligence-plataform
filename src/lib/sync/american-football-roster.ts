@@ -6,7 +6,7 @@ import {
 } from "@/lib/american-football/team-league";
 import {
   encodeFootballStatsForPrisma,
-  fetchFootballAthleteSeasonStats,
+  fetchFootballAthleteSeasonStatsMap,
   footballSeasonRowHasSignal,
   zeroFootballStatsForPrisma,
   type ParsedFootballSeasonStats,
@@ -172,6 +172,7 @@ export async function ensureAmericanFootballPlayerSeasons(options: {
   } as const;
 
   let fetchedAny = false;
+  const yearsNeedingFetch: number[] = [];
 
   for (const seasonYear of priorYears) {
     const existing = await prisma.playerSeasonStats.findUnique({
@@ -187,14 +188,21 @@ export async function ensureAmericanFootballPlayerSeasons(options: {
       continue;
     }
 
-    const stats = await fetchFootballAthleteSeasonStats({
+    yearsNeedingFetch.push(seasonYear);
+  }
+
+  if (yearsNeedingFetch.length > 0 && options.espnAthleteId != null) {
+    const byYear = await fetchFootballAthleteSeasonStatsMap({
       espnAthleteId: options.espnAthleteId,
       league: options.league,
-      seasonYear,
+      seasonYears: yearsNeedingFetch,
       timeoutMs: options.timeoutMs ?? 12_000,
     });
-    if (stats) fetchedAny = true;
-    await upsertSeasonRow(options.playerId, seasonYear, stats);
+    for (const seasonYear of yearsNeedingFetch) {
+      const stats = byYear.get(seasonYear) ?? null;
+      if (stats) fetchedAny = true;
+      await upsertSeasonRow(options.playerId, seasonYear, stats);
+    }
   }
 
   await prisma.player.update({

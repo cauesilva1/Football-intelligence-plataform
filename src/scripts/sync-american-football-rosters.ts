@@ -22,7 +22,7 @@ process.stdout.write(`[af-rosters] boot pid=${process.pid}\n`);
 
 const FETCH_DELAY_MS = 150;
 const TEAM_CONCURRENCY = 3;
-const PLAYER_SEASON_CONCURRENCY = 8;
+const PLAYER_SEASON_CONCURRENCY = 12;
 
 type LeagueFilter = "all" | "nfl" | "cfb";
 

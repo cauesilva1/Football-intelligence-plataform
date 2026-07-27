@@ -10,9 +10,9 @@
 |-------|--------:|--------------------:|-------------:|-------------------------:|
 | Soccer | 3 921 | 1 575 | 1 550 | **796 (20.3%)** |
 | Basketball | 2 320 | 1 767 | 110 | **443 (19.1%)** |
-| American Football | 9 792 | 8 300 | 1 156 | **336 (3.4%)** |
+| American Football | 9 792 | 8 237 | 903 | **652 (6.7%)** |
 
-NBA dual-season backfill unlocked BB trajectory (~443). AF dual prior seasons (2024+2025) after NFL/CFB batches: **336** trajectory-eligible. EuroLeague boxscore window (`--days=90`): **62/259** with any season stats.
+NBA dual-season backfill unlocked BB trajectory (~443). AF dual prior seasons (2024+2025): **652** trajectory-eligible (~6.7%) after larger NFL/CFB batches. EuroLeague boxscore window (`--days=90`): **62/259** with any season stats.
 
 ### By league (players)
 
