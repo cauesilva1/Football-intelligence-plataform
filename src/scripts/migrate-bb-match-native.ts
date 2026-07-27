@@ -58,8 +58,8 @@ async function main() {
       data: {
         points: row.goals,
         rebounds: row.passesCompleted,
-        steals: Math.round(row.tackles),
-        blocks: Math.round(row.interceptions),
+        steals: Math.round(row.tackles ?? 0),
+        blocks: Math.round(row.interceptions ?? 0),
         fieldGoalsAttempted: row.passesAttempted,
       },
     });
