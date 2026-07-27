@@ -3,7 +3,9 @@ import {
   buildFootballPositionScorecard,
   buildPositionScorecard,
 } from "@/features/scouting/lib/position-scorecard";
+import { buildBasketballIntelligenceProfile } from "@/lib/intelligence/basketball/build-basketball-intelligence-profile";
 import { buildSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/build-soccer-intelligence-profile";
+import { adaptSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/adapter";
 import {
   formatBriefIntelligenceLines,
   toBriefIntelligenceSnapshot,
@@ -44,6 +46,9 @@ export function buildScoutBriefContext(player: Player): ScoutingReportBriefConte
       minutesPlayed: s.minutesPlayed,
     });
     const scorecard = buildBasketballPositionScorecard(player.position, s);
+    const intelligence = toBriefIntelligenceSnapshot(
+      buildBasketballIntelligenceProfile(player)
+    );
     return {
       minutesPlayed: s.minutesPlayed,
       appearances: s.appearances,
@@ -51,7 +56,11 @@ export function buildScoutBriefContext(player: Player): ScoutingReportBriefConte
       sampleNote: smallSample
         ? "Provisional rating — need ≥10 games and ≥200′ for full rates."
         : "Reliable sample — rates match profile methodology.",
-      keyRates: scorecardToKeyRates(scorecard.metrics),
+      keyRates: [
+        ...scorecardToKeyRates(scorecard.metrics),
+        ...formatBriefIntelligenceLines(intelligence),
+      ],
+      intelligence,
     };
   }
 
@@ -74,7 +83,9 @@ export function buildScoutBriefContext(player: Player): ScoutingReportBriefConte
 
   const smallSample = !hasReliableSoccerSample(s.minutesPlayed);
   const scorecard = buildPositionScorecard(player.position, s);
-  const intelligence = toBriefIntelligenceSnapshot(buildSoccerIntelligenceProfile(player));
+  const intelligence = toBriefIntelligenceSnapshot(
+    adaptSoccerIntelligenceProfile(buildSoccerIntelligenceProfile(player))
+  );
   return {
     minutesPlayed: s.minutesPlayed,
     appearances: s.appearances,

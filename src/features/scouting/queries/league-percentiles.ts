@@ -1,14 +1,25 @@
-import { similarPositionGroup } from "@/features/scouting/lib/position-scorecard";
+import {
+  similarBasketballPositionGroup,
+  similarPositionGroup,
+} from "@/features/scouting/lib/position-scorecard";
 import { getPlayerRepository } from "@/features/scouting/repository";
+import {
+  computeBasketballLeaguePositionPercentiles,
+  type BasketballLeaguePositionPercentileTable,
+} from "@/lib/intelligence/basketball/league-percentiles";
 import {
   computeLeaguePositionPercentiles,
   type LeaguePositionPercentileTable,
 } from "@/lib/intelligence/soccer/league-percentiles";
-import { SOCCER_RATE_MIN_MINUTES } from "@/lib/scoring";
+import { BB_RATE_MIN_MINUTES, SOCCER_RATE_MIN_MINUTES } from "@/lib/scoring";
 import { CURRENT_SEASON } from "@/lib/data/generators";
 import type { Player } from "@/types";
 
 const LEAGUE_COHORT_TAKE = 800;
+
+export type AnyLeaguePercentileTable =
+  | LeaguePositionPercentileTable
+  | BasketballLeaguePositionPercentileTable;
 
 export async function loadLeaguePercentileTable(
   league: string,
@@ -29,12 +40,39 @@ export async function loadLeaguePercentileTable(
   });
 }
 
+export async function loadBasketballLeaguePercentileTable(
+  league: string,
+  position: string,
+  season: string = CURRENT_SEASON
+): Promise<BasketballLeaguePositionPercentileTable | null> {
+  const repo = getPlayerRepository();
+  const cohort = await repo.findSample("BASKETBALL", {
+    league,
+    positions: similarBasketballPositionGroup(position),
+    minMinutes: BB_RATE_MIN_MINUTES,
+    take: LEAGUE_COHORT_TAKE,
+  });
+
+  return computeBasketballLeaguePositionPercentiles("BASKETBALL", league, position, {
+    season,
+    cohort,
+  });
+}
+
 export async function loadLeaguePercentileContext(
   player: Player
-): Promise<LeaguePositionPercentileTable | null> {
+): Promise<AnyLeaguePercentileTable | null> {
   const league = player.league;
   if (!league) return null;
 
   const season = player.selectedSeason ?? player.currentSeasonStats.season;
-  return loadLeaguePercentileTable(league, player.position, season);
+  const sport = player.sport ?? "SOCCER";
+
+  if (sport === "BASKETBALL") {
+    return loadBasketballLeaguePercentileTable(league, player.position, season);
+  }
+  if (sport === "SOCCER") {
+    return loadLeaguePercentileTable(league, player.position, season);
+  }
+  return null;
 }

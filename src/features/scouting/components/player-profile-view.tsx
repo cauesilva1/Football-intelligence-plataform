@@ -12,6 +12,8 @@ import { PlayerCompetitionContext } from "@/features/scouting/components/profile
 import { ProfileBackButton } from "@/features/scouting/components/profile/profile-back-button";
 import { AfProfileSeasonEnricher } from "@/features/scouting/components/profile/af-profile-season-enricher";
 import { resolveFootballHubSeasonYears } from "@/lib/api/espn-football-seasons";
+import { supportsIntelligence } from "@/lib/intelligence/registry";
+import type { Sport } from "@/lib/sport";
 import type { Player } from "@/types";
 import { notFound } from "next/navigation";
 
@@ -54,7 +56,9 @@ export async function PlayerProfileView({
   const player = await queryPlayerById(playerId, season);
   if (!player) notFound();
 
-  const isSoccer = (player.sport ?? "SOCCER") === "SOCCER";
+  const sport = (player.sport ?? "SOCCER") as Sport;
+  const showIntelligence = supportsIntelligence(sport);
+  const showTacticalFit = sport === "SOCCER";
 
   return (
     <div className="space-y-6">
@@ -65,12 +69,12 @@ export async function PlayerProfileView({
       />
       <PlayerProfileHeader player={player} />
       <PlayerPerformanceSection player={player} />
-      {isSoccer ? (
+      {showIntelligence ? (
         <Suspense fallback={<IntelligenceSkeleton />}>
           <PlayerIntelligencePanel playerId={playerId} />
         </Suspense>
       ) : null}
-      {isSoccer ? (
+      {showTacticalFit ? (
         <Suspense fallback={<IntelligenceSkeleton />}>
           <PlayerTacticalFitPanel playerId={playerId} teamId={player.teamId} />
         </Suspense>

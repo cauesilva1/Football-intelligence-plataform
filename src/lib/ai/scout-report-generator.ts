@@ -1,7 +1,9 @@
 import { derivePlayingStyle } from "@/features/scouting/lib/playing-style";
 import { withBriefContext } from "@/lib/export/scout-brief-context";
 import { toBriefIntelligenceSnapshot } from "@/lib/export/scout-brief-intelligence";
+import { adaptSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/adapter";
 import { buildSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/build-soccer-intelligence-profile";
+import { buildBasketballIntelligenceProfile } from "@/lib/intelligence/basketball/build-basketball-intelligence-profile";
 import { computeReportOverallRating } from "@/lib/scoring/soccer-rating";
 import { computeBasketballReportOverallRating } from "@/lib/scoring/basketball-rating";
 import { computeFootballReportOverallRating } from "@/lib/scoring/football-rating";
@@ -469,9 +471,17 @@ function buildPlayerContext(player: Player): string {
       seasonStats,
       ...(sport === "SOCCER"
         ? {
-            intelligence: toBriefIntelligenceSnapshot(buildSoccerIntelligenceProfile(player)),
+            intelligence: toBriefIntelligenceSnapshot(
+              adaptSoccerIntelligenceProfile(buildSoccerIntelligenceProfile(player))
+            ),
           }
-        : {}),
+        : sport === "BASKETBALL"
+          ? {
+              intelligence: toBriefIntelligenceSnapshot(
+                buildBasketballIntelligenceProfile(player)
+              ),
+            }
+          : {}),
     },
     null,
     2

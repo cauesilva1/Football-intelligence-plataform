@@ -183,7 +183,10 @@ Referência: [statsperform.com](https://www.statsperform.com/)
 - [ ] `player.repository.prisma.ts` (~968 LOC) — split list vs sync
 - [ ] `DATA_SOURCE=mock` default — demo vs prod
 - [ ] Testes só em scoring/export — sem E2E
-- [ ] BB/AF intelligence depth — subir em paralelo com o template soccer (não “depois que soccer estiver maduro”)
+- [x] BB intelligence profile (Wave 1) — `src/lib/intelligence/basketball/` + shared registry
+- [ ] AF intelligence depth — próximo após BB recruitment / polish
+- [ ] BB recruitment fit (Wave 2)
+- [ ] BB/AF tactical fit (Wave 4)
 
 ---
 
@@ -578,4 +581,4 @@ Eles são infraestrutura de dados + AI em escala enterprise. OmniScout é **work
 
 ---
 
-*Última atualização: 2026-07-27 — Phase M multi-sport peers (apresentação igualitária); soccer pioneira engine, BB/AF sobem em paralelo.*
+*Última atualização: 2026-07-27 — Intelligence Parity Wave 1: shared contract + BB profile live; AF pending.*

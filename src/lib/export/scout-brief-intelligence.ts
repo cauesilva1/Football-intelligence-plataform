@@ -1,4 +1,4 @@
-import type { PlayerIntelligenceProfile } from "@/lib/intelligence/soccer/types";
+import type { IntelligenceProfile } from "@/lib/intelligence/types";
 
 export interface ScoutingReportBriefIntelligence {
   role: string;
@@ -14,12 +14,12 @@ export interface ScoutingReportBriefIntelligence {
 }
 
 export function toBriefIntelligenceSnapshot(
-  profile: PlayerIntelligenceProfile
+  profile: IntelligenceProfile
 ): ScoutingReportBriefIntelligence {
   return {
-    role: profile.role,
-    trajectory: profile.trajectory,
-    styleLabel: profile.styleLabel,
+    role: profile.role.label,
+    trajectory: profile.trajectory.direction,
+    styleLabel: profile.styleLabel ?? "—",
     dimensions: profile.dimensions.map((dimension) => ({
       label: dimension.label,
       score: dimension.score,

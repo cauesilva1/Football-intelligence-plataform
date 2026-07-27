@@ -11,10 +11,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { DataPanel } from "@/components/data/data-panel";
 import { queryPlayerIntelligenceProfile } from "@/features/scouting/queries/player-intelligence";
-import type { SoccerTrajectory } from "@/lib/intelligence/soccer/types";
+import type { TrajectoryDirection } from "@/lib/intelligence/types";
 import { cn } from "@/lib/utils";
 
-function trajectoryMeta(trajectory: SoccerTrajectory): {
+function trajectoryMeta(trajectory: TrajectoryDirection): {
   label: string;
   variant: "azure" | "neutral" | "rose" | "amber";
   Icon: typeof TrendingUp;
@@ -49,7 +49,7 @@ export async function PlayerIntelligencePanel({ playerId }: { playerId: string }
   const profile = await queryPlayerIntelligenceProfile(playerId);
   if (!profile) return null;
 
-  const trajectory = trajectoryMeta(profile.trajectory);
+  const trajectory = trajectoryMeta(profile.trajectory.direction);
   const TrajectoryIcon = trajectory.Icon;
   const avgConfidence =
     profile.dimensions.reduce((sum, dimension) => sum + dimension.confidence, 0) /
@@ -72,11 +72,13 @@ export async function PlayerIntelligencePanel({ playerId }: { playerId: string }
     >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface-muted/30 p-3">
-          <Badge variant="default">{profile.role}</Badge>
-          <Badge variant="secondary">
-            <Sparkles className="mr-1 h-3 w-3" />
-            {profile.styleLabel}
-          </Badge>
+          <Badge variant="default">{profile.role.label}</Badge>
+          {profile.styleLabel ? (
+            <Badge variant="secondary">
+              <Sparkles className="mr-1 h-3 w-3" />
+              {profile.styleLabel}
+            </Badge>
+          ) : null}
           <Badge variant={trajectory.variant}>
             <TrajectoryIcon className="mr-1 h-3 w-3" />
             {trajectory.label}
@@ -88,6 +90,16 @@ export async function PlayerIntelligencePanel({ playerId }: { playerId: string }
             </Badge>
           ) : null}
         </div>
+
+        {profile.role.evidence.length > 0 ? (
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-2xs text-muted-foreground">
+            {profile.role.evidence.map((item) => (
+              <li key={`${item.label}-${item.value}`}>
+                <span className="text-foreground/80">{item.label}:</span> {item.value}
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
         <div className="grid gap-3 md:grid-cols-2">
           {profile.dimensions.map((dimension) => (

@@ -1,6 +1,6 @@
 import { cache } from "react";
-import { queryPlayerIntelligenceProfile } from "@/features/scouting/queries/player-intelligence";
 import { queryTeamById } from "@/features/scouting/queries/teams";
+import { buildSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/build-soccer-intelligence-profile";
 import { computeTacticalFit } from "@/lib/intelligence/soccer/compute-tactical-fit";
 import { buildTeamStyleProfile } from "@/lib/intelligence/soccer/team-style-profile";
 import type { TacticalFitResult } from "@/lib/intelligence/soccer/compute-tactical-fit";
@@ -19,9 +19,7 @@ export const queryTacticalFit = cache(
     const stats = team?.stats;
     if (!team || !stats) return null;
 
-    const profile = await queryPlayerIntelligenceProfile(playerId);
-    if (!profile) return null;
-
+    const profile = buildSoccerIntelligenceProfile(player);
     return computeTacticalFit(profile, buildTeamStyleProfile(stats), team.name);
   }
 );

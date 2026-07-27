@@ -1,13 +1,17 @@
 /**
- * Print a headless soccer intelligence profile as JSON.
+ * Print a headless intelligence profile as JSON (soccer / basketball).
  *
  * Usage:
  *   npm run intel:profile -- <playerId>
  */
-import { buildSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/build-soccer-intelligence-profile";
+import {
+  similarBasketballPositionGroup,
+  similarPositionGroup,
+} from "@/features/scouting/lib/position-scorecard";
 import { getPlayerRepository } from "@/features/scouting/repository";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
-import { similarPositionGroup } from "@/features/scouting/lib/position-scorecard";
+import { getIntelligenceEngine, supportsIntelligence } from "@/lib/intelligence/registry";
+import type { Sport } from "@/lib/sport";
 
 async function main() {
   const playerId = process.argv[2];
@@ -24,12 +28,24 @@ async function main() {
     process.exit(1);
   }
 
-  const pool = await repo.findSample("SOCCER", {
-    positions: similarPositionGroup(player.position),
+  const sport = (player.sport ?? "SOCCER") as Sport;
+  if (!supportsIntelligence(sport)) {
+    console.error(`Intelligence engine not available for sport: ${sport}`);
+    process.exit(1);
+  }
+
+  const engine = getIntelligenceEngine(sport)!;
+  const positions =
+    sport === "BASKETBALL"
+      ? similarBasketballPositionGroup(player.position)
+      : similarPositionGroup(player.position);
+
+  const pool = await repo.findSample(sport, {
+    positions,
     take: 400,
   });
 
-  const profile = buildSoccerIntelligenceProfile(player, { comparablesPool: pool });
+  const profile = engine.buildProfile(player, { comparablesPool: pool });
   console.log(JSON.stringify(profile, null, 2));
 }
 
