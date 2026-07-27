@@ -35,3 +35,5 @@ Details: [docs/SCORING.md](./docs/SCORING.md).
 - Photos/crests may be enriched via API-Sports and cached in DB when configured.
 
 For methodology and interview talking points, see [docs/SCORING.md](./docs/SCORING.md). Setup variables: `.env.example`.
+
+**Demos:** set `DATA_SOURCE` explicitly (`mock` vs `db`) — see [docs/DEMO-DATA-SOURCE.md](./docs/DEMO-DATA-SOURCE.md). Coverage inventory: `npm run data:coverage` when on `db`.

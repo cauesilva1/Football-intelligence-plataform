@@ -1,58 +1,27 @@
 import Link from "next/link";
 import { queryRecruitmentCandidates } from "@/features/scouting/queries/recruitment-candidates";
+import { resolveRecruitmentBrief } from "@/features/recruitment/lib/resolve-recruitment-brief";
 import { recordRecruitmentBriefRun } from "@/lib/actions/workspace";
 import { getOrCreateDeviceId } from "@/lib/workspace/device-id";
-import type { RecruitmentBrief } from "@/lib/intelligence/recruitment-types";
 import { Badge } from "@/components/ui/badge";
 import { formatMarketValue, ratingColor } from "@/lib/utils";
-
-function parseBrief(
-  searchParams: Record<string, string | string[] | undefined>
-): RecruitmentBrief | null {
-  const position = typeof searchParams.position === "string" ? searchParams.position : undefined;
-  if (!position) return null;
-
-  const sportRaw = typeof searchParams.sport === "string" ? searchParams.sport : "SOCCER";
-  const sport =
-    sportRaw === "BASKETBALL"
-      ? "BASKETBALL"
-      : sportRaw === "AMERICAN_FOOTBALL"
-        ? "AMERICAN_FOOTBALL"
-        : "SOCCER";
-
-  const num = (key: string) => {
-    const raw = searchParams[key];
-    const value = typeof raw === "string" ? Number(raw) : NaN;
-    return Number.isFinite(value) ? value : undefined;
-  };
-
-  return {
-    sport,
-    position,
-    league: typeof searchParams.league === "string" ? searchParams.league : undefined,
-    maxAge: num("maxAge"),
-    maxMarketValue: num("maxValue"),
-    maxCapHit: num("maxCapHit"),
-    minRating: num("minRating"),
-    limit: num("limit") ?? 15,
-    trajectory: "any",
-  };
-}
 
 export async function RecruitmentResults({
   searchParams,
 }: {
   searchParams: Record<string, string | string[] | undefined>;
 }) {
-  const brief = parseBrief(searchParams);
-  if (!brief) {
+  const resolved = await resolveRecruitmentBrief(searchParams);
+  if (!resolved) {
     return (
       <p className="text-sm text-muted-foreground">
-        Set filters and run a search to see ranked recruitment candidates.
+        Set filters and run a search to see ranked recruitment candidates — or open a player
+        profile and use <span className="text-foreground/80">Find replacements</span>.
       </p>
     );
   }
 
+  const { brief, replaceTarget } = resolved;
   const result = await queryRecruitmentCandidates(brief);
 
   const deviceId = await getOrCreateDeviceId();
@@ -66,8 +35,20 @@ export async function RecruitmentResults({
 
   return (
     <div className="space-y-4">
+      {replaceTarget ? (
+        <p className="rounded-lg border border-primary/25 bg-primary/5 px-3 py-2 text-xs text-foreground/90">
+          Replacing{" "}
+          <Link href={`/players/${replaceTarget.id}`} className="font-semibold text-primary hover:underline">
+            {replaceTarget.knownAs || replaceTarget.fullName}
+          </Link>{" "}
+          ({replaceTarget.position}
+          {replaceTarget.teamName ? ` · ${replaceTarget.teamName}` : ""}) — brief seeded from
+          role/dimensions; target excluded from results. Decision support, not certainty.
+        </p>
+      ) : null}
       <p className="rounded-lg border border-border bg-surface-muted/30 px-3 py-2 text-xs text-muted-foreground">
-        {result.disclaimer} Evaluated {result.totalEvaluated} players; showing {result.candidates.length}.
+        {result.disclaimer} Evaluated {result.totalEvaluated} players; showing{" "}
+        {result.candidates.length}.
       </p>
       {result.candidates.length === 0 ? (
         <p className="text-sm text-muted-foreground">No candidates matched this brief.</p>

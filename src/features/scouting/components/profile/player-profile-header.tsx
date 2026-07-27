@@ -6,17 +6,19 @@ import {
   Weight,
   Footprints,
   ShieldHalf,
+  UserRoundSearch,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { PlayerAvatar } from "@/components/players/player-avatar";
 import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
-import { getPositionGlossaryDescription } from "@/lib/positions";
+import { getPositionGlossaryDescription, normalizeBasketballPosition } from "@/lib/positions";
 import { ShortlistButton } from "@/features/shortlist/components/shortlist-button";
 import { derivePlayerStatus } from "@/features/scouting/lib/player-status";
 import { NationalTeamCrest } from "@/features/tournaments/components/national-team-crest";
 import { SummerLeagueBadge } from "@/components/ui/summer-league-badge";
 import { getTeamTheme } from "@/lib/team-theme";
+import { deriveDataDepthSnapshot } from "@/lib/intelligence/data-depth";
 import { cn, formatCapHit, formatMarketValue, formatPhysicalMetric, formatPreferredFoot, ratingColor } from "@/lib/utils";
 import type { Player } from "@/types";
 
@@ -36,6 +38,7 @@ export function PlayerProfileHeader({
       ? "AMERICAN_FOOTBALL"
       : "SOCCER";
   const status = derivePlayerStatus(stats, sport);
+  const dataDepth = deriveDataDepthSnapshot(player);
   const theme = getTeamTheme(player.competitionName, player.teamName);
 
   const statusVariant =
@@ -49,6 +52,12 @@ export function PlayerProfileHeader({
 
   const heightLabel = formatPhysicalMetric(player.height, "cm");
   const weightLabel = formatPhysicalMetric(player.weight, "kg");
+  const displayPosition =
+    isBasketball ? normalizeBasketballPosition(player.position) : player.position;
+  const displaySecondary =
+    player.secondaryPosition && isBasketball
+      ? normalizeBasketballPosition(player.secondaryPosition)
+      : player.secondaryPosition;
 
   return (
     <div
@@ -84,19 +93,25 @@ export function PlayerProfileHeader({
                 {player.fullName}
               </h1>
               <Badge variant={statusVariant}>{status.label}</Badge>
+              {dataDepth.gapKind !== "none" ? (
+                <GlossaryTooltip
+                  label={<Badge variant="amber">{dataDepth.label}</Badge>}
+                  description={dataDepth.description}
+                />
+              ) : null}
               {isBasketball && player.summerLeague2026 ? (
                 <SummerLeagueBadge label="Summer League Roster" className="normal-case tracking-wide" />
               ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <GlossaryTooltip
-                label={<Badge variant="neutral">{player.position}</Badge>}
+                label={<Badge variant="neutral">{displayPosition}</Badge>}
                 description={getPositionGlossaryDescription(player.position, positionSport)}
               />
-              {player.secondaryPosition && (
+              {displaySecondary && (
                 <GlossaryTooltip
-                  label={<Badge variant="secondary">{player.secondaryPosition}</Badge>}
-                  description={getPositionGlossaryDescription(player.secondaryPosition, positionSport)}
+                  label={<Badge variant="secondary">{displaySecondary}</Badge>}
+                  description={getPositionGlossaryDescription(player.secondaryPosition!, positionSport)}
                 />
               )}
               <span className="inline-flex items-center gap-1.5 text-xs text-white/70">
@@ -167,6 +182,12 @@ export function PlayerProfileHeader({
             <ShortlistButton playerId={player.id} />
             <Link href={`/compare?playerA=${player.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
               <GitCompareArrows className="h-3.5 w-3.5" /> Compare
+            </Link>
+            <Link
+              href={`/recruitment?replacePlayerId=${player.id}&sport=${sport}`}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              <UserRoundSearch className="h-3.5 w-3.5" /> Find replacements
             </Link>
             <Link href={`/reports?playerId=${player.id}`} className={buttonVariants({ variant: "secondary", size: "sm" })}>
               <FileText className="h-3.5 w-3.5" /> Generate brief

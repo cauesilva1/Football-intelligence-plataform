@@ -27,7 +27,7 @@ OmniScout é uma **Sports Intelligence Platform** multi-sport: camada de decisã
 
 ### Classificação honesta
 
-Entre **dashboard multi-sport** e **produto de inteligência**: desk compartilhado maduro nos três esportes; profundidade de intelligence (role, percentis, recruitment fit, tactical fit) **só em soccer**.
+Desk compartilhado maduro nos três esportes; **engines de intelligence** (role, percentis, recruitment, tactical) nos três via Waves 1–4. **Profundidade de dados** (multi-season / EuroLeague stats) ainda limita trajectory em BB/AF — ver `docs/DATA-COVERAGE.md`.
 
 ### Stack e superfície
 
@@ -74,7 +74,7 @@ Isto é o **shared desk** — funcional hoje para Soccer, Basketball e American 
 | Dimensão | Soccer | Basketball | American Football |
 |----------|--------|------------|-------------------|
 | Ingestão / cron | ✅ ESPN + API-Football (defensivo) | ✅ ESPN + EuroLeague | ✅ ESPN NFL/CFB |
-| Contagem documentada | ~3.550 jogadores / 169 clubes | Não enumerada no repo | Não enumerada no repo |
+| Contagem documentada | ~3 921 jogadores | ~2 320 (NBA/NCAA/EL) — `DATA-COVERAGE.md` | ~9 792 (NFL+CFB) — `DATA-COVERAGE.md` |
 | Rating + honesty | ✅ | ✅ | ✅ |
 | Scorecards | ✅ | ✅ | ✅ |
 | Shared desk (list/compare/shortlist/report) | ✅ | ✅ | ✅ |
@@ -83,18 +83,17 @@ Isto é o **shared desk** — funcional hoje para Soccer, Basketball e American 
 | **Recruitment fit engine** | ✅ + UI `/recruitment` | ✅ + UI sport-aware | ✅ + UI sport-aware |
 | **Tactical / team fit** | ✅ MVP + panel | ✅ MVP + panel | ✅ MVP + panel |
 | **Similarity “why”** | ✅ | ✅ | ✅ |
-| Painéis no perfil | Intelligence + Tactical | Intelligence | Intelligence |
-| Testes de intelligence | 4 suítes | 2 suítes | 2 suítes |
+| Painéis no perfil | Intelligence + Tactical | Intelligence + Tactical | Intelligence + Tactical |
+| Data depth / honesty badges | ✅ + `data:coverage` | ✅ (trajectory rare until backfill) | ✅ (trajectory rare until backfill) |
+| Testes de intelligence | 4 suítes | 3 suítes | 3 suítes |
 | Testes de scoring | ✅ | ✅ | ✅ |
-| CLI intel (`intel:profile` etc.) | ✅ soccer | — | — |
+| CLI intel / coverage | ✅ `intel:*` + `data:coverage` | ✅ via registry + coverage | ✅ via registry + coverage |
 
-### Onde o código trava BB/AF (exemplos)
+### Onde ainda há gap (data, não engine)
 
-- `src/features/scouting/queries/player-intelligence.ts` — throw se sport ≠ SOCCER
-- `src/features/scouting/queries/recruitment-candidates.ts` — engine soccer-only
-- `src/features/scouting/components/player-profile-view.tsx` — painéis intelligence/tactical só se `isSoccer`
-- Form de recruitment: posições tipicamente soccer
-- Pasta `src/lib/intelligence/` contém **apenas** `soccer/`
+- EuroLeague: rostos sem season stats (`data:sync-euroleague`)
+- BB/AF: ~0% trajectory-eligible até backfill multi-season
+- Ver `docs/DATA-COVERAGE.md` e `npm run data:coverage`
 
 ---
 
@@ -160,22 +159,24 @@ Portar o padrão das 4 suítes soccer para cada sport (role tipico, small sample
 - Coluna “Why” na similarity para BB/AF
 - Landing já trata peers iguais — manter essa disciplina no app interno
 
-### 6.5 Data depth (prioridade 5, em paralelo)
+### 6.5 Data depth (✅ Wave pós-parity — 2026-07-27)
 
-| Sport | Trabalho |
-|-------|----------|
-| Basketball | Cobertura EuroLeague consistente; documentar contagens; team aggregates para fit |
-| American Football | Rosters/stats CFB consistentes; documentar contagens; multi-season para trajectory |
-| Ambos | Histórico de seasons suficiente para trajectory não ser quase sempre `insufficient_data` |
+| Sport | Estado |
+|-------|--------|
+| Contagens | Documentadas em `docs/DATA-COVERAGE.md` + CLI `npm run data:coverage` |
+| Honesty floors | `src/lib/intelligence/data-depth.ts` alinhado a trajectory |
+| UI badges | Header + intelligence panel |
+| Basketball | EuroLeague still roster-only; NBA/NCAA mostly 1 productive season |
+| American Football | NFL/CFB counts OK; multi-season backfill still ops work |
 
-### Ordem de entrega sugerida
+### Ordem de entrega (histórico Waves 1–4 + ponto 1)
 
-1. BB Intelligence Profile + percentis + testes  
-2. BB Recruitment + wire UI perfil/recruit  
-3. AF Intelligence Profile + percentis + testes  
-4. AF Recruitment + wire UI  
-5. BB then AF Tactical fit MVP  
-6. Documentar cobertura (player/team counts) + polish de honesty badges  
+1. ✅ BB Intelligence Profile + percentis + testes  
+2. ✅ BB Recruitment + wire UI  
+3. ✅ AF Intelligence Profile + percentis + testes  
+4. ✅ AF Recruitment + wire UI  
+5. ✅ BB then AF Tactical fit MVP  
+6. ✅ Documentar cobertura + honesty badges (`DATA-COVERAGE.md`)
 
 ---
 
@@ -190,9 +191,9 @@ Portar o padrão das 4 suítes soccer para cada sport (role tipico, small sample
 
 ## 8. Débito e riscos a lembrar
 
-- `player.repository.prisma.ts` grande — split list vs sync
-- `DATA_SOURCE=mock` default — cuidado em demos
-- Sem E2E
+- `player.repository.prisma.ts` grande — split list vs sync (**adiado**; não bloqueia demos)
+- `DATA_SOURCE=mock` default — ver `docs/DEMO-DATA-SOURCE.md` antes de demos
+- E2E browser completo adiado; smoke: `perf:routes` + fluxo manual recruitment replace
 - Defensive soccer depende de quota API-Football
 - Se a apresentação/demo privilegiar soccer, o mercado lê “app de futebol” — parity de **pitch + UI + engines** é produto, não só tech
 
@@ -204,12 +205,13 @@ Portar o padrão das 4 suítes soccer para cada sport (role tipico, small sample
 |--------|--------|------------|-------------------|
 | Shared scout desk | Pronto | Pronto | Pronto |
 | Rating + scorecard | Pronto | Pronto | Pronto |
-| Intelligence depth | **Referência** | Gap principal | Gap principal |
+| Intelligence depth (engine) | Pronto | Pronto | Pronto |
+| Data depth / trajectory sample | ~20% eligible | Engine ok; sample thin | Engine ok; sample thin |
 | Marketing / landing | Peer | Peer | Peer |
 
-**Hoje:** multi-sport de verdade no workflow; soccer na frente só na *engine* profunda.  
-**Próximo passo de parity:** portar `intelligence/soccer/` → `basketball/` e `american-football/`, abrir os gates nas queries/UI, e subir testes em paralelo — para o produto (e o pitch) não depender de um único esporte.
+**Hoje:** peers no desk **e** nas engines; BB/AF limitados por **dados multi-season**, não por código.  
+**Roadmap 1–4:** ✅ data depth → ✅ decisão (replace/value) → ✅ polish → ✅ demo DATA_SOURCE docs.
 
 ---
 
-*Gerado em 2026-07-27. Atualizar este arquivo quando BB/AF ganharem engines ou quando contagens de cobertura forem documentadas.*
+*Atualizado 2026-07-27 (Waves 1–4 + data depth). Ver `docs/DATA-COVERAGE.md`.*

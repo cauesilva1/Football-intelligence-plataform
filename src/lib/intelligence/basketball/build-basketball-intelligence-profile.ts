@@ -10,6 +10,7 @@ import {
   BASKETBALL_DIMENSION_LABELS,
   type BasketballDimensionKey,
 } from "@/lib/intelligence/basketball/types";
+import { dataDepthLimitationLines } from "@/lib/intelligence/data-depth";
 import type { IntelligencePercentile, IntelligenceProfile } from "@/lib/intelligence/types";
 import { hasReliableBasketballSample } from "@/lib/scoring/basketball-rating";
 import type { Player } from "@/types";
@@ -42,7 +43,19 @@ function buildLimitations(
     "Defense uses steals/blocks only — not on-ball or team defensive context."
   );
 
-  if (trajectoryDirection === "insufficient_data") {
+  for (const line of dataDepthLimitationLines(player)) {
+    if (!limitations.includes(line)) limitations.push(line);
+  }
+
+  if (
+    trajectoryDirection === "insufficient_data" &&
+    !limitations.some(
+      (line) =>
+        line.includes("Data gap") ||
+        line.includes("season depth") ||
+        line.toLowerCase().includes("trajectory")
+    )
+  ) {
     limitations.push("Trajectory needs at least two seasons with meaningful games and minutes.");
   }
 

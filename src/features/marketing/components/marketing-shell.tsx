@@ -7,7 +7,7 @@ import {
 import { APP_NAME } from "@/lib/config";
 
 const NAV = [
-  { href: "/scouting", label: "Product" },
+  { href: "/scouting", label: "Scouting" },
   { href: "/recruitment", label: "Recruitment" },
   { href: "/methodology", label: "Methodology" },
 ] as const;
@@ -42,10 +42,10 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
           </nav>
           <div className="landing-header-actions">
             <Link href="/dashboard" className="landing-btn-nav">
-              Open app
+              Explore the product
             </Link>
             <a href={ACCESS_MAIL} className="landing-btn-primary landing-btn-compact">
-              Contact us
+              Get in touch
             </a>
           </div>
         </div>
@@ -61,7 +61,7 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
             </p>
           </div>
           <div className="landing-footer-col">
-            <p>Product</p>
+            <p>Scouting</p>
             <Link href="/scouting">Scouting</Link>
             <Link href="/recruitment">Recruitment</Link>
             <Link href="/compare">Compare</Link>
@@ -70,7 +70,7 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
           <div className="landing-footer-col">
             <p>Trust</p>
             <Link href="/methodology">Methodology</Link>
-            <a href={ACCESS_MAIL}>Contact</a>
+            <a href={ACCESS_MAIL}>Get in touch</a>
           </div>
         </div>
         <div className="landing-wrap landing-footer-bottom">

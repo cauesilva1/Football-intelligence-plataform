@@ -25,8 +25,8 @@ export default function MethodologyPage() {
     <DashboardShell subtitle="Methodology">
       <div className="mx-auto max-w-3xl space-y-6">
         <PageHeader
-          title="Scoring & data notes"
-          description="Transparent prototype methodology — how ratings and opportunity flags are defined today."
+          title="Methodology"
+          description="Transparent prototype notes — how ratings, fit, and opportunity flags are defined today."
         />
 
         <DataPanel title="Prototype disclaimer" density="dense">

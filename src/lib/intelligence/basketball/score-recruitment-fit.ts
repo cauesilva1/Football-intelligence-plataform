@@ -102,6 +102,7 @@ function allowedPositions(briefPosition: string): string[] {
 function passesBriefFilters(brief: RecruitmentBrief, player: Player): boolean {
   if ((player.sport ?? "BASKETBALL") !== "BASKETBALL") return false;
   if (brief.sport !== "BASKETBALL") return false;
+  if (brief.excludePlayerIds?.includes(player.id)) return false;
 
   if (!allowedPositions(brief.position).includes(player.position)) return false;
 

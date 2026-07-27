@@ -18,7 +18,7 @@ export function PrototypeBanner() {
           href="/methodology"
           className="font-medium text-primary underline-offset-2 hover:underline"
         >
-          scoring notes
+          methodology
         </a>
         .
       </p>

@@ -6,6 +6,7 @@ import { computeSoccerTrajectory } from "@/lib/intelligence/soccer/compute-socce
 import { explainSoccerSimilarity } from "@/lib/intelligence/soccer/explain-similarity";
 import type { LeaguePositionPercentileTable } from "@/lib/intelligence/soccer/league-percentiles";
 import { lookupPlayerPercentileScores } from "@/lib/intelligence/soccer/league-percentiles";
+import { dataDepthLimitationLines } from "@/lib/intelligence/data-depth";
 import type { PlayerIntelligenceProfile } from "@/lib/intelligence/soccer/types";
 import { hasReliableSoccerSample } from "@/lib/metrics/per90";
 import type { Player } from "@/types";
@@ -34,7 +35,19 @@ function buildLimitations(player: Player): string[] {
     limitations.push("Defensive actions may be incomplete — pending API-Football enrichment.");
   }
 
-  if (computeSoccerTrajectory(player) === "insufficient_data") {
+  for (const line of dataDepthLimitationLines(player)) {
+    if (!limitations.includes(line)) limitations.push(line);
+  }
+
+  if (
+    computeSoccerTrajectory(player) === "insufficient_data" &&
+    !limitations.some(
+      (line) =>
+        line.includes("Data gap") ||
+        line.includes("season depth") ||
+        line.toLowerCase().includes("trajectory")
+    )
+  ) {
     limitations.push("Trajectory needs at least two seasons with meaningful minutes.");
   }
 

@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { DataPanel } from "@/components/data/data-panel";
 import { queryPlayerIntelligenceProfile } from "@/features/scouting/queries/player-intelligence";
+import { queryPlayerValueSignal } from "@/features/scouting/queries/player-value-signal";
 import type { TrajectoryDirection } from "@/lib/intelligence/types";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +47,10 @@ function scoreBarClass(score: number): string {
 }
 
 export async function PlayerIntelligencePanel({ playerId }: { playerId: string }) {
-  const profile = await queryPlayerIntelligenceProfile(playerId);
+  const [profile, valueSignal] = await Promise.all([
+    queryPlayerIntelligenceProfile(playerId),
+    queryPlayerValueSignal(playerId),
+  ]);
   if (!profile) return null;
 
   const trajectory = trajectoryMeta(profile.trajectory.direction);
@@ -54,6 +58,13 @@ export async function PlayerIntelligencePanel({ playerId }: { playerId: string }
   const avgConfidence =
     profile.dimensions.reduce((sum, dimension) => sum + dimension.confidence, 0) /
     Math.max(profile.dimensions.length, 1);
+
+  const valueBadgeVariant =
+    valueSignal?.kind === "undervalued"
+      ? "azure"
+      : valueSignal?.kind === "unavailable"
+        ? "amber"
+        : "outline";
 
   return (
     <DataPanel
@@ -83,6 +94,16 @@ export async function PlayerIntelligencePanel({ playerId }: { playerId: string }
             <TrajectoryIcon className="mr-1 h-3 w-3" />
             {trajectory.label}
           </Badge>
+          {profile.dataDepth && profile.dataDepth.gapKind !== "none" ? (
+            <Badge variant="amber" title={profile.dataDepth.description}>
+              {profile.dataDepth.label}
+            </Badge>
+          ) : null}
+          {valueSignal ? (
+            <Badge variant={valueBadgeVariant} title={valueSignal.description}>
+              {valueSignal.label}
+            </Badge>
+          ) : null}
           <Badge variant="outline">{confidenceLabel(avgConfidence)}</Badge>
           {profile.leagueContext?.scoringMethod === "league_percentile" ? (
             <Badge variant="azure">
@@ -134,14 +155,14 @@ export async function PlayerIntelligencePanel({ playerId }: { playerId: string }
           ))}
         </div>
 
-        {profile.limitations.length > 0 ? (
+        {profile.limitations.length > 0 || (valueSignal?.limitations.length ?? 0) > 0 ? (
           <div className="rounded-lg border border-amber-500/25 bg-amber-500/5 p-3">
             <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-amber-200/90">
               <Brain className="h-3.5 w-3.5" />
               Limitations
             </div>
             <ul className="space-y-1.5">
-              {profile.limitations.map((line) => (
+              {[...profile.limitations, ...(valueSignal?.limitations ?? [])].map((line) => (
                 <li key={line} className="text-2xs leading-relaxed text-amber-100/80">
                   {line}
                 </li>

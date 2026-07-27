@@ -23,6 +23,10 @@ export interface RecruitmentBrief {
   preferredRoles?: string[];
   trajectory?: TrajectoryDirection | "any";
   limit?: number;
+  /** Exclude these player ids from the ranked list (e.g. the replacement target). */
+  excludePlayerIds?: string[];
+  /** When set, brief was seeded from this player's intelligence profile. */
+  seedFromPlayerId?: string;
 }
 
 export interface RecruitmentFitScore {

@@ -1,16 +1,15 @@
 import { aggregateSeasonTimeline } from "@/features/scouting/lib/season-history";
+import { seasonProductivityFloor } from "@/lib/intelligence/data-depth";
 import type { IntelligenceEvidence, IntelligenceTrajectory } from "@/lib/intelligence/types";
 import type { Player } from "@/types";
 
-const MIN_TRAJECTORY_GAMES = 4;
-const MIN_TRAJECTORY_MINUTES = 200;
-
 /** Trend from multi-season history — rating and production proxy (yards) slope. */
 export function computeAmericanFootballTrajectory(player: Player): IntelligenceTrajectory {
+  const floor = seasonProductivityFloor("AMERICAN_FOOTBALL");
   const history = player.history ?? [];
   const timeline = aggregateSeasonTimeline(history, "AMERICAN_FOOTBALL").filter(
     (point) =>
-      point.appearances >= MIN_TRAJECTORY_GAMES && point.minutes >= MIN_TRAJECTORY_MINUTES
+      point.appearances >= floor.minAppearances && point.minutes >= floor.minMinutes
   );
 
   if (timeline.length < 2) {
@@ -19,7 +18,7 @@ export function computeAmericanFootballTrajectory(player: Player): IntelligenceT
       evidence: [
         {
           label: "History",
-          value: `Need ≥2 seasons with ≥${MIN_TRAJECTORY_GAMES}G and ≥${MIN_TRAJECTORY_MINUTES}′ proxy`,
+          value: `Need ≥2 seasons with ≥${floor.minAppearances}G and ≥${floor.minMinutes}′ proxy`,
         },
       ],
     };

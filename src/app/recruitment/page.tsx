@@ -5,8 +5,10 @@ import { ScoutWorkflowNav } from "@/features/scouting/components/scout-workflow-
 import { RecruitmentHistoryPanel } from "@/features/recruitment/components/recruitment-history-panel";
 import { RecruitmentResults } from "@/features/recruitment/components/recruitment-results";
 import { RecruitmentSearchForm } from "@/features/recruitment/components/recruitment-search-form";
+import { loadReplaceRecruitmentSeed } from "@/features/recruitment/lib/resolve-recruitment-brief";
 import { Skeleton } from "@/components/ui/skeleton";
 import { APP_NAME } from "@/lib/config";
+import type { Sport } from "@/lib/sport";
 
 export const metadata = { title: `Recruitment · ${APP_NAME}` };
 
@@ -20,6 +22,9 @@ export default async function RecruitmentPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
+  const replacePlayerId =
+    typeof params.replacePlayerId === "string" ? params.replacePlayerId : undefined;
+  const seed = replacePlayerId ? await loadReplaceRecruitmentSeed(replacePlayerId) : null;
 
   return (
     <DashboardShell subtitle="Recruitment">
@@ -28,13 +33,22 @@ export default async function RecruitmentPage({
         <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-6">
           <h1 className="font-display text-xl font-bold text-foreground md:text-2xl">Recruitment</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Headless fit engine with ranked candidates for soccer, basketball, and American
-            football — decision support, not certainty. Switch sport in the shell to change the
-            brief vocabulary.
+            Ranked fit as decision support for soccer, basketball, and American football —
+            including “replace this player” briefs from a profile. Not certainty.
           </p>
         </div>
         <Suspense fallback={<ResultsSkeleton />}>
-          <RecruitmentSearchForm />
+          <RecruitmentSearchForm
+            seedDefaults={
+              seed
+                ? {
+                    ...seed.formDefaults,
+                    sport: (seed.target.sport ?? "SOCCER") as Sport,
+                    targetName: seed.target.knownAs || seed.target.fullName,
+                  }
+                : null
+            }
+          />
         </Suspense>
         <Suspense fallback={<ResultsSkeleton />}>
           <RecruitmentHistoryPanel />

@@ -1,3 +1,4 @@
+import type { DataDepthSnapshot } from "@/lib/intelligence/data-depth";
 import type { Sport } from "@/lib/sport";
 import type { Player } from "@/types";
 
@@ -71,6 +72,8 @@ export interface IntelligenceProfile {
   limitations: string[];
   comparables: IntelligenceComparable[];
   leagueContext?: IntelligenceLeagueContext;
+  /** Season-depth honesty for badges — never invents trajectory eligibility. */
+  dataDepth?: DataDepthSnapshot;
 }
 
 export interface BuildIntelligenceProfileOptions {

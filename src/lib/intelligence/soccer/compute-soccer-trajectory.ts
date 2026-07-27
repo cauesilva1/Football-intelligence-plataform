@@ -1,14 +1,15 @@
 import { aggregateSeasonTimeline } from "@/features/scouting/lib/season-history";
+import { seasonProductivityFloor } from "@/lib/intelligence/data-depth";
 import type { SoccerTrajectory } from "@/lib/intelligence/soccer/types";
 import type { Player } from "@/types";
 
-const MIN_TRAJECTORY_MINUTES = 270;
-
 /** Trend from multi-season history — rating and goals/90 slope over the last two seasons. */
 export function computeSoccerTrajectory(player: Player): SoccerTrajectory {
+  const floor = seasonProductivityFloor("SOCCER");
   const history = player.history ?? [];
   const timeline = aggregateSeasonTimeline(history, "SOCCER").filter(
-    (point) => point.minutes >= MIN_TRAJECTORY_MINUTES
+    (point) =>
+      point.appearances >= floor.minAppearances && point.minutes >= floor.minMinutes
   );
 
   if (timeline.length < 2) return "insufficient_data";

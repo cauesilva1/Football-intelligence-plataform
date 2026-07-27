@@ -6,6 +6,7 @@ import {
 } from "@/features/scouting/lib/position-scorecard";
 import { loadLeaguePercentileContext } from "@/features/scouting/queries/league-percentiles";
 import { getPlayerRepository } from "@/features/scouting/repository";
+import { deriveDataDepthSnapshot } from "@/lib/intelligence/data-depth";
 import { getIntelligenceEngine, supportsIntelligence } from "@/lib/intelligence/registry";
 import type { IntelligenceProfile } from "@/lib/intelligence/types";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
@@ -42,9 +43,14 @@ export const queryPlayerIntelligenceProfile = cache(
       loadLeaguePercentileContext(player),
     ]);
 
-    return engine.buildProfile(player, {
+    const profile = engine.buildProfile(player, {
       comparablesPool: pool,
       percentileTable,
     });
+
+    return {
+      ...profile,
+      dataDepth: deriveDataDepthSnapshot(player),
+    };
   }
 );

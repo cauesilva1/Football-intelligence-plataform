@@ -15,7 +15,8 @@ const AF_POSITIONS = [
   "SPECIALIST",
 ] as const;
 
-function resolveSport(currentSport: Sport): Sport {
+function resolveSport(currentSport: Sport, forced?: Sport): Sport {
+  if (forced) return forced;
   if (currentSport === "BASKETBALL") return "BASKETBALL";
   if (currentSport === "AMERICAN_FOOTBALL") return "AMERICAN_FOOTBALL";
   return "SOCCER";
@@ -33,18 +34,48 @@ function defaultPositionForSport(sport: Sport): string {
   return "ST";
 }
 
-export function RecruitmentSearchForm() {
+export interface RecruitmentFormSeedDefaults {
+  position: string;
+  maxAge?: string;
+  maxValue?: string;
+  maxCapHit?: string;
+  minRating?: string;
+  league?: string;
+  limit: string;
+  replacePlayerId: string;
+  sport?: Sport;
+  targetName?: string;
+}
+
+export function RecruitmentSearchForm({
+  seedDefaults,
+}: {
+  seedDefaults?: RecruitmentFormSeedDefaults | null;
+}) {
   const router = useRouter();
   const params = useSearchParams();
   const { currentSport } = useSport();
-  const sport = resolveSport(currentSport);
+  const sport = resolveSport(
+    currentSport,
+    seedDefaults?.sport ??
+      (params.get("sport") === "BASKETBALL"
+        ? "BASKETBALL"
+        : params.get("sport") === "AMERICAN_FOOTBALL"
+          ? "AMERICAN_FOOTBALL"
+          : undefined)
+  );
   const positions = useMemo(() => positionsForSport(sport), [sport]);
   const defaultPosition = defaultPositionForSport(sport);
   const allKnown = useMemo(
     () => [...SOCCER_POSITIONS, ...BB_POSITIONS, ...AF_POSITIONS],
     []
   );
+  const replacePlayerId =
+    seedDefaults?.replacePlayerId ?? params.get("replacePlayerId") ?? undefined;
+
   const [position, setPosition] = useState(() => {
+    const fromSeed = seedDefaults?.position;
+    if (fromSeed && allKnown.includes(fromSeed)) return fromSeed;
     const fromUrl = params.get("position");
     if (fromUrl && allKnown.includes(fromUrl)) return fromUrl;
     return defaultPosition;
@@ -69,11 +100,26 @@ export function RecruitmentSearchForm() {
         ? "American football"
         : "soccer";
 
+  const usesCap = sport === "BASKETBALL" || sport === "AMERICAN_FOOTBALL";
+
   return (
     <form
       onSubmit={onSubmit}
       className="grid gap-3 rounded-xl border border-border bg-surface-muted/20 p-4 md:grid-cols-2 lg:grid-cols-3"
     >
+      {replacePlayerId ? (
+        <div className="md:col-span-2 lg:col-span-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground/90">
+          Replacement mode
+          {seedDefaults?.targetName ? (
+            <>
+              {" "}
+              for <span className="font-semibold">{seedDefaults.targetName}</span>
+            </>
+          ) : null}
+          . Adjust filters and re-run — the target stays excluded.
+          <input type="hidden" name="replacePlayerId" value={replacePlayerId} />
+        </div>
+      ) : null}
       <input type="hidden" name="sport" value={sport} />
       <label className="space-y-1 text-xs">
         <span className="font-medium text-muted-foreground">Position ({sportLabel})</span>
@@ -98,6 +144,7 @@ export function RecruitmentSearchForm() {
           min={16}
           max={40}
           defaultValue={
+            seedDefaults?.maxAge ??
             params.get("maxAge") ??
             (sport === "BASKETBALL" ? "26" : sport === "AMERICAN_FOOTBALL" ? "28" : "23")
           }
@@ -111,11 +158,15 @@ export function RecruitmentSearchForm() {
           type="number"
           min={0}
           step={100000}
-          defaultValue={params.get("maxValue") ?? (sport === "SOCCER" ? "5000000" : "")}
+          defaultValue={
+            seedDefaults?.maxValue ??
+            params.get("maxValue") ??
+            (sport === "SOCCER" ? "5000000" : "")
+          }
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
         />
       </label>
-      {sport === "BASKETBALL" ? (
+      {usesCap ? (
         <label className="space-y-1 text-xs">
           <span className="font-medium text-muted-foreground">Max cap hit (USD, optional)</span>
           <input
@@ -123,7 +174,7 @@ export function RecruitmentSearchForm() {
             type="number"
             min={0}
             step={100000}
-            defaultValue={params.get("maxCapHit") ?? ""}
+            defaultValue={seedDefaults?.maxCapHit ?? params.get("maxCapHit") ?? ""}
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
           />
         </label>
@@ -136,7 +187,7 @@ export function RecruitmentSearchForm() {
           min={0}
           max={10}
           step={0.1}
-          defaultValue={params.get("minRating") ?? "6.8"}
+          defaultValue={seedDefaults?.minRating ?? params.get("minRating") ?? "6.8"}
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
         />
       </label>
@@ -152,7 +203,7 @@ export function RecruitmentSearchForm() {
         <input
           name="league"
           type="text"
-          defaultValue={params.get("league") ?? ""}
+          defaultValue={seedDefaults?.league ?? params.get("league") ?? ""}
           placeholder={
             sport === "BASKETBALL"
               ? "NBA"
@@ -170,7 +221,7 @@ export function RecruitmentSearchForm() {
           type="number"
           min={5}
           max={50}
-          defaultValue={params.get("limit") ?? "15"}
+          defaultValue={seedDefaults?.limit ?? params.get("limit") ?? "15"}
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
         />
       </label>
@@ -179,7 +230,9 @@ export function RecruitmentSearchForm() {
           type="submit"
           className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
-          Run {sportLabel} recruitment search
+          {replacePlayerId
+            ? `Find ${sportLabel} replacements`
+            : `Run ${sportLabel} recruitment search`}
         </button>
       </div>
     </form>

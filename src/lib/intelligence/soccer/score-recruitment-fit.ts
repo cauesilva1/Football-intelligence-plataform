@@ -73,6 +73,7 @@ function soccerDataConfidence(
 function passesBriefFilters(brief: RecruitmentBrief, player: Player): boolean {
   if ((player.sport ?? "SOCCER") !== "SOCCER") return false;
   if (brief.sport !== "SOCCER") return false;
+  if (brief.excludePlayerIds?.includes(player.id)) return false;
 
   const positions = similarPositionGroup(brief.position);
   if (!positions.includes(player.position)) return false;

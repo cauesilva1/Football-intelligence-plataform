@@ -6,7 +6,7 @@ import {
   LandingSignalStrip,
   LandingSportsStrip,
 } from "@/features/marketing/components/landing-hero-plane";
-import { APP_NAME } from "@/lib/config";
+import { APP_NAME, APP_TAGLINE } from "@/lib/config";
 
 const landingDisplay = Outfit({
   subsets: ["latin"],
@@ -32,7 +32,7 @@ export function LandingPage() {
           <div className="landing-hero-bg" aria-hidden />
           <div className="landing-hero-grid">
             <div className="landing-hero-copy">
-              <p className="landing-eyebrow">Multi-sport intelligence platform</p>
+              <p className="landing-eyebrow">{APP_TAGLINE}</p>
               <p className="landing-wordmark">{APP_NAME}</p>
               <h1 className="landing-headline">
                 In recruitment, decisions start with evidence.

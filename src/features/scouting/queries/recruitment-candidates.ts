@@ -103,7 +103,10 @@ export const queryRecruitmentCandidates = cache(
     }
 
     const season = brief.season ?? CURRENT_SEASON;
-    const players = await loadCandidatePool(brief);
+    const exclude = new Set(brief.excludePlayerIds ?? []);
+    const players = (await loadCandidatePool(brief)).filter(
+      (player) => !exclude.has(player.id)
+    );
 
     if (brief.sport === "BASKETBALL") {
       const percentileTable = brief.league

@@ -367,19 +367,19 @@
     overflow: hidden;
   }
 
-  /* ── Phase M: product landing (Stats Perform–inspired structure) ── */
+  /* ── Phase M: product landing — tokens bridged to app chrome ── */
   .landing {
-    --landing-bg: hsl(152 16% 5%);
-    --landing-bg-alt: hsl(152 14% 7%);
-    --landing-fg: hsl(140 14% 94%);
-    --landing-muted: hsl(140 8% 64%);
-    --landing-line: hsl(145 10% 16%);
-    --landing-accent: hsl(142 58% 44%);
-    --landing-accent-2: hsl(142 45% 28%);
+    --landing-bg: hsl(var(--background));
+    --landing-bg-alt: hsl(var(--surface-muted) / 0.55);
+    --landing-fg: hsl(var(--foreground));
+    --landing-muted: hsl(var(--muted-foreground));
+    --landing-line: hsl(var(--border));
+    --landing-accent: hsl(var(--primary));
+    --landing-accent-2: hsl(var(--sport-glow-soft));
     min-height: 100vh;
     background: var(--landing-bg);
     color: var(--landing-fg);
-    font-family: var(--font-landing-body), "Source Sans 3", system-ui, sans-serif;
+    font-family: var(--font-landing-body), var(--font-body), system-ui, sans-serif;
   }
 
   .landing-wordmark,
@@ -394,7 +394,7 @@
   .landing-audience h3,
   .landing-pillar h3,
   .landing-process-item h3 {
-    font-family: var(--font-landing-display), Outfit, system-ui, sans-serif;
+    font-family: var(--font-landing-display), var(--font-display), system-ui, sans-serif;
   }
 
   .landing-wrap {
@@ -795,7 +795,7 @@
     font-size: 1.15rem;
     line-height: 1.45;
     color: var(--landing-fg);
-    font-family: var(--font-landing-display), Outfit, system-ui, sans-serif;
+    font-family: var(--font-landing-display), var(--font-display), system-ui, sans-serif;
     font-weight: 600;
     letter-spacing: -0.02em;
   }
@@ -895,7 +895,7 @@
 
   .landing-sport-card h3 {
     margin: 0;
-    font-family: var(--font-landing-display), Outfit, system-ui, sans-serif;
+    font-family: var(--font-landing-display), var(--font-display), system-ui, sans-serif;
     font-size: 1.15rem;
     font-weight: 650;
     letter-spacing: -0.02em;

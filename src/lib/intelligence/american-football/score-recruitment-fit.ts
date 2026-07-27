@@ -125,12 +125,16 @@ function allowedPositions(briefPosition: string): string[] {
 function passesBriefFilters(brief: RecruitmentBrief, player: Player): boolean {
   if ((player.sport ?? "AMERICAN_FOOTBALL") !== "AMERICAN_FOOTBALL") return false;
   if (brief.sport !== "AMERICAN_FOOTBALL") return false;
+  if (brief.excludePlayerIds?.includes(player.id)) return false;
 
   if (!allowedPositions(brief.position).includes(player.position)) return false;
 
   if (typeof brief.minAge === "number" && player.age < brief.minAge) return false;
   if (typeof brief.maxAge === "number" && player.age > brief.maxAge) return false;
   if (typeof brief.maxMarketValue === "number" && player.marketValue > brief.maxMarketValue) {
+    return false;
+  }
+  if (typeof brief.maxCapHit === "number" && (player.capHit ?? 0) > brief.maxCapHit) {
     return false;
   }
 

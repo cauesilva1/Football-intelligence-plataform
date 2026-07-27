@@ -11,6 +11,7 @@ import {
   AMERICAN_FOOTBALL_DIMENSION_LABELS,
   type AmericanFootballDimensionKey,
 } from "@/lib/intelligence/american-football/types";
+import { dataDepthLimitationLines } from "@/lib/intelligence/data-depth";
 import type { IntelligencePercentile, IntelligenceProfile } from "@/lib/intelligence/types";
 import { hasReliableFootballSample } from "@/lib/scoring/football-rating";
 import type { Player } from "@/types";
@@ -50,7 +51,19 @@ function buildLimitations(
     );
   }
 
-  if (trajectoryDirection === "insufficient_data") {
+  for (const line of dataDepthLimitationLines(player)) {
+    if (!limitations.includes(line)) limitations.push(line);
+  }
+
+  if (
+    trajectoryDirection === "insufficient_data" &&
+    !limitations.some(
+      (line) =>
+        line.includes("Data gap") ||
+        line.includes("season depth") ||
+        line.toLowerCase().includes("trajectory")
+    )
+  ) {
     limitations.push("Trajectory needs at least two seasons with meaningful games.");
   }
 
