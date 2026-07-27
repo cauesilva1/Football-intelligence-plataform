@@ -296,28 +296,28 @@ Referência: `docs/SOCCER-SCOUT-PLAN.md` Stages 0–7 + Stage 8 data.
 **Estimativa:** 3–5 semanas (UI fora desta fase)
 
 #### 1.1 Engine + types
-- [ ] Criar `src/lib/intelligence/soccer/`
-  - [ ] `types.ts` — `PlayerIntelligenceProfile`, `IntelligenceDimension`, etc.
-  - [ ] `build-soccer-intelligence-profile.ts` — orquestrador
-  - [ ] `classify-soccer-role.ts` — labels (Progressive Playmaker, Ball-winning CB…)
-  - [ ] `compute-soccer-dimensions.ts` — 4 dimensões + confidence + evidence
-  - [ ] `compute-soccer-trajectory.ts` — improving/stable/declining/insufficient_data
-  - [ ] `explain-similarity.ts` — top 3 razões de similaridade
-- [ ] Testes unitários (`*.test.ts`) — ST, CB, CM small sample
+- [x] Criar `src/lib/intelligence/soccer/`
+  - [x] `types.ts` — `PlayerIntelligenceProfile`, `IntelligenceDimension`, etc.
+  - [x] `build-soccer-intelligence-profile.ts` — orquestrador
+  - [x] `classify-soccer-role.ts` — labels (Progressive Playmaker, Ball-winning CB…)
+  - [x] `compute-soccer-dimensions.ts` — 4 dimensões + confidence + evidence
+  - [x] `compute-soccer-trajectory.ts` — improving/stable/declining/insufficient_data
+  - [x] `explain-similarity.ts` — top 3 razões de similaridade
+- [x] Testes unitários (`*.test.ts`) — ST, CB, CM small sample
 
 #### 1.2 Integração server (sem componentes React)
-- [ ] `queryPlayerIntelligenceProfile(playerId)` em `src/features/scouting/queries/`
-- [ ] Estender `similar-players.ts` para incluir `why[]`
-- [ ] Wire em `scout-report-generator` / `scout-brief-context` (evidence alinhada)
-- [ ] Script CLI opcional: `npm run intel:profile -- <playerId>` (debug/output JSON)
+- [x] `queryPlayerIntelligenceProfile(playerId)` em `src/features/scouting/queries/`
+- [x] Estender `similar-players.ts` para incluir `why[]`
+- [x] Wire em `scout-report-generator` / `scout-brief-context` (evidence alinhada)
+- [x] Script CLI opcional: `npm run intel:profile -- <playerId>` (debug/output JSON)
 
 #### 1.3 Critério de done (headless)
-- [ ] `buildSoccerIntelligenceProfile(player)` retorna JSON consistente
-- [ ] ST vs CB → role e dimensões diferentes no objeto
-- [ ] Jogador <450′ → `confidence` baixa + `limitations` explícitas
-- [ ] Similar retorna `why` com 3 strings
-- [ ] `tsc` + `npm test` verdes
-- [ ] **Nenhum componente UI novo nesta fase**
+- [x] `buildSoccerIntelligenceProfile(player)` retorna JSON consistente
+- [x] ST vs CB → role e dimensões diferentes no objeto
+- [x] Jogador <450′ → `confidence` baixa + `limitations` explícitas
+- [x] Similar retorna `why` com 3 strings
+- [x] `tsc` + `npm test` verdes
+- [x] **Nenhum componente UI novo nesta fase**
 
 **Arquivos prováveis (fase headless):**
 - `src/lib/intelligence/soccer/*.ts` (novo)
@@ -332,10 +332,10 @@ Referência: `docs/SOCCER-SCOUT-PLAN.md` Stages 0–7 + Stage 8 data.
 **Objetivo:** scores relativos ao universo (não absolutos).  
 **Estimativa:** 2–3 semanas
 
-- [ ] `computeLeaguePositionPercentiles(sport, league, position)`
-- [ ] Cache em memória ou `SystemCache` por season
-- [ ] Dimensões usam percentil → score 0–100
-- [ ] Testes + output JSON (ainda sem UI)
+- [x] `computeLeaguePositionPercentiles(sport, league, position)`
+- [x] Cache em memória ou `SystemCache` por season
+- [x] Dimensões usam percentil → score 0–100
+- [x] Testes + output JSON (ainda sem UI)
 
 ---
 
@@ -343,37 +343,77 @@ Referência: `docs/SOCCER-SCOUT-PLAN.md` Stages 0–7 + Stage 8 data.
 **Objetivo:** fit score + ranked list como dados, não como tela.  
 **Estimativa:** 2–3 semanas
 
-- [ ] `RecruitmentBrief` type
-- [ ] `scoreRecruitmentFit(brief, player)` — heurístico
-- [ ] `queryRecruitmentCandidates(brief)` — reusa filter + intelligence
-- [ ] Testes + CLI debug
-- [ ] Copy/modelo: “Decision support, not certainty” nos **dados**, UI depois
+- [x] `RecruitmentBrief` type
+- [x] `scoreRecruitmentFit(brief, player)` — heurístico
+- [x] `queryRecruitmentCandidates(brief)` — reusa filter + intelligence
+- [x] Testes + CLI debug
+- [x] Copy/modelo: “Decision support, not certainty” nos **dados**, UI depois
 
 ---
 
-### PHASE 2 — UI Intelligence Layer (por último)
-**Objetivo:** apresentar o que já funciona no server — Stats Perform–inspired.  
-**Estimativa:** 2 semanas — **só após Phase 1 + 1b (+ 1c se priorizado)**
+### PHASE 2 — UI Intelligence Layer ✅ (MVP)
+**Objetivo:** apresentar o que já funciona no server — estrutura inspirada em [Stats Perform](https://www.statsperform.com/), visual alinhado ao app atual.  
+**Branch:** `experiments`  
+**Estimativa:** 2 semanas — **concluído MVP (sem recruitment UI)**
 
 #### 2.1 Player profile
-- [ ] `PlayerIntelligencePanel` — consome `queryPlayerIntelligenceProfile`
-- [ ] Band: Role + Trajectory + confidence
-- [ ] Grid dimensões + evidence + limitations
-- [ ] Link → `/methodology`
+- [x] `PlayerIntelligencePanel` — consome `queryPlayerIntelligenceProfile`
+- [x] Band: Role + Trajectory + confidence
+- [x] Grid dimensões + evidence + limitations
+- [x] Link → `/methodology`
 
 #### 2.2 Surfaces existentes
-- [ ] `PlayerSimilarSection` — coluna “Why similar”
-- [ ] Brief PDF — intelligence dimensions quando existirem
+- [x] `PlayerSimilarSection` — coluna “Why similar”
+- [x] Brief PDF — intelligence dimensions quando existirem (Phase 1.2)
+- [x] Report view — intelligence snapshot estruturado
 - [ ] (Opcional) `/recruitment` — form + ranked list
 
 #### 2.3 Critério de done (UI)
-- [ ] Perfil ST vs CB muda visualmente **espelhando** o JSON já validado
-- [ ] UI nunca calcula score — só renderiza server output
+- [x] Perfil ST vs CB muda visualmente **espelhando** o JSON já validado
+- [x] UI nunca calcula score — só renderiza server output
 
-**Arquivos prováveis (fase UI):**
-- `src/features/scouting/components/profile/player-intelligence-panel.tsx` (novo)
-- `src/features/scouting/components/profile/player-similar-section.tsx`
-- `src/features/scouting/components/player-profile-view.tsx`
+**Arquivos (fase UI):**
+- `src/features/scouting/components/profile/player-intelligence-panel.tsx` ✅
+- `src/features/scouting/components/profile/player-similar-section.tsx` ✅
+- `src/features/scouting/components/player-profile-view.tsx` ✅
+- `src/features/ai-report/components/report-view.tsx` ✅
+
+---
+
+### PHASE M — Public Landing & Brand Surface (separada)
+**Objetivo:** página inicial pública profissional — credibilidade, posicionamento e CTA — **inspirada na estrutura** do site [Stats Perform](https://www.statsperform.com/), com identidade OmniScout.  
+**Não é** Phase 2b nem polish do app interno.  
+**Branch:** `experiments` (ou `marketing` se quiser isolar)  
+**Estimativa:** 1–2 semanas
+
+#### M.1 Landing (`/` ou `/home`)
+- [ ] Substituir redirect ` /` → `/dashboard` por landing pública (dashboard continua em `/dashboard`)
+- [ ] Hero: proposta (“decision layer para scouts”, não feed Opta)
+- [ ] Segmentos: analista independente, clube, academia
+- [ ] Bloco “Como funciona”: dados → inteligência → decisão (workflow scout)
+- [ ] Trust: metodologia, honestidade de amostra, prototype disclaimer
+- [ ] CTA: Entrar no app / Scouting / Methodology
+
+#### M.2 Tom visual (só landing + layout público)
+- [ ] Tipografia e espaçamento mais “enterprise” na landing
+- [ ] Paleta sóbria (dark/neutral) — **sem** rebranding global do app ainda
+- [ ] Sem animações pesadas (opcional: motion leve no hero)
+
+#### M.3 Critério de done
+- [ ] Visitante entende o produto em &lt;30s
+- [ ] Links claros para `/methodology`, `/scouting`, `/dashboard`
+- [ ] Mobile-first responsivo
+- [ ] Não prometer feed/live data que não existe
+
+#### M.4 Polish transversal (depois de M + Phase 2 estáveis)
+- [ ] Unificar tokens visuais landing ↔ app interno
+- [ ] Micro-interações consistentes (hover, transições)
+- [ ] Revisão de copy PT/EN se necessário
+
+**Arquivos prováveis:**
+- `src/app/page.tsx` (landing)
+- `src/features/marketing/components/` (novo)
+- `src/components/layout/marketing-shell.tsx` (opcional)
 
 ---
 

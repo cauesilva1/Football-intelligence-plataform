@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Download, ExternalLink, FileText, ShieldCheck, Sparkles, Target, TrendingDown } from "lucide-react";
+import { Download, ExternalLink, FileText, ShieldCheck, Sparkles, Target, TrendingDown, Brain } from "lucide-react";
 import { DataPanel } from "@/components/data/data-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -20,6 +20,14 @@ export function ReportView({
   onExportPdf?: () => void;
 }) {
   const ctx = report.briefContext;
+  const intelligence = ctx?.intelligence;
+  const metricRates =
+    ctx?.keyRates.filter(
+      (line) =>
+        !line.startsWith("Role:") &&
+        !line.includes("confidence") &&
+        !line.startsWith("Limitation:")
+    ) ?? [];
 
   return (
     <div className="space-y-4">
@@ -84,14 +92,14 @@ export function ReportView({
         </p>
       ) : null}
 
-      {ctx && ctx.keyRates.length > 0 ? (
+      {ctx && metricRates.length > 0 ? (
         <DataPanel
           title="Key rates"
           description="Role-aware metrics — same pack as the player profile scorecard."
           density="dense"
         >
           <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {ctx.keyRates.map((line) => (
+            {metricRates.map((line) => (
               <li
                 key={line}
                 className="rounded-lg border border-border bg-surface-muted/30 px-3 py-2 font-mono text-xs tabular-nums text-foreground"
@@ -100,6 +108,50 @@ export function ReportView({
               </li>
             ))}
           </ul>
+        </DataPanel>
+      ) : null}
+
+      {intelligence ? (
+        <DataPanel
+          title="Intelligence snapshot"
+          description="Structured profile at generation time — aligned with the player intelligence engine."
+          density="dense"
+        >
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="default">{intelligence.role}</Badge>
+              <Badge variant="secondary">{intelligence.styleLabel}</Badge>
+              <Badge variant="outline">Trajectory: {intelligence.trajectory}</Badge>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {intelligence.dimensions.map((dimension) => (
+                <div
+                  key={dimension.label}
+                  className="rounded-lg border border-border bg-surface-muted/30 px-3 py-2"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-medium text-foreground">{dimension.label}</p>
+                    <p className="font-mono text-xs font-semibold tabular-nums">
+                      {dimension.score}/100
+                    </p>
+                  </div>
+                  <p className="mt-1 text-2xs text-muted-foreground">
+                    Confidence {Math.round(dimension.confidence * 100)}%
+                  </p>
+                </div>
+              ))}
+            </div>
+            {intelligence.limitations.length > 0 ? (
+              <ul className="space-y-1.5 rounded-lg border border-amber-500/25 bg-amber-500/5 p-3">
+                {intelligence.limitations.map((line) => (
+                  <li key={line} className="flex items-start gap-2 text-2xs text-amber-100/80">
+                    <Brain className="mt-0.5 h-3 w-3 shrink-0" />
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
         </DataPanel>
       ) : null}
 

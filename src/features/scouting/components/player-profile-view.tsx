@@ -6,6 +6,7 @@ import { PlayerProfileHeader } from "@/features/scouting/components/profile/play
 import { PlayerPerformanceSection } from "@/features/scouting/components/profile/player-performance-section";
 import { PlayerAnalysisSection } from "@/features/scouting/components/profile/player-analysis-section";
 import { PlayerSimilarSection } from "@/features/scouting/components/profile/player-similar-section";
+import { PlayerIntelligencePanel } from "@/features/scouting/components/profile/player-intelligence-panel";
 import { PlayerCompetitionContext } from "@/features/scouting/components/profile/player-competition-context";
 import { ProfileBackButton } from "@/features/scouting/components/profile/profile-back-button";
 import { AfProfileSeasonEnricher } from "@/features/scouting/components/profile/af-profile-season-enricher";
@@ -15,6 +16,10 @@ import { notFound } from "next/navigation";
 
 function SimilarSkeleton() {
   return <Skeleton className="h-48 w-full rounded-xl" />;
+}
+
+function IntelligenceSkeleton() {
+  return <Skeleton className="h-64 w-full rounded-xl" />;
 }
 
 function playerNeedsAfSeasonEnrich(player: Player): boolean {
@@ -48,6 +53,8 @@ export async function PlayerProfileView({
   const player = await queryPlayerById(playerId, season);
   if (!player) notFound();
 
+  const isSoccer = (player.sport ?? "SOCCER") === "SOCCER";
+
   return (
     <div className="space-y-6">
       <ProfileBackButton />
@@ -57,6 +64,11 @@ export async function PlayerProfileView({
       />
       <PlayerProfileHeader player={player} />
       <PlayerPerformanceSection player={player} />
+      {isSoccer ? (
+        <Suspense fallback={<IntelligenceSkeleton />}>
+          <PlayerIntelligencePanel playerId={playerId} />
+        </Suspense>
+      ) : null}
       <PlayerCompetitionContext player={player} />
       <PlayerAnalysisSection player={player} />
       <div className="grid items-start gap-6 xl:grid-cols-2">

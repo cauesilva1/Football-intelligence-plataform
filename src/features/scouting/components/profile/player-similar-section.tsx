@@ -7,6 +7,7 @@ import { formatCapHit, formatMarketValue, ratingColor } from "@/lib/utils";
 
 export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
   const similar = await querySimilarPlayers(playerId, 4);
+  const showWhy = similar.some((entry) => (entry.why?.length ?? 0) > 0);
 
   return (
     <DataPanel
@@ -20,34 +21,45 @@ export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
         </p>
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
-          {similar.map(({ player, score }) => (
+          {similar.map(({ player, score, why }) => (
             <Link
               key={player.id}
               href={`/players/${player.id}`}
-              className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-muted/30 px-3 py-3 transition-colors hover:border-primary/30 hover:bg-surface-muted/60"
+              className="flex flex-col gap-2 rounded-lg border border-border bg-surface-muted/30 px-3 py-3 transition-colors hover:border-primary/30 hover:bg-surface-muted/60"
             >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <p className="truncate text-sm font-medium text-foreground">{player.knownAs}</p>
-                  <Badge variant="neutral">{player.position}</Badge>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <p className="truncate text-sm font-medium text-foreground">{player.knownAs}</p>
+                    <Badge variant="neutral">{player.position}</Badge>
+                  </div>
+                  <p className="mt-1 truncate text-2xs text-muted-foreground">
+                    {player.teamShortName ?? "—"} · {player.age} years old
+                    {player.sport === "BASKETBALL"
+                      ? player.capHit
+                        ? ` · ${formatCapHit(player.capHit)}`
+                        : ""
+                      : ` · ${formatMarketValue(player.marketValue)}`}
+                  </p>
                 </div>
-                <p className="mt-1 truncate text-2xs text-muted-foreground">
-                  {player.teamShortName ?? "—"} · {player.age} years old
-                  {player.sport === "BASKETBALL"
-                    ? player.capHit
-                      ? ` · ${formatCapHit(player.capHit)}`
-                      : ""
-                    : ` · ${formatMarketValue(player.marketValue)}`}
-                </p>
+                <div className="shrink-0 text-right">
+                  <p className="text-2xs uppercase tracking-wider text-muted-foreground">Match</p>
+                  <p className="font-mono text-sm font-semibold text-primary">{Math.round(score)}%</p>
+                  <p className={`font-mono text-2xs ${ratingColor(player.currentSeasonStats.rating)}`}>
+                    {player.currentSeasonStats.rating.toFixed(1)}
+                  </p>
+                </div>
               </div>
-              <div className="shrink-0 text-right">
-                <p className="text-2xs uppercase tracking-wider text-muted-foreground">Match</p>
-                <p className="font-mono text-sm font-semibold text-primary">{Math.round(score)}%</p>
-                <p className={`font-mono text-2xs ${ratingColor(player.currentSeasonStats.rating)}`}>
-                  {player.currentSeasonStats.rating.toFixed(1)}
-                </p>
-              </div>
+              {showWhy && why && why.length > 0 ? (
+                <ul className="space-y-1 border-t border-border/60 pt-2">
+                  {why.map((line) => (
+                    <li key={line} className="text-2xs leading-snug text-muted-foreground">
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </Link>
           ))}
         </div>
