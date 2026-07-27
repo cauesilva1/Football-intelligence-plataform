@@ -1,19 +1,19 @@
 import Link from "next/link";
-import { Syne, Source_Sans_3 } from "next/font/google";
+import { Outfit, Source_Sans_3 } from "next/font/google";
 import { MarketingShell } from "@/features/marketing/components/marketing-shell";
 import { LandingHeroPlane } from "@/features/marketing/components/landing-hero-plane";
 import { APP_NAME } from "@/lib/config";
 
-const landingDisplay = Syne({
+const landingDisplay = Outfit({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["500", "600", "700"],
   variable: "--font-landing-display",
   display: "swap",
 });
 
 const landingBody = Source_Sans_3({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
   variable: "--font-landing-body",
   display: "swap",
 });
@@ -22,7 +22,7 @@ const ACCESS_MAIL = "mailto:access@omniscout.app?subject=OmniScout%20access%20re
 
 function CtaRow({ primary = "Enter scouting" }: { primary?: string }) {
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="landing-cta-row">
       <Link href="/scouting" className="landing-btn-primary">
         {primary}
       </Link>
@@ -40,110 +40,91 @@ export function LandingPage() {
   return (
     <div className={`${landingDisplay.variable} ${landingBody.variable}`}>
       <MarketingShell>
-        <section className="landing-hero relative isolate min-h-[100svh] overflow-hidden">
-          <div className="landing-hero-bg" aria-hidden />
-
-          {/* Product is always the dominant visual plane */}
-          <div className="landing-hero-visual-slot" aria-hidden>
-            <LandingHeroPlane />
-          </div>
-
-          <div className="landing-hero-copy relative z-10 flex min-h-[100svh] flex-col justify-end pb-14 pt-28 md:pb-20 lg:pb-24">
-            <p className="landing-brand landing-wordmark">{APP_NAME}</p>
-            <h1 className="landing-brand landing-headline">
-              Intelligence you can defend in a recruitment room.
-            </h1>
-            <p className="landing-lede">
-              Roles, dimensions, trajectory, and fit — with evidence and sample limits visible.
-              Built for scouts, not highlight reels.
-            </p>
-            <div className="mt-9">
+        <section className="landing-hero">
+          <div className="landing-hero-grid">
+            <div className="landing-hero-copy">
+              <p className="landing-brand landing-wordmark">{APP_NAME}</p>
+              <h1 className="landing-headline">
+                Scouting intelligence you can explain.
+              </h1>
+              <p className="landing-lede">
+                Role, trajectory, fit, and evidence — with sample limits visible. Built for
+                recruitment desks, not highlight reels.
+              </p>
               <CtaRow />
+            </div>
+            <div className="landing-hero-visual" aria-hidden>
+              <LandingHeroPlane />
             </div>
           </div>
         </section>
 
-        <section className="landing-section border-t border-white/[0.07]">
-          <div className="mx-auto max-w-[88rem] px-5 md:px-10">
-            <p className="landing-kicker">Workflow</p>
-            <h2 className="landing-brand landing-section-title max-w-3xl">
-              Data becomes a decision — with the why attached.
-            </h2>
-            <ol className="landing-flow mt-14">
+        <section className="landing-section">
+          <div className="landing-wrap">
+            <h2 className="landing-section-title">From season data to a staff brief</h2>
+            <p className="landing-section-lede">
+              One workflow: understand the profile, shortlist with reasons, brief the room.
+            </p>
+            <div className="landing-steps">
               {[
                 {
-                  step: "01",
-                  title: "Ingest the season",
-                  body: "Appearances, rates, market context. No fake live feed.",
+                  title: "Season context",
+                  body: "Appearances, rates, and market signals — without pretending to be a live Opta feed.",
                 },
                 {
-                  step: "02",
-                  title: "Score the profile",
-                  body: "Role, dimensions, trajectory, similarity reasons, tactical fit.",
+                  title: "Explainable scores",
+                  body: "Role labels, dimensions, trajectory, similarity why, and tactical fit heuristics.",
                 },
                 {
-                  step: "03",
-                  title: "Brief the staff",
-                  body: "Shortlist, recruitment search, and staff-ready reports.",
+                  title: "Decision support",
+                  body: "Shortlist, recruitment search, and reports meant for staff — not certainty theatre.",
                 },
               ].map((item) => (
-                <li key={item.step} className="landing-flow-item">
-                  <span className="landing-flow-step">{item.step}</span>
-                  <h3 className="landing-brand landing-flow-title">{item.title}</h3>
-                  <p className="landing-flow-body">{item.body}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <section className="landing-section landing-section-muted border-t border-white/[0.07]">
-          <div className="mx-auto max-w-[88rem] px-5 md:px-10">
-            <p className="landing-kicker">Who it serves</p>
-            <h2 className="landing-brand landing-section-title max-w-3xl">
-              For desks that need explainable shortlists — not another Sofascore clone.
-            </h2>
-            <div className="landing-audiences mt-16">
-              {[
-                {
-                  title: "Independent analysts",
-                  body: "Run recruitment briefs and compare profiles without an enterprise data contract.",
-                },
-                {
-                  title: "Club recruitment",
-                  body: "A decision layer for smaller rooms — honest about coverage and sample size.",
-                },
-                {
-                  title: "Academies",
-                  body: "Track trajectory and role fit as players move through pathways.",
-                },
-              ].map((item, index) => (
-                <div key={item.title} className="landing-audience">
-                  <span className="landing-audience-index">0{index + 1}</span>
-                  <h3 className="landing-brand">{item.title}</h3>
-                  <p>{item.body}</p>
+                <div key={item.title} className="landing-step">
+                  <h3 className="landing-step-title">{item.title}</h3>
+                  <p className="landing-step-body">{item.body}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="landing-section border-t border-white/[0.07]">
-          <div className="mx-auto grid max-w-[88rem] gap-12 px-5 md:grid-cols-[1.2fr_0.8fr] md:items-end md:px-10">
+        <section className="landing-section landing-section-alt">
+          <div className="landing-wrap landing-split">
             <div>
-              <p className="landing-kicker">Trust</p>
-              <h2 className="landing-brand landing-section-title">
-                Small sample. Missing tackles. Say it out loud.
-              </h2>
-              <p className="landing-section-copy mt-6 max-w-xl">
-                OmniScout surfaces provisional ratings, data gaps, and limitations instead of
-                inventing certainty. Methodology is public. Predictions are not the product —
-                explainable decision support is.
+              <h2 className="landing-section-title">Who it is for</h2>
+              <p className="landing-section-lede">
+                Analysts, smaller club rooms, and academies that need honest shortlists — not another
+                stats browser.
               </p>
             </div>
-            <div className="flex flex-col gap-3 md:items-end">
+            <ul className="landing-list">
+              <li>
+                <strong>Independent analysts</strong>
+                <span>Recruitment briefs without an enterprise data contract.</span>
+              </li>
+              <li>
+                <strong>Club recruitment</strong>
+                <span>A decision layer that admits coverage and sample gaps.</span>
+              </li>
+              <li>
+                <strong>Academies</strong>
+                <span>Trajectory and role fit as players move through pathways.</span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section className="landing-section">
+          <div className="landing-wrap landing-trust">
+            <h2 className="landing-section-title">Honest about what the data can say</h2>
+            <p className="landing-section-lede">
+              Provisional ratings, missing defensive lines, and small samples are surfaced — not
+              hidden. Methodology is public. Predictions are not the product.
+            </p>
+            <div className="landing-cta-row">
               <Link href="/methodology" className="landing-btn-primary">
-                Read the methodology
+                Read methodology
               </Link>
               <Link href="/dashboard" className="landing-btn-ghost">
                 Open the app
@@ -152,16 +133,13 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section className="landing-close border-t border-white/[0.07]">
-          <div className="mx-auto max-w-[88rem] px-5 py-24 md:px-10 md:py-32">
-            <p className="landing-brand landing-close-brand">{APP_NAME}</p>
-            <h2 className="landing-brand landing-close-title">Start on the pitch desk.</h2>
-            <p className="landing-section-copy mt-5 max-w-lg">
-              No public signup. Explore soccer intelligence now, or request a guided walkthrough.
+        <section className="landing-section landing-section-alt">
+          <div className="landing-wrap">
+            <h2 className="landing-section-title">Start with the workflow</h2>
+            <p className="landing-section-lede">
+              No public signup. Explore soccer intelligence, or request a guided walkthrough.
             </p>
-            <div className="mt-10">
-              <CtaRow primary="Open Scouting" />
-            </div>
+            <CtaRow primary="Open Scouting" />
           </div>
         </section>
       </MarketingShell>

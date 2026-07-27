@@ -1,40 +1,33 @@
-/** Full-bleed product plane — intelligence UI as the hero visual, not a floating card. */
+/** Quiet product preview for the hero — stays inside its column. */
 export function LandingHeroPlane() {
   return (
-    <div className="landing-hero-plane" aria-hidden>
-      <div className="landing-hero-plane-glow" />
-      <div className="landing-hero-plane-grid" />
-      <div className="landing-hero-product">
-        <div className="landing-hero-product-head">
-          <span className="landing-hero-product-role">Clinical Finisher</span>
-          <span className="landing-hero-product-traj">Trajectory · Improving</span>
+    <div className="landing-preview">
+      <div className="landing-preview-top">
+        <div>
+          <p className="landing-preview-label">Role</p>
+          <p className="landing-preview-role">Clinical Finisher</p>
         </div>
-        <div className="landing-hero-dims">
-          {[
-            { label: "Production", score: 86 },
-            { label: "Creation", score: 71 },
-            { label: "Defense", score: 38 },
-            { label: "Progression", score: 64 },
-          ].map((dim) => (
-            <div key={dim.label} className="landing-hero-dim">
-              <div className="landing-hero-dim-meta">
-                <span>{dim.label}</span>
-                <span className="landing-hero-dim-score">{dim.score}</span>
-              </div>
-              <div className="landing-hero-dim-track">
-                <div
-                  className="landing-hero-dim-fill"
-                  style={{ ["--dim" as string]: `${dim.score}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="landing-hero-evidence">
-          <p>G/90 · 0.62 · cohort p82</p>
-          <p>Provisional — under 900′ sample</p>
-        </div>
+        <p className="landing-preview-traj">Improving</p>
       </div>
+      <div className="landing-preview-dims">
+        {[
+          { label: "Production", score: 86 },
+          { label: "Creation", score: 71 },
+          { label: "Defense", score: 38 },
+          { label: "Progression", score: 64 },
+        ].map((dim) => (
+          <div key={dim.label} className="landing-preview-dim">
+            <div className="landing-preview-dim-row">
+              <span>{dim.label}</span>
+              <span>{dim.score}</span>
+            </div>
+            <div className="landing-preview-track">
+              <span style={{ width: `${dim.score}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="landing-preview-note">G/90 0.62 · cohort p82 · provisional under 900′</p>
     </div>
   );
 }
