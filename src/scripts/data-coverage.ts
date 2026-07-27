@@ -74,6 +74,8 @@ async function main() {
       withOneProductive: number;
       withTwoPlusProductive: number;
       trajectoryEligiblePct: number;
+      /** Share of players who already have ≥1 productive season and also have ≥2. */
+      amongProductivePct: number;
     }
   > = {};
 
@@ -140,12 +142,14 @@ async function main() {
     }
 
     const total = players.length || 1;
+    const productive = withOne + withTwoPlus || 1;
     depthBySport[sport] = {
       players: players.length,
       withZeroSeasonRows: withZero,
       withOneProductive: withOne,
       withTwoPlusProductive: withTwoPlus,
       trajectoryEligiblePct: Number(((withTwoPlus / total) * 100).toFixed(1)),
+      amongProductivePct: Number(((withTwoPlus / productive) * 100).toFixed(1)),
     };
   }
 

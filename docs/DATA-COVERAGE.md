@@ -9,7 +9,7 @@
 | Sport | Players | 0 productive / stub | 1 productive | ≥2 (trajectory-eligible) |
 |-------|--------:|--------------------:|-------------:|-------------------------:|
 | Soccer | 3 921 | 1 575 | 1 550 | **796 (20.3%)** |
-| Basketball | 2 320 | 1 767 | 110 | **443 (19.1%)** |
+| Basketball | 2 320 | 1 768 | 33 | **519 (22.4% overall · 94% among productive)** |
 | American Football | 9 792 | 8 237 | 903 | **652 (6.7%)** |
 
 NBA dual-season backfill unlocked BB trajectory (~443). AF dual prior seasons (2024+2025): **652** trajectory-eligible (~6.7%) after larger NFL/CFB batches. EuroLeague boxscore window (`--days=90`): **62/259** with any season stats.
@@ -44,7 +44,7 @@ Trajectory compute functions share these floors — UI badges and limitations us
 
 1. **EuroLeague:** Rosters always sync; season stats come from boxscores. In off-season use a wide window (`--days=90`) — Finals typically end in May. After 2026-07-27 backfill: **62/259** players with season-stat rows (playoff window), not full regular season.
 2. **Basketball multi-season:** Use `npm run data:sync-nba-teste -- --teams=30` to write **2024-25 + 2025-26** productive lines (stubs for 2026-27 alone do not unlock trajectory).
-3. **American Football:** Dual prior seasons (2024+2025) via `data:backfill-af-season-stats -- --with-stats`; ~3.4% trajectory-eligible after first NFL/CFB batches — keep running with higher `--limit=` to climb.
+3. **American Football:** Dual prior seasons (2024+2025) via optimized one-call ESPN map; ~6.7% trajectory-eligible after NFL 1500 + CFB 800 batches — keep raising `--limit=` to climb toward soccer/BB parity.
 4. **Soccer:** ~20% trajectory-eligible; many rows still stub or single-season — badges surface this on profile.
 
 ## Ops commands

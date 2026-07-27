@@ -1,10 +1,9 @@
 /**
- * Carga leve — histórico NBA multi-season (2024-25 + 2025-26) para jogadores já cadastrados.
- * Limita a N franquias (padrão: 3) para teste local sem rate limit.
+ * Carga leve — histórico NBA multi-season (2023-24 … 2025-26) para jogadores já cadastrados.
  *
- * Uso: npm run data:sync-nba-teste
- *      npm run data:sync-nba-teste -- --teams=8
- *      npm run data:sync-nba-teste -- --teams=30
+ * Uso:
+ *   npm run data:sync-nba-teste -- --teams=30
+ *   npm run data:sync-nba-teste -- --teams=30 --ones-only
  */
 import fs from "fs";
 import path from "path";
@@ -17,6 +16,7 @@ const SEASON_TARGETS: Array<{
 }> = [
   { key: 202526, labels: ["2025-26", "2025"], years: [2026] },
   { key: 202425, labels: ["2024-25", "2024"], years: [2025] },
+  { key: 202324, labels: ["2023-24", "2023"], years: [2024] },
 ];
 
 const DEFAULT_TEAM_LIMIT = 3;
@@ -92,6 +92,27 @@ function parseTeamLimit(): number {
   if (!arg) return DEFAULT_TEAM_LIMIT;
   const parsed = Number.parseInt(arg.split("=")[1] ?? "", 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_TEAM_LIMIT;
+}
+
+function wantsOnesOnly(): boolean {
+  return process.argv.includes("--ones-only");
+}
+
+function isProductiveNbaRow(stats: ParsedBasketballStats): boolean {
+  return stats.matchesPlayed >= 8 && stats.minutesPlayed >= 150;
+}
+
+function seasonKeyFromEspn(season: EspnSeasonRef | undefined): number | null {
+  for (const target of SEASON_TARGETS) {
+    if (matchesSeasonTarget(season, target)) return target.key;
+  }
+  // Fallback: ESPN year N → season key (N-1)*100 + (N%100) e.g. 2024 → 202324
+  if (typeof season?.year === "number" && season.year >= 2020 && season.year <= 2030) {
+    const end = season.year % 100;
+    const start = (season.year - 1) % 100;
+    return (season.year - 1) * 100 + end;
+  }
+  return null;
 }
 
 function throttleDelayMs(): number {
@@ -181,39 +202,40 @@ async function fetchStatsCategories(
   return payload?.categories ?? null;
 }
 
-/** Resolve up to two completed seasons so trajectory can leave insufficient_data. */
+/** Resolve as many completed seasons as ESPN exposes (NBA then NCAA fill). */
 async function resolveHistoricalSeasons(
   espnId: string
 ): Promise<Array<{ seasonKey: number; stats: ParsedBasketballStats }>> {
-  const nbaCategories = await fetchStatsCategories(espnId, "nba");
-  const nbaNames = nbaCategories?.find((category) => category.name === "averages")?.names ?? [];
-  const resolved: Array<{ seasonKey: number; stats: ParsedBasketballStats }> = [];
+  const resolved = new Map<number, ParsedBasketballStats>();
 
-  for (const target of SEASON_TARGETS) {
-    const nbaRow = findSeasonRow(nbaCategories, (season) => matchesSeasonTarget(season, target));
-    if (nbaRow) {
-      const parsed = parseStatsRow(nbaRow, nbaNames);
-      if (parsed) {
-        resolved.push({ seasonKey: target.key, stats: parsed });
-        continue;
-      }
+  const ingest = (categories: EspnStatsCategory[] | null) => {
+    const averages = categories?.find((category) => category.name === "averages");
+    if (!averages?.statistics?.length) return;
+    const names = averages.names ?? [];
+    for (const row of averages.statistics) {
+      const key = seasonKeyFromEspn(row.season);
+      if (key == null || resolved.has(key)) continue;
+      const parsed = parseStatsRow(row, names);
+      if (parsed) resolved.set(key, parsed);
     }
+  };
+
+  ingest(await fetchStatsCategories(espnId, "nba"));
+  if ([...resolved.values()].filter(isProductiveNbaRow).length < 2) {
+    ingest(await fetchStatsCategories(espnId, "mens-college-basketball"));
   }
 
-  if (resolved.length >= 2) return resolved;
-
-  const ncaaCategories = await fetchStatsCategories(espnId, "mens-college-basketball");
-  const ncaaNames = ncaaCategories?.find((category) => category.name === "averages")?.names ?? [];
-
-  for (const target of SEASON_TARGETS) {
-    if (resolved.some((row) => row.seasonKey === target.key)) continue;
-    const ncaaRow = findSeasonRow(ncaaCategories, (season) => matchesSeasonTarget(season, target));
-    if (!ncaaRow) continue;
-    const parsed = parseStatsRow(ncaaRow, ncaaNames);
-    if (parsed) resolved.push({ seasonKey: target.key, stats: parsed });
+  // Prefer known target keys first, then any other years found
+  const orderedKeys = [
+    ...SEASON_TARGETS.map((t) => t.key),
+    ...[...resolved.keys()].filter((key) => !SEASON_TARGETS.some((t) => t.key === key)),
+  ];
+  const out: Array<{ seasonKey: number; stats: ParsedBasketballStats }> = [];
+  for (const key of orderedKeys) {
+    const stats = resolved.get(key);
+    if (stats) out.push({ seasonKey: key, stats });
   }
-
-  return resolved;
+  return out;
 }
 
 async function upsertSeasonStats(
@@ -263,11 +285,13 @@ async function main(): Promise<void> {
   }
 
   const teamLimit = parseTeamLimit();
+  const onesOnly = wantsOnesOnly();
   const prisma = new PrismaClient();
 
   try {
     console.log(
-      `[NBA-HIST-TEST] Histórico ${SEASON_TARGETS.map((t) => t.key).join(" + ")} — limite: ${teamLimit} franquias`
+      `[NBA-HIST-TEST] Histórico ${SEASON_TARGETS.map((t) => t.key).join(" + ")}` +
+        ` — teams=${teamLimit}${onesOnly ? " · ones-only" : ""}`
     );
 
     const teams = await prisma.team.findMany({
@@ -286,6 +310,7 @@ async function main(): Promise<void> {
     let multiSeason = 0;
     let skipped = 0;
     let failed = 0;
+    let skippedNotOnes = 0;
 
     for (const team of teams) {
       console.log(`[NBA-HIST-TEST] Processando ${team.name}...`);
@@ -297,13 +322,28 @@ async function main(): Promise<void> {
           teamId: team.id,
           apiSportsId: { not: null },
         },
-        select: { id: true, fullName: true, apiSportsId: true },
+        select: {
+          id: true,
+          fullName: true,
+          apiSportsId: true,
+          stats: { select: { matchesPlayed: true, minutesPlayed: true } },
+        },
         orderBy: { fullName: "asc" },
       });
 
       let teamUpdated = 0;
 
       for (const player of players) {
+        if (onesOnly) {
+          const productive = player.stats.filter(
+            (row) => row.matchesPlayed >= 8 && row.minutesPlayed >= 150
+          ).length;
+          if (productive !== 1) {
+            skippedNotOnes += 1;
+            continue;
+          }
+        }
+
         processed += 1;
 
         try {
@@ -320,7 +360,9 @@ async function main(): Promise<void> {
           }
           updated += 1;
           teamUpdated += 1;
-          if (seasons.length >= 2) multiSeason += 1;
+          if (seasons.filter((row) => isProductiveNbaRow(row.stats)).length >= 2) {
+            multiSeason += 1;
+          }
         } catch (error) {
           failed += 1;
           console.warn(`[NBA-HIST-TEST] FAIL ${player.fullName}:`, error);
@@ -328,12 +370,14 @@ async function main(): Promise<void> {
       }
 
       console.log(
-        `[NBA-HIST-TEST] ${team.name}: ${players.length} jogadores · ${teamUpdated} com histórico`
+        `[NBA-HIST-TEST] ${team.name}: ${players.length} no elenco · ${teamUpdated} atualizados`
       );
     }
 
     console.log(
-      `[NBA-HIST-TEST] Concluído — processados: ${processed} · atualizados: ${updated} · multi-season: ${multiSeason} · sem dados: ${skipped} · falhas: ${failed}`
+      `[NBA-HIST-TEST] Concluído — processados: ${processed} · atualizados: ${updated}` +
+        ` · multi-season: ${multiSeason} · sem dados: ${skipped} · falhas: ${failed}` +
+        (onesOnly ? ` · skipped-not-ones: ${skippedNotOnes}` : "")
     );
   } finally {
     await prisma.$disconnect();
