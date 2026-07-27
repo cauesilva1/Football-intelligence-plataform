@@ -7,6 +7,7 @@ import { PlayerPerformanceSection } from "@/features/scouting/components/profile
 import { PlayerAnalysisSection } from "@/features/scouting/components/profile/player-analysis-section";
 import { PlayerSimilarSection } from "@/features/scouting/components/profile/player-similar-section";
 import { PlayerIntelligencePanel } from "@/features/scouting/components/profile/player-intelligence-panel";
+import { PlayerTacticalFitPanel } from "@/features/scouting/components/profile/player-tactical-fit-panel";
 import { PlayerCompetitionContext } from "@/features/scouting/components/profile/player-competition-context";
 import { ProfileBackButton } from "@/features/scouting/components/profile/profile-back-button";
 import { AfProfileSeasonEnricher } from "@/features/scouting/components/profile/af-profile-season-enricher";
@@ -67,6 +68,11 @@ export async function PlayerProfileView({
       {isSoccer ? (
         <Suspense fallback={<IntelligenceSkeleton />}>
           <PlayerIntelligencePanel playerId={playerId} />
+        </Suspense>
+      ) : null}
+      {isSoccer ? (
+        <Suspense fallback={<IntelligenceSkeleton />}>
+          <PlayerTacticalFitPanel playerId={playerId} teamId={player.teamId} />
         </Suspense>
       ) : null}
       <PlayerCompetitionContext player={player} />

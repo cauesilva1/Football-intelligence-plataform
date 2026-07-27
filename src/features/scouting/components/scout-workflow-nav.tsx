@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 const STEPS = [
   { id: "discover", label: "Discover", href: "/scouting" },
   { id: "shortlist", label: "Shortlist", href: "/shortlist" },
+  { id: "recruitment", label: "Recruit", href: "/recruitment" },
   { id: "compare", label: "Compare", href: "/compare" },
   { id: "report", label: "Report", href: "/reports" },
 ] as const;

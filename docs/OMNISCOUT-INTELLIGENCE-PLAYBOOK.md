@@ -167,14 +167,14 @@ Referência: [statsperform.com](https://www.statsperform.com/)
 - [ ] Auth — schema `User` existe, UI não
 - [ ] Defensive data — depende enrich + quota API-Football
 - [ ] Appearances vazias até cron/backfill
-- [ ] Similar players — sem explicação “why” na UI
+- [x] Similar players — explicação “why” na UI (Phase 2)
 - [ ] AI — LLM para narrativa; sem RAG/memória
 
 ### Ausente ❌
-- [ ] Player Intelligence Profile (multi-score + evidence)
-- [ ] Performance trajectory panel
-- [ ] Recruitment Search
-- [ ] Team / Tactical Fit
+- [x] Player Intelligence Profile (multi-score + evidence) — Phase 1 + 2
+- [x] Performance trajectory panel — Phase 1 + 2
+- [x] Recruitment Search — Phase 1c + 2 (`/recruitment`)
+- [x] Team / Tactical Fit — Phase 3 MVP
 - [ ] Historical memory / outcomes
 - [ ] Player graph persistido
 
@@ -366,7 +366,7 @@ Referência: `docs/SOCCER-SCOUT-PLAN.md` Stages 0–7 + Stage 8 data.
 - [x] `PlayerSimilarSection` — coluna “Why similar”
 - [x] Brief PDF — intelligence dimensions quando existirem (Phase 1.2)
 - [x] Report view — intelligence snapshot estruturado
-- [ ] (Opcional) `/recruitment` — form + ranked list
+- [x] `/recruitment` — form + ranked list
 
 #### 2.3 Critério de done (UI)
 - [x] Perfil ST vs CB muda visualmente **espelhando** o JSON já validado
@@ -377,12 +377,56 @@ Referência: `docs/SOCCER-SCOUT-PLAN.md` Stages 0–7 + Stage 8 data.
 - `src/features/scouting/components/profile/player-similar-section.tsx` ✅
 - `src/features/scouting/components/player-profile-view.tsx` ✅
 - `src/features/ai-report/components/report-view.tsx` ✅
+- `src/app/recruitment/page.tsx` ✅
+- `src/features/recruitment/components/` ✅
 
 ---
 
-### PHASE M — Public Landing & Brand Surface (separada)
+### PHASE 2 (legado renumerado) — ~~Percentis~~ → ver Phase 1b
+
+### PHASE 3 (legado renumerado) — ~~Recruitment UI~~ → engine em 1c, UI em Phase 2
+
+---
+
+### PHASE 3 — Team / Tactical Fit ✅ (MVP)
+**Estimativa:** 6+ semanas — **MVP concluído (heurístico, soccer-only)**
+
+- [x] `TeamStyleProfile` (pressing, possession proxy from TeamStatistic)
+- [x] `computeTacticalFit(teamId, playerId)` + `queryTacticalFit`
+- [x] UI no perfil: `PlayerTacticalFitPanel` — “Fit for [Club X]: N/100”
+- [x] Testes unitários `compute-tactical-fit.test.ts`
+
+**Arquivos:**
+- `src/lib/intelligence/soccer/team-style-profile.ts` ✅
+- `src/lib/intelligence/soccer/compute-tactical-fit.ts` ✅
+- `src/features/scouting/queries/tactical-fit.ts` ✅
+- `src/features/scouting/components/profile/player-tactical-fit-panel.tsx` ✅
+
+---
+
+### PHASE 5 — Memory, Auth, Outcomes
+**Estimativa:** 8+ semanas
+
+- [ ] Auth (NextAuth ou similar) + roles SCOUT/ANALYST
+- [ ] Shortlist + notes em DB
+- [ ] Reports em `scouting_reports` Prisma
+- [ ] Histórico de recruitment briefs
+- [ ] RAG opcional sobre notas do clube (só se agregar valor)
+- [ ] `RecruitmentOutcome` para aprendizado comercial
+
+---
+
+### PHASE 6 — Comercial
+- [ ] Multi-tenant / org
+- [ ] API pública
+- [ ] White-label reports
+- [ ] Pricing para clubes, agências, academias
+
+---
+
+### PHASE M — Public Landing & Brand Surface (última fase do roadmap)
 **Objetivo:** página inicial pública profissional — credibilidade, posicionamento e CTA — **inspirada na estrutura** do site [Stats Perform](https://www.statsperform.com/), com identidade OmniScout.  
-**Não é** Phase 2b nem polish do app interno.  
+**Não é** Phase 2b nem polish do app interno — **implementar depois de Phases 5–6 estáveis.**  
 **Branch:** `experiments` (ou `marketing` se quiser isolar)  
 **Estimativa:** 1–2 semanas
 
@@ -405,7 +449,7 @@ Referência: `docs/SOCCER-SCOUT-PLAN.md` Stages 0–7 + Stage 8 data.
 - [ ] Mobile-first responsivo
 - [ ] Não prometer feed/live data que não existe
 
-#### M.4 Polish transversal (depois de M + Phase 2 estáveis)
+#### M.4 Polish transversal (depois de M + app interno estável)
 - [ ] Unificar tokens visuais landing ↔ app interno
 - [ ] Micro-interações consistentes (hover, transições)
 - [ ] Revisão de copy PT/EN se necessário
@@ -414,41 +458,6 @@ Referência: `docs/SOCCER-SCOUT-PLAN.md` Stages 0–7 + Stage 8 data.
 - `src/app/page.tsx` (landing)
 - `src/features/marketing/components/` (novo)
 - `src/components/layout/marketing-shell.tsx` (opcional)
-
----
-
-### PHASE 2 (legado renumerado) — ~~Percentis~~ → ver Phase 1b
-
-### PHASE 3 (legado renumerado) — ~~Recruitment UI~~ → engine em 1c, UI em Phase 2
-
----
-
-### PHASE 3 — Team / Tactical Fit
-**Estimativa:** 6+ semanas — **só depois** de validar Phase 1–3
-
-- [ ] `TeamStyleProfile` (pressing, possession proxy from TeamStatistic)
-- [ ] `computeTacticalFit(teamId, playerId)`
-- [ ] UI no perfil: “Fit for [Club X]: 74%”
-
----
-
-### PHASE 5 — Memory, Auth, Outcomes
-**Estimativa:** 8+ semanas
-
-- [ ] Auth (NextAuth ou similar) + roles SCOUT/ANALYST
-- [ ] Shortlist + notes em DB
-- [ ] Reports em `scouting_reports` Prisma
-- [ ] Histórico de recruitment briefs
-- [ ] RAG opcional sobre notas do clube (só se agregar valor)
-- [ ] `RecruitmentOutcome` para aprendizado comercial
-
----
-
-### PHASE 6 — Comercial
-- [ ] Multi-tenant / org
-- [ ] API pública
-- [ ] White-label reports
-- [ ] Pricing para clubes, agências, academias
 
 ---
 
@@ -545,4 +554,4 @@ Eles são infraestrutura de dados + AI em escala enterprise. OmniScout é **work
 
 ---
 
-*Última atualização: 2026-07-27 — headless-first: UI movida para Phase 2; engine antes de componentes visuais.*
+*Última atualização: 2026-07-27 — Phase 2 recruitment UI + Phase 3 tactical fit MVP; Phase M movida para última fase do roadmap.*

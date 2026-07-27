@@ -68,6 +68,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/rankings", label: "Rankings", icon: BarChart3 },
       { href: "/shortlist", label: "My Players", icon: Bookmark },
       { href: "/compare", label: "Compare", icon: GitCompareArrows },
+      { href: "/recruitment", label: "Recruitment", icon: Radar },
       { href: "/reports", label: "Reports", icon: FileText },
     ],
   },
