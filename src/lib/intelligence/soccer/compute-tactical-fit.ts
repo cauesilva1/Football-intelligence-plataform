@@ -1,17 +1,11 @@
 import type { TeamStyleProfile } from "@/lib/intelligence/soccer/team-style-profile";
 import type { PlayerIntelligenceProfile } from "@/lib/intelligence/soccer/types";
+import {
+  TACTICAL_FIT_DISCLAIMER,
+  type TacticalFitResult,
+} from "@/lib/intelligence/tactical-fit-types";
 
-export const TACTICAL_FIT_DISCLAIMER =
-  "Heuristic squad-style match from season aggregates — not a full tactical model.";
-
-export interface TacticalFitResult {
-  teamId: string;
-  teamName: string;
-  fitScore: number;
-  teamStyleLabel: string;
-  reasons: string[];
-  limitations: string[];
-}
+export { TACTICAL_FIT_DISCLAIMER, type TacticalFitResult };
 
 function dimensionScore(profile: PlayerIntelligenceProfile, key: string): number {
   return profile.dimensions.find((dimension) => dimension.key === key)?.score ?? 0;

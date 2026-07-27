@@ -81,7 +81,7 @@ Isto é o **shared desk** — funcional hoje para Soccer, Basketball e American 
 | **Intelligence profile** (role, dimensions, trajectory, limits) | ✅ `src/lib/intelligence/soccer/` | ✅ `src/lib/intelligence/basketball/` | ✅ `src/lib/intelligence/american-football/` |
 | **Percentis de liga/posição** | ✅ | ✅ (NBA/NCAA/EuroLeague isolados) | ✅ (NFL/CFB isolados) |
 | **Recruitment fit engine** | ✅ + UI `/recruitment` | ✅ + UI sport-aware | ✅ + UI sport-aware |
-| **Tactical / team fit** | ✅ MVP + panel | ❌ | ❌ |
+| **Tactical / team fit** | ✅ MVP + panel | ✅ MVP + panel | ✅ MVP + panel |
 | **Similarity “why”** | ✅ | ✅ | ✅ |
 | Painéis no perfil | Intelligence + Tactical | Intelligence | Intelligence |
 | Testes de intelligence | 4 suítes | 2 suítes | 2 suítes |

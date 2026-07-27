@@ -186,7 +186,7 @@ Referência: [statsperform.com](https://www.statsperform.com/)
 - [x] BB intelligence profile (Wave 1) — `src/lib/intelligence/basketball/` + shared registry
 - [x] BB recruitment fit (Wave 2) — shared brief + `/recruitment` sport-aware
 - [x] AF intelligence profile + recruitment (Wave 3) — `src/lib/intelligence/american-football/`
-- [ ] BB/AF tactical fit (Wave 4)
+- [x] BB/AF tactical fit (Wave 4) — team style proxies + profile panel for all three sports
 
 ---
 
@@ -581,4 +581,4 @@ Eles são infraestrutura de dados + AI em escala enterprise. OmniScout é **work
 
 ---
 
-*Última atualização: 2026-07-27 — Intelligence Parity Wave 1: shared contract + BB profile live; AF pending.*
+*Última atualização: 2026-07-27 — Intelligence Parity Waves 1–4: shared contract + BB/AF profile, recruitment e tactical fit.*

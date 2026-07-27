@@ -58,7 +58,7 @@ export async function PlayerProfileView({
 
   const sport = (player.sport ?? "SOCCER") as Sport;
   const showIntelligence = supportsIntelligence(sport);
-  const showTacticalFit = sport === "SOCCER";
+  const showTacticalFit = supportsIntelligence(sport);
 
   return (
     <div className="space-y-6">
