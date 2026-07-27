@@ -3,7 +3,8 @@
 > **Branch de trabalho:** `experiments`  
 > **Referência de produto:** evoluir de dashboard multi-sport para **Sports Intelligence Platform**  
 > **Referência de UI/UX (quando chegar a fase visual):** [Stats Perform](https://www.statsperform.com/) — confiança, dados como verdade, B2B profissional  
-> **Foco inicial:** Soccer (inteligência profunda); arquitetura permanece multi-sport
+> **Foco de produto:** multi-sport de ponta a ponta (soccer, basketball, American football).  
+> **Profundidade de engine:** soccer pioneira o template de inteligência profunda; BB/AF sobem no **mesmo nível de prioridade** de produto e apresentação — não são “extras” de um app de futebol.
 
 > **Ordem de construção (decisão 2026-07-27):** **headless first, UI por último.**  
 > Engine → testes → queries/integração → export/CLI → **só então** componentes visuais.
@@ -25,7 +26,7 @@ DADOS BRUTOS (ESPN, API-Football, Transfermarkt)
         ↓
 FEATURE ENGINEERING (per90, percentis, scorecards)
         ↓
-MODELOS DE INTELIGÊNCIA POR ESPORTE (soccer first)
+MODELOS DE INTELIGÊNCIA POR ESPORTE (peers: soccer · basketball · AF)
         ↓
 SINAIS INTERPRETÁVEIS (role, style, trajectory, fit…)
         ↓
@@ -182,7 +183,7 @@ Referência: [statsperform.com](https://www.statsperform.com/)
 - [ ] `player.repository.prisma.ts` (~968 LOC) — split list vs sync
 - [ ] `DATA_SOURCE=mock` default — demo vs prod
 - [ ] Testes só em scoring/export — sem E2E
-- [ ] BB/AF expandir só depois soccer intelligence maduro
+- [ ] BB/AF intelligence depth — subir em paralelo com o template soccer (não “depois que soccer estiver maduro”)
 
 ---
 
@@ -204,11 +205,12 @@ Platform Core
 ### Inteligência por esporte
 ```
 SportIntelligenceEngine (interface)
-├── SoccerIntelligenceEngine   ← implementar primeiro
-├── BasketballIntelligenceEngine
-└── AmericanFootballIntelligenceEngine
+├── SoccerIntelligenceEngine          ← template pioneiro (testes/profundidade)
+├── BasketballIntelligenceEngine      ← peer — subir em paralelo
+└── AmericanFootballIntelligenceEngine ← peer — subir em paralelo
 ```
 
+> **Regra de posicionamento:** na landing, demos e pitch, os três esportes são **pares**. Soccer pode ser o primeiro com testes profundos de engine; isso não autoriza vender OmniScout como produto de futebol.
 ### Contrato conceitual (TypeScript futuro)
 ```typescript
 interface IntelligenceDimension {
@@ -491,7 +493,7 @@ Referência: `docs/SOCCER-SCOUT-PLAN.md` Stages 0–7 + Stage 8 data.
 | ML / embeddings antes de rules+percentis | Dados e labels ainda imaturos |
 | Team fit sem team model | Score fake destrói confiança |
 | Auth enterprise antes de 2–3 usuários reais | Overhead |
-| Expandir BB/AF intelligence antes soccer | Dispersão |
+| Tratar BB/AF como afterthought de marketing | Posicionamento vira “app de futebol” |
 | Event-level xG chain / tracking | Sem feed; anos de trabalho |
 | Competir com Opta/Stats Perform em dados | Eles vendem **feed**; nós vendemos **decision layer** |
 
@@ -576,4 +578,4 @@ Eles são infraestrutura de dados + AI em escala enterprise. OmniScout é **work
 
 ---
 
-*Última atualização: 2026-07-27 — Phase M landing MVP + polish leve; Phase 6 adiada até piloto.*
+*Última atualização: 2026-07-27 — Phase M multi-sport peers (apresentação igualitária); soccer pioneira engine, BB/AF sobem em paralelo.*

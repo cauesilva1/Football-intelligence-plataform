@@ -1,12 +1,18 @@
 import Link from "next/link";
-import { OmniScoutMark } from "@/components/icons/sport-balls";
+import {
+  AmericanFootballIcon,
+  BasketballIcon,
+  SoccerBallIcon,
+} from "@/components/icons/sport-balls";
 import { APP_NAME } from "@/lib/config";
 
 const NAV = [
-  { href: "/scouting", label: "Scouting" },
+  { href: "/scouting", label: "Product" },
   { href: "/recruitment", label: "Recruitment" },
   { href: "/methodology", label: "Methodology" },
 ] as const;
+
+const ACCESS_MAIL = "mailto:access@omniscout.app?subject=OmniScout%20access%20request";
 
 export function MarketingShell({ children }: { children: React.ReactNode }) {
   return (
@@ -14,7 +20,17 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
       <header className="landing-header">
         <div className="landing-wrap landing-header-inner">
           <Link href="/" className="landing-logo">
-            <OmniScoutMark sport="SOCCER" className="h-8 w-8 rounded-md shadow-none" />
+            <span className="landing-logo-marks" aria-hidden>
+              <span className="landing-logo-mark" data-landing-sport="SOCCER">
+                <SoccerBallIcon className="h-3.5 w-3.5" />
+              </span>
+              <span className="landing-logo-mark" data-landing-sport="BASKETBALL">
+                <BasketballIcon className="h-3.5 w-3.5" />
+              </span>
+              <span className="landing-logo-mark" data-landing-sport="AMERICAN_FOOTBALL">
+                <AmericanFootballIcon className="h-3.5 w-3.5" />
+              </span>
+            </span>
             <span>{APP_NAME}</span>
           </Link>
           <nav className="landing-nav">
@@ -24,26 +40,42 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
-          <Link href="/dashboard" className="landing-btn-nav">
-            Open app
-          </Link>
+          <div className="landing-header-actions">
+            <Link href="/dashboard" className="landing-btn-nav">
+              Open app
+            </Link>
+            <a href={ACCESS_MAIL} className="landing-btn-primary landing-btn-compact">
+              Contact us
+            </a>
+          </div>
         </div>
       </header>
       <main>{children}</main>
       <footer className="landing-footer">
-        <div className="landing-wrap landing-footer-inner">
+        <div className="landing-wrap landing-footer-grid">
           <div>
             <p className="landing-footer-brand">{APP_NAME}</p>
             <p className="landing-footer-copy">
-              Explainable scouting intelligence. Decision support — not a live data feed.
+              Multi-sport decision layer for scouts — soccer, basketball, and American football.
+              Explainable intelligence on season data. Not a live Opta feed.
             </p>
           </div>
-          <div className="landing-footer-links">
-            <Link href="/methodology">Methodology</Link>
+          <div className="landing-footer-col">
+            <p>Product</p>
             <Link href="/scouting">Scouting</Link>
             <Link href="/recruitment">Recruitment</Link>
+            <Link href="/compare">Compare</Link>
             <Link href="/dashboard">Dashboard</Link>
           </div>
+          <div className="landing-footer-col">
+            <p>Trust</p>
+            <Link href="/methodology">Methodology</Link>
+            <a href={ACCESS_MAIL}>Contact</a>
+          </div>
+        </div>
+        <div className="landing-wrap landing-footer-bottom">
+          <span>© {new Date().getFullYear()} {APP_NAME}</span>
+          <span>Prototype · honest sample limits</span>
         </div>
       </footer>
     </div>
