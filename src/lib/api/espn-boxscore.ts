@@ -13,8 +13,9 @@ export interface MatchPlayerBoxScore {
   teamName: string;
   goals: number;
   assists: number;
-  tackles: number;
-  interceptions: number;
+  /** null when ESPN boxscore omitted the metric */
+  tackles: number | null;
+  interceptions: number | null;
   passesCompleted: number;
   passesAttempted: number;
   minutesPlayed: number;
@@ -123,6 +124,21 @@ function statValue(stats: EspnStat[] | undefined, ...names: string[]): number {
   return 0;
 }
 
+/** Like statValue, but returns null when none of the named keys exist in the feed. */
+function statValueOrNull(stats: EspnStat[] | undefined, ...names: string[]): number | null {
+  if (!stats?.length) return null;
+  let sawKey = false;
+  for (const name of names) {
+    const stat = stats.find((entry) => entry.name === name);
+    if (!stat) continue;
+    sawKey = true;
+    if (stat.value == null) continue;
+    const value = Number(stat.value);
+    if (Number.isFinite(value)) return value;
+  }
+  return sawKey ? 0 : null;
+}
+
 function playerAppeared(player: EspnRosterPlayer): boolean {
   if (statValue(player.stats, "appearances") > 0) return true;
   if (player.starter) return true;
@@ -213,8 +229,8 @@ function extractMatchPlayerBoxScores(summary: EspnSummaryResponse): MatchPlayerB
         teamName,
         goals: statValue(stats, "totalGoals", "goals"),
         assists: statValue(stats, "goalAssists", "assists"),
-        tackles: statValue(stats, "tacklesWon", "tackles", "totalTackles"),
-        interceptions: statValue(stats, "interceptions"),
+        tackles: statValueOrNull(stats, "tacklesWon", "tackles", "totalTackles"),
+        interceptions: statValueOrNull(stats, "interceptions"),
         passesCompleted,
         passesAttempted,
         minutesPlayed: estimateMinutesPlayed(rosterPlayer, substitutionClocks),
@@ -361,8 +377,8 @@ async function resolvePlayerId(
       position: inferPosition(
         boxScore.goals,
         boxScore.assists,
-        boxScore.tackles,
-        boxScore.interceptions
+        boxScore.tackles ?? 0,
+        boxScore.interceptions ?? 0
       ),
       height: 180,
       weight: 75,
@@ -406,8 +422,8 @@ async function accumulateSeasonStats(
           season: seasonYear,
           goals: boxScore.goals,
           assists: boxScore.assists,
-          tackles: boxScore.tackles,
-          interceptions: boxScore.interceptions,
+          tackles: boxScore.tackles ?? 0,
+          interceptions: boxScore.interceptions ?? 0,
           minutesPlayed: boxScore.minutesPlayed,
           matchesPlayed: 1,
           passingAccuracy: matchPassAccuracy,
@@ -433,8 +449,8 @@ async function accumulateSeasonStats(
     data: {
       goals: row.goals + boxScore.goals,
       assists: row.assists + boxScore.assists,
-      tackles: row.tackles + boxScore.tackles,
-      interceptions: row.interceptions + boxScore.interceptions,
+      tackles: row.tackles + (boxScore.tackles ?? 0),
+      interceptions: row.interceptions + (boxScore.interceptions ?? 0),
       minutesPlayed: row.minutesPlayed + boxScore.minutesPlayed,
       matchesPlayed: row.matchesPlayed + 1,
       passingAccuracy: combinePassingAccuracy(

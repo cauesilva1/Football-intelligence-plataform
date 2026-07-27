@@ -16,8 +16,9 @@ export type PlayerMatchStatUpsertInput = {
   minutesPlayed: number;
   goals: number;
   assists: number;
-  tackles: number;
-  interceptions: number;
+  /** null = provider did not supply the metric */
+  tackles: number | null;
+  interceptions: number | null;
   passesCompleted: number;
   passesAttempted: number;
   /** Basketball native fields (nullable on soccer rows). */
@@ -55,11 +56,17 @@ export async function upsertPlayerMatchStat(input: PlayerMatchStatUpsertInput): 
           minutesPlayed: input.minutesPlayed,
           goals: input.goals,
           assists: input.assists,
-          tackles: input.tackles,
-          interceptions: input.interceptions,
+          tackles: input.tackles ?? 0,
+          interceptions: input.interceptions ?? 0,
           passesCompleted: input.passesCompleted,
           passesAttempted: input.passesAttempted,
         });
+
+  // On update: do not overwrite non-null defensive fields with ESPN nulls
+  // (API-Football enrichment must survive ESPN re-sync).
+  const defensiveUpdate: { tackles?: number | null; interceptions?: number | null } = {};
+  if (input.tackles != null) defensiveUpdate.tackles = input.tackles;
+  if (input.interceptions != null) defensiveUpdate.interceptions = input.interceptions;
 
   await prisma.playerMatchStat.upsert({
     where: {
@@ -110,8 +117,7 @@ export async function upsertPlayerMatchStat(input: PlayerMatchStatUpsertInput): 
       minutesPlayed: input.minutesPlayed,
       goals: input.goals,
       assists: input.assists,
-      tackles: input.tackles,
-      interceptions: input.interceptions,
+      ...defensiveUpdate,
       passesCompleted: input.passesCompleted,
       passesAttempted: input.passesAttempted,
       ...(input.points != null ? { points: input.points } : {}),
@@ -130,7 +136,8 @@ export async function upsertPlayerMatchStat(input: PlayerMatchStatUpsertInput): 
       ...(input.totalYards != null ? { totalYards: input.totalYards } : {}),
       rating: rating ?? undefined,
       season: input.season ?? undefined,
-      source: input.source ?? "espn",
+      // Keep enriched source tags if present
+      ...(input.source ? { source: input.source } : {}),
     },
   });
 }

@@ -8,10 +8,11 @@ The ideas below remain valid. Staging puts **credibility and scout workflow** be
 
 ## Status (local implementation)
 
-Stages **0–7** done in the working tree (not pushed).
+Stages **0–7** on `main`. Stage **8** in progress on `feat/defensive-stats-providers`.
 - Match-level: race-safe season aggregate; appearances written before season rollup.
 - Cron: `/api/cron/soccer` covers **last 2 days** across all ESPN soccer leagues (`CRON_SECRET`, `maxDuration` 300).
 - Ops: `npm run data:backfill-big5` for European history; daily cron keeps in-season fresh.
+- UI polish (workflow nav, dashboard 2×2, glossary tooltips) merged.
 Shortlist stays device-local (Stage 2.4 / auth deferred).
 
 **Soccer-first ≠ one shared dashboard.** Each sport keeps its own Overview (cookie). Soccer-first means soccer is the mature reference workflow; BB/AF dashboards stay sport-specific and are not expanded first.
@@ -160,6 +161,59 @@ Discover → Filter → Shortlist → Compare → Report
 
 ---
 
+## Stage 8 — Defensive match stats (API-Football + FBref)
+
+**Goal:** Recent appearances and CB/CDM scorecards show **real** tackles / interceptions / duels — not ESPN zeros that mean “missing”.
+
+### Why
+
+ESPN soccer boxscores (Big-5 included) do **not** publish per-player tackles or interceptions. Persisting `0` made absence look like a real zero. API-Football (`v3.football.api-sports.io`) already powers photos/crests/`apiSportsId` in this repo (`APISPORTS_KEY`, `src/lib/api-sports.ts`) and **does** expose defensive lines on `/fixtures/players`.
+
+### Architecture
+
+```
+ESPN (fixtures, minutes, G/A, passes)  →  PlayerMatchStat spine
+API-Football (/fixtures/players)       →  fill tackles / interceptions / duels
+FBref (season tables, later)           →  validate / backfill season aggregates
+```
+
+| # | Work | Type | Notes |
+|---|------|------|-------|
+| 8.1 | `PlayerMatchStat.tackles` / `interceptions` **nullable** (`null` = not provided) | Schema | ESPN missing → `null`; real zero stays `0` |
+| 8.2 | ESPN parser: `statValueOrNull` for defensive keys | Sync | Stop writing fake zeros |
+| 8.3 | API-Football: resolve fixture by team `apiSportsId` + date → `/fixtures/players` | Sync | Reuse quota helper (100/day free tier) |
+| 8.4 | Match players by `apiSportsId` then name; **update** defensive fields only (don’t wipe ESPN spine) | Sync | Preserve enriched values on ESPN re-sync |
+| 8.5 | CLI enrich: `npm run data:enrich-defense` (limit + league filters) | Ops | Respect daily quota; cache fixture lookups |
+| 8.6 | UI: Def column uses `null` → `—`; drop competition-wide heuristic when nulls exist | Scout UX | |
+| 8.7 | FBref season scrape / CSV import for tacklesWon on `PlayerSeasonStats` | Enrich | Phase B — fragile; after 8.1–8.6 stable |
+| 8.8 | Document methodology: which provider owns which fields | Docs | `/methodology` + this plan |
+
+**Done when:** a La Liga / PL appearance that had `Tkl 0 · Int 0` from ESPN alone shows real defensive numbers (or honest `—` until enriched), and CB scorecards stop looking empty solely because of feed gaps.
+
+**Ops notes**
+
+```bash
+# Stamp Team.apiSportsId (static map + optional Big-5 /teams sync)
+npm run data:ensure-team-apisports
+npm run data:ensure-team-apisports -- --map-only
+
+# Enrich recent PlayerMatchStat rows that still lack defense (uses APISPORTS_KEY)
+npm run data:enrich-defense -- --limit=40
+
+# Season totals for scorecards (API-Football /players — FBref-equivalent lag)
+npm run data:enrich-season-defense -- --teams=8
+```
+
+**FBref cadence:** squad tables update **during the season, usually the day after matchdays** — not live. Same practical lag as API-Football season `/players`. Daily cron uses match-level `/fixtures/players` for the free-tier recent window; season enrich fills profile scorecards.
+
+**Free-tier reality (api-sports.io):** the Free plan only exposes fixtures in a **rolling recent date window** (often ~today ±1–2 days — the API returns `Free plans do not have access to this date`). Season `/players` and `/teams?league=` are limited to seasons **2022–2024** on free (`data:enrich-season-defense` defaults to 2024; set `APISPORTS_ALLOW_CURRENT_SEASON=1` or `--season=2025` on paid). Historical Big-5 match enrich (Apr/May) requires a paid plan **or** offline FBref/ETL CSV. Match enrich also requires `Team.apiSportsId` — `data:ensure-team-apisports` + cron handle this.
+
+Daily quota ≈ **100 requests** — cron runs ESPN 2-day backfill, then team-id sync (≈5 league calls), then defense enrich (`limit=40`).
+
+**Out of Stage 8:** replacing ESPN as the fixture spine; paid Opta/Wyscout; StatsBomb open data.
+
+---
+
 ## Refactor track (parallel, low risk)
 
 Do these when touching related files — don’t block scout UX.
@@ -190,8 +244,9 @@ Do these when touching related files — don’t block scout UX.
 ## Suggested order of execution
 
 ```
-Stage 0–7 (done locally)
-    → Ops backfill Big-5 when demoing European profiles
+Stage 0–7 (done on main)
+    → Stage 8 (API-Football defense on feat/defensive-stats-providers)
+    → Ops backfill / enrich-defense within API quota
     → Stage 2.4 auth/shortlist sync only if needed later
 ```
 
