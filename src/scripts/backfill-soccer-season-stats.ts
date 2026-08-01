@@ -63,6 +63,7 @@ async function main(): Promise<void> {
     season: Number.isFinite(season) ? season : 2024,
     showcaseOnly,
     skipDone: !process.argv.includes("--refresh"),
+    createMissingPlayers: process.argv.includes("--create-missing"),
   });
 
   console.log("[backfill-soccer-seasons] done", result);

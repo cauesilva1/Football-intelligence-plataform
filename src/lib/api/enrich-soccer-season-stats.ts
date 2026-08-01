@@ -45,11 +45,14 @@ export async function enrichSoccerSeasonStatsFromApiFootball(options?: {
   showcaseOnly?: boolean;
   /** Skip clubs that already have any PlayerSeasonStats for this season. */
   skipDone?: boolean;
+  /** Create unmatched API players (default false — avoids diluting coverage %). */
+  createMissingPlayers?: boolean;
 }): Promise<EnrichSoccerSeasonStatsResult> {
   const teamLimit = Math.max(1, Math.min(options?.teamLimit ?? 20, 120));
   const season = options?.season ?? API_FOOTBALL_PLAYER_MEDIA_SEASON;
   const showcaseOnly = options?.showcaseOnly ?? true;
   const skipDone = options?.skipDone ?? true;
+  const createMissingPlayers = options?.createMissingPlayers ?? false;
 
   const empty: EnrichSoccerSeasonStatsResult = {
     teamsAttempted: 0,
@@ -172,8 +175,8 @@ export async function enrichSoccerSeasonStatsFromApiFootball(options?: {
           }
         }
 
-        // Create missing showcase player so season lines are not dropped.
-        if (!player) {
+        // Opt-in: create missing showcase player so season lines are not dropped.
+        if (!player && createMissingPlayers) {
           const createdPlayer = await prisma.player.create({
             data: {
               fullName: line.playerName,
@@ -197,6 +200,11 @@ export async function enrichSoccerSeasonStatsFromApiFootball(options?: {
           player = createdPlayer;
           players.push(createdPlayer);
           created += 1;
+        }
+
+        if (!player) {
+          empty.skippedNoMatch += 1;
+          continue;
         }
 
         await prisma.playerSeasonStats.upsert({

@@ -26,6 +26,7 @@
     "data:enrich-season-defense": "tsx src/scripts/enrich-season-defense.ts",
     "data:backfill-soccer-seasons": "tsx src/scripts/backfill-soccer-season-stats.ts",
     "data:pending-soccer-seasons": "tsx src/scripts/pending-soccer-seasons.ts",
+    "data:prune-soccer-stubs": "tsx src/scripts/prune-soccer-stubs.ts",
     "data:fix-soccer-leagues": "tsx src/scripts/fix-soccer-league-labels.ts",
     "intel:profile": "tsx src/scripts/intel-profile.ts",
     "intel:percentiles": "tsx src/scripts/intel-percentiles.ts",
