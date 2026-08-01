@@ -43,7 +43,13 @@ export function getPrisma(): PrismaClient {
       datasources: {
         db: { url: resolveDatabaseUrl() },
       },
-      log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+      // ETL scripts set PRISMA_LOG_QUIET=1 to avoid spammy prisma:error on P1017 retries.
+      log:
+        process.env.PRISMA_LOG_QUIET === "1"
+          ? []
+          : process.env.NODE_ENV === "development"
+            ? ["error", "warn"]
+            : ["error"],
     });
   }
 
@@ -81,9 +87,9 @@ export function isTransientPrismaError(error: unknown): boolean {
 
 export async function withPrismaRetry<T>(
   fn: () => Promise<T>,
-  options: { attempts?: number; label?: string } = {}
+  options: { attempts?: number; label?: string; quiet?: boolean } = {}
 ): Promise<T> {
-  const attempts = options.attempts ?? 3;
+  const attempts = options.attempts ?? 4;
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
@@ -94,13 +100,18 @@ export async function withPrismaRetry<T>(
       if (!isTransientPrismaError(error) || attempt === attempts) {
         throw error;
       }
-      console.warn(
-        `[prisma] transient ${options.label ?? "query"} (attempt ${attempt}/${attempts}) — reconnecting…`,
-        error instanceof Error ? error.message : error
-      );
+      if (!options.quiet) {
+        const code =
+          error && typeof error === "object" && "code" in error
+            ? String((error as { code: unknown }).code)
+            : "transient";
+        console.warn(
+          `[prisma] ${code} ${options.label ?? "query"} · retry ${attempt}/${attempts}`
+        );
+      }
       await resetPrismaConnection();
       await getPrisma().$connect();
-      await new Promise((r) => setTimeout(r, 400 * attempt));
+      await new Promise((r) => setTimeout(r, 600 * attempt));
     }
   }
 

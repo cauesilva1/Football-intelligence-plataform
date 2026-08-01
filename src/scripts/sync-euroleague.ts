@@ -1,8 +1,10 @@
 /**
- * Bootstrap EuroLeague clubs/rosters and backfill recent boxscores.
+ * Bootstrap EuroLeague clubs/rosters and backfill boxscores.
  *
  *   npm run data:sync-euroleague
- *   npm run data:sync-euroleague -- --days=30
+ *   npm run data:sync-euroleague -- --days=90
+ *   npm run data:sync-euroleague -- --all-played --limit=80
+ *   npm run data:sync-euroleague -- --all-played
  *   npm run data:sync-euroleague -- --days=7 --force
  *   npm run data:sync-euroleague -- --skip-boxscores
  */
@@ -40,21 +42,34 @@ function readFlag(args: string[], name: string): string | undefined {
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2).filter((arg) => arg !== "--");
-  const days = Number(readFlag(args, "days") ?? "14");
+  const allPlayed = args.includes("--all-played");
+  const days = Number(readFlag(args, "days") ?? (allPlayed ? "365" : "14"));
   const force = args.includes("--force");
   const skipBoxscores = args.includes("--skip-boxscores");
+  const limitRaw = readFlag(args, "limit");
+  const limit = limitRaw ? Number(limitRaw) : undefined;
 
-  if (!Number.isFinite(days) || days < 1 || days > 120) {
-    throw new Error("Use --days=N com N entre 1 e 120.");
+  if (!allPlayed && (!Number.isFinite(days) || days < 1 || days > 400)) {
+    throw new Error("Use --days=N com N entre 1 e 400, ou --all-played.");
+  }
+  if (limit != null && (!Number.isFinite(limit) || limit < 1)) {
+    throw new Error("Use --limit=N com N >= 1.");
   }
 
   console.log(
-    `[sync-euroleague] days=${days}${force ? " · force" : ""}${
-      skipBoxscores ? " · skip-boxscores" : ""
-    }…`
+    `[sync-euroleague] ${allPlayed ? "all-played" : `days=${days}`}` +
+      `${limit != null ? ` · limit=${limit}` : ""}` +
+      `${force ? " · force" : ""}` +
+      `${skipBoxscores ? " · skip-boxscores" : ""}…`
   );
 
-  const result = await runEuroLeagueSync({ days, force, skipBoxscores });
+  const result = await runEuroLeagueSync({
+    days,
+    force,
+    skipBoxscores,
+    allPlayed,
+    limit,
+  });
   console.log(
     `[sync-euroleague] OK — clubs ${result.clubs} · players ${result.players} · boxscore stats ${result.boxscores.statsUpdated}`
   );

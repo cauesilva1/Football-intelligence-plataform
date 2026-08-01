@@ -433,25 +433,45 @@ export type ApiSportsSeasonPlayerDefense = {
   minutes: number;
 };
 
+/** Full season production line from API-Football `/players?team=&season=`. */
+export type ApiSportsSeasonPlayerLine = {
+  playerId: number;
+  playerName: string;
+  teamId: number;
+  appearances: number;
+  minutes: number;
+  goals: number;
+  assists: number;
+  tackles: number;
+  interceptions: number;
+  passingAccuracy: number;
+};
+
 type ApiPlayerSeasonItem = {
   player: { id: number; name: string };
   statistics: Array<{
     team?: { id?: number };
-    games?: { minutes?: number | null };
+    games?: {
+      appearences?: number | null;
+      appearances?: number | null;
+      minutes?: number | null;
+    };
+    goals?: { total?: number | null; assists?: number | null };
     tackles?: { total?: number | null; interceptions?: number | null };
+    passes?: { accuracy?: number | string | null };
   }>;
 };
 
 /**
- * Season defensive totals for one club (paginated /players?team=&season=).
- * Prefer this over FBref scrape for operational updates — same ~next-day lag as FBref tables.
+ * Full season totals for one club (paginated /players?team=&season=).
+ * Free tier typically allows season ≤ 2024 — use that for prior-season depth.
  */
-export async function fetchTeamSeasonPlayerDefense(
+export async function fetchTeamSeasonPlayerLines(
   teamApiId: number,
   season: number,
   maxPages = 3
-): Promise<ApiSportsSeasonPlayerDefense[]> {
-  const lines: ApiSportsSeasonPlayerDefense[] = [];
+): Promise<ApiSportsSeasonPlayerLine[]> {
+  const lines: ApiSportsSeasonPlayerLine[] = [];
   for (let page = 1; page <= maxPages; page += 1) {
     const q = await getQuotaCount();
     if (q >= DAILY_LIMIT) break;
@@ -465,22 +485,58 @@ export async function fetchTeamSeasonPlayerDefense(
 
     for (const row of response) {
       const stats = row.statistics?.[0];
-      const tackles = numOrNull(stats?.tackles?.total) ?? 0;
-      const interceptions = numOrNull(stats?.tackles?.interceptions) ?? 0;
-      if (tackles === 0 && interceptions === 0) continue;
+      const appearances =
+        numOrNull(stats?.games?.appearences) ??
+        numOrNull(stats?.games?.appearances) ??
+        0;
+      const minutes = numOrNull(stats?.games?.minutes) ?? 0;
+      if (appearances <= 0 && minutes <= 0) continue;
+
+      const passRaw = stats?.passes?.accuracy;
+      const passingAccuracy =
+        typeof passRaw === "string"
+          ? Number.parseFloat(passRaw.replace("%", "")) || 0
+          : numOrNull(passRaw) ?? 0;
+
       lines.push({
         playerId: row.player.id,
         playerName: row.player.name,
         teamId: stats?.team?.id ?? teamApiId,
-        tackles,
-        interceptions,
-        minutes: numOrNull(stats?.games?.minutes) ?? 0,
+        appearances,
+        minutes,
+        goals: numOrNull(stats?.goals?.total) ?? 0,
+        assists: numOrNull(stats?.goals?.assists) ?? 0,
+        tackles: numOrNull(stats?.tackles?.total) ?? 0,
+        interceptions: numOrNull(stats?.tackles?.interceptions) ?? 0,
+        passingAccuracy,
       });
     }
 
     if (response.length < 20) break;
   }
   return lines;
+}
+
+/**
+ * Season defensive totals for one club (paginated /players?team=&season=).
+ * Prefer this over FBref scrape for operational updates — same ~next-day lag as FBref tables.
+ */
+export async function fetchTeamSeasonPlayerDefense(
+  teamApiId: number,
+  season: number,
+  maxPages = 3
+): Promise<ApiSportsSeasonPlayerDefense[]> {
+  const full = await fetchTeamSeasonPlayerLines(teamApiId, season, maxPages);
+  return full
+    .filter((line) => line.tackles > 0 || line.interceptions > 0)
+    .map((line) => ({
+      playerId: line.playerId,
+      playerName: line.playerName,
+      teamId: line.teamId,
+      tackles: line.tackles,
+      interceptions: line.interceptions,
+      minutes: line.minutes,
+    }));
 }
 
 // ── World Cup 2026 fixtures (cached 15 min) ───────────────────────────────

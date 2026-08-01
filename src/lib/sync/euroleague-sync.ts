@@ -478,6 +478,10 @@ export async function syncEuroLeagueRecentBoxscores(options: {
   days?: number;
   force?: boolean;
   now?: Date;
+  /** Process every played game in the season (ignores days window). */
+  allPlayed?: boolean;
+  /** Cap games processed this run (useful for long full-season backfills). */
+  limit?: number;
 }): Promise<{
   gamesFound: number;
   processed: number;
@@ -485,31 +489,67 @@ export async function syncEuroLeagueRecentBoxscores(options: {
   failed: number;
   statsUpdated: number;
 }> {
-  const days = Math.max(1, Math.min(options.days ?? 2, 90));
+  const days = Math.max(1, Math.min(options.days ?? 2, 365));
   const now = options.now ?? new Date();
   const cutoff = new Date(now);
   cutoff.setDate(cutoff.getDate() - (days - 1));
   cutoff.setHours(0, 0, 0, 0);
 
   const games = await fetchEuroLeagueGames();
-  const recent = games.filter((g) => {
+  const played = games.filter((g) => {
     if (!g.played) return false;
+    if (options.allPlayed) return true;
     const raw = g.utcDate ?? g.date;
     if (!raw) return false;
     const d = new Date(raw);
     return d >= cutoff && d <= now;
   });
 
+  // Oldest first so season aggregates build chronologically when force-refreshing.
+  played.sort((a, b) => {
+    const da = new Date(a.utcDate ?? a.date ?? 0).getTime();
+    const db = new Date(b.utcDate ?? b.date ?? 0).getTime();
+    return da - db;
+  });
+
+  // With --limit, prefer games not yet in systemCache so batches advance past the first N.
+  let candidate = played;
+  if (!options.force && typeof options.limit === "number" && options.limit > 0) {
+    const prisma = getPrisma();
+    const keys = played.map(
+      (g) => `${CACHE_PREFIX}${EUROLEAGUE_SEASON_CODE}:${g.gameCode}`
+    );
+    const cached = await prisma.systemCache.findMany({
+      where: { key: { in: keys } },
+      select: { key: true },
+    });
+    const cachedKeys = new Set(cached.map((row) => row.key));
+    const pending = played.filter(
+      (g) => !cachedKeys.has(`${CACHE_PREFIX}${EUROLEAGUE_SEASON_CODE}:${g.gameCode}`)
+    );
+    candidate = pending.length > 0 ? pending : played;
+    console.log(
+      `${LOG} queue — pending ${pending.length}/${played.length} uncached` +
+        (pending.length === 0 ? " (all cached)" : "")
+    );
+  }
+
+  const queue =
+    typeof options.limit === "number" && options.limit > 0
+      ? candidate.slice(0, options.limit)
+      : candidate;
+
   let processed = 0;
   let skipped = 0;
   let failed = 0;
   let statsUpdated = 0;
 
-      console.log(
-        `${LOG} boxscores — ${recent.length} games in window · processing…`
-      );
+  console.log(
+    `${LOG} boxscores — ${queue.length}/${played.length} games` +
+      `${options.allPlayed ? " (all-played)" : ` (${days}d window)`} · processing…`
+  );
 
-  for (const game of recent) {
+  for (const game of queue) {
     try {
       const result = await processEuroLeagueGame(game.gameCode, {
         force: options.force,
@@ -523,6 +563,11 @@ export async function syncEuroLeagueRecentBoxscores(options: {
         statsUpdated += result.statsUpdated;
         failed += result.failed;
       }
+      if ((processed + skipped) % 5 === 0 || processed + skipped === queue.length) {
+        console.log(
+          `${LOG} progress ${processed + skipped}/${queue.length} · new=${processed} cache=${skipped} stats=${statsUpdated}`
+        );
+      }
     } catch (error) {
       failed += 1;
       console.warn(`${LOG} game ${game.gameCode}:`, error);
@@ -530,7 +575,7 @@ export async function syncEuroLeagueRecentBoxscores(options: {
   }
 
   return {
-    gamesFound: recent.length,
+    gamesFound: queue.length,
     processed,
     skipped,
     failed,
@@ -550,6 +595,8 @@ export async function runEuroLeagueSync(options: {
   days?: number;
   force?: boolean;
   skipBoxscores?: boolean;
+  allPlayed?: boolean;
+  limit?: number;
 } = {}): Promise<EuroLeagueSyncResult> {
   if (!process.env.DATABASE_URL?.trim()) {
     throw new Error("DATABASE_URL ausente. Configure .env antes de sincronizar a EuroLeague.");
@@ -573,6 +620,8 @@ export async function runEuroLeagueSync(options: {
     : await syncEuroLeagueRecentBoxscores({
         days: options.days ?? 14,
         force: options.force,
+        allPlayed: options.allPlayed,
+        limit: options.limit,
       });
 
   console.log(

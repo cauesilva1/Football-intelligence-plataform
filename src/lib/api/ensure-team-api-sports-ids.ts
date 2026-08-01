@@ -58,11 +58,33 @@ export async function ensureSoccerTeamApiSportsIds(options?: {
   });
 
   for (const team of teams) {
+    const mapped = lookupClubApiSportsId(team.name);
     if (team.apiSportsId != null) {
+      // Re-map known collisions (e.g. "inter" → Inter Milan applied to Internacional/Miami).
+      if (mapped != null && mapped !== team.apiSportsId) {
+        const normalized = team.name.toLowerCase();
+        const isCollision =
+          (normalized.includes("internacional") && team.apiSportsId === 505) ||
+          (normalized.includes("inter miami") && team.apiSportsId === 505) ||
+          (normalized.includes("towson") && team.apiSportsId === 119);
+        if (isCollision) {
+          await prisma.team.update({
+            where: { id: team.id },
+            data: {
+              apiSportsId: normalized.includes("towson") ? null : mapped,
+              crestUrl:
+                normalized.includes("towson")
+                  ? team.crestUrl
+                  : team.crestUrl ?? apiSportsTeamLogoUrl(mapped),
+            },
+          });
+          result.fromMap += 1;
+          continue;
+        }
+      }
       result.alreadySet += 1;
       continue;
     }
-    const mapped = lookupClubApiSportsId(team.name);
     if (mapped == null) continue;
     await prisma.team.update({
       where: { id: team.id },

@@ -93,6 +93,10 @@ export type SoccerSyncOptions = {
   skipFixtures?: boolean;
   /** Re-process even if systemCache marks the event done. */
   force?: boolean;
+  /** Override competition seasonYear (e.g. 2024 for prior European season). */
+  seasonYear?: number;
+  /** Create players missing from roster (default true). Prefer false on short prior-season windows. */
+  createMissingPlayers?: boolean;
 };
 
 function leaguesForSync(espnSlug?: string) {
@@ -169,9 +173,9 @@ export async function runSoccerDailySync(
         const result = await withPrismaRetry(
           () =>
             processMatchBoxScore(league.espnSlug, matchId, {
-              seasonYear: league.seasonYear,
+              seasonYear: options.seasonYear ?? league.seasonYear,
               competitionLabel: league.espnCompetitionLabel ?? league.name,
-              createMissingPlayers: true,
+              createMissingPlayers: options.createMissingPlayers ?? true,
               force: options.force,
             }),
           { label: `match:${league.espnSlug}:${matchId}`, attempts: 3 }
@@ -202,6 +206,10 @@ export async function runSoccerDailySync(
         console.log(
           `${LOG_PREFIX} OK ${league.shortName} ${label} — athletes: ${result.playersProcessed} · match rows: ${result.statsUpserted}`
         );
+
+        // Long ESPN days idle the pooler — refresh after each finished match.
+        await resetPrismaConnection();
+        await getPrisma().$connect();
       } catch (error) {
         failed += 1;
         const message = error instanceof Error ? error.message : String(error);
@@ -248,6 +256,10 @@ export async function runSoccerBoxscoreBackfill(options: {
   /** Inclusive end of the window (defaults to today). Use season dates in the off-season. */
   endDate?: Date;
   force?: boolean;
+  /** Override season year written to PlayerSeasonStats / cache keys. */
+  seasonYear?: number;
+  /** Prefer false on short prior-season windows to avoid flooding rosters with stubs. */
+  createMissingPlayers?: boolean;
 }): Promise<SoccerBackfillResult> {
   const days = Math.max(1, Math.min(options.days, 90));
   const end = options.endDate ?? new Date();
@@ -268,6 +280,8 @@ export async function runSoccerBoxscoreBackfill(options: {
       espnSlug: options.espnSlug,
       skipFixtures: i > 0,
       force: options.force,
+      seasonYear: options.seasonYear,
+      createMissingPlayers: options.createMissingPlayers,
     });
     dayResults.push(result);
     processed += result.processed;

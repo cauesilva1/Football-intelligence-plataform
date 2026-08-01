@@ -4,15 +4,25 @@
 > **Source of truth:** `npm run data:coverage` (live DB, `DATA_SOURCE=db`)  
 > **Honesty rule:** trajectory needs **≥2 productive seasons**; we never invent slopes from stubs.
 
-## Snapshot (2026-07-27, pós backfills)
+## Snapshot (2026-07-27, pós backfills reais)
 
 | Sport | Players | 0 productive / stub | 1 productive | ≥2 (trajectory-eligible) |
 |-------|--------:|--------------------:|-------------:|-------------------------:|
-| Soccer | 3 921 | 1 575 | 1 550 | **796 (20.3%)** |
-| Basketball | 2 320 | 1 768 | 33 | **519 (22.4% overall · 94% among productive)** |
+| Soccer | 3 921 | 1 549 | 1 430 | **942 (24%)** |
+| Basketball | 2 320 | 1 758 | 43 | **519 (22.4% overall · 92% among productive)** |
 | American Football | 9 792 | 8 237 | 903 | **652 (6.7%)** |
 
-NBA dual-season backfill unlocked BB trajectory (~443). AF dual prior seasons (2024+2025): **652** trajectory-eligible (~6.7%) after larger NFL/CFB batches. EuroLeague boxscore window (`--days=90`): **62/259** with any season stats.
+**Coverage principle:** fill real zeros/stubs from feeds — do not chase vanity `%` by shrinking denominators. `amongProductive` is diagnostic only; overall coverage of rostered players is the product goal.
+
+### Startup KPI (meta)
+- **Primary:** Soccer Big5 with **≥1 productive season ≥ 90%** (`npm run data:coverage` → bloco “Startup KPI”).
+- **Secondary:** climb **≥2 seasons** via API-Football 2024 + ESPN `--seasonYear=2024` prior boxscores.
+- Do **not** treat “90% of all AF+NCAA stubs” as the bar — that is not honest or demo-relevant.
+
+**Latest real fills (same day):**
+- Soccer Big5 prior year via API-Football season **2024** (`data:backfill-soccer-seasons`) → +146 trajectory-eligible (796→942).
+- EuroLeague full-season boxscores in flight (`--all-played`): **186/259** with season rows (was ~62).
+- AF NFL 800 + CFB 600 seasons-only batches completed; trajectory % unchanged until more dual productive lines land.
 
 ### By league (players)
 
@@ -42,10 +52,10 @@ Trajectory compute functions share these floors — UI badges and limitations us
 
 ## Known gaps (honest)
 
-1. **EuroLeague:** Rosters always sync; season stats come from boxscores. In off-season use a wide window (`--days=90`) — Finals typically end in May. After 2026-07-27 backfill: **62/259** players with season-stat rows (playoff window), not full regular season.
-2. **Basketball multi-season:** Use `npm run data:sync-nba-teste -- --teams=30` to write **2024-25 + 2025-26** productive lines (stubs for 2026-27 alone do not unlock trajectory).
-3. **American Football:** Dual prior seasons (2024+2025) via optimized one-call ESPN map; ~6.7% trajectory-eligible after NFL 1500 + CFB 800 batches — keep raising `--limit=` to climb toward soccer/BB parity.
-4. **Soccer:** ~20% trajectory-eligible; many rows still stub or single-season — badges surface this on profile.
+1. **EuroLeague:** Rosters always sync; season stats come from boxscores. Use `--all-played` (batch with `--limit=`) for full regular season — not only the playoff window. In progress: ~190/259 with season rows after first full-season batches.
+2. **Basketball multi-season:** Use `npm run data:sync-nba-teste -- --teams=30` to write **2024-25 + 2025-26** productive lines (stubs for 2026-27 alone do not unlock trajectory). NCAA history still thin.
+3. **American Football:** Dual prior seasons (2024+2025) via optimized one-call ESPN map; ~6.7% trajectory-eligible — keep raising `--limit=` / ensure ESPN returns productive dual lines.
+4. **Soccer:** ~24% trajectory-eligible after prior-season API fill. Many Big5 players still carry legacy `league: "Série A"` while clubs are correctly linked — run `npm run data:fix-soccer-leagues` before trusting league splits. Continue `data:backfill-soccer-seasons` when API quota resets.
 
 ## Ops commands
 
@@ -53,8 +63,12 @@ Trajectory compute functions share these floors — UI badges and limitations us
 npm run data:coverage
 npm run data:coverage -- --json
 
-# EuroLeague season depth (off-season: widen the window)
-npm run data:sync-euroleague -- --days=90
+# EuroLeague full season (all played games; batch with --limit=)
+npm run data:sync-euroleague -- --all-played --limit=80
+npm run data:sync-euroleague -- --all-played
+
+# Soccer prior season (API-Football ≤2024 free tier) → real second productive year
+npm run data:backfill-soccer-seasons -- --teams=30 --season=2024
 
 # NBA two completed seasons for trajectory
 npm run data:sync-nba-teste -- --teams=30

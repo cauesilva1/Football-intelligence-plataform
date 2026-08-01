@@ -403,64 +403,69 @@ async function accumulateSeasonStats(
   boxScore: MatchPlayerBoxScore,
   seasonYear: number
 ): Promise<void> {
-  const prisma = getPrisma();
-  const matchPassAccuracy = matchPassingAccuracy(
-    boxScore.passesCompleted,
-    boxScore.passesAttempted
-  );
-
-  // Upsert + increments avoids P2002 races when two matches/backfills hit the same player.
-  const existing = await prisma.playerSeasonStats.findUnique({
-    where: { playerId_season: { playerId, season: seasonYear } },
-  });
-
-  if (!existing) {
-    try {
-      await prisma.playerSeasonStats.create({
-        data: {
-          playerId,
-          season: seasonYear,
-          goals: boxScore.goals,
-          assists: boxScore.assists,
-          tackles: boxScore.tackles ?? 0,
-          interceptions: boxScore.interceptions ?? 0,
-          minutesPlayed: boxScore.minutesPlayed,
-          matchesPlayed: 1,
-          passingAccuracy: matchPassAccuracy,
-        },
-      });
-      return;
-    } catch (error) {
-      const code =
-        error && typeof error === "object" && "code" in error
-          ? String((error as { code: unknown }).code)
-          : "";
-      if (code !== "P2002") throw error;
-      // Concurrent create won the race — fall through to increment update.
-    }
-  }
-
-  const row = await prisma.playerSeasonStats.findUniqueOrThrow({
-    where: { playerId_season: { playerId, season: seasonYear } },
-  });
-
-  await prisma.playerSeasonStats.update({
-    where: { playerId_season: { playerId, season: seasonYear } },
-    data: {
-      goals: row.goals + boxScore.goals,
-      assists: row.assists + boxScore.assists,
-      tackles: row.tackles + (boxScore.tackles ?? 0),
-      interceptions: row.interceptions + (boxScore.interceptions ?? 0),
-      minutesPlayed: row.minutesPlayed + boxScore.minutesPlayed,
-      matchesPlayed: row.matchesPlayed + 1,
-      passingAccuracy: combinePassingAccuracy(
-        row.passingAccuracy,
-        row.matchesPlayed,
+  await withPrismaRetry(
+    async () => {
+      const prisma = getPrisma();
+      const matchPassAccuracy = matchPassingAccuracy(
         boxScore.passesCompleted,
         boxScore.passesAttempted
-      ),
+      );
+
+      // Upsert + increments avoids P2002 races when two matches/backfills hit the same player.
+      const existing = await prisma.playerSeasonStats.findUnique({
+        where: { playerId_season: { playerId, season: seasonYear } },
+      });
+
+      if (!existing) {
+        try {
+          await prisma.playerSeasonStats.create({
+            data: {
+              playerId,
+              season: seasonYear,
+              goals: boxScore.goals,
+              assists: boxScore.assists,
+              tackles: boxScore.tackles ?? 0,
+              interceptions: boxScore.interceptions ?? 0,
+              minutesPlayed: boxScore.minutesPlayed,
+              matchesPlayed: 1,
+              passingAccuracy: matchPassAccuracy,
+            },
+          });
+          return;
+        } catch (error) {
+          const code =
+            error && typeof error === "object" && "code" in error
+              ? String((error as { code: unknown }).code)
+              : "";
+          if (code !== "P2002") throw error;
+          // Concurrent create won the race — fall through to increment update.
+        }
+      }
+
+      const row = await prisma.playerSeasonStats.findUniqueOrThrow({
+        where: { playerId_season: { playerId, season: seasonYear } },
+      });
+
+      await prisma.playerSeasonStats.update({
+        where: { playerId_season: { playerId, season: seasonYear } },
+        data: {
+          goals: row.goals + boxScore.goals,
+          assists: row.assists + boxScore.assists,
+          tackles: row.tackles + (boxScore.tackles ?? 0),
+          interceptions: row.interceptions + (boxScore.interceptions ?? 0),
+          minutesPlayed: row.minutesPlayed + boxScore.minutesPlayed,
+          matchesPlayed: row.matchesPlayed + 1,
+          passingAccuracy: combinePassingAccuracy(
+            row.passingAccuracy,
+            row.matchesPlayed,
+            boxScore.passesCompleted,
+            boxScore.passesAttempted
+          ),
+        },
+      });
     },
-  });
+    { label: `season:${playerId}:${seasonYear}`, quiet: true, attempts: 4 }
+  );
 }
 
 function isMatchFinished(summary: EspnSummaryResponse): boolean {
@@ -586,13 +591,16 @@ export async function processMatchBoxScore(
           try {
             await accumulateSeasonStats(playerId, boxScore, options.seasonYear);
           } catch (seasonError) {
+            const code =
+              seasonError && typeof seasonError === "object" && "code" in seasonError
+                ? String((seasonError as { code: unknown }).code)
+                : "err";
             console.warn(
-              `[boxscore] season aggregate skip ${espnSlug} ${boxScore.fullName}:`,
-              seasonError
+              `[boxscore] season aggregate skip ${espnSlug} ${boxScore.fullName} (${code})`
             );
           }
         },
-        { label: `boxscore:${espnSlug}:${boxScore.fullName}` }
+        { label: `boxscore:${espnSlug}:${boxScore.fullName}`, quiet: true }
       );
     } catch (error) {
       failed += 1;

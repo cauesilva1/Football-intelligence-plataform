@@ -181,6 +181,117 @@ async function main() {
     },
   });
 
+  const americanFootballSplit = {
+      nflPlayers,
+      cfbPlayers,
+    };
+
+  // Startup KPI: Big5 (+ Ligue/Bundesliga etc.) showcase — not vanity overall %.
+  const SHOWCASE_LEAGUES = [
+    "Premier League",
+    "La Liga",
+    "Serie A",
+    "Bundesliga",
+    "Ligue 1",
+  ];
+  const showcasePlayers = await prisma.player.findMany({
+    where: {
+      sport: "SOCCER",
+      OR: SHOWCASE_LEAGUES.map((league) => ({
+        league: { equals: league, mode: "insensitive" as const },
+      })),
+    },
+    select: {
+      league: true,
+      stats: {
+        select: { season: true, matchesPlayed: true, minutesPlayed: true },
+      },
+      statistics: {
+        select: { season: true, appearances: true, minutesPlayed: true },
+      },
+    },
+  });
+
+  let showcaseZero = 0;
+  let showcaseOne = 0;
+  let showcaseTwo = 0;
+  const byLeague: Record<
+    string,
+    { players: number; zero: number; one: number; twoPlus: number; withOnePlusPct: number; twoPlusPct: number }
+  > = {};
+
+  for (const league of SHOWCASE_LEAGUES) {
+    byLeague[league] = { players: 0, zero: 0, one: 0, twoPlus: 0, withOnePlusPct: 0, twoPlusPct: 0 };
+  }
+
+  for (const player of showcasePlayers) {
+    const leagueKey =
+      SHOWCASE_LEAGUES.find((l) => l.toLowerCase() === player.league.toLowerCase()) ??
+      player.league;
+    if (!byLeague[leagueKey]) {
+      byLeague[leagueKey] = {
+        players: 0,
+        zero: 0,
+        one: 0,
+        twoPlus: 0,
+        withOnePlusPct: 0,
+        twoPlusPct: 0,
+      };
+    }
+    const bySeason = new Map<string, { apps: number; minutes: number }>();
+    for (const row of player.stats) {
+      const key = String(row.season);
+      const bucket = bySeason.get(key) ?? { apps: 0, minutes: 0 };
+      bucket.apps += row.matchesPlayed;
+      bucket.minutes += row.minutesPlayed;
+      bySeason.set(key, bucket);
+    }
+    for (const row of player.statistics) {
+      const key = row.season;
+      const bucket = bySeason.get(key) ?? { apps: 0, minutes: 0 };
+      bucket.apps += row.appearances;
+      bucket.minutes += row.minutesPlayed;
+      bySeason.set(key, bucket);
+    }
+    let productive = 0;
+    for (const bucket of bySeason.values()) {
+      if (isProductiveSeasonRow(bucket.apps, bucket.minutes, "SOCCER")) productive += 1;
+    }
+    byLeague[leagueKey].players += 1;
+    if (productive === 0) {
+      showcaseZero += 1;
+      byLeague[leagueKey].zero += 1;
+    } else if (productive === 1) {
+      showcaseOne += 1;
+      byLeague[leagueKey].one += 1;
+    } else {
+      showcaseTwo += 1;
+      byLeague[leagueKey].twoPlus += 1;
+    }
+  }
+
+  for (const league of Object.keys(byLeague)) {
+    const row = byLeague[league];
+    const n = row.players || 1;
+    row.withOnePlusPct = Number((((row.one + row.twoPlus) / n) * 100).toFixed(1));
+    row.twoPlusPct = Number(((row.twoPlus / n) * 100).toFixed(1));
+  }
+
+  const showcaseTotal = showcasePlayers.length || 1;
+  const showcase = {
+    target: {
+      withOnePlusProductivePct: 90,
+      note: "Startup KPI: ≥90% of Big5 rostered players with ≥1 productive season (honest floor). twoPlus climbs with prior-season feeds.",
+    },
+    players: showcasePlayers.length,
+    zero: showcaseZero,
+    one: showcaseOne,
+    twoPlus: showcaseTwo,
+    withOnePlusPct: Number((((showcaseOne + showcaseTwo) / showcaseTotal) * 100).toFixed(1)),
+    twoPlusPct: Number(((showcaseTwo / showcaseTotal) * 100).toFixed(1)),
+    byLeague,
+  };
+
   const report = {
     generatedAt: new Date().toISOString(),
     dataSource: process.env.DATA_SOURCE ?? "unset",
@@ -198,6 +309,7 @@ async function main() {
       rows: row._count._all,
     })),
     depthBySport,
+    showcase,
     euroLeague: {
       players: euroLeaguePlayers,
       playersWithAnySeasonStats: euroLeagueWithStats,
@@ -206,15 +318,13 @@ async function main() {
           ? "Rosters present but season stats missing — run data:sync-euroleague -- --days=30"
           : "Season stats present for at least some EuroLeague players",
     },
-    americanFootballSplit: {
-      nflPlayers,
-      cfbPlayers,
-    },
+    americanFootballSplit,
     opsHints: [
-      "npm run data:sync-euroleague -- --days=90",
+      "npm run data:backfill-soccer-seasons -- --teams=40 --season=2024",
+      "npm run data:backfill-big5 -- --days=40 --end=2025-05-25 --seasonYear=2024",
+      "npm run data:sync-euroleague -- --all-played --limit=100",
       "npm run data:sync-nba-teste -- --teams=30",
-      "npm run data:backfill-af-season-stats -- --league=nfl --limit=200",
-      "npm run data:backfill-af-season-stats -- --league=cfb --limit=200",
+      "npm run data:backfill-af-season-stats -- --league=nfl --limit=500",
     ],
   };
 
@@ -231,7 +341,16 @@ async function main() {
     console.log("\nSeason depth (productive seasons)");
     for (const [sport, depth] of Object.entries(report.depthBySport)) {
       console.log(
-        `  ${sport}: players=${depth.players} zero/stub=${depth.withZeroSeasonRows} one=${depth.withOneProductive} twoPlus=${depth.withTwoPlusProductive} trajectoryEligible=${depth.trajectoryEligiblePct}%`
+        `  ${sport}: players=${depth.players} zero/stub=${depth.withZeroSeasonRows} one=${depth.withOneProductive} twoPlus=${depth.withTwoPlusProductive} overall=${depth.trajectoryEligiblePct}% amongProductive=${depth.amongProductivePct}%`
+      );
+    }
+    console.log("\nStartup KPI — Soccer Big5 showcase (meta ≥90% com ≥1 produtiva)");
+    console.log(
+      `  players=${showcase.players} zero=${showcase.zero} one=${showcase.one} twoPlus=${showcase.twoPlus} · ≥1 produtiva=${showcase.withOnePlusPct}% · ≥2=${showcase.twoPlusPct}%`
+    );
+    for (const [league, row] of Object.entries(showcase.byLeague)) {
+      console.log(
+        `  ${league}: n=${row.players} ≥1=${row.withOnePlusPct}% ≥2=${row.twoPlusPct}% (zero=${row.zero})`
       );
     }
     console.log("\nEuroLeague");

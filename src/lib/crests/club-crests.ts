@@ -19,7 +19,11 @@ const CLUB_API_SPORTS_IDS: Array<{ keys: string[]; id: number }> = [
   { keys: ["borussia dortmund", "dortmund"], id: 165 },
   { keys: ["juventus"], id: 496 },
   { keys: ["ac milan", "milan"], id: 489 },
-  { keys: ["inter", "internazionale", "inter milan"], id: 505 },
+  { keys: ["inter milan", "internazionale", "fc internazionale"], id: 505 },
+  // Exact "inter" alone — only after longer names; avoid matching Brazilian Internacional
+  { keys: ["^inter$"], id: 505 },
+  { keys: ["internacional"], id: 119 },
+  { keys: ["inter miami"], id: 9568 },
   { keys: ["napoli"], id: 492 },
   { keys: ["roma"], id: 497 },
   { keys: ["paris saint", "psg", "paris s-g"], id: 85 },
@@ -147,9 +151,19 @@ function normalizeClubName(name: string): string {
 /** Resolve a known API-Football team id from our static club map (no network). */
 export function lookupClubApiSportsId(teamName: string): number | null {
   const normalized = normalizeClubName(teamName);
-  for (const club of CLUB_API_SPORTS_IDS) {
-    if (club.keys.some((key) => normalized.includes(key))) {
-      return club.id;
+  // Prefer longer/more specific keys first to avoid "inter" matching "internacional".
+  const ranked = [...CLUB_API_SPORTS_IDS].sort(
+    (a, b) =>
+      Math.max(...b.keys.map((k) => k.replace(/^\^|\$$/g, "").length)) -
+      Math.max(...a.keys.map((k) => k.replace(/^\^|\$$/g, "").length))
+  );
+  for (const club of ranked) {
+    for (const key of club.keys) {
+      if (key.startsWith("^") && key.endsWith("$")) {
+        if (normalized === key.slice(1, -1)) return club.id;
+        continue;
+      }
+      if (normalized.includes(key)) return club.id;
     }
   }
   return null;

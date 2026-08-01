@@ -33,6 +33,7 @@ function loadDotEnv(): void {
 }
 
 loadDotEnv();
+process.env.PRISMA_LOG_QUIET = "1";
 
 function readFlag(args: string[], name: string): string | undefined {
   const prefix = `--${name}=`;
@@ -54,7 +55,13 @@ async function main(): Promise<void> {
   const args = process.argv.slice(2).filter((arg) => arg !== "--");
   const days = Number(readFlag(args, "days") ?? "35");
   const endDate = parseEndDate(readFlag(args, "end"));
+  const seasonYearRaw = readFlag(args, "seasonYear");
+  const seasonYear = seasonYearRaw ? Number(seasonYearRaw) : undefined;
   const force = args.includes("--force");
+  // Prior-season short windows should not invent roster stubs (hurts coverage %).
+  const createMissingPlayers = !args.includes("--no-create")
+    ? seasonYear == null
+    : false;
 
   if (!process.env.DATABASE_URL?.trim()) {
     throw new Error("DATABASE_URL ausente.");
@@ -62,11 +69,16 @@ async function main(): Promise<void> {
   if (!Number.isFinite(days) || days < 1) {
     throw new Error("Use --days=N (1–90).");
   }
+  if (seasonYearRaw && !Number.isFinite(seasonYear)) {
+    throw new Error("Use --seasonYear=YYYY");
+  }
 
   console.log(
     `[backfill-big5] leagues=${BIG5_SLUGS.join(",")} · days=${days} · end=${endDate
       .toISOString()
-      .slice(0, 10)}${force ? " · FORCE" : ""}`
+      .slice(0, 10)}` +
+      (seasonYear ? ` · seasonYear=${seasonYear}` : "") +
+      (force ? " · FORCE" : "")
   );
 
   let processed = 0;
@@ -81,6 +93,8 @@ async function main(): Promise<void> {
         espnSlug: slug,
         endDate,
         force,
+        seasonYear,
+        createMissingPlayers,
       });
       processed += result.processed;
       skipped += result.skipped;
@@ -88,6 +102,8 @@ async function main(): Promise<void> {
       console.log(
         `[backfill-big5] ${slug} done — processed ${result.processed} · skipped ${result.skipped} · failed ${result.failed}`
       );
+      await getPrisma().$disconnect().catch(() => undefined);
+      await new Promise((r) => setTimeout(r, 1500));
     } catch (error) {
       failed += 1;
       console.error(`[backfill-big5] ${slug} FATAL:`, error);
