@@ -42,6 +42,8 @@ NBA 30 · NCAA Men's Basketball 105 · EuroLeague 20 · NFL 32 · College Footba
 
 ### Productive-season floors (`src/lib/intelligence/data-depth.ts`)
 
+Both thresholds must pass (**AND**), not OR.
+
 | Sport | Min appearances | Min minutes |
 |-------|----------------:|------------:|
 | Soccer | 4 | 270 |

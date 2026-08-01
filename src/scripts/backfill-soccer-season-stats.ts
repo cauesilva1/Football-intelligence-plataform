@@ -55,15 +55,20 @@ async function main(): Promise<void> {
 
   console.log(
     `[backfill-soccer-seasons] teams=${teams} · season=${season}` +
-      (showcaseOnly ? " · showcase" : " · all-teams")
+      (showcaseOnly ? " · showcase" : " · all-teams") +
+      (process.argv.includes("--big5-only") ? " · big5-only" : "") +
+      (process.argv.includes("--prefer-zeros") ? " · prefer-zeros" : "") +
+      (process.argv.includes("--refresh") ? " · refresh" : "")
   );
 
   const result = await enrichSoccerSeasonStatsFromApiFootball({
     teamLimit: Number.isFinite(teams) ? teams : 25,
     season: Number.isFinite(season) ? season : 2024,
     showcaseOnly,
+    big5Only: process.argv.includes("--big5-only"),
     skipDone: !process.argv.includes("--refresh"),
     createMissingPlayers: process.argv.includes("--create-missing"),
+    preferZeros: process.argv.includes("--prefer-zeros"),
   });
 
   console.log("[backfill-soccer-seasons] done", result);

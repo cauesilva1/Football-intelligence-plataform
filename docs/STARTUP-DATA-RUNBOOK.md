@@ -1,27 +1,37 @@
-# Startup data runbook — Big5 → 90%
+# Startup data runbook — Big5 → 90% → Brasileirão
 
-> Meta: **≥90% dos jogadores Big5 com ≥1 temporada produtiva** (`npm run data:coverage` → Startup KPI).  
-> Não chase 90% de todo o banco (AF/NCAA stubs).
+> Meta 1: **≥90% dos jogadores Big5** com ≥1 temporada produtiva (`npm run data:coverage` → Startup KPI).  
+> Meta 2 (logo a seguir, **antes** de NCAA/AF): **≥90% Brasileirão Série A** com a mesma barra de honestidade.  
+> Piso soccer (código): **≥4 aparições e ≥270 minutos** (AND). Não redefinir como OU para inflar o KPI.  
+> Não chase 90% de todo o banco (AF/NCAA stubs). MLS não bloqueia o BR.
 
 ## Diário (quando a quota API resetar)
 
 ```bash
-# 1) Prior season lines (API-Football ≤2024) — ~100 calls/day
-npm run data:backfill-soccer-seasons -- --teams=40 --season=2024
+# Cirúrgico Big5: clubes com mais zeros primeiro (~2–3 calls/clube, ≤100/dia)
+npm run data:backfill-soccer-seasons -- --teams=35 --season=2024 --refresh --big5-only --prefer-zeros
 
 # 2) Medir
 npm run data:coverage
 
-# 3) Se ainda houver pending clubs, repetir no dia seguinte
+# 3) Repetir no dia seguinte até KPI ≥90%
 ```
 
-## ESPN (sem quota API — não paralelizar com outro ETL pesado)
+## ESPN curto (se API esgotada — não paralelizar)
 
 ```bash
-PRISMA_LOG_QUIET=1 npm run data:backfill-big5 -- --days=20 --end=2025-05-25 --seasonYear=2024
+# Janela curta ≠ marathon de 35 dias (ex.: fev/mar 2025)
+PRISMA_LOG_QUIET=1 npm run data:backfill-big5 -- --days=12 --end=2025-03-10 --seasonYear=2024
 ```
 
-Se aparecer spam `P1017` / connection closed: pare, use `PRISMA_LOG_QUIET=1`, lotes `--days=20`, uma liga por vez se preciso.
+## Depois do KPI Big5 ≥90%
+
+1. Podar invent stubs se ainda diluírem o denominador (`npm run data:prune-soccer-stubs -- --force-match-stats`).
+2. **Brasileirão (pilar #2):** backfill ESPN `bra.1` + season lines API (sem `--create-missing`); medir KPI BR.
+3. Freeze docs/MVP (Big5 + BR).
+4. Ligas de transição (PT, NL; MLS depois) — opcional, ainda em soccer.
+5. Colleges/HS e aprofundar NCAA/AF — só após freeze soccer.
+6. Auth Phase 5b só com piloto.
 
 ## Segurança Supabase
 
@@ -29,17 +39,11 @@ Se aparecer spam `P1017` / connection closed: pare, use `PRISMA_LOG_QUIET=1`, lo
 npm run db:secure-rls
 ```
 
-## Depois do KPI ≥90%
-
-1. Commit dos scripts/docs (pedir explicitamente).
-2. NCAA basketball histórico.
-3. AF dual-season só com produção ESPN real.
-4. Auth Phase 5b só com piloto.
-
 ## Comandos úteis
 
 | Comando | Uso |
 |---------|-----|
-| `npm run data:coverage` | KPI Big5 + depth por sport |
+| `npm run data:coverage` | KPI Big5 (+ KPI BR quando existir no script) + depth por sport |
+| `npm run data:prune-soccer-stubs` | Remove invent stubs sem temporada produtiva |
 | `npm run data:fix-soccer-leagues` | Corrige `league: Série A` legado |
 | `npm run data:sync-euroleague -- --all-played --limit=100` | EL (já ~402/402) |

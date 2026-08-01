@@ -2,8 +2,12 @@
  * Remove API/ESPN invent stubs that never reached a productive season.
  * Markers: nationality Unknown + DOB 2000-01-01 (from enrich create-missing).
  *
+ * Default keeps rows that have matchStats (active ESPN ingest may still fill them).
+ * Use --force-match-stats to drop invent zeros even with match rows (post-backfill).
+ *
  *   npm run data:prune-soccer-stubs -- --dry-run
  *   npm run data:prune-soccer-stubs
+ *   npm run data:prune-soccer-stubs -- --force-match-stats
  */
 import fs from "fs";
 import path from "path";
@@ -34,6 +38,7 @@ loadDotEnv();
 
 async function main(): Promise<void> {
   const dryRun = process.argv.includes("--dry-run");
+  const forceMatchStats = process.argv.includes("--force-match-stats");
   if (!process.env.DATABASE_URL?.trim()) throw new Error("DATABASE_URL ausente.");
 
   const prisma = getPrisma();
@@ -56,12 +61,13 @@ async function main(): Promise<void> {
   });
 
   const toDelete: string[] = [];
+  let skippedMatchStats = 0;
   for (const player of candidates) {
-    if (
-      player._count.matchStats > 0 ||
-      player._count.reports > 0 ||
-      player._count.shortlistEntries > 0
-    ) {
+    if (player._count.reports > 0 || player._count.shortlistEntries > 0) {
+      continue;
+    }
+    if (!forceMatchStats && player._count.matchStats > 0) {
+      skippedMatchStats += 1;
       continue;
     }
     let productive = 0;
@@ -82,7 +88,9 @@ async function main(): Promise<void> {
     JSON.stringify(
       {
         dryRun,
+        forceMatchStats,
         candidates: candidates.length,
+        skippedMatchStats,
         deletable: toDelete.length,
         samples: candidates
           .filter((p) => toDelete.includes(p.id))

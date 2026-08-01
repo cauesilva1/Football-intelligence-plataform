@@ -6,6 +6,7 @@ import {
   getApiSportsQuotaStatus,
 } from "@/lib/api-sports";
 import { API_FOOTBALL_PLAYER_MEDIA_SEASON } from "@/lib/seasons";
+import { isProductiveSeasonRow } from "@/lib/intelligence/data-depth";
 
 const BIG5_COMPETITION_MATCH = [
   "premier league",
@@ -16,6 +17,14 @@ const BIG5_COMPETITION_MATCH = [
   "mls",
   "brasileir",
   "uefa champions",
+];
+
+const BIG5_ONLY_MATCH = [
+  "premier league",
+  "la liga",
+  "serie a",
+  "bundesliga",
+  "ligue 1",
 ];
 
 export type EnrichSoccerSeasonStatsResult = {
@@ -33,6 +42,12 @@ function isShowcaseCompetition(name: string | null | undefined): boolean {
   return BIG5_COMPETITION_MATCH.some((needle) => n.includes(needle));
 }
 
+function isBig5OnlyCompetition(name: string | null | undefined): boolean {
+  const n = (name ?? "").toLowerCase();
+  if (n.includes("brasileir") || n.includes("mls")) return false;
+  return BIG5_ONLY_MATCH.some((needle) => n.includes(needle));
+}
+
 /**
  * Upsert full PlayerSeasonStats lines from API-Football `/players?team=&season=`.
  * Default season = 2024 (free-tier max) so showcase rosters gain a real prior productive year
@@ -43,16 +58,22 @@ export async function enrichSoccerSeasonStatsFromApiFootball(options?: {
   season?: number;
   /** Prefer Big5 / MLS / Brasileirão clubs first. */
   showcaseOnly?: boolean;
+  /** Restrict to European Big5 only (skip MLS / Brasileirão / UCL clubs). */
+  big5Only?: boolean;
   /** Skip clubs that already have any PlayerSeasonStats for this season. */
   skipDone?: boolean;
   /** Create unmatched API players (default false — avoids diluting coverage %). */
   createMissingPlayers?: boolean;
+  /** Prefer clubs with the most non-productive roster players (surgical refresh). */
+  preferZeros?: boolean;
 }): Promise<EnrichSoccerSeasonStatsResult> {
   const teamLimit = Math.max(1, Math.min(options?.teamLimit ?? 20, 120));
   const season = options?.season ?? API_FOOTBALL_PLAYER_MEDIA_SEASON;
   const showcaseOnly = options?.showcaseOnly ?? true;
+  const big5Only = options?.big5Only ?? false;
   const skipDone = options?.skipDone ?? true;
   const createMissingPlayers = options?.createMissingPlayers ?? false;
+  const preferZeros = options?.preferZeros ?? false;
 
   const empty: EnrichSoccerSeasonStatsResult = {
     teamsAttempted: 0,
@@ -99,6 +120,16 @@ export async function enrichSoccerSeasonStatsFromApiFootball(options?: {
     ? teams.filter((t) => isShowcaseCompetition(t.competition?.name))
     : teams;
 
+  if (big5Only) {
+    ordered = ordered.filter((t) => {
+      const n = (t.competition?.name ?? "").toLowerCase();
+      if (n.includes("brasileir") || n.includes("mls") || n.includes("champions")) {
+        return false;
+      }
+      return isBig5OnlyCompetition(t.competition?.name);
+    });
+  }
+
   if (skipDone) {
     const covered = await prisma.player.groupBy({
       by: ["teamId"],
@@ -116,6 +147,53 @@ export async function enrichSoccerSeasonStatsFromApiFootball(options?: {
     ordered = pending.length > 0 ? pending : ordered;
     console.log(
       `[enrich-soccer-season] season=${season} · pending clubs ${pending.length}/${doneTeamIds.size + pending.length}`
+    );
+  }
+
+  if (preferZeros && ordered.length > 1) {
+    const roster = await prisma.player.findMany({
+      where: {
+        sport: "SOCCER",
+        teamId: { in: ordered.map((t) => t.id) },
+      },
+      select: {
+        teamId: true,
+        stats: {
+          where: { season },
+          select: { matchesPlayed: true, minutesPlayed: true },
+        },
+        statistics: {
+          where: { season: String(season) },
+          select: { appearances: true, minutesPlayed: true },
+        },
+      },
+    });
+    const zeroByTeam = new Map<string, number>();
+    for (const player of roster) {
+      if (!player.teamId) continue;
+      let apps = 0;
+      let minutes = 0;
+      for (const row of player.stats) {
+        apps += row.matchesPlayed;
+        minutes += row.minutesPlayed;
+      }
+      for (const row of player.statistics) {
+        apps += row.appearances;
+        minutes += row.minutesPlayed;
+      }
+      if (!isProductiveSeasonRow(apps, minutes, "SOCCER")) {
+        zeroByTeam.set(player.teamId, (zeroByTeam.get(player.teamId) ?? 0) + 1);
+      }
+    }
+    ordered = [...ordered].sort(
+      (a, b) => (zeroByTeam.get(b.id) ?? 0) - (zeroByTeam.get(a.id) ?? 0)
+    );
+    console.log(
+      `[enrich-soccer-season] prefer-zeros · top ${Math.min(5, ordered.length)}: ` +
+        ordered
+          .slice(0, 5)
+          .map((t) => `${t.name}(${zeroByTeam.get(t.id) ?? 0})`)
+          .join(", ")
     );
   }
 

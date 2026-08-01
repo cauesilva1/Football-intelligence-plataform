@@ -3,6 +3,8 @@
 Multi-sport scouting & analytics prototype (soccer, basketball, American football) built with Next.js, Prisma, and public sports feeds.
 
 > **Prototype.** The current version uses a prototype dataset and scoring models that are still being refined — not a live club product. See [docs/SCORING.md](./docs/SCORING.md) and the in-app `/methodology` page.
+>
+> **MVP / pitch:** [docs/OMNISCOUT-MVP.md](./docs/OMNISCOUT-MVP.md) — narrativa de startup, estado do produto e roadmap de profundidade de dados.
 
 ---
 
