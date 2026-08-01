@@ -24,10 +24,11 @@ Ordem **rígida** — não pular etapas:
 | **1 — Agora** | Showcase Big5 (PL, La Liga, Serie A, Bundesliga, Ligue 1) | Startup KPI ≥ **90%** com ≥1 temporada produtiva real (piso: ≥4 aparições **e** ≥270′ — AND, como em `data-depth.ts`) · sem stubs inventados |
 | **2 — Em seguida** | **Brasileirão Série A** (pilar #2, não “liga genérica”) | Mesma barra ≥90% e o mesmo piso AND · ESPN `bra.1` + season lines · sem create-missing |
 | **3 — Médio prazo (soccer)** | Ligas de transição (ex.: Portugal, Holanda; MLS depois do BR) | Expandir horizontalmente **dentro do futebol** com a mesma disciplina |
-| **4 — Tese / próximo grande mercado** | **Colleges + High School** | Arquitetura e narrativa prontas; **ETL/produto só após freeze Big5+BR** |
-| **5 — Depois** | Aprofundar Basketball (NCAA) e American Football | Produção real, sem vaidade · depois auth/piloto |
+| **4 — Product UI (pós-freeze soccer)** | Redesign para cara de **produto completo** (não protótipo AI) | North star: [Opta Analyst](https://www.statsperform.com/about/opta-analyst/) + [theanalyst.com](https://theanalyst.com/) — ver `docs/PRODUCT-UI-NORTH-STAR.md` |
+| **5 — Tese / próximo grande mercado** | **Colleges + High School** | Arquitetura e narrativa prontas; **ETL/produto só após freeze Big5+BR** |
+| **6 — Depois** | Aprofundar Basketball (NCAA) e American Football · auth/piloto | Produção real, sem vaidade; UI já no design system da fase 4 |
 
-**Não fazer agora:** inventar telas novas; paralelizar ETLs pesados; chasear 90% de AF/NCAA/HS inteiros; tratar BR como igual a MLS/PT no curto prazo.
+**Não fazer agora:** redesenhar UI / inventar telas novas antes do freeze Big5+BR; paralelizar ETLs pesados; chasear 90% de AF/NCAA/HS inteiros; tratar BR como igual a MLS/PT no curto prazo.
 
 ## Regras rígidas de engenharia de dados
 
@@ -35,7 +36,7 @@ Ordem **rígida** — não pular etapas:
 - Backfills ESPN **não** criam plantéis fictícios quando `seasonYear` está definida.
 - Limpeza: `npm run data:prune-soccer-stubs` (usar `--force-match-stats` só **depois** de backfills ESPN terminarem).
 - **Um ETL pesado de cada vez** — evitar P1017 no pooler Prisma/Supabase.
-- Priorizar integridade e limpeza dos dados sobre features de UI.
+- Priorizar integridade e limpeza dos dados sobre features de UI **até** o freeze Big5+BR; a fase Product UI vem a seguir (não em paralelo com ETL).
 
 ## O que fazer AGORA (pós-lote ESPN em curso)
 
@@ -56,5 +57,6 @@ Quando o backfill Big5 em curso terminar:
 Documentos irmãos:
 
 - `docs/OMNISCOUT-MVP.md` — narrativa MVP / pitch
+- `docs/PRODUCT-UI-NORTH-STAR.md` — design futuro (Opta Analyst / The Analyst)
 - `docs/STARTUP-DATA-RUNBOOK.md` — comandos Big5 → BR
 - `docs/DATA-COVERAGE.md` — inventário de cobertura

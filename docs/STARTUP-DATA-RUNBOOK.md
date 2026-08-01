@@ -29,9 +29,10 @@ PRISMA_LOG_QUIET=1 npm run data:backfill-big5 -- --days=12 --end=2025-03-10 --se
 1. Podar invent stubs se ainda diluírem o denominador (`npm run data:prune-soccer-stubs -- --force-match-stats`).
 2. **Brasileirão (pilar #2):** backfill ESPN `bra.1` + season lines API (sem `--create-missing`); medir KPI BR.
 3. Freeze docs/MVP (Big5 + BR).
-4. Ligas de transição (PT, NL; MLS depois) — opcional, ainda em soccer.
-5. Colleges/HS e aprofundar NCAA/AF — só após freeze soccer.
-6. Auth Phase 5b só com piloto.
+4. **Product UI** — redesign cara de produto ([PRODUCT-UI-NORTH-STAR.md](./PRODUCT-UI-NORTH-STAR.md); insp. Opta Analyst / theanalyst.com).
+5. Ligas de transição (PT, NL; MLS depois) — opcional, ainda em soccer.
+6. Colleges/HS e aprofundar NCAA/AF — só após freeze soccer + UI base.
+7. Auth Phase 5b só com piloto.
 
 ## Segurança Supabase
 

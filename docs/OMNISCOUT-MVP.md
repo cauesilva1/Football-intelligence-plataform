@@ -141,11 +141,12 @@ Ordem explícita de execução:
 4. **Iterar fills** até ≥90% Big5 (só jogadores existentes).  
 5. **Brasileirão Série A** — pilar #2, mesma barra ≥90% (ESPN `bra.1` + API, sem create-missing).  
 6. **Freeze** showcase soccer **Big5 + BR**.  
-7. **Ligas de transição** (PT, NL; MLS depois) — expansão horizontal no futebol.  
-8. **Colleges / High School** — tese de mercado negligenciado; construir depois do freeze soccer.  
-9. **Basketball NCAA / AF** com produção real → **auth / piloto**.
+7. **Product UI** — redesign para cara de produto completo (inspiração [Opta Analyst](https://www.statsperform.com/about/opta-analyst/) / [theanalyst.com](https://theanalyst.com/)); ver [PRODUCT-UI-NORTH-STAR.md](./PRODUCT-UI-NORTH-STAR.md).  
+8. **Ligas de transição** (PT, NL; MLS depois) — expansão horizontal no futebol.  
+9. **Colleges / High School** — tese de mercado negligenciado.  
+10. **Basketball NCAA / AF** com produção real → **auth / piloto**.
 
-Fora de escopo imediato: chasear 90% de AF+NCAA+HS; paralelizar ETLs pesados (P1017); UI nova sem necessidade.
+Fora de escopo imediato: chasear 90% de AF+NCAA+HS; paralelizar ETLs pesados (P1017); redesenhar UI **antes** do freeze de dados (hoje ainda parece protótipo — isso é fase 7, não atalho).
 
 ---
 
@@ -179,11 +180,18 @@ Fora de escopo imediato: chasear 90% de AF+NCAA+HS; paralelizar ETLs pesados (P1
 
 ---
 
+## Product UI (futuro — pós-freeze)
+
+Meta de percepção: **produto de sports intelligence**, não scaffold AI.  
+Referências: [Opta Analyst](https://www.statsperform.com/about/opta-analyst/), [theanalyst.com](https://theanalyst.com/).  
+Detalhe e backlog de superfícies: [PRODUCT-UI-NORTH-STAR.md](./PRODUCT-UI-NORTH-STAR.md).
+
 ## Documentos relacionados
 
 | Documento | Uso |
 |-----------|-----|
 | [STARTUP-DATA-RUNBOOK.md](./STARTUP-DATA-RUNBOOK.md) | Comandos diários Big5 → 90% |
+| [PRODUCT-UI-NORTH-STAR.md](./PRODUCT-UI-NORTH-STAR.md) | Design system / UI pós-freeze |
 | [DATA-COVERAGE.md](./DATA-COVERAGE.md) | Inventário de cobertura |
 | [SCORING.md](./SCORING.md) | Metodologia de scores |
 | [OMNISCOUT-INTELLIGENCE-PLAYBOOK.md](./OMNISCOUT-INTELLIGENCE-PLAYBOOK.md) | Inteligência / paridade |
@@ -194,7 +202,7 @@ Fora de escopo imediato: chasear 90% de AF+NCAA+HS; paralelizar ETLs pesados (P1
 
 ## Resumo executivo
 
-OmniScout já é um **MVP apresentável**: multi-desporto, scouting usable, metodologia e pipelines reais.  
-O foco imediato não é “mais features” — é **fechar Big5 (≥90%)**, em seguida **Brasileirão (≥90%)**, congelar o showcase soccer, e só então escalar NCAA, AF e um piloto com auth.
+OmniScout já é um **MVP apresentável**: multi-desporto, scouting usable, metodologia e pipelines reais — ainda com **cara de protótipo**, o que será corrigido na fase Product UI após o freeze.  
+O foco imediato não é redesign — é **fechar Big5 (≥90%)**, **Brasileirão (≥90%)**, congelar soccer, **depois** UI nível Analyst, e só então escalar Colleges/NCAA/AF e piloto.
 
-Isso é o padrão de uma startup de dados séria: **provar a qualidade do combustível antes de vender o motor.**
+Isso é o padrão de uma startup de dados séria: **provar a qualidade do combustível antes de pintar o motor.**
