@@ -40,13 +40,24 @@ Ordem **rígida** — não pular etapas:
 
 ## O que fazer AGORA (pós-lote ESPN em curso)
 
-Quando houver quota API (reset diário do provider):
+## Frente atual (enquanto Big5 API está em quota)
 
-1. **Low-quota fill** — `npm run data:backfill-soccer-seasons -- --low-quota` (~12 calls: 12 clubes × 1 página, zeros com `apiSportsId` primeiro).
-2. **Medir** — `npm run data:coverage` → *Startup KPI — Soccer Big5 showcase*.
-3. Repetir nos dias seguintes até ≥90%; ESPN só em janelas curtas se necessário.
-4. **Só então** — profundidade **Brasileirão** (KPI BR + fills `bra.1`/API).
-5. Não redesenhar UI antes do freeze Big5+BR.
+Big5 API free esgotada / low-quota só no reset. **Não ficar parado:** avançar **Brasileirão** (ESPN `bra.1` + CSV 2025), sem create-missing em janelas curtas salvo necessidade explícita de plantel.
+
+1. `npm run data:sync-br2025-db` (CSV local → season lines).
+2. ESPN: `npm run data:backfill-boxscores -- --days=40 --slug=bra.1 --end=2025-12-08 --seasonYear=2025 --no-create` (e janelas 2026 se preciso).
+3. Medir cobertura BR (mesmo piso AND); voltar ao Big5 com `--low-quota` quando a quota resetar.
+4. Não redesenhar UI antes do freeze Big5+BR.
+
+## Higiene de commits (importante)
+
+O histórico já está denso (~129 commits em `main`). **Maneirar daqui pra frente:**
+
+- **1 commit por fatia útil** (ex.: “BR ESPN + medida”, “README + contexto”), não um commit por ficheiro/flag/doc.
+- Agrupar docs + código da mesma mudança no mesmo commit.
+- **Não** abrir PR/push a cada micro-ajuste; só quando a fatia estiver estável.
+- ETL/dados no Supabase **não** exigem commit de código.
+- **Não** fazer squash/rebase de `main` publicado sem pedido explícito (force push).
 
 ## Como usar no Cursor
 
@@ -60,3 +71,4 @@ Documentos irmãos:
 - `docs/PRODUCT-UI-NORTH-STAR.md` — design futuro (Opta Analyst / The Analyst)
 - `docs/STARTUP-DATA-RUNBOOK.md` — comandos Big5 → BR
 - `docs/DATA-COVERAGE.md` — inventário de cobertura
+- `README.md` — visão atual do repo (com screenshots)
