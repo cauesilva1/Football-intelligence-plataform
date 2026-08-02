@@ -6,7 +6,8 @@
  *
  *   npm run data:backfill-soccer-seasons -- --teams=25
  *   npm run data:backfill-soccer-seasons -- --teams=40 --season=2024
- *   npm run data:backfill-soccer-seasons -- --teams=20 --all-teams
+ *   npm run data:backfill-soccer-seasons -- --low-quota
+ *     → 12 clubs · 1 page · big5-only · prefer-zeros · refresh (~12 calls)
  */
 import fs from "fs";
 import path from "path";
@@ -45,30 +46,37 @@ function argValue(flag: string): string | undefined {
 }
 
 async function main(): Promise<void> {
-  const teams = Number(argValue("--teams") ?? "25");
+  const lowQuota = process.argv.includes("--low-quota");
+  const teams = Number(argValue("--teams") ?? (lowQuota ? "12" : "25"));
   const season = argValue("--season") ? Number(argValue("--season")) : 2024;
+  const maxPages = Number(argValue("--max-pages") ?? (lowQuota ? "1" : "3"));
   const showcaseOnly = !process.argv.includes("--all-teams");
+  const refresh = lowQuota || process.argv.includes("--refresh");
+  const big5Only = lowQuota || process.argv.includes("--big5-only");
+  const preferZeros = lowQuota || process.argv.includes("--prefer-zeros");
 
   if (!process.env.DATABASE_URL?.trim()) {
     throw new Error("DATABASE_URL ausente.");
   }
 
   console.log(
-    `[backfill-soccer-seasons] teams=${teams} · season=${season}` +
+    `[backfill-soccer-seasons] teams=${teams} · season=${season} · maxPages=${maxPages}` +
       (showcaseOnly ? " · showcase" : " · all-teams") +
-      (process.argv.includes("--big5-only") ? " · big5-only" : "") +
-      (process.argv.includes("--prefer-zeros") ? " · prefer-zeros" : "") +
-      (process.argv.includes("--refresh") ? " · refresh" : "")
+      (big5Only ? " · big5-only" : "") +
+      (preferZeros ? " · prefer-zeros" : "") +
+      (refresh ? " · refresh" : "") +
+      (lowQuota ? " · low-quota" : "")
   );
 
   const result = await enrichSoccerSeasonStatsFromApiFootball({
     teamLimit: Number.isFinite(teams) ? teams : 25,
     season: Number.isFinite(season) ? season : 2024,
     showcaseOnly,
-    big5Only: process.argv.includes("--big5-only"),
-    skipDone: !process.argv.includes("--refresh"),
+    big5Only,
+    skipDone: !refresh,
     createMissingPlayers: process.argv.includes("--create-missing"),
-    preferZeros: process.argv.includes("--prefer-zeros"),
+    preferZeros,
+    maxPages: Number.isFinite(maxPages) ? maxPages : 3,
   });
 
   console.log("[backfill-soccer-seasons] done", result);

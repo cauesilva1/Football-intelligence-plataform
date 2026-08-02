@@ -66,6 +66,8 @@ export async function enrichSoccerSeasonStatsFromApiFootball(options?: {
   createMissingPlayers?: boolean;
   /** Prefer clubs with the most non-productive roster players (surgical refresh). */
   preferZeros?: boolean;
+  /** Pages per club for `/players?team=` (default 3; use 1 for low-quota days). */
+  maxPages?: number;
 }): Promise<EnrichSoccerSeasonStatsResult> {
   const teamLimit = Math.max(1, Math.min(options?.teamLimit ?? 20, 120));
   const season = options?.season ?? API_FOOTBALL_PLAYER_MEDIA_SEASON;
@@ -74,6 +76,7 @@ export async function enrichSoccerSeasonStatsFromApiFootball(options?: {
   const skipDone = options?.skipDone ?? true;
   const createMissingPlayers = options?.createMissingPlayers ?? false;
   const preferZeros = options?.preferZeros ?? false;
+  const maxPages = Math.max(1, Math.min(options?.maxPages ?? 3, 5));
 
   const empty: EnrichSoccerSeasonStatsResult = {
     teamsAttempted: 0,
@@ -158,6 +161,7 @@ export async function enrichSoccerSeasonStatsFromApiFootball(options?: {
       },
       select: {
         teamId: true,
+        apiSportsId: true,
         stats: {
           where: { season },
           select: { matchesPlayed: true, minutesPlayed: true },
@@ -169,6 +173,7 @@ export async function enrichSoccerSeasonStatsFromApiFootball(options?: {
       },
     });
     const zeroByTeam = new Map<string, number>();
+    const zeroWithApiByTeam = new Map<string, number>();
     for (const player of roster) {
       if (!player.teamId) continue;
       let apps = 0;
@@ -183,25 +188,39 @@ export async function enrichSoccerSeasonStatsFromApiFootball(options?: {
       }
       if (!isProductiveSeasonRow(apps, minutes, "SOCCER")) {
         zeroByTeam.set(player.teamId, (zeroByTeam.get(player.teamId) ?? 0) + 1);
+        if (player.apiSportsId != null) {
+          zeroWithApiByTeam.set(
+            player.teamId,
+            (zeroWithApiByTeam.get(player.teamId) ?? 0) + 1
+          );
+        }
       }
     }
-    ordered = [...ordered].sort(
-      (a, b) => (zeroByTeam.get(b.id) ?? 0) - (zeroByTeam.get(a.id) ?? 0)
-    );
+    // API-linked zeros first (calls actually help), then raw zero count.
+    ordered = [...ordered].sort((a, b) => {
+      const apiDiff =
+        (zeroWithApiByTeam.get(b.id) ?? 0) - (zeroWithApiByTeam.get(a.id) ?? 0);
+      if (apiDiff !== 0) return apiDiff;
+      return (zeroByTeam.get(b.id) ?? 0) - (zeroByTeam.get(a.id) ?? 0);
+    });
     console.log(
       `[enrich-soccer-season] prefer-zeros · top ${Math.min(5, ordered.length)}: ` +
         ordered
           .slice(0, 5)
-          .map((t) => `${t.name}(${zeroByTeam.get(t.id) ?? 0})`)
+          .map(
+            (t) =>
+              `${t.name}(apiZero=${zeroWithApiByTeam.get(t.id) ?? 0}/zero=${zeroByTeam.get(t.id) ?? 0})`
+          )
           .join(", ")
     );
   }
 
   ordered = ordered.slice(0, teamLimit);
+  console.log(`[enrich-soccer-season] maxPages=${maxPages} · clubs=${ordered.length}`);
 
   for (const team of ordered) {
     const q = await getApiSportsQuotaStatus();
-    if (q.used >= q.limit - 2) {
+    if (q.used >= q.limit) {
       empty.skippedQuota += 1;
       console.log(`[enrich-soccer-season] quota exhausted at ${q.used}/${q.limit}`);
       break;
@@ -213,9 +232,15 @@ export async function enrichSoccerSeasonStatsFromApiFootball(options?: {
       console.log(
         `[enrich-soccer-season] ${empty.teamsAttempted}/${ordered.length} ${team.name} (${team.competition?.name})…`
       );
-      const lines = await fetchTeamSeasonPlayerLines(team.apiSportsId, season);
+      const lines = await fetchTeamSeasonPlayerLines(team.apiSportsId, season, maxPages);
+      const qAfter = await getApiSportsQuotaStatus();
       if (!lines.length) {
         console.log(`[enrich-soccer-season] ${team.name}: no lines`);
+        if (qAfter.used >= qAfter.limit) {
+          empty.skippedQuota += 1;
+          console.log(`[enrich-soccer-season] stopping — provider/local quota exhausted`);
+          break;
+        }
         continue;
       }
 

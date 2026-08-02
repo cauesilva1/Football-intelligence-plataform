@@ -8,8 +8,11 @@
 ## Diário (quando a quota API resetar)
 
 ```bash
-# Cirúrgico Big5: clubes com mais zeros primeiro (~2–3 calls/clube, ≤100/dia)
-npm run data:backfill-soccer-seasons -- --teams=35 --season=2024 --refresh --big5-only --prefer-zeros
+# Low-quota (recomendado): ~12 calls — 12 clubes × 1 página, zeros com API id primeiro
+npm run data:backfill-soccer-seasons -- --low-quota
+
+# Ou explícito:
+# npm run data:backfill-soccer-seasons -- --teams=12 --season=2024 --refresh --big5-only --prefer-zeros --max-pages=1
 
 # 2) Medir
 npm run data:coverage

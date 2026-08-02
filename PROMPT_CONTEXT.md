@@ -40,13 +40,13 @@ Ordem **rígida** — não pular etapas:
 
 ## O que fazer AGORA (pós-lote ESPN em curso)
 
-Quando o backfill Big5 em curso terminar:
+Quando houver quota API (reset diário do provider):
 
-1. **Medir** — `npm run data:coverage` → bloco *Startup KPI — Soccer Big5 showcase*.
-2. **Podar** — invent stubs sem temporada produtiva (`prune-soccer-stubs -- --force-match-stats` se seguro).
-3. **Remedir** — confirmar ≥90% Big5; se faltar, mais janelas ESPN/API **só em jogadores existentes**.
-4. **Só então** — profundidade **Brasileirão** (KPI BR no coverage + fills `bra.1`/API).
-5. Manter arquitetura Next.js/Prisma pronta para ligas de transição e Colleges — **sem** construir essas superfícies agora.
+1. **Low-quota fill** — `npm run data:backfill-soccer-seasons -- --low-quota` (~12 calls: 12 clubes × 1 página, zeros com `apiSportsId` primeiro).
+2. **Medir** — `npm run data:coverage` → *Startup KPI — Soccer Big5 showcase*.
+3. Repetir nos dias seguintes até ≥90%; ESPN só em janelas curtas se necessário.
+4. **Só então** — profundidade **Brasileirão** (KPI BR + fills `bra.1`/API).
+5. Não redesenhar UI antes do freeze Big5+BR.
 
 ## Como usar no Cursor
 

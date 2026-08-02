@@ -74,14 +74,41 @@ async function getQuotaCount(): Promise<number> {
   return payload?.count ?? 0;
 }
 
-async function incrementQuota(): Promise<boolean> {
+async function setQuotaCount(count: number, extra?: Record<string, unknown>): Promise<void> {
   const date = todayKey();
   const key = `api-sports:quota:${date}`;
+  const clamped = Math.max(0, Math.min(DAILY_LIMIT, Math.floor(count)));
+  await writeSystemCache(key, { date, count: clamped, ...extra });
+}
+
+async function incrementQuota(): Promise<boolean> {
   const current = await getQuotaCount();
   if (current >= DAILY_LIMIT) return false;
-
-  await writeSystemCache(key, { date, count: current + 1 });
+  await setQuotaCount(current + 1);
   return true;
+}
+
+async function decrementQuota(): Promise<void> {
+  const current = await getQuotaCount();
+  if (current <= 0) return;
+  await setQuotaCount(current - 1);
+}
+
+/** Provider said daily limit hit — align local gate so we stop burning calls. */
+async function markQuotaExhausted(reason: string): Promise<void> {
+  await setQuotaCount(DAILY_LIMIT, { exhaustedReason: reason });
+  console.warn(`[api-sports] Quota marked exhausted locally (${reason}).`);
+}
+
+function syncQuotaFromHeaders(headers: Headers): void {
+  const remainingRaw =
+    headers.get("x-ratelimit-requests-remaining") ??
+    headers.get("X-RateLimit-Requests-Remaining");
+  if (remainingRaw == null) return;
+  const remaining = Number(remainingRaw);
+  if (!Number.isFinite(remaining)) return;
+  const used = Math.max(0, DAILY_LIMIT - remaining);
+  void setQuotaCount(used, { syncedFromProvider: true, remaining });
 }
 
 /** API-Football rejects `league` when `team` or `search` is already set. */
@@ -91,6 +118,12 @@ function sanitizeApiParams(params: Record<string, string | number>): Record<stri
     delete cleaned.league;
   }
   return cleaned;
+}
+
+function isProviderQuotaError(errors: Record<string, unknown> | undefined): boolean {
+  if (!errors) return false;
+  const blob = JSON.stringify(errors).toLowerCase();
+  return blob.includes("request limit") || blob.includes("rate limit") || blob.includes("too many requests");
 }
 
 async function fetchApiSports<T>(endpoint: string, params: Record<string, string | number>): Promise<T | null> {
@@ -108,13 +141,25 @@ async function fetchApiSports<T>(endpoint: string, params: Record<string, string
     url.searchParams.set(key, String(value));
   }
 
-  const response = await fetch(url, {
-    headers: { "x-apisports-key": apiKey },
-    next: { revalidate: 0 },
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: { "x-apisports-key": apiKey },
+      next: { revalidate: 0 },
+    });
+  } catch (error) {
+    await decrementQuota();
+    console.warn(`[api-sports] network error on ${endpoint}:`, error);
+    return null;
+  }
+
+  syncQuotaFromHeaders(response.headers);
 
   if (!response.ok) {
-    if (response.status === 401 || response.status === 403) {
+    await decrementQuota();
+    if (response.status === 429) {
+      await markQuotaExhausted(`HTTP ${response.status}`);
+    } else if (response.status === 401 || response.status === 403) {
       console.error(
         `[api-sports] Authentication failed (HTTP ${response.status}) — verify APISPORTS_KEY in environment variables.`
       );
@@ -126,9 +171,13 @@ async function fetchApiSports<T>(endpoint: string, params: Record<string, string
 
   const data = (await response.json()) as ApiEnvelope<T>;
   if (data.errors && Object.keys(data.errors).length > 0) {
+    await decrementQuota();
     const tokenError = data.errors.token ?? data.errors.access;
     if (tokenError) {
       console.error(`[api-sports] Invalid APISPORTS_KEY: ${tokenError}`);
+    } else if (isProviderQuotaError(data.errors as Record<string, unknown>)) {
+      await markQuotaExhausted(String(data.errors.requests ?? "provider limit"));
+      console.warn("[api-sports] API error:", data.errors);
     } else {
       console.warn("[api-sports] API error:", data.errors);
     }
@@ -471,8 +520,9 @@ export async function fetchTeamSeasonPlayerLines(
   season: number,
   maxPages = 3
 ): Promise<ApiSportsSeasonPlayerLine[]> {
+  const pages = Math.max(1, Math.min(maxPages, 5));
   const lines: ApiSportsSeasonPlayerLine[] = [];
-  for (let page = 1; page <= maxPages; page += 1) {
+  for (let page = 1; page <= pages; page += 1) {
     const q = await getQuotaCount();
     if (q >= DAILY_LIMIT) break;
 
