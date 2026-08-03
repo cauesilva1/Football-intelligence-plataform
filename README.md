@@ -33,9 +33,9 @@ Diferencial:
 |------|--------|
 | App (Next.js) em Production | Live — [vercel](https://football-intelligence-plataform.vercel.app/) |
 | Intelligence (roles, fit, trajectory, briefs) | MVP usable |
-| Startup KPI Big5 (≥1 temporada produtiva) | **~85%** (meta **≥90%**) |
-| Brasileirão (pilar #2) | Em fill ESPN (`bra.1`) — plantel a crescer |
-| Product UI nível Opta Analyst | Planeado **pós-freeze** Big5+BR |
+| Startup KPI Big5 (≥1 temporada produtiva) | **Freeze ~85%** (aspiracional ≥90% em background) |
+| Brasileirão (pilar #2) | **Freeze ~81%** |
+| Product UI nível Opta Analyst | **Em curso** — sair do look AI |
 | Colleges / High School | Tese — ainda não |
 | Auth / piloto pago | Ainda não |
 

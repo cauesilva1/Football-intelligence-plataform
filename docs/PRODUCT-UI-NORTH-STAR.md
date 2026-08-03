@@ -1,49 +1,84 @@
 # OmniScout — Product UI north star
 
-> **Quando:** depois do freeze de dados soccer (**Big5 + Brasileirão ≥90%**).  
-> **Não agora:** enquanto fechamos profundidade / ETL — UI cosmética não substitui KPI honesto.  
-> **Objetivo:** deixar de parecer “protótipo gerado por AI” e passar a parecer **produto editorial + intelligence** completo.
+> **Fase ativa (2026-08-03):** freeze de dados Big5 ~85% / BR ~81% — **Product UI em curso**.  
+> **Objetivo:** deixar de parecer “protótipo gerado por AI” e passar a parecer **produto editorial + sports intelligence**.
 
-## Referências de mercado (inspiração, não cópia)
+## Freeze de dados
+
+Não bloqueamos mais a UI à espera dos 90%. KPI aspiracional continua nos resets; redesign **não** espera.
+
+## Referências (inspiração, não cópia)
+
+### Credibilidade editorial
 
 | Referência | O que levar |
 |------------|-------------|
-| [Opta Analyst (Stats Perform)](https://www.statsperform.com/about/opta-analyst/) | Dados → narrativa; credibilidade; “sports intelligence turned into stories” |
-| [theanalyst.com](https://theanalyst.com/) | Hierarquia editorial, ticker/hubs por liga, artigos + stats + rankings no mesmo shell, multi-desporto sem parecer dashboard genérico |
+| [Opta Analyst](https://www.statsperform.com/about/opta-analyst/) | Dados → narrativa; credibilidade |
+| [theanalyst.com](https://theanalyst.com/) | Hierarquia editorial, hubs por liga, multi-desporto sem dashboard genérico |
 
-OmniScout **não** é um clone de journalism site: continua a ser scouting/freemium. A barra visual e de UX é: *se removeres o logo, ainda parece um produto de sports intelligence sério — não um template SaaS roxo.*
+### Energia sports (landing)
 
-## Diagnóstico atual (honesto)
+| Referência | O que levar |
+|------------|-------------|
+| [AI Football Agency](https://dribbble.com/shots/27292555-Sports-Website-AI-Football-Agency-Landing-Page) | Tipografia display agressiva, CTAs óbvios |
+| [Turfhub](https://dribbble.com/shots/25935042-Turfhub-Turf-Booking-Sports-Website) | Contraste paper × blocos escuros, secções com peso |
+| [Running Sport](https://dribbble.com/shots/26185032-Running-Sport-Website) | Ritmo de scroll, uma composição por viewport |
+| [Football Player LP](https://dribbble.com/shots/26940773-Football-Player-Landing-Page-Design) | Brand/hero com presença, sem clutter |
+| [Sports Website UI](https://dribbble.com/shots/26937328-Sports-Website-UI-Design) | Hierarquia clara, peers nomeados |
+| [Basketball Sports](https://dribbble.com/shots/27613146-Basketball-Sports-Website) | Energia desportiva sem virar template neon |
 
-Hoje o app ainda comunica “protótipo”: tipografia/stack genérica, secções tipo dashboard, pouco branding de herói, densidade de UI sem composição editorial. Isso enfraquece demos mesmo com dados bons.
+**Não copiar:** um único desporto no hero, collage de cards, glow “AI”, mock de dashboard no primeiro viewport.
 
-## Princípios de design (fase Product UI)
+### Densidade analytics (desk — Fase 2)
 
-1. **Uma composição por viewport** — não um painel de widgets no primeiro ecrã.  
-2. **Brand first** — nome OmniScout como sinal de herói onde fizer sentido (landing / hub).  
-3. **Tipografia expressiva** — evitar Inter/Roboto/Arial/system como voz principal.  
-4. **Atmosfera** — fundos com profundidade (gradiente/textura/imagem de contexto), não flat único.  
-5. **Editorial + tool** — hubs de liga/jogador com hierarquia à la Analyst (história → prova estatística → CTA de scouting), sem card spam.  
-6. **Dados honestos na UI** — empty states e “sem amostra produtiva” claros; nunca maquilar buracos com scores inventados.  
-7. **Motion com propósito** — 2–3 movimentos de hierarquia, não ruído.  
-8. **Mobile-first parity** — a composição tem de ler bem no telemóvel.
+| Referência | O que levar |
+|------------|-------------|
+| [Alignify Analytics](https://dribbble.com/shots/26928850-Alignify-Revenue-Analytics-Dashboard-UI) | Densidade, tabs, métricas legíveis |
+| [Gambling Analytics](https://dribbble.com/shots/27495291-Gambling-Analytics-Dashboard) | Tabelas e painéis para o hub — **não** na landing |
 
-## Superfícies a redesenhar (backlog futuro)
+### Componentes de produto
 
-Ordem sugerida pós-freeze:
+| Referência | O que levar |
+|------------|-------------|
+| [shadcn/ui](https://ui.shadcn.com/) | Primitives já em `src/components/ui/` (`button`, `tabs`, `table`, `badge`…) no **desk**; landing fica em CSS editorial (`landing.css`), sem card spam |
 
-1. **Landing / marketing** — narrativa startup + prova do Startup KPI.  
-2. **Hub de scouting soccer** (Big5 + BR) — lista/liga com cara de produto.  
-3. **Perfil de jogador** — intelligence + depth badge + trajetória só quando elegível.  
-4. **Shell global** — nav, tipografia, tokens CSS, dark/light só se o sistema visual o pedir (não default “AI dark purple”).  
-5. Depois: basketball / AF hubs com o **mesmo** design system.
+Barra: *se removeres o logo, ainda parece sports intelligence sério — não template SaaS.*
 
-## Fora de âmbito nesta fase
+## Regra de divisão
 
-- Replicar paywall/newsletter Opta.  
-- Construir CMS jornalístico completo.  
-- Redesign paralelo a ETLs pesados ou antes do freeze Big5+BR.
+| Superfície | Linguagem |
+|------------|-----------|
+| **Landing** | Energia sports + editorial Analyst; fotos de jogo **só** nos capítulos por desporto; hero = masthead brand (peers em texto) |
+| **Desk** (`/scouting`, perfil, compare) | Densidade analytics + shadcn; headers editoriais; sample limits honestos |
+
+## Feedback que motivou a fase
+
+- UI **monocromática** / dark SaaS
+- Pouco **intuitiva**
+- Visual **muito “AI”**
+- Hero com fotos a **duplicar** os capítulos por desporto
+
+## Princípios
+
+1. Uma composição por viewport  
+2. Brand first (OmniScout como herói na landing)  
+3. Tipografia expressiva — **proibido Inter/Roboto/Arial como voz**  
+4. Atmosfera (gradiente/textura), não flat único  
+5. Editorial + tool — sem card spam  
+6. Dados honestos na UI (empty states / sample limits)  
+7. Motion com propósito (2–3)  
+8. Mobile parity  
+9. Três sports iguais — sem soccer-only no primeiro viewport  
+
+## Backlog desta fase
+
+1. **Design system** — fonts + tokens CSS (app-wide) ✅  
+2. **Landing** — masthead brand-first + capítulos com fotos + workflow/trust/close ✅ em curso  
+3. **Hub scouting (Fase 2)** — shadcn + densidade Alignify-like, header editorial, fluxo discover claro  
+4. **Shell (Fase 2)** — sidebar/header menos “AI dashboard”  
+5. **Perfil (Fase 2)** — intelligence legível  
+6. Depois: BB / AF no mesmo sistema visual  
 
 ## Critério de “done”
 
-Um desconhecido abre o OmniScout e, em 10 segundos, classifica-o como **produto de sports intelligence** — não como demo Next.js / AI scaffold.
+Um desconhecido abre o OmniScout e, em 10 segundos, classifica-o como **produto de sports intelligence** — não demo Next.js / AI scaffold.

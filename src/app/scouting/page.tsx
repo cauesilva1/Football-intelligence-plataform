@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { parsePlayerFilters } from "@/features/scouting/lib/parse-filters";
 import { getServerSport } from "@/lib/sport-server";
 import { APP_NAME } from "@/lib/config";
@@ -18,6 +19,25 @@ function FiltersSkeleton() {
   return <Skeleton className="h-40 w-full rounded-xl" />;
 }
 
+function scoutingCopy(sport: string): { title: string; description: string } {
+  if (sport === "BASKETBALL") {
+    return {
+      title: "Basketball scouting",
+      description: "Filter by metrics and archetypes, then open a profile for season evidence.",
+    };
+  }
+  if (sport === "AMERICAN_FOOTBALL") {
+    return {
+      title: "American football scouting",
+      description: "Filter NFL and college by position and age — production shows on the profile.",
+    };
+  }
+  return {
+    title: "Scouting",
+    description: "Search or filter by role — save players, then refine on My Players.",
+  };
+}
+
 export default async function ScoutingPage({
   searchParams,
 }: {
@@ -26,6 +46,7 @@ export default async function ScoutingPage({
   const params = await searchParams;
   const sport = await getServerSport();
   const filters = parsePlayerFilters(params, "scouting", sport);
+  const copy = scoutingCopy(sport);
 
   return (
     <DashboardShell
@@ -35,36 +56,9 @@ export default async function ScoutingPage({
           : "Scouting"
       }
     >
-      <div className="space-y-4">
-        {sport === "BASKETBALL" ? (
-          <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-6">
-            <h1 className="font-display text-xl font-bold text-foreground md:text-2xl">Basketball Scouting</h1>
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Refine your search with advanced metrics, archetypes, and performance sliders.
-            </p>
-          </div>
-        ) : null}
-        {sport === "AMERICAN_FOOTBALL" ? (
-          <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-6">
-            <h1 className="font-display text-xl font-bold text-foreground md:text-2xl">
-              American Football Scouting
-            </h1>
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Filter NFL and College Football by position, age, and rating — season production is shown on the profile.
-            </p>
-          </div>
-        ) : null}
-        {sport === "SOCCER" ? (
-          <div className="space-y-3">
-            <ScoutWorkflowNav current="discover" />
-            <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-6">
-              <h1 className="font-display text-xl font-bold text-foreground md:text-2xl">Scouting</h1>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                Search by name or filter by role — save players from the list, then refine on My Players.
-              </p>
-            </div>
-          </div>
-        ) : null}
+      <div className="space-y-5">
+        {sport === "SOCCER" ? <ScoutWorkflowNav current="discover" /> : null}
+        <PageHeader title={copy.title} description={copy.description} />
         <Suspense fallback={<FiltersSkeleton />}>
           <ScoutingFiltersPanelLoader
             basePath="/scouting"

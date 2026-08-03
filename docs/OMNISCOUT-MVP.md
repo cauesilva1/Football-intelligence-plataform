@@ -180,18 +180,21 @@ Fora de escopo imediato: chasear 90% de AF+NCAA+HS; paralelizar ETLs pesados (P1
 
 ---
 
-## Product UI (futuro — pós-freeze)
+## Product UI (fase ativa — pós-freeze)
+
+Dados soccer **congelados** em Big5 ~85% / BR ~81% (2026-08-02) para desbloquear redesign. Meta 90% fica aspiracional em background.
 
 Meta de percepção: **produto de sports intelligence**, não scaffold AI.  
 Referências: [Opta Analyst](https://www.statsperform.com/about/opta-analyst/), [theanalyst.com](https://theanalyst.com/).  
-Detalhe e backlog de superfícies: [PRODUCT-UI-NORTH-STAR.md](./PRODUCT-UI-NORTH-STAR.md).
+Detalhe: [PRODUCT-UI-NORTH-STAR.md](./PRODUCT-UI-NORTH-STAR.md).
 
 ## Documentos relacionados
 
 | Documento | Uso |
 |-----------|-----|
-| [STARTUP-DATA-RUNBOOK.md](./STARTUP-DATA-RUNBOOK.md) | Comandos diários Big5 → 90% |
-| [PRODUCT-UI-NORTH-STAR.md](./PRODUCT-UI-NORTH-STAR.md) | Design system / UI pós-freeze |
+| [RESUMO-E-PROXIMOS-PASSOS.md](./RESUMO-E-PROXIMOS-PASSOS.md) | Estado + agora |
+| [STARTUP-DATA-RUNBOOK.md](./STARTUP-DATA-RUNBOOK.md) | Comandos de dados |
+| [PRODUCT-UI-NORTH-STAR.md](./PRODUCT-UI-NORTH-STAR.md) | Design system / UI **ativa** |
 | [DATA-COVERAGE.md](./DATA-COVERAGE.md) | Inventário de cobertura |
 | [SCORING.md](./SCORING.md) | Metodologia de scores |
 | [OMNISCOUT-INTELLIGENCE-PLAYBOOK.md](./OMNISCOUT-INTELLIGENCE-PLAYBOOK.md) | Inteligência / paridade |
@@ -202,7 +205,5 @@ Detalhe e backlog de superfícies: [PRODUCT-UI-NORTH-STAR.md](./PRODUCT-UI-NORTH
 
 ## Resumo executivo
 
-OmniScout já é um **MVP apresentável**: multi-desporto, scouting usable, metodologia e pipelines reais — ainda com **cara de protótipo**, o que será corrigido na fase Product UI após o freeze.  
-O foco imediato não é redesign — é **fechar Big5 (≥90%)**, **Brasileirão (≥90%)**, congelar soccer, **depois** UI nível Analyst, e só então escalar Colleges/NCAA/AF e piloto.
-
-Isso é o padrão de uma startup de dados séria: **provar a qualidade do combustível antes de pintar o motor.**
+OmniScout já é um **MVP apresentável**: multi-desporto, scouting usable, metodologia e pipelines reais.  
+**Agora:** Product UI (sair do look AI) com dados congelados ~85% Big5 / ~81% BR — depois Colleges/NCAA/AF e piloto.

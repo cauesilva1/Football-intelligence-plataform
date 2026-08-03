@@ -1,25 +1,25 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Barlow_Condensed, Source_Sans_3, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SportProviderWrapper } from "@/components/providers/sport-provider-wrapper";
 import { APP_NAME, APP_TAGLINE } from "@/lib/config";
 import "./globals.css";
 
-const interDisplay = Inter({
+const display = Barlow_Condensed({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
-  weight: ["500", "600", "700"],
+  weight: ["600", "700"],
 });
 
-const interBody = Inter({
+const body = Source_Sans_3({
   subsets: ["latin"],
   variable: "--font-body",
   display: "swap",
-  weight: ["400", "500", "600"],
+  weight: ["400", "600", "700"],
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const mono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
   display: "swap",
@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark" data-sport="SOCCER" suppressHydrationWarning>
       <body
-        className={`${interDisplay.variable} ${interBody.variable} ${jetbrainsMono.variable} bg-background font-body text-sm text-foreground antialiased`}
+        className={`${display.variable} ${body.variable} ${mono.variable} bg-background font-body text-sm text-foreground antialiased`}
         suppressHydrationWarning
       >
         <SportProviderWrapper>{children}</SportProviderWrapper>

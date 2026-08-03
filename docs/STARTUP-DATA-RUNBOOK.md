@@ -30,7 +30,11 @@ PRISMA_LOG_QUIET=1 npm run data:backfill-big5 -- --days=12 --end=2025-03-10 --se
 ## Depois do KPI Big5 ≥90%
 
 1. Podar invent stubs se ainda diluírem o denominador (`npm run data:prune-soccer-stubs -- --force-match-stats`).
-2. **Brasileirão (pilar #2):** backfill ESPN `bra.1` + season lines API (sem `--create-missing`); medir KPI BR.
+2. **Brasileirão (pilar #2):** plantel BR está vazio em muitos clubes — ESPN `bra.1` com `--create` só para semear a partir de jogos reais; depois `--no-create`. Ex.:
+   ```bash
+   PRISMA_LOG_QUIET=1 npm run data:backfill-boxscores -- --days=30 --slug=bra.1 --end=2025-12-08 --seasonYear=2025 --create
+   ```
+   CSV `data:sync-br2025-db` ajuda nomes/G/A mas **não** minutos (não conta no piso AND).
 3. Freeze docs/MVP (Big5 + BR).
 4. **Product UI** — redesign cara de produto ([PRODUCT-UI-NORTH-STAR.md](./PRODUCT-UI-NORTH-STAR.md); insp. Opta Analyst / theanalyst.com).
 5. Ligas de transição (PT, NL; MLS depois) — opcional, ainda em soccer.

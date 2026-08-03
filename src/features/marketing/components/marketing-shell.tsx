@@ -1,14 +1,13 @@
 import Link from "next/link";
-import {
-  AmericanFootballIcon,
-  BasketballIcon,
-  SoccerBallIcon,
-} from "@/components/icons/sport-balls";
 import { APP_NAME } from "@/lib/config";
+import "@/app/landing.css";
 
-const NAV = [
-  { href: "/scouting", label: "Scouting" },
+const TICKER = [
+  { href: "/scouting", label: "Soccer" },
+  { href: "/scouting", label: "Basketball" },
+  { href: "/scouting", label: "Football" },
   { href: "/recruitment", label: "Recruitment" },
+  { href: "/compare", label: "Compare" },
   { href: "/methodology", label: "Methodology" },
 ] as const;
 
@@ -20,32 +19,22 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
       <header className="landing-header">
         <div className="landing-wrap landing-header-inner">
           <Link href="/" className="landing-logo">
-            <span className="landing-logo-marks" aria-hidden>
-              <span className="landing-logo-mark" data-landing-sport="SOCCER">
-                <SoccerBallIcon className="h-3.5 w-3.5" />
-              </span>
-              <span className="landing-logo-mark" data-landing-sport="BASKETBALL">
-                <BasketballIcon className="h-3.5 w-3.5" />
-              </span>
-              <span className="landing-logo-mark" data-landing-sport="AMERICAN_FOOTBALL">
-                <AmericanFootballIcon className="h-3.5 w-3.5" />
-              </span>
-            </span>
-            <span>{APP_NAME}</span>
+            <i aria-hidden />
+            {APP_NAME}
           </Link>
-          <nav className="landing-nav">
-            {NAV.map((item) => (
-              <Link key={item.href} href={item.href}>
+          <nav className="landing-ticker" aria-label="Sections">
+            {TICKER.map((item) => (
+              <Link key={item.label} href={item.href}>
                 {item.label}
               </Link>
             ))}
           </nav>
           <div className="landing-header-actions">
-            <Link href="/dashboard" className="landing-btn-nav">
-              Explore the product
+            <Link href="/scouting" className="landing-btn landing-btn-quiet">
+              Desk
             </Link>
-            <a href={ACCESS_MAIL} className="landing-btn-primary landing-btn-compact">
-              Get in touch
+            <a href={ACCESS_MAIL} className="landing-btn landing-btn-primary">
+              Contact
             </a>
           </div>
         </div>
@@ -56,16 +45,16 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
           <div>
             <p className="landing-footer-brand">{APP_NAME}</p>
             <p className="landing-footer-copy">
-              Multi-sport decision layer for scouts — soccer, basketball, and American football.
-              Explainable intelligence on season data. Not a live Opta feed.
+              Multi-sport scouting intelligence for soccer, basketball, and American football.
+              Honest sample limits. Not a live Opta feed.
             </p>
           </div>
           <div className="landing-footer-col">
-            <p>Scouting</p>
+            <p>Desk</p>
             <Link href="/scouting">Scouting</Link>
             <Link href="/recruitment">Recruitment</Link>
             <Link href="/compare">Compare</Link>
-            <Link href="/dashboard">Dashboard</Link>
+            <Link href="/shortlist">Shortlist</Link>
           </div>
           <div className="landing-footer-col">
             <p>Trust</p>
@@ -74,8 +63,10 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <div className="landing-wrap landing-footer-bottom">
-          <span>© {new Date().getFullYear()} {APP_NAME}</span>
-          <span>Prototype · honest sample limits</span>
+          <span>
+            © {new Date().getFullYear()} {APP_NAME}
+          </span>
+          <span>Sports intelligence</span>
         </div>
       </footer>
     </div>
