@@ -15,33 +15,35 @@ O nosso diferencial **não** é volume de dados inventados. É a combinação de
 - **Banco de Dados/ORM:** Supabase PostgreSQL + Prisma (RLS lockdown nas tabelas)
 - **Pipelines de Dados:** Scripts customizados (`npm run data:*`)
 
-## Freeze de dados (decisão 2026-08-02)
+## Sprint soccer live (até 14 ago 2026)
 
-Showcase soccer **congelado** para avançar Product UI (feedback: UI monocromática / pouco intuitiva / “cara de AI”):
+Europeus abrem ~14/08; Brasileirão **2026** já corre. Freeze de dados **reaberto** para dados reais.
 
-| Frente | KPI à data do freeze | Nota |
-|--------|----------------------|------|
-| Big5 | **~85%** ≥1 temporada produtiva | Meta aspiracional 90% — retomar em background nos resets API |
-| Brasileirão | **~81%** | ESPN 2025 esgotou; CSV/API depois |
+| Frente | Estado | Nota |
+|--------|--------|------|
+| Big5 | ~**85%** → meta **≥90%** | Low-quota diário (`data:backfill-soccer-seasons --low-quota`) |
+| Brasileirão 2026 | Boxscores ESPN ativos | `data:backfill-boxscores --slug=bra.1 --seasonYear=2026` |
+| Clubs / team stats | **ESPN + DB only** | StatsBomb open-data **não** alimentar Clubs (épocas stale) |
+| Desk UI | Editorial light shipped | Manter estável; não expandir BB/AF |
 
-Piso AND mantém-se (≥4 apps **e** ≥270′). Não reabrir ETL pesado em paralelo com redesign UI.
+Piso AND mantém-se (≥4 apps **e** ≥270′). Um ETL pesado de cada vez (P1017).
 
 ## Ordem estratégica
 
 | Fase | Foco | Estado |
 |------|------|--------|
-| **1** | Big5 showcase | **Freeze** ~85% |
-| **2** | Brasileirão | **Freeze** ~81% |
-| **3** | **Product UI (AGORA)** | Landing Fase 1 ✅ · **Desk Fase 2** (shadcn + analytics) — `docs/PRODUCT-UI-NORTH-STAR.md` |
-| **4** | Ligas de transição (PT, NL; MLS depois) | Depois da UI core |
-| **5** | Colleges + High School | Tese; ETL só com UI estável |
+| **1** | Big5 showcase live | **Ativo** — push 90% + prep 2026/27 |
+| **2** | Brasileirão 2026 | **Ativo** — cron/boxscores |
+| **3** | Product UI desk | Landing + desk editorial ✅ — polish só se não bloquear dados |
+| **4** | Ligas de transição (PT, NL; MLS depois) | Depois do go-live europeu |
+| **5** | Colleges + High School | Tese; ETL só com soccer estável |
 | **6** | BB/AF profundos · auth/piloto | Depois |
 
 ## O que fazer AGORA
 
-1. **Product UI — Fase 2 (Desk):** hub scouting / shell / perfil com densidade analytics + shadcn (`docs/PRODUCT-UI-NORTH-STAR.md`). Landing Fase 1: masthead sem fotos duplicadas; capítulos com foto; workflow/trust/close.
-2. Dados: só manutenção leve / low-quota no reset — **não** bloquear UI.
-3. Não paralelizar ETLs pesados com refactors visuais grandes.
+1. **Dados soccer:** BR 2026 live + Big5 low-quota → 90% + flip `CURRENT_SEASON` para 2026/27 antes de 14/08.
+2. **Sem StatsBomb** em Clubs/detail — só ESPN standings + `TeamStatistic`.
+3. Um ETL pesado de cada vez; commit por fatia.
 
 ## Regras de dados (ainda válidas)
 
