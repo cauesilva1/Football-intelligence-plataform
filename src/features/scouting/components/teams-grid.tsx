@@ -3,9 +3,7 @@ import { ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TeamCrest } from "@/components/teams/team-crest";
-import { StatsBombAttribution } from "@/features/scouting/components/statsbomb-attribution";
 import { queryTeamsDirectory, type TeamWithStatsBomb } from "@/features/scouting/queries/teams";
-import { isDbSource } from "@/lib/data-source";
 import { CURRENT_SEASON } from "@/lib/seasons";
 import type { Sport } from "@/lib/sport";
 
@@ -31,7 +29,7 @@ export async function TeamsGrid({
   page?: number;
 }) {
   const directory = await queryTeamsDirectory(competitionId, leagueKey, {
-    enrich: false,
+    enrich: true,
     page,
     pageSize: PAGE_SIZE,
   });
@@ -59,9 +57,7 @@ export async function TeamsGrid({
           {!isFranchiseSport && (
             <>
               {" · "}
-              {isDbSource()
-                ? `Cached data (${teams[0]?.stats?.season ?? teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`
-                : `Demo (${teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`}
+              {`Season data (${teams[0]?.stats?.season ?? teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`}
             </>
           )}
         </p>
@@ -196,7 +192,6 @@ export async function TeamsGrid({
             : "No clubs found for this filter. Check Tournaments for live league standings."}
         </p>
       ) : null}
-      {!isDbSource() && !isFranchiseSport ? <StatsBombAttribution /> : null}
     </div>
   );
 }

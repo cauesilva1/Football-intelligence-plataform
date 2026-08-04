@@ -3,11 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TeamCrest } from "@/components/teams/team-crest";
 import { TeamSquadTable } from "@/features/scouting/components/team-squad-table";
-import { StatsBombAttribution } from "@/features/scouting/components/statsbomb-attribution";
 import { BrasileiraoSeasonNotice } from "@/features/scouting/components/brasileirao-season-notice";
 import { TeamBackLink } from "@/features/scouting/components/team-back-link";
 import { queryTeamById } from "@/features/scouting/queries/teams";
-import { isDbSource } from "@/lib/data-source";
 import { isBrazilianLeague } from "@/lib/seasons";
 import {
   isBasketballTeamCompetition,
@@ -20,7 +18,15 @@ import { notFound } from "next/navigation";
 function buildStatCards(
   isBasketball: boolean,
   isAmericanFootball: boolean,
-  teamStats: { wins: number; draws: number; losses: number } | undefined,
+  teamStats:
+    | {
+        wins: number;
+        draws: number;
+        losses: number;
+        goalsFor?: number;
+        goalsAgainst?: number;
+      }
+    | undefined,
   sb: { wins: number; draws: number; losses: number; goalBalance: number } | undefined,
   theme: ReturnType<typeof getTeamTheme>,
   squadSize: number
@@ -39,14 +45,31 @@ function buildStatCards(
     ];
   }
 
-  const goalBalance = sb?.goalBalance ?? 0;
-  const balanceLabel = goalBalance > 0 ? `+${goalBalance}` : String(goalBalance);
+  const wins = sb?.wins ?? teamStats?.wins;
+  const draws = sb?.draws ?? teamStats?.draws;
+  const losses = sb?.losses ?? teamStats?.losses;
+  const goalBalance =
+    sb?.goalBalance ??
+    (teamStats?.goalsFor != null && teamStats?.goalsAgainst != null
+      ? teamStats.goalsFor - teamStats.goalsAgainst
+      : null);
+  const balanceLabel =
+    goalBalance == null ? "—" : goalBalance > 0 ? `+${goalBalance}` : String(goalBalance);
 
   return [
-    { label: "Wins", value: sb?.wins ?? "—", accent: theme.primaryColor },
-    { label: "Draws", value: sb?.draws ?? "—", accent: "#94a3b8" },
-    { label: "Losses", value: sb?.losses ?? "—", accent: "#f87171" },
-    { label: "Goal difference", value: sb ? balanceLabel : "—", accent: goalBalance >= 0 ? theme.secondaryColor : "#f87171" },
+    { label: "Wins", value: wins ?? "—", accent: theme.primaryColor },
+    { label: "Draws", value: draws ?? "—", accent: "#94a3b8" },
+    { label: "Losses", value: losses ?? "—", accent: "#f87171" },
+    {
+      label: "Goal difference",
+      value: balanceLabel,
+      accent:
+        goalBalance == null
+          ? "#94a3b8"
+          : goalBalance >= 0
+            ? theme.secondaryColor
+            : "#f87171",
+    },
   ];
 }
 
@@ -117,10 +140,16 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
                   ? ` · ${sb.wins}V–${sb.losses}D · ${sb.seasonLabel} (${sb.statsBombCompetitionName})`
                   : ""}
               </p>
-            ) : sb ? (
+            ) : sb || team.stats ? (
               <p className="text-xs text-white/50">
-                {sb.matchesPlayed} matches · {sb.goalsFor} goals scored · {sb.goalsAgainst} conceded ·{" "}
-                {sb.statsBombCompetitionName}
+                {(sb?.matchesPlayed ?? team.stats?.matchesPlayed) ?? 0} matches ·{" "}
+                {(sb?.goalsFor ?? team.stats?.goalsFor) ?? 0} goals scored ·{" "}
+                {(sb?.goalsAgainst ?? team.stats?.goalsAgainst) ?? 0} conceded
+                {sb?.statsBombCompetitionName
+                  ? ` · ${sb.statsBombCompetitionName}`
+                  : team.stats?.season
+                    ? ` · ${team.stats.season} · DB`
+                    : ""}
               </p>
             ) : null}
           </div>
@@ -180,7 +209,6 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
         </CardContent>
       </Card>
 
-      {!isDbSource() && !isBasketball && !isAmericanFootball ? <StatsBombAttribution /> : null}
     </div>
   );
 }

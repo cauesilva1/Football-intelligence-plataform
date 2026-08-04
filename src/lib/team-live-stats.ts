@@ -1,11 +1,6 @@
-import { isDbSource } from "@/lib/data-source";
 import { logSupabaseError } from "@/lib/db-errors";
 import { getEspnStatsForTeam, preloadEspnLeague } from "@/lib/crests/espn-standings";
 import { resolvePersistedSeasonLabel } from "@/lib/seasons";
-import {
-  getStatsBombStatsForTeam,
-  preloadStatsBombLeague,
-} from "@/lib/statsbomb/team-stats-service";
 import type { AggregatedTeamStats } from "@/lib/statsbomb/aggregate-team-stats";
 import type { Competition, TeamStatistic } from "@/types";
 
@@ -29,7 +24,7 @@ export function dbStatsToAggregated(
     matchesPlayed: stats.matchesPlayed,
     goalBalance: stats.goalsFor - stats.goalsAgainst,
     seasonLabel: stats.season,
-    statsBombCompetitionName: competitionName ? `${competitionName} · Supabase` : "Supabase",
+    statsBombCompetitionName: competitionName ? `${competitionName} · DB` : "DB",
   };
 }
 
@@ -54,14 +49,17 @@ export function toDisplayStatsFromAggregated(sb: AggregatedTeamStats): TeamStati
   };
 }
 
-async function resolveDbModeTeamStats(
+/**
+ * Real standings only: ESPN live table, then persisted TeamStatistic.
+ * StatsBomb open-data archives are intentionally not used (stale seasons).
+ */
+async function resolveLiveTeamStats(
   teamName: string,
   competitionName: string | undefined,
   dbStats?: TeamStatistic
 ): Promise<AggregatedTeamStats | null> {
   const expectedSeason = resolvePersistedSeasonLabel(competitionName);
 
-  // Read-only on list/detail pages — never upsert here (saturates Supabase pool).
   try {
     const espnStats = await getEspnStatsForTeam(teamName, competitionName);
     if (hasMeaningfulStats(espnStats)) {
@@ -82,7 +80,7 @@ async function resolveDbModeTeamStats(
   return null;
 }
 
-/** Attaches live standings for display only (no DB writes). */
+/** Attaches live standings for display only (no DB writes). ESPN + DB — never StatsBomb. */
 export async function attachTeamLiveStats<
   T extends { id?: string; name: string; competition?: Competition; stats?: TeamStatistic },
 >(teams: T[]): Promise<(T & { statsBomb?: AggregatedTeamStats; stats?: TeamStatistic })[]> {
@@ -90,41 +88,17 @@ export async function attachTeamLiveStats<
     teams.map((t) => t.competition?.name).filter((name): name is string => Boolean(name))
   );
 
-  if (isDbSource()) {
-    await Promise.all([...leagues].map((name) => preloadEspnLeague(name)));
-
-    // Sequential map would be too slow; ESPN lookups are memory-cached after preload.
-    return Promise.all(
-      teams.map(async (team) => {
-        const statsBomb = await resolveDbModeTeamStats(
-          team.name,
-          team.competition?.name,
-          team.stats
-        );
-
-        return {
-          ...team,
-          statsBomb: statsBomb ?? undefined,
-          stats: statsBomb ? toDisplayStatsFromAggregated(statsBomb) : team.stats,
-        };
-      })
-    );
-  }
-
-  await Promise.all([...leagues].map((name) => preloadStatsBombLeague(name)));
+  await Promise.all([...leagues].map((name) => preloadEspnLeague(name)));
 
   return Promise.all(
     teams.map(async (team) => {
-      let statsBomb = await getStatsBombStatsForTeam(team.name, team.competition?.name);
-
-      if (!statsBomb && team.stats) {
-        statsBomb = dbStatsToAggregated(team.name, team.stats, team.competition?.name);
-      }
+      const live = await resolveLiveTeamStats(team.name, team.competition?.name, team.stats);
 
       return {
         ...team,
-        statsBomb: statsBomb ?? undefined,
-        stats: statsBomb ? toDisplayStatsFromAggregated(statsBomb) : team.stats,
+        // Legacy field name kept for callers; value is ESPN/DB only.
+        statsBomb: live ?? undefined,
+        stats: live ? toDisplayStatsFromAggregated(live) : team.stats,
       };
     })
   );
