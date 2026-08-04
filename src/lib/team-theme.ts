@@ -156,6 +156,34 @@ function themeFromClub(ctx: string): TeamTheme | null {
   return null;
 }
 
+/** Relative luminance 0–1 for #RRGGBB (sRGB). Non-hex returns mid-gray. */
+function hexLuminance(hex: string): number {
+  const raw = hex.trim().replace("#", "");
+  if (!/^[0-9a-fA-F]{6}$/.test(raw)) return 0.45;
+  const channel = (i: number) => Number.parseInt(raw.slice(i, i + 2), 16) / 255;
+  const [r, g, b] = [channel(0), channel(2), channel(4)];
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/**
+ * Color safe on light editorial panels (radar stroke/fill, metric borders).
+ * White / near-white / pale gold club colors are skipped — they vanish on paper.
+ */
+export function chartSafeTeamColor(
+  theme: TeamTheme,
+  fallback = "#d6001c"
+): string {
+  const candidates = [theme.primaryColor, theme.secondaryColor, theme.accent];
+  for (const color of candidates) {
+    if (!color?.startsWith("#")) continue;
+    const L = hexLuminance(color);
+    // Near-white and pale yellows (e.g. Real Madrid gold) wash out at low fill opacity.
+    if (L > 0.62) continue;
+    return color;
+  }
+  return fallback;
+}
+
 /** Returns vivid club- or league-inspired theme for immersive UI. */
 export function getTeamTheme(
   competitionName?: string | null,

@@ -51,9 +51,11 @@ export const playerListInclude = {
     orderBy: [{ createdAt: "desc" as const }],
     take: 1,
   },
+  // BB/AF: keep a few recent seasons so empty upcoming stubs (e.g. 202627)
+  // do not hide the last productive campaign used for ratings / rankings.
   stats: {
     orderBy: [{ season: "desc" as const }],
-    take: 1,
+    take: 3,
   },
 } satisfies Prisma.PlayerInclude;
 
@@ -337,10 +339,25 @@ function slimListStats(stats: PlayerStatistic, sport: Player["sport"]): PlayerSt
     appearances: stats.appearances,
     minutesPlayed: stats.minutesPlayed,
     goals: stats.goals,
+    assists: stats.assists,
     xG: stats.xG,
+    xA: stats.xA,
+    shots: stats.shots,
+    shotsOnTarget: stats.shotsOnTarget,
+    keyPasses: stats.keyPasses,
+    dribblesCompleted: stats.dribblesCompleted,
+    tacklesWon: stats.tacklesWon,
+    interceptions: stats.interceptions,
+    passAccuracy: stats.passAccuracy,
+    duelsWonPct: stats.duelsWonPct,
     per90: {
-      ...base.per90,
       goals: stats.per90?.goals ?? 0,
+      assists: stats.per90?.assists ?? 0,
+      shots: stats.per90?.shots ?? 0,
+      keyPasses: stats.per90?.keyPasses ?? 0,
+      dribbles: stats.per90?.dribbles ?? 0,
+      tackles: stats.per90?.tackles ?? 0,
+      interceptions: stats.per90?.interceptions ?? 0,
     },
   };
 }

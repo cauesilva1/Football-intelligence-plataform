@@ -15,10 +15,10 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-colors",
+        "flex items-center gap-3 rounded-sm px-3 py-2 text-[13px] font-medium transition-colors",
         active
-          ? "bg-primary/12 text-primary"
-          : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground hover:bg-surface-muted/70 hover:text-foreground"
       )}
     >
       <Icon className={cn("h-[18px] w-[18px] shrink-0", active ? "text-primary" : "opacity-70")} />
@@ -31,17 +31,17 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border/60 bg-background/50 px-4 py-6 backdrop-blur-md md:flex">
+    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-background px-3 py-5 md:flex">
       <SidebarLogo />
 
-      <div className="mb-8">
+      <div className="mb-7">
         <SportSwitcher />
       </div>
 
-      <nav className="flex flex-1 flex-col gap-8 overflow-y-auto pr-0.5">
+      <nav className="flex flex-1 flex-col gap-7 overflow-y-auto pr-0.5">
         {NAV_GROUPS.map((group) => (
-          <div key={group.id} className="space-y-1.5">
-            <p className="px-3 text-2xs font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
+          <div key={group.id} className="space-y-1">
+            <p className="px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/75">
               {group.label}
             </p>
             <div className="flex flex-col gap-0.5">

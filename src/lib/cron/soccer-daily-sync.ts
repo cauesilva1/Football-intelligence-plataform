@@ -7,9 +7,13 @@ const LOG_PREFIX = "[cron-soccer-boxscores]";
 interface EspnScoreboardEvent {
   id: string;
   name?: string;
+  shortName?: string;
   status?: { type?: { name?: string; state?: string; completed?: boolean } };
   competitions?: Array<{
     status?: { type?: { name?: string; state?: string; completed?: boolean } };
+    competitors?: Array<{
+      team?: { displayName?: string; name?: string; shortDisplayName?: string };
+    }>;
   }>;
 }
 
@@ -97,7 +101,30 @@ export type SoccerSyncOptions = {
   seasonYear?: number;
   /** Create players missing from roster (default true). Prefer false on short prior-season windows. */
   createMissingPlayers?: boolean;
+  /**
+   * Only process finals whose ESPN label/competitors match any of these substrings
+   * (case-insensitive), e.g. ["Real Sociedad", "Real Madrid", "Bayern"].
+   */
+  teamNames?: string[];
 };
+
+function eventMatchesTeams(event: EspnScoreboardEvent, teamNames?: string[]): boolean {
+  if (!teamNames?.length) return true;
+  const needles = teamNames.map((t) => t.trim().toLowerCase()).filter(Boolean);
+  if (!needles.length) return true;
+
+  const haystacks: string[] = [];
+  if (event.name) haystacks.push(event.name);
+  if (event.shortName) haystacks.push(event.shortName);
+  for (const c of event.competitions?.[0]?.competitors ?? []) {
+    const t = c.team;
+    if (t?.displayName) haystacks.push(t.displayName);
+    if (t?.name) haystacks.push(t.name);
+    if (t?.shortDisplayName) haystacks.push(t.shortDisplayName);
+  }
+  const blob = haystacks.join(" | ").toLowerCase();
+  return needles.some((n) => blob.includes(n));
+}
 
 function leaguesForSync(espnSlug?: string) {
   const all = espnSoccerLeagues();
@@ -161,7 +188,9 @@ export async function runSoccerDailySync(
       continue;
     }
 
-    const finished = events.filter(isFinalEvent);
+    const finished = events.filter(isFinalEvent).filter((e) =>
+      eventMatchesTeams(e, options.teamNames)
+    );
     eventsFound += events.length;
     finalEvents += finished.length;
 
@@ -260,6 +289,8 @@ export async function runSoccerBoxscoreBackfill(options: {
   seasonYear?: number;
   /** Prefer false on short prior-season windows to avoid flooding rosters with stubs. */
   createMissingPlayers?: boolean;
+  /** Only process matches involving these team name substrings. */
+  teamNames?: string[];
 }): Promise<SoccerBackfillResult> {
   const days = Math.max(1, Math.min(options.days, 90));
   const end = options.endDate ?? new Date();
@@ -282,6 +313,7 @@ export async function runSoccerBoxscoreBackfill(options: {
       force: options.force,
       seasonYear: options.seasonYear,
       createMissingPlayers: options.createMissingPlayers,
+      teamNames: options.teamNames,
     });
     dayResults.push(result);
     processed += result.processed;

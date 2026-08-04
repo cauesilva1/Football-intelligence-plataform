@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { formatMarketValue, ratingColor } from "@/lib/utils";
+import { formatMarketValue, ratingColor, playerDisplayName } from "@/lib/utils";
 import type { Player } from "@/types";
 
 export function PlayersTable({ players }: { players: Player[] }) {
@@ -24,7 +24,7 @@ export function PlayersTable({ players }: { players: Player[] }) {
           <TableRow key={p.id}>
             <TableCell>
               <Link href={`/players/${p.id}`} className="font-medium text-foreground hover:text-primary">
-                {p.knownAs}
+                {playerDisplayName(p)}
               </Link>
               <p className="text-2xs text-muted-foreground">{p.nationality}</p>
             </TableCell>

@@ -59,6 +59,11 @@ function matchSportFromPath(path: string | null): Sport | null {
 function resolveSportSwitchHref(pathname: string | null, nextSport: Sport): string | null {
   if (!pathname) return null;
 
+  // Player / ranking / club deep links are sport-scoped identity pages — jump to the directory.
+  if (pathname.startsWith("/players/")) return "/players";
+  if (pathname.startsWith("/rankings/")) return "/rankings";
+  if (/^\/teams\/[^/]+/.test(pathname)) return "/teams";
+
   // Any match deep link is sport-keyed; leave unless the target sport owns this match.
   if (pathname.startsWith("/matches/")) {
     const matchSport = matchSportFromPath(pathname);
@@ -131,8 +136,14 @@ export function SportProvider({ children }: { children: ReactNode }) {
         typeof window !== "undefined" ? window.location.pathname : pathname;
       const redirectHref = resolveSportSwitchHref(path, sport);
 
-      // Leaving a match page: persist + hard navigate so soft routing cannot stall.
-      if (redirectHref && path.startsWith("/matches/")) {
+      // Leaving identity deep links: persist + navigate to the sport directory.
+      if (
+        redirectHref &&
+        (path.startsWith("/matches/") ||
+          path.startsWith("/players/") ||
+          path.startsWith("/rankings/") ||
+          /^\/teams\/[^/]+/.test(path))
+      ) {
         persistSportCookie(sport);
         applySportToDocument(sport);
         setCurrentSportState(sport);

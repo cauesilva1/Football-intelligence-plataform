@@ -7,6 +7,7 @@ import {
   AF_RATE_MIN_MINUTES,
   BB_RATE_MIN_GAMES,
   BB_RATE_MIN_MINUTES,
+  BEST_PERFORMER_MIN_RATING,
   OPPORTUNITY_MAX_AGE,
   OPPORTUNITY_MAX_CAP_HIT,
   OPPORTUNITY_MAX_VALUE,
@@ -120,7 +121,8 @@ export default function MethodologyPage() {
         <DataPanel title="Best Performers" density="dense">
           <p className="text-sm text-muted-foreground">{SCORE_DEFINITIONS.bestPerformers}</p>
           <p className="mt-2 text-xs text-muted-foreground">
-            Dashboard list uses rating ≥ 7.5 (and soccer minutes ≥ {SOCCER_RATE_MIN_MINUTES}).
+            Dashboard list uses rating ≥ {BEST_PERFORMER_MIN_RATING} (and soccer minutes ≥{" "}
+            {SOCCER_RATE_MIN_MINUTES}).
           </p>
         </DataPanel>
 

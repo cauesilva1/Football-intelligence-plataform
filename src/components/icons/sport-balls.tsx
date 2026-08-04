@@ -5,7 +5,7 @@ type IconProps = {
   title?: string;
 };
 
-/** Lightweight soccer ball mark — pure SVG, no assets. */
+/** Classic soccer ball — readable at 16px (not a crest/badge). */
 export function SoccerBallIcon({ className, title = "Soccer" }: IconProps) {
   return (
     <svg
@@ -18,17 +18,26 @@ export function SoccerBallIcon({ className, title = "Soccer" }: IconProps) {
     >
       {title ? <title>{title}</title> : null}
       <circle cx="12" cy="12" r="9.25" stroke="currentColor" strokeWidth="1.5" />
+      {/* Center pentagon */}
       <path
-        d="M12 7.1 14.6 9l-.95 3.1H10.35L9.4 9 12 7.1Z"
-        fill="currentColor"
-        fillOpacity="0.92"
-      />
-      <path
-        d="M12 7.1 9.4 9l-3.05-.55M12 7.1l2.6 1.9 3.05-.55M8.35 12.1 6.35 8.45M15.65 12.1l2-3.65M8.35 12.1l-1.1 3.35 2.85 2.05M15.65 12.1l1.1 3.35-2.85 2.05M10.1 17.5h3.8"
+        d="M12 9.15 13.85 10.5l-.7 2.2h-2.3l-.7-2.2L12 9.15Z"
         stroke="currentColor"
-        strokeWidth="1.25"
-        strokeLinecap="round"
+        strokeWidth="1.2"
         strokeLinejoin="round"
+      />
+      {/* Panel seams from pentagon to rim */}
+      <path
+        d="M12 9.15V5.4M13.85 10.5l3.35-1.85M13.15 12.7l2.95 2.55M10.85 12.7 7.9 15.25M10.15 10.5 6.8 8.65"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+      {/* Outer panel hints */}
+      <path
+        d="M8.35 6.9c1.1-.55 2.35-.9 3.65-.9s2.55.35 3.65.9M6.55 13.35c-.35 1.15-.35 2.4 0 3.55M17.45 13.35c.35 1.15.35 2.4 0 3.55"
+        stroke="currentColor"
+        strokeWidth="1.15"
+        strokeLinecap="round"
       />
     </svg>
   );

@@ -18,7 +18,7 @@ import { SortableTableHead } from "@/features/scouting/components/sortable-table
 import { ShortlistButton } from "@/features/shortlist/components/shortlist-button";
 import { computeXGPer90 } from "@/features/scouting/lib/filter-players";
 import { type ScoutingRoute } from "@/features/scouting/lib/filter-defaults";
-import { ratingColor, formatMarketValue, formatCapHit } from "@/lib/utils";
+import { ratingColor, formatMarketValue, formatCapHit, playerDisplayName } from "@/lib/utils";
 import { soccerValueScore } from "@/lib/scoring/soccer-rankings";
 import { capValueScore } from "@/lib/scoring";
 import { hasReliableSoccerSample } from "@/lib/metrics/per90";
@@ -84,7 +84,7 @@ function BasketballRosterTable({
             <TableCell>
               <div className="flex items-center gap-3">
                 <PlayerAvatar
-                  name={player.knownAs}
+                  name={playerDisplayName(player)}
                   fullName={player.fullName}
                   position={player.position}
                   competitionName={player.competitionName}
@@ -94,7 +94,7 @@ function BasketballRosterTable({
                 />
                 <div className="min-w-0">
                   <Link href={`/players/${player.id}`} className="truncate font-medium text-foreground hover:text-primary">
-                    {player.knownAs}
+                    {playerDisplayName(player)}
                   </Link>
                   <p className="truncate text-2xs text-muted-foreground">{player.nationality}</p>
                 </div>
@@ -213,7 +213,7 @@ function BasketballScoutingTable({
               <TableCell>
                 <div className="flex items-center gap-3">
                   <PlayerAvatar
-                    name={player.knownAs}
+                    name={playerDisplayName(player)}
                     fullName={player.fullName}
                     position={player.position}
                     competitionName={player.competitionName}
@@ -223,7 +223,7 @@ function BasketballScoutingTable({
                   />
                   <div className="min-w-0">
                     <Link href={`/players/${player.id}`} className="truncate font-medium text-foreground hover:text-primary">
-                      {player.knownAs}
+                      {playerDisplayName(player)}
                     </Link>
                     <p className="truncate text-2xs text-muted-foreground">{player.nationality}</p>
                   </div>
@@ -393,7 +393,7 @@ function SoccerScoutingTable({
               <TableCell>
                 <div className="flex items-center gap-3">
                   <PlayerAvatar
-                    name={player.knownAs}
+                    name={playerDisplayName(player)}
                     fullName={player.fullName}
                     position={player.position}
                     competitionName={player.competitionName}
@@ -403,7 +403,7 @@ function SoccerScoutingTable({
                   />
                   <div className="min-w-0">
                     <Link href={`/players/${player.id}`} className="truncate font-medium text-foreground hover:text-primary">
-                      {player.knownAs}
+                      {playerDisplayName(player)}
                     </Link>
                     <p className="truncate text-2xs text-muted-foreground">{player.nationality}</p>
                   </div>
@@ -584,7 +584,7 @@ function AmericanFootballScoutingTable({
               <TableCell>
                 <div className="flex items-center gap-3">
                   <PlayerAvatar
-                    name={player.knownAs}
+                    name={playerDisplayName(player)}
                     fullName={player.fullName}
                     position={player.position}
                     competitionName={player.competitionName}
@@ -594,7 +594,7 @@ function AmericanFootballScoutingTable({
                   />
                   <div className="min-w-0">
                     <Link href={`/players/${player.id}`} className="truncate font-medium text-foreground hover:text-primary">
-                      {player.knownAs}
+                      {playerDisplayName(player)}
                     </Link>
                     <p className="truncate text-2xs text-muted-foreground">{player.nationality}</p>
                   </div>

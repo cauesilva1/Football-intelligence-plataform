@@ -19,7 +19,7 @@ import { NationalTeamCrest } from "@/features/tournaments/components/national-te
 import { SummerLeagueBadge } from "@/components/ui/summer-league-badge";
 import { getTeamTheme } from "@/lib/team-theme";
 import { deriveDataDepthSnapshot } from "@/lib/intelligence/data-depth";
-import { cn, formatCapHit, formatMarketValue, formatPhysicalMetric, formatPreferredFoot, ratingColor } from "@/lib/utils";
+import { cn, formatCapHit, formatMarketValue, formatPhysicalMetric, formatPreferredFoot } from "@/lib/utils";
 import type { Player } from "@/types";
 
 export function PlayerProfileHeader({
@@ -151,7 +151,13 @@ export function PlayerProfileHeader({
           <div className="flex gap-6">
             <div>
               <div className="text-2xs font-medium uppercase tracking-wider text-white/60">Rating</div>
-              <div className={`font-display text-2xl font-bold tabular-nums ${ratingColor(stats.rating)}`}>
+              <div
+                className={cn(
+                  "font-display text-2xl font-bold tabular-nums",
+                  // ratingColor tokens are tuned for paper; on dark banners prefer accent/white.
+                  stats.rating >= 7 ? "text-emerald-300" : stats.rating >= 6 ? "text-amber-300" : "text-rose-300"
+                )}
+              >
                 {stats.rating.toFixed(1)}
               </div>
             </div>
@@ -179,17 +185,32 @@ export function PlayerProfileHeader({
             )}
           </div>
           <div className="flex flex-wrap gap-2">
-            <ShortlistButton playerId={player.id} />
-            <Link href={`/compare?playerA=${player.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <ShortlistButton playerId={player.id} tone="onDark" />
+            <Link
+              href={`/compare?playerA=${player.id}`}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "border-white/45 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+              )}
+            >
               <GitCompareArrows className="h-3.5 w-3.5" /> Compare
             </Link>
             <Link
               href={`/recruitment?replacePlayerId=${player.id}&sport=${sport}`}
-              className={buttonVariants({ variant: "outline", size: "sm" })}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "border-white/45 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+              )}
             >
               <UserRoundSearch className="h-3.5 w-3.5" /> Find replacements
             </Link>
-            <Link href={`/reports?playerId=${player.id}`} className={buttonVariants({ variant: "secondary", size: "sm" })}>
+            <Link
+              href={`/reports?playerId=${player.id}`}
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "sm" }),
+                "border-transparent bg-white text-zinc-900 hover:bg-white/90"
+              )}
+            >
               <FileText className="h-3.5 w-3.5" /> Generate brief
             </Link>
           </div>

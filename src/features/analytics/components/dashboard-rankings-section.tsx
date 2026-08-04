@@ -3,7 +3,7 @@ import { queryDashboardOverview } from "@/features/analytics/queries/dashboard";
 import { getPlayerRepository } from "@/features/scouting/repository";
 import { DataPanel } from "@/components/data/data-panel";
 import { Badge } from "@/components/ui/badge";
-import { ratingColor, formatMarketValue, formatCapHit } from "@/lib/utils";
+import { ratingColor, formatMarketValue, formatCapHit, playerDisplayName } from "@/lib/utils";
 import { getServerSport } from "@/lib/sport-server";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
 import { SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
@@ -67,7 +67,7 @@ function BasketballLeaderList({
             <div className="flex min-w-0 items-center gap-2.5">
               <span className="w-5 font-mono text-2xs tabular-nums text-muted-foreground">#{index + 1}</span>
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-foreground">{player.knownAs}</p>
+                <p className="truncate text-sm font-medium text-foreground">{playerDisplayName(player)}</p>
                 <p className="truncate text-xs text-muted-foreground">
                   {player.teamShortName ?? "—"} · {player.position}
                 </p>
@@ -112,7 +112,7 @@ function RatingList({
             <div className="flex min-w-0 items-center gap-2.5">
               <span className="w-5 font-mono text-2xs tabular-nums text-muted-foreground">#{index + 1}</span>
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-foreground">{player.knownAs}</p>
+                <p className="truncate text-sm font-medium text-foreground">{playerDisplayName(player)}</p>
                 <p className="truncate text-xs text-muted-foreground">
                   {player.teamShortName ?? "—"} · {player.age}y
                 </p>
@@ -151,7 +151,7 @@ function CapBargainList({
           <div className="flex min-w-0 items-center gap-2.5">
             <span className="w-5 font-mono text-2xs tabular-nums text-muted-foreground">#{index + 1}</span>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-foreground">{player.knownAs}</p>
+              <p className="truncate text-sm font-medium text-foreground">{playerDisplayName(player)}</p>
               <p className="truncate text-xs text-muted-foreground">
                 {player.teamShortName ?? "—"} · {player.age}y · {player.currentSeasonStats.rating.toFixed(1)}
               </p>
@@ -189,7 +189,7 @@ function SoccerRankingList({
           <div className="flex min-w-0 items-center gap-2.5">
             <span className="w-5 font-mono text-2xs tabular-nums text-muted-foreground">#{index + 1}</span>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-foreground">{player.knownAs}</p>
+              <p className="truncate text-sm font-medium text-foreground">{playerDisplayName(player)}</p>
               <p className="truncate text-xs text-muted-foreground">
                 {player.teamShortName ?? "—"} · {player.age}y
               </p>
@@ -232,7 +232,7 @@ export async function DashboardRankingsSection() {
             <RatingList
               players={overview.topProspects}
               sport="BASKETBALL"
-              emptyMessage="No U23 prospects with a rating ≥ 7.0 in a season with data (e.g. 2025/26)."
+              emptyMessage="No U23 prospects with rating ≥ 6.25 and a reliable sample (≥ 10 games / 200') yet."
             />
           </DataPanel>
           <DataPanel
@@ -243,7 +243,7 @@ export async function DashboardRankingsSection() {
             <RatingList
               players={overview.bestPerformers}
               sport="BASKETBALL"
-            emptyMessage="No performers with a rating ≥ 7.5 — check that the season with actual stats is synced."
+              emptyMessage="No performers with rating ≥ 6.35 and a reliable sample (≥ 10 games / 200') yet."
             />
           </DataPanel>
           <DataPanel

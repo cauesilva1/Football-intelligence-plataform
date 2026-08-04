@@ -14,10 +14,13 @@ import { cn } from "@/lib/utils";
 export function ShortlistButton({
   playerId,
   compact = false,
+  tone = "default",
 }: {
   playerId: string;
   /** Icon-only control for dense tables. */
   compact?: boolean;
+  /** Use on dark club banners so outline/secondary stay readable. */
+  tone?: "default" | "onDark";
 }) {
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -33,6 +36,8 @@ export function ShortlistButton({
     ? "Saved to workspace — click to remove"
     : "Save to My Players";
 
+  const onDark = tone === "onDark";
+
   return (
     <div className={cn("inline-flex items-center gap-1", !compact && "flex-col items-stretch sm:flex-row sm:items-center")}>
       <Button
@@ -42,7 +47,15 @@ export function ShortlistButton({
         disabled={isPending}
         title={saveLabel}
         aria-label={saveLabel}
-        className={cn(compact && "h-7 w-7")}
+        className={cn(
+          compact && "h-7 w-7",
+          onDark &&
+            !saved &&
+            "border-white/45 bg-white/10 text-white hover:bg-white/20 hover:text-white",
+          onDark &&
+            saved &&
+            "border-transparent bg-white text-zinc-900 hover:bg-white/90"
+        )}
         onClick={() => {
           startTransition(() => {
             const next = toggleShortlistId(playerId);
@@ -65,7 +78,12 @@ export function ShortlistButton({
       {saved && !compact ? (
         <Link
           href="/shortlist"
-          className="text-2xs text-muted-foreground underline-offset-2 hover:text-primary hover:underline"
+          className={cn(
+            "text-2xs underline-offset-2 hover:underline",
+            onDark
+              ? "text-white/70 hover:text-white"
+              : "text-muted-foreground hover:text-primary"
+          )}
         >
           My Players
         </Link>

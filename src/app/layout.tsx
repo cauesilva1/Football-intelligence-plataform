@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 /** Default sport on HTML only — cookie is read on the client so this layout stays cacheable. */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark" data-sport="SOCCER" suppressHydrationWarning>
+    <html lang="en" data-sport="SOCCER" suppressHydrationWarning>
       <body
         className={`${display.variable} ${body.variable} ${mono.variable} bg-background font-body text-sm text-foreground antialiased`}
         suppressHydrationWarning

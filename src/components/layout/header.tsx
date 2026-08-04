@@ -7,35 +7,31 @@ import { useSport } from "@/context/sport-context";
 import { sportLabel } from "@/lib/sport";
 import { sportTheme } from "@/lib/sport-theme";
 import { OmniScoutMark } from "@/components/icons/sport-balls";
-import { useIsMounted } from "@/hooks/use-is-mounted";
 import { SportSwitcher } from "./sport-switcher";
 import { MobileHeaderMenu } from "./mobile-header-menu";
 
 export function Header({ subtitle }: { subtitle?: string }) {
   const { currentSport } = useSport();
-  const mounted = useIsMounted();
   const theme = sportTheme(currentSport);
 
   return (
-    <header className="relative sticky top-0 z-10 flex shrink-0 items-center border-b border-border/80 bg-background/70 px-3 py-2.5 backdrop-blur-md md:px-8 md:py-4">
+    <header className="sticky top-0 z-10 flex shrink-0 items-center border-b border-border bg-background/95 px-3 py-2.5 md:px-8 md:py-3">
       <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-4">
         <Link href="/dashboard" className="shrink-0 md:hidden" aria-label={appConfig.name}>
           <OmniScoutMark sport={currentSport} />
         </Link>
 
         <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-center gap-2">
-            <p className="truncate font-display text-base font-semibold text-foreground md:text-lg">
-              {subtitle ?? "Overview"}
+          <div className="flex min-w-0 items-center gap-2.5">
+            <p className="truncate font-display text-base font-semibold tracking-tight text-foreground md:text-lg">
+              {subtitle ?? "Desk"}
             </p>
             <Badge
               variant="outline"
-              className="hidden border-primary/30 bg-primary/10 text-primary sm:inline-flex"
+              className="hidden rounded-sm border-border px-1.5 py-0 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:inline-flex"
+              style={{ color: "hsl(var(--sport))", borderColor: "hsl(var(--sport) / 0.35)" }}
             >
               {sportLabel(currentSport)}
-            </Badge>
-            <Badge variant="secondary" className="hidden sm:inline-flex">
-              {mounted ? (appConfig.dataSource === "mock" ? "Demo" : "Supabase") : "—"}
             </Badge>
           </div>
           <p className="truncate text-2xs text-muted-foreground md:text-xs">

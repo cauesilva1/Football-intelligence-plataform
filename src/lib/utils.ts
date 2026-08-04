@@ -35,6 +35,28 @@ export function formatPreferredFoot(foot: string): string {
   return "Unknown";
 }
 
+/**
+ * List/table label. `knownAs` is often a surname-only feed slug ("Martín", "Dijk");
+ * prefer fullName when it carries a clearer identity.
+ */
+export function playerDisplayName(player: {
+  knownAs?: string | null;
+  fullName?: string | null;
+}): string {
+  const known = player.knownAs?.trim() ?? "";
+  const full = player.fullName?.trim() ?? "";
+  if (!full) return known || "—";
+  if (!known) return full;
+  // Slug-style knownAs (hyphenated) → prefer fullName
+  if (known.includes("-") && full.includes(" ")) return full;
+  // Single-token knownAs that is a suffix of fullName → use fullName
+  const knownTokens = known.split(/\s+/).filter(Boolean);
+  if (knownTokens.length === 1 && full.toLowerCase().includes(known.toLowerCase()) && full !== known) {
+    return full;
+  }
+  return known;
+}
+
 export function formatMinutes(minutes: number): string {
   return `${minutes.toLocaleString("en-US")}'`;
 }
@@ -46,7 +68,7 @@ export function calcAge(dateOfBirth: string): number {
 }
 
 export function ratingColor(rating: number): string {
-  if (rating >= 8) return "text-pitch-400";
+  if (rating >= 8) return "text-pitch-600";
   if (rating >= 7) return "text-signal-azure";
   if (rating >= 6) return "text-signal-amber";
   return "text-signal-rose";

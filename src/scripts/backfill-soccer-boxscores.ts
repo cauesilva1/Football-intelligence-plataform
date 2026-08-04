@@ -5,6 +5,8 @@
  *   npm run data:backfill-boxscores -- --days=14
  *   npm run data:backfill-boxscores -- --days=21 --slug=ger.1
  *   npm run data:backfill-boxscores -- --days=30 --slug=ger.1 --end=2026-05-17
+ *   npm run data:backfill-boxscores -- --days=40 --slug=bra.1 --end=2025-12-08 --seasonYear=2025 --no-create
+ *   npm run data:backfill-boxscores -- --days=40 --slug=esp.1 --end=2025-05-25 --seasonYear=2024 --no-create --teams="Real Sociedad,Real Madrid"
  */
 import fs from "fs";
 import path from "path";
@@ -55,6 +57,21 @@ async function main(): Promise<void> {
   const days = Number(readFlag(args, "days") ?? "14");
   const slug = readFlag(args, "slug");
   const endDate = parseEndDate(readFlag(args, "end"));
+  const seasonYearRaw = readFlag(args, "seasonYear");
+  const seasonYear = seasonYearRaw ? Number(seasonYearRaw) : undefined;
+  // Prior-season / depth fills: do not invent stubs unless --create.
+  const createMissingPlayers = args.includes("--create")
+    ? true
+    : args.includes("--no-create")
+      ? false
+      : seasonYear == null;
+  const teamsRaw = readFlag(args, "teams");
+  const teamNames = teamsRaw
+    ? teamsRaw
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : undefined;
 
   if (!process.env.DATABASE_URL?.trim()) {
     throw new Error("DATABASE_URL ausente. Configure .env antes de executar o backfill.");
@@ -63,17 +80,27 @@ async function main(): Promise<void> {
   if (!Number.isFinite(days) || days < 1) {
     throw new Error("Use --days=N com N entre 1 e 90.");
   }
+  if (seasonYearRaw && !Number.isFinite(seasonYear)) {
+    throw new Error("Use --seasonYear=YYYY");
+  }
 
   console.log(
     `[backfill-boxscores] days=${days}${slug ? ` · slug=${slug}` : " · all soccer leagues"}${
       endDate ? ` · end=${endDate.toISOString().slice(0, 10)}` : ""
-    }...`
+    }${seasonYear != null ? ` · seasonYear=${seasonYear}` : ""}${
+      createMissingPlayers ? "" : " · no-create"
+    }${teamNames?.length ? ` · teams=${teamNames.join("|")}` : ""}...`
   );
+
+  process.env.PRISMA_LOG_QUIET = process.env.PRISMA_LOG_QUIET ?? "1";
 
   const result = await runSoccerBoxscoreBackfill({
     days,
     espnSlug: slug,
     endDate,
+    seasonYear,
+    createMissingPlayers,
+    teamNames,
   });
 
   console.log(

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
 import { getPositionGlossaryDescription } from "@/lib/positions";
-import { formatCapHit, ratingColor } from "@/lib/utils";
+import { formatCapHit, playerDisplayName, ratingColor } from "@/lib/utils";
 import type { Player } from "@/types";
 import type { Sport } from "@/lib/sport";
 
@@ -93,7 +93,7 @@ export function TeamSquadTable({
                 <TableCell>
                   <Link href={`/players/${player.id}`} className="flex items-center gap-3 hover:text-primary">
                     <PlayerAvatar
-                      name={player.knownAs}
+                      name={playerDisplayName(player)}
                       fullName={player.fullName}
                       position={player.position}
                       competitionName={competitionName}
@@ -101,7 +101,7 @@ export function TeamSquadTable({
                       photoPolicy="initials"
                       size="sm"
                     />
-                    <span className="font-medium text-foreground">{player.knownAs}</span>
+                    <span className="font-medium text-foreground">{playerDisplayName(player)}</span>
                   </Link>
                 </TableCell>
                 <TableCell>

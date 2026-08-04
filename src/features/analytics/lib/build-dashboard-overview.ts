@@ -14,6 +14,7 @@ import {
   OPPORTUNITY_MAX_VALUE,
   OPPORTUNITY_MIN_RATING,
   PROSPECT_MIN_RATING,
+  BEST_PERFORMER_MIN_RATING,
   SOCCER_RATE_MIN_MINUTES,
   SOCCER_RATE_SOFT_CAP,
   U23_MAX_AGE,
@@ -26,21 +27,22 @@ import type { Competition, DashboardInsight, DashboardOverview, Player, Team } f
 const SOCCER_POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"];
 
 function hasReliableSample(player: Player, sport: Sport): boolean {
-  const s = player.currentSeasonStats;
   if (sport === "BASKETBALL") {
+    const s = pickBasketballDisplayStats(player);
     return hasReliableBasketballSample({
       matchesPlayed: s.appearances,
       minutesPlayed: s.minutesPlayed,
     });
   }
   if (sport === "AMERICAN_FOOTBALL") {
+    const s = player.currentSeasonStats;
     return hasReliableFootballSample({
       matchesPlayed: s.appearances,
       minutesPlayed: s.minutesPlayed,
     });
   }
   if (sport === "SOCCER") {
-    return hasReliableSoccerSample(s.minutesPlayed);
+    return hasReliableSoccerSample(player.currentSeasonStats.minutesPlayed);
   }
   return true;
 }
@@ -104,17 +106,17 @@ function prospectHref(sport: Sport): string {
   if (sport === "AMERICAN_FOOTBALL") {
     return `/scouting?maxAge=23&minRating=7&minMinutes=${AF_RATE_MIN_MINUTES}`;
   }
-  return `/scouting?maxAge=23&minRating=7&minMinutes=${SOCCER_RATE_MIN_MINUTES}`;
+  return `/scouting?maxAge=23&minRating=${PROSPECT_MIN_RATING}&minMinutes=${SOCCER_RATE_MIN_MINUTES}`;
 }
 
 function marketHref(sport: Sport): string {
   if (sport === "BASKETBALL") {
-    return `/scouting?maxAge=25&minRating=7.2&minMinutes=${BB_RATE_MIN_MINUTES}&maxCapHit=${OPPORTUNITY_MAX_CAP_HIT}&sortBy=valueScore`;
+    return `/scouting?maxAge=25&minRating=${OPPORTUNITY_MIN_RATING}&minMinutes=${BB_RATE_MIN_MINUTES}&maxCapHit=${OPPORTUNITY_MAX_CAP_HIT}&sortBy=valueScore`;
   }
   if (sport === "AMERICAN_FOOTBALL") {
-    return `/scouting?maxAge=25&minRating=7.2&minMinutes=${AF_RATE_MIN_MINUTES}&maxCapHit=${OPPORTUNITY_MAX_CAP_HIT}&sortBy=valueScore`;
+    return `/scouting?maxAge=25&minRating=${OPPORTUNITY_MIN_RATING}&minMinutes=${AF_RATE_MIN_MINUTES}&maxCapHit=${OPPORTUNITY_MAX_CAP_HIT}&sortBy=valueScore`;
   }
-  return `/scouting?maxAge=25&minRating=7.2&minMinutes=${SOCCER_RATE_MIN_MINUTES}&maxMarketValue=${OPPORTUNITY_MAX_VALUE}&sortBy=valueScore`;
+  return `/scouting?maxAge=25&minRating=${OPPORTUNITY_MIN_RATING}&minMinutes=${SOCCER_RATE_MIN_MINUTES}&maxMarketValue=${OPPORTUNITY_MAX_VALUE}&sortBy=valueScore`;
 }
 
 function buildInsights(
@@ -151,7 +153,7 @@ function buildInsights(
       description:
         sport === "BASKETBALL" || sport === "AMERICAN_FOOTBALL"
           ? `Rating ≥ ${OPPORTUNITY_MIN_RATING}, age ≤ ${OPPORTUNITY_MAX_AGE}, Cap Hit ≤ $5M, reliable sample.`
-          : `Rating ≥ 7.2, age ≤ 25, value ≤ €8M, and ≥ ${SOCCER_RATE_MIN_MINUTES}' played.`,
+          : `Rating ≥ ${OPPORTUNITY_MIN_RATING}, age ≤ 25, value ≤ €8M, and ≥ ${SOCCER_RATE_MIN_MINUTES}' played.`,
       href: marketHref(sport),
     });
   }
@@ -251,7 +253,7 @@ export function buildDashboardOverview(
 
   const bestPerformers = [...players]
     .filter((p) => {
-      if (playerEffectiveRating(p, sport) < 7.5) return false;
+      if (playerEffectiveRating(p, sport) < BEST_PERFORMER_MIN_RATING) return false;
       if (!hasReliableSample(p, sport)) return false;
       return true;
     })
@@ -259,7 +261,7 @@ export function buildDashboardOverview(
     .slice(0, 5);
 
   const bestPerformersCount = players.filter((p) => {
-    if (playerEffectiveRating(p, sport) < 7.5) return false;
+    if (playerEffectiveRating(p, sport) < BEST_PERFORMER_MIN_RATING) return false;
     if (!hasReliableSample(p, sport)) return false;
     return true;
   }).length;

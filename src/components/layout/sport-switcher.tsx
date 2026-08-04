@@ -17,7 +17,14 @@ function matchSportFromPath(path: string | null): Sport | null {
   return raw ? resolveSportFromMatchId(raw) : null;
 }
 
-export function SportSwitcher({ compact = false }: { compact?: boolean }) {
+export function SportSwitcher({
+  compact = false,
+  layout = "grid",
+}: {
+  compact?: boolean;
+  /** `rail` = vertical stack for editorial sidebar (labels fade with collapse). */
+  layout?: "grid" | "rail";
+}) {
   const { currentSport, setSport, adoptSport } = useSport();
   const pathname = usePathname();
   const mounted = useIsMounted();
@@ -27,6 +34,8 @@ export function SportSwitcher({ compact = false }: { compact?: boolean }) {
   const activeIndex = Math.max(0, OPTIONS.indexOf(currentSport));
   const [popSport, setPopSport] = useState<Sport | null>(null);
   const prevSport = useRef(currentSport);
+  const rail = layout === "rail";
+  const iconsOnly = rail || compact;
 
   useEffect(() => {
     if (prevSport.current === currentSport) return;
@@ -38,35 +47,34 @@ export function SportSwitcher({ compact = false }: { compact?: boolean }) {
 
   const tabClass = (value: Sport, active: boolean) =>
     cn(
-      "relative z-[1] flex items-center justify-center gap-1.5 rounded-lg text-2xs font-medium transition-colors duration-200",
-      compact ? "h-8 w-8 px-0" : "min-w-0 flex-col gap-1 px-1 py-2",
+      "relative z-[1] flex items-center gap-1.5 text-2xs font-medium transition-[color,background-color,padding,gap,min-height,justify-content] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+      rail && "editorial-sport-rail editorial-sport-compact min-h-[2.15rem] w-full justify-start rounded-sm px-2.5 py-1.5",
+      compact && !rail && "h-8 w-8 justify-center rounded-sm px-0",
+      !iconsOnly && "min-w-0 flex-col justify-center gap-1 rounded-sm px-1 py-2",
       active
-        ? cn(
-            "text-primary",
-            compact &&
-              "bg-primary/18 shadow-[0_0_16px_-4px_hsl(var(--sport-glow)/0.7)] ring-1 ring-primary/30"
-          )
-        : cn(
-            "text-muted-foreground hover:text-foreground",
-            value === "SOCCER" && "hover:text-[hsl(142_71%_45%)]",
-            value === "BASKETBALL" && "hover:text-[hsl(24_95%_53%)]",
-            value === "AMERICAN_FOOTBALL" && "hover:text-[hsl(214_88%_52%)]"
-          )
+        ? rail
+          ? "is-active text-[#d6001c] bg-[rgba(214,0,28,0.06)]"
+          : compact
+            ? "text-[hsl(var(--sport))] bg-[hsl(var(--sport)/0.1)] ring-1 ring-[hsl(var(--sport)/0.3)]"
+            : "text-[hsl(var(--sport))]"
+        : "text-muted-foreground hover:text-foreground hover:bg-[#f3f4f6]"
     );
 
   return (
     <div
       className={cn(
-        "relative rounded-xl border border-border/80 bg-card/70 p-1 shadow-[inset_0_1px_0_0_hsl(var(--foreground)/0.04)] backdrop-blur-sm",
-        compact ? "flex w-auto" : "grid w-full grid-cols-3 gap-0.5"
+        "relative",
+        rail && "editorial-sport-rail-list flex w-full flex-col gap-0.5",
+        compact && !rail && "flex w-auto gap-0.5 rounded-sm border border-border bg-card p-1",
+        !iconsOnly && "grid w-full grid-cols-3 gap-0.5 rounded-sm border border-border bg-card p-1"
       )}
       role="tablist"
       aria-label="Switch sport"
     >
-      {!compact && mounted ? (
+      {!iconsOnly && mounted ? (
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-y-1 z-0 w-[calc((100%-0.5rem-0.25rem)/3)] rounded-lg bg-primary/18 shadow-[0_0_20px_-4px_hsl(var(--sport-glow)/0.65)] ring-1 ring-primary/30 transition-[left] duration-350 ease-out"
+          className="pointer-events-none absolute inset-y-1 z-0 w-[calc((100%-0.5rem-0.25rem)/3)] rounded-sm bg-[hsl(var(--sport)/0.1)] ring-1 ring-[hsl(var(--sport)/0.22)] transition-[left] duration-350 ease-out"
           style={{
             left: `calc(0.25rem + ${activeIndex} * ((100% - 0.5rem - 0.25rem) / 3 + 0.125rem))`,
           }}
@@ -76,7 +84,6 @@ export function SportSwitcher({ compact = false }: { compact?: boolean }) {
       {OPTIONS.map((value) => {
         const { label, shortLabel, icon: Icon } = SPORT_THEME[value];
         const active = currentSport === value;
-        // Match pages are sport-specific — leave when picking a different sport.
         const onMatchPage = (path ?? "").startsWith("/matches/");
         const lockedSport = matchSport ?? currentSport;
         const leaveMatch = onMatchPage && value !== lockedSport;
@@ -85,25 +92,33 @@ export function SportSwitcher({ compact = false }: { compact?: boolean }) {
           <>
             <Icon
               className={cn(
-                "shrink-0 transition-transform duration-200",
-                compact ? "h-4 w-4" : "h-4 w-4",
+                "editorial-side-icon shrink-0 transition-transform duration-200",
                 active && popSport === value && "sport-switcher-icon-active"
               )}
             />
-            {!compact && <span className="truncate leading-none">{shortLabel}</span>}
+            {rail ? (
+              <span className="editorial-side-label truncate leading-none">{shortLabel}</span>
+            ) : !iconsOnly ? (
+              <span className="truncate leading-none">{shortLabel}</span>
+            ) : null}
             <span className="sr-only">{label}</span>
           </>
         );
+
+        const sharedProps = {
+          role: "tab" as const,
+          "aria-selected": active,
+          "data-label": label,
+          title: label,
+          className: cn(tabClass(value, active), rail && "editorial-sport-compact"),
+        };
 
         if (leaveMatch) {
           return (
             <a
               key={value}
+              {...sharedProps}
               href="/tournaments"
-              role="tab"
-              aria-selected={active}
-              title={label}
-              className={tabClass(value, active)}
               onClick={() => {
                 adoptSport(value);
               }}
@@ -114,15 +129,7 @@ export function SportSwitcher({ compact = false }: { compact?: boolean }) {
         }
 
         return (
-          <button
-            key={value}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            title={label}
-            onClick={() => setSport(value)}
-            className={tabClass(value, active)}
-          >
+          <button key={value} {...sharedProps} type="button" onClick={() => setSport(value)}>
             {content}
           </button>
         );

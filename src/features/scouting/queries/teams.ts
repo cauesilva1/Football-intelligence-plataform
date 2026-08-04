@@ -123,7 +123,7 @@ export const queryTeamsDirectory = cache(
         competitionIds,
         take: pageSize,
         skip: (page - 1) * pageSize,
-        includeStats: shouldEnrich || sport === "BASKETBALL" || sport === "AMERICAN_FOOTBALL",
+        includeStats: true,
       })
     );
 

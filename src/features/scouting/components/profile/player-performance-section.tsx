@@ -24,7 +24,7 @@ import {
   BB_RATE_MIN_MINUTES,
   SOCCER_RATE_MIN_MINUTES,
 } from "@/lib/scoring";
-import { getTeamTheme } from "@/lib/team-theme";
+import { getTeamTheme, chartSafeTeamColor } from "@/lib/team-theme";
 import { ratingColor } from "@/lib/utils";
 import { getSportConfig } from "@/lib/sport-registry";
 import type { Player } from "@/types";
@@ -41,6 +41,7 @@ function SoccerPerformanceSection({
   theme: ReturnType<typeof getTeamTheme>;
 }) {
   const radarMetrics = [...getSportConfig("SOCCER").ui.radarMetrics];
+  const ink = chartSafeTeamColor(theme);
   const smallSample = s.minutesPlayed > 0 && s.minutesPlayed < SOCCER_RATE_MIN_MINUTES;
   const scorecard = buildPositionScorecard(player.position, s);
   const ratingMetric = scorecard.metrics.find((m) => m.key === "rating");
@@ -52,7 +53,7 @@ function SoccerPerformanceSection({
   return (
     <>
       {smallSample ? (
-        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90">
+        <p className="rounded-lg border border-amber-600/25 bg-amber-50 px-3 py-2 text-xs text-amber-900">
           Small sample ({s.minutesPlayed}&apos;). Showing season totals until ≥ {SOCCER_RATE_MIN_MINUTES}
           &apos; — per-90 rates and rating stay provisional.
         </p>
@@ -63,13 +64,13 @@ function SoccerPerformanceSection({
         description={`${soccerPositionGroupLabel(scorecard.group)} pack for ${player.position} — role-aware metrics.`}
         density="dense"
         className="border"
-        style={{ borderColor: `${theme.primaryColor}33` }}
+        style={{ borderColor: `${ink}33` }}
       >
         {/* Asymmetric band: rating anchors the eye; role rates read after it. */}
         <div className="grid gap-3 lg:grid-cols-[minmax(0,15rem)_1fr]">
           <div
             className="flex flex-col rounded-lg border bg-surface-muted/40 px-4 py-3"
-            style={{ borderColor: `${theme.primaryColor}44` }}
+            style={{ borderColor: `${ink}44` }}
           >
             <span className="text-2xs uppercase leading-snug tracking-wider text-muted-foreground">
               Season rating
@@ -78,11 +79,11 @@ function SoccerPerformanceSection({
               {s.rating.toFixed(1)}
             </div>
             {ratingMetric?.hint ? (
-              <p className="mt-0.5 text-2xs text-amber-200/80">{ratingMetric.hint}</p>
+              <p className="mt-0.5 text-2xs text-amber-800/90">{ratingMetric.hint}</p>
             ) : null}
             <dl
               className="mt-auto grid grid-cols-2 gap-2 border-t pt-3"
-              style={{ borderColor: `${theme.primaryColor}22` }}
+              style={{ borderColor: `${ink}22` }}
             >
               <div>
                 <dt className="text-2xs uppercase tracking-wider text-muted-foreground">Minutes</dt>
@@ -104,7 +105,7 @@ function SoccerPerformanceSection({
               <div
                 key={m.key}
                 className="flex min-h-[4.5rem] flex-col rounded-lg border bg-surface-muted/40 px-3 py-2.5"
-                style={{ borderColor: `${theme.primaryColor}33` }}
+                style={{ borderColor: `${ink}33` }}
               >
                 <span className="line-clamp-2 min-h-[1.75rem] text-2xs uppercase leading-snug tracking-wider text-muted-foreground">
                   {m.label}
@@ -112,7 +113,7 @@ function SoccerPerformanceSection({
                 <div className="mt-auto font-mono text-base font-semibold tabular-nums text-foreground">
                   {m.value}
                 </div>
-                {m.hint ? <p className="mt-0.5 text-2xs text-amber-200/80">{m.hint}</p> : null}
+                {m.hint ? <p className="mt-0.5 text-2xs text-amber-800/90">{m.hint}</p> : null}
               </div>
             ))}
           </div>
@@ -125,7 +126,7 @@ function SoccerPerformanceSection({
           description="Rating, goals/90, and xG/90 aggregated by season."
           density="dense"
           className="border"
-          style={{ borderColor: `${theme.primaryColor}33` }}
+          style={{ borderColor: `${ink}33` }}
         >
           <LazyPlayerSeasonChart data={timeline} sport="SOCCER" />
         </DataPanel>
@@ -135,11 +136,11 @@ function SoccerPerformanceSection({
           description={`Normalized per-90 dimensions — season ${player.selectedSeason}.`}
           density="dense"
           className="border"
-          style={{ borderColor: `${theme.primaryColor}33` }}
+          style={{ borderColor: `${ink}33` }}
         >
           <LazyStatRadarChart
             metrics={radarMetrics}
-            series={[{ name: player.knownAs, color: theme.primaryColor, values: toRadarProfile(s) }]}
+            series={[{ name: player.knownAs, color: ink, values: toRadarProfile(s) }]}
           />
         </DataPanel>
       </div>
@@ -149,14 +150,14 @@ function SoccerPerformanceSection({
         description={`${soccerPositionGroupLabel(scorecard.group)}-first order for ${player.selectedSeason} — season totals and per-90 rates.`}
         density="dense"
         className="border"
-        style={{ borderColor: `${theme.primaryColor}33` }}
+        style={{ borderColor: `${ink}33` }}
       >
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {detailedMetrics.map((item) => (
             <div
               key={item.label}
               className="rounded-lg border bg-surface-muted/40 px-3 py-2.5"
-              style={{ borderColor: `${theme.primaryColor}33` }}
+              style={{ borderColor: `${ink}33` }}
             >
               {"glossary" in item && item.glossary ? (
                 <GlossaryTooltip
@@ -318,6 +319,7 @@ function BasketballPerformanceSection({
     assists: s.assists ?? 0,
   };
   const radarMetrics = [...getSportConfig("BASKETBALL").ui.radarMetrics];
+  const ink = chartSafeTeamColor(theme);
   const smallSample =
     s.appearances > 0 &&
     (s.appearances < BB_RATE_MIN_GAMES || s.minutesPlayed < BB_RATE_MIN_MINUTES);
@@ -330,7 +332,7 @@ function BasketballPerformanceSection({
   return (
     <>
       {smallSample ? (
-        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90">
+        <p className="rounded-lg border border-amber-600/25 bg-amber-50 px-3 py-2 text-xs text-amber-900">
           Small sample ({s.appearances} G / {s.minutesPlayed}&apos;). Rating stays provisional until ≥{" "}
           {BB_RATE_MIN_GAMES} games and ≥ {BB_RATE_MIN_MINUTES}&apos;.
         </p>
@@ -342,28 +344,28 @@ function BasketballPerformanceSection({
           value={String(s.appearances)}
           icon={Activity}
           accent="info"
-          borderColor={theme.primaryColor}
+          borderColor={ink}
         />
         <MetricCard
           label="Points / Game"
           value={g.points.toFixed(1)}
           icon={Target}
           accent="primary"
-          borderColor={theme.primaryColor}
+          borderColor={ink}
         />
         <MetricCard
           label="Rebounds / Game"
           value={g.rebounds.toFixed(1)}
           icon={Shield}
           accent="warning"
-          borderColor={theme.primaryColor}
+          borderColor={ink}
         />
         <MetricCard
           label="Assists / Game"
           value={g.assists.toFixed(1)}
           icon={TrendingUp}
           accent="info"
-          borderColor={theme.primaryColor}
+          borderColor={ink}
         />
       </div>
 
@@ -372,17 +374,14 @@ function BasketballPerformanceSection({
         description={`Role pack for ${player.position} — same rating rules as list / report.`}
         density="dense"
         className="border"
-        style={{ borderColor: `${theme.primaryColor}33` }}
+        style={{ borderColor: `${ink}33` }}
       >
         <div className="mb-3 flex flex-wrap items-baseline gap-3">
-          <span
-            className="font-mono text-2xl font-semibold tabular-nums"
-            style={{ color: ratingColor(s.rating) }}
-          >
+          <span className={`font-mono text-2xl font-semibold tabular-nums ${ratingColor(s.rating)}`}>
             {ratingMetric?.value ?? s.rating.toFixed(1)}
           </span>
           {ratingMetric?.hint ? (
-            <span className="text-2xs text-amber-200/80">{ratingMetric.hint}</span>
+            <span className="text-2xs text-amber-800/90">{ratingMetric.hint}</span>
           ) : null}
         </div>
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
@@ -390,7 +389,7 @@ function BasketballPerformanceSection({
             <div
               key={item.key}
               className="rounded-lg border bg-surface-muted/40 px-3 py-2.5"
-              style={{ borderColor: `${theme.primaryColor}33` }}
+              style={{ borderColor: `${ink}33` }}
             >
               <span className="text-2xs uppercase tracking-wider text-muted-foreground">
                 {item.label}
@@ -409,7 +408,7 @@ function BasketballPerformanceSection({
           description="Rating and points per game by season."
           density="dense"
           className="border"
-          style={{ borderColor: `${theme.primaryColor}33` }}
+          style={{ borderColor: `${ink}33` }}
         >
           <LazyPlayerSeasonChart data={timeline} sport="BASKETBALL" />
         </DataPanel>
@@ -419,11 +418,11 @@ function BasketballPerformanceSection({
           description={`Per-game profile — season ${player.selectedSeason}.`}
           density="dense"
           className="border"
-          style={{ borderColor: `${theme.primaryColor}33` }}
+          style={{ borderColor: `${ink}33` }}
         >
           <LazyStatRadarChart
             metrics={radarMetrics}
-            series={[{ name: player.knownAs, color: theme.primaryColor, values: toRadarProfile(s) }]}
+            series={[{ name: player.knownAs, color: ink, values: toRadarProfile(s) }]}
           />
         </DataPanel>
       </div>
@@ -433,7 +432,7 @@ function BasketballPerformanceSection({
         description={`Season averages for ${player.selectedSeason}.`}
         density="dense"
         className="border"
-        style={{ borderColor: `${theme.primaryColor}33` }}
+        style={{ borderColor: `${ink}33` }}
       >
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {[
@@ -451,7 +450,7 @@ function BasketballPerformanceSection({
             <div
               key={item.label}
               className="rounded-lg border bg-surface-muted/40 px-3 py-2.5"
-              style={{ borderColor: `${theme.primaryColor}33` }}
+              style={{ borderColor: `${ink}33` }}
             >
               <span className="text-2xs uppercase tracking-wider text-muted-foreground">{item.label}</span>
               <div className="mt-0.5 font-mono text-sm font-semibold tabular-nums text-foreground">{item.value}</div>
@@ -475,6 +474,7 @@ function AmericanFootballPerformanceSection({
   theme: ReturnType<typeof getTeamTheme>;
 }) {
   const radarMetrics = [...getSportConfig("AMERICAN_FOOTBALL").ui.radarMetrics];
+  const ink = chartSafeTeamColor(theme);
   const totalYards = s.totalYards ?? s.points ?? 0;
   const touchdowns = s.touchdowns ?? s.goals ?? 0;
   const smallSample =
@@ -485,7 +485,7 @@ function AmericanFootballPerformanceSection({
   return (
     <>
       {smallSample ? (
-        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90">
+        <p className="rounded-lg border border-amber-600/25 bg-amber-50 px-3 py-2 text-xs text-amber-900">
           Small sample ({s.appearances} G). Rating stays provisional until ≥ {AF_RATE_MIN_GAMES}{" "}
           games and ≥ {AF_RATE_MIN_MINUTES}&apos; proxy minutes.
         </p>
@@ -496,7 +496,7 @@ function AmericanFootballPerformanceSection({
         description="Role-aware production snapshot."
         density="dense"
         className="border"
-        style={{ borderColor: `${theme.primaryColor}33` }}
+        style={{ borderColor: `${ink}33` }}
       >
         <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-6">
           {scorecard.metrics.map((m) => (
@@ -514,28 +514,28 @@ function AmericanFootballPerformanceSection({
           value={String(s.appearances)}
           icon={Activity}
           accent="info"
-          borderColor={theme.primaryColor}
+          borderColor={ink}
         />
         <MetricCard
           label="Total Yards"
           value={totalYards.toLocaleString("en-US")}
           icon={Target}
           accent="primary"
-          borderColor={theme.primaryColor}
+          borderColor={ink}
         />
         <MetricCard
           label="Touchdowns"
           value={String(touchdowns)}
           icon={Crosshair}
           accent="warning"
-          borderColor={theme.primaryColor}
+          borderColor={ink}
         />
         <MetricCard
           label="Tackles"
           value={String(s.tacklesWon)}
           icon={Shield}
           accent="info"
-          borderColor={theme.primaryColor}
+          borderColor={ink}
         />
       </div>
 
@@ -549,7 +549,7 @@ function AmericanFootballPerformanceSection({
           }
           density="dense"
           className="border"
-          style={{ borderColor: `${theme.primaryColor}33` }}
+          style={{ borderColor: `${ink}33` }}
         >
           <LazyPlayerSeasonChart data={timeline} sport="AMERICAN_FOOTBALL" />
         </DataPanel>
@@ -559,11 +559,11 @@ function AmericanFootballPerformanceSection({
           description={`Production profile — ${player.selectedSeason} season.`}
           density="dense"
           className="border"
-          style={{ borderColor: `${theme.primaryColor}33` }}
+          style={{ borderColor: `${ink}33` }}
         >
           <LazyStatRadarChart
             metrics={radarMetrics}
-            series={[{ name: player.knownAs, color: theme.primaryColor, values: toRadarProfile(s) }]}
+            series={[{ name: player.knownAs, color: ink, values: toRadarProfile(s) }]}
           />
         </DataPanel>
       </div>
@@ -577,7 +577,7 @@ function AmericanFootballPerformanceSection({
         }
         density="dense"
         className="border"
-        style={{ borderColor: `${theme.primaryColor}33` }}
+        style={{ borderColor: `${ink}33` }}
       >
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {[
@@ -595,7 +595,7 @@ function AmericanFootballPerformanceSection({
             <div
               key={item.label}
               className="rounded-lg border bg-surface-muted/40 px-3 py-2.5"
-              style={{ borderColor: `${theme.primaryColor}33` }}
+              style={{ borderColor: `${ink}33` }}
             >
               <span className="text-2xs uppercase tracking-wider text-muted-foreground">{item.label}</span>
               <div className="mt-0.5 font-mono text-sm font-semibold tabular-nums text-foreground">{item.value}</div>

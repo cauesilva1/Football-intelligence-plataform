@@ -5,108 +5,75 @@
 @layer base {
   :root {
     /*
-      Product UI v1 — “ink desk”: charcoal ink + sharp accent, not monochrome green mush.
-      Avoid Inter / purple glow / cream-terracotta AI defaults.
+      Desk tokens lock to landing identity:
+      paper #fafafa · ink #121212 · brand red #d6001c
+      Sport color is --sport only (rails/kickers), never the whole chrome.
     */
-    --background: 222 28% 6%;
-    --foreground: 40 18% 94%;
-    --card: 222 22% 9%;
-    --card-foreground: 40 18% 94%;
-    --popover: 222 22% 9%;
-    --popover-foreground: 40 18% 94%;
-    --surface-elevated: 222 20% 11%;
-    --surface-muted: 220 16% 14%;
+    --background: 0 0% 98%;
+    --foreground: 0 0% 7%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 7%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+    --surface-elevated: 0 0% 100%;
+    --surface-muted: 210 10% 96%;
 
-    /* Brand — electric pitch as accent only */
-    --primary: 148 78% 42%;
-    --primary-foreground: 222 28% 6%;
-    --accent-positive: 148 78% 42%;
-    --accent-info: 199 92% 62%;
-    --accent-warning: 38 92% 58%;
-    --accent-negative: 354 78% 58%;
-    --sport-glow: 148 78% 42%;
-    --sport-glow-soft: 222 24% 14%;
-    --sport-texture-opacity: 0.05;
+    --primary: 353 100% 42%;
+    --primary-foreground: 0 0% 100%;
+    --sport: 353 100% 42%;
+    --accent-positive: 148 55% 32%;
+    --accent-info: 210 70% 40%;
+    --accent-warning: 38 85% 40%;
+    --accent-negative: 353 100% 42%;
+    --sport-glow: 353 100% 42%;
+    --sport-glow-soft: 210 10% 96%;
+    --sport-texture-opacity: 0.03;
 
-    /* UI chrome */
-    --secondary: 220 16% 14%;
-    --secondary-foreground: 40 18% 94%;
-    --muted: 220 16% 14%;
-    --muted-foreground: 220 10% 58%;
-    --accent: 199 40% 18%;
-    --accent-foreground: 40 18% 94%;
-    --destructive: 354 78% 58%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 220 14% 20%;
-    --input: 220 14% 20%;
-    --ring: 148 78% 42%;
-    --radius: 0.65rem;
+    --secondary: 210 10% 96%;
+    --secondary-foreground: 0 0% 12%;
+    --muted: 210 10% 96%;
+    --muted-foreground: 200 7% 40%;
+    --accent: 210 10% 96%;
+    --accent-foreground: 0 0% 12%;
+    --destructive: 353 100% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 10% 90%;
+    --input: 210 10% 90%;
+    --ring: 353 100% 42%;
+    --radius: 0.125rem;
 
-    /* Charts */
-    --chart-grid: 220 16% 14%;
-    --chart-axis: 220 14% 20%;
-    --chart-tick: 220 10% 55%;
-    --chart-label: 40 12% 82%;
-    --chart-tooltip-bg: 222 22% 9%;
-    --chart-tooltip-border: 220 14% 20%;
-    --chart-primary: 148 78% 42%;
-    --chart-secondary: 199 92% 62%;
-    --chart-negative: 354 78% 58%;
-    --chart-cursor: 220 16% 14%;
+    --chart-grid: 210 10% 92%;
+    --chart-axis: 210 10% 84%;
+    --chart-tick: 200 7% 42%;
+    --chart-label: 0 0% 18%;
+    --chart-tooltip-bg: 0 0% 100%;
+    --chart-tooltip-border: 210 10% 90%;
+    --chart-primary: 353 100% 42%;
+    --chart-secondary: 210 70% 40%;
+    --chart-negative: 353 100% 42%;
+    --chart-cursor: 210 10% 96%;
   }
 
   html[data-sport="SOCCER"] {
-    --background: 222 26% 6%;
-    --card: 222 20% 9%;
-    --surface-elevated: 222 18% 11%;
-    --surface-muted: 160 12% 12%;
-    --border: 220 14% 20%;
-    --input: 220 14% 20%;
-    --primary: 148 78% 42%;
-    --primary-foreground: 222 28% 6%;
-    --ring: 148 78% 42%;
-    --chart-primary: 148 78% 42%;
-    --sport-glow: 148 78% 42%;
-    --sport-glow-soft: 160 20% 12%;
-    --sport-texture-opacity: 0.06;
+    --sport: 148 55% 32%;
+    --sport-glow: 148 55% 32%;
+    --sport-glow-soft: 148 25% 95%;
   }
 
-  /* Basketball — warm court orange brand */
   html[data-sport="BASKETBALL"] {
-    --background: 24 14% 5%;
-    --card: 22 12% 8%;
-    --surface-elevated: 22 11% 10%;
-    --surface-muted: 24 10% 13%;
-    --border: 24 10% 18%;
-    --input: 24 10% 18%;
-    --primary: 24 95% 53%;
-    --primary-foreground: 220 25% 5%;
-    --ring: 24 95% 53%;
-    --chart-primary: 24 95% 53%;
-    --sport-glow: 24 95% 53%;
-    --sport-glow-soft: 24 40% 14%;
-    --sport-texture-opacity: 0.09;
+    --sport: 24 82% 40%;
+    --sport-glow: 24 82% 40%;
+    --sport-glow-soft: 24 35% 95%;
   }
 
-  /* American football — gridiron navy */
   html[data-sport="AMERICAN_FOOTBALL"] {
-    --background: 218 28% 5%;
-    --card: 216 22% 8%;
-    --surface-elevated: 216 20% 10%;
-    --surface-muted: 215 16% 13%;
-    --border: 214 16% 18%;
-    --input: 214 16% 18%;
-    --primary: 214 88% 52%;
-    --primary-foreground: 220 25% 5%;
-    --ring: 214 88% 52%;
-    --chart-primary: 214 88% 52%;
-    --sport-glow: 214 88% 52%;
-    --sport-glow-soft: 214 40% 16%;
-    --sport-texture-opacity: 0.1;
+    --sport: 214 72% 38%;
+    --sport-glow: 214 72% 38%;
+    --sport-glow-soft: 214 30% 95%;
   }
 
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   * {
@@ -177,9 +144,7 @@
     inset: 0;
     z-index: 0;
     background:
-      radial-gradient(ellipse 70% 45% at 0% 0%, hsl(var(--accent-info) / 0.08), transparent 55%),
-      radial-gradient(ellipse 55% 40% at 100% 100%, hsl(var(--sport-glow) / 0.07), transparent 50%),
-      linear-gradient(180deg, hsl(var(--background)), hsl(222 24% 5%));
+      linear-gradient(180deg, hsl(0 0% 98%), hsl(210 14% 96%));
     transition: opacity 420ms ease;
   }
 
@@ -284,15 +249,15 @@
   }
 
   .sport-soccer-accent {
-    color: hsl(142 71% 45%);
+    color: hsl(148 55% 32%);
   }
 
   .sport-basketball-accent {
-    color: hsl(24 95% 53%);
+    color: hsl(24 82% 40%);
   }
 
   .sport-american-football-accent {
-    color: hsl(214 88% 52%);
+    color: hsl(214 72% 38%);
   }
 
   /* ——— Motion (package 3) ——— */
@@ -366,7 +331,696 @@
 
   /* Marketing landing styles live in src/app/landing.css (Opta Analyst language). */
 
+  /* ——— Desk editorial (scouting hub + shared chrome) ——— */
+  .desk-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+
+  .desk-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 0.55rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: hsl(var(--primary));
+  }
+
+  .desk-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .desk-workflow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.15rem 0.1rem;
+    padding-top: 0.15rem;
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  .desk-workflow-item {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .desk-workflow-sep {
+    margin: 0 0.35rem;
+    color: hsl(var(--muted-foreground) / 0.4);
+    font-size: 0.75rem;
+  }
+
+  .desk-workflow-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 0.35rem;
+    border-radius: 1px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: hsl(var(--muted-foreground));
+    transition: color 150ms ease;
+  }
+
+  .desk-workflow-link:hover {
+    color: hsl(var(--foreground));
+  }
+
+  .desk-workflow-link.is-active {
+    color: hsl(var(--foreground));
+    box-shadow: inset 0 -2px 0 0 hsl(var(--primary));
+  }
+
+  .desk-workflow-index {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .desk-workflow-link.is-active .desk-workflow-index {
+    color: hsl(var(--primary));
+  }
+
+  .desk-logo-mark {
+    display: inline-block;
+    width: 0.45rem;
+    height: 0.45rem;
+    flex-shrink: 0;
+    background: hsl(var(--primary));
+    border-radius: 1px;
+    translate: 0 -0.08em;
+  }
+
+  .desk-filter-bar {
+    border-radius: 2px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card));
+    box-shadow: none;
+  }
+
+  .desk-results-meta {
+    font-size: 0.78rem;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .desk-results-meta strong {
+    font-weight: 700;
+    color: hsl(var(--foreground));
+  }
+
+  /* Editorial product shell — landing continuity + collapsible sidebar */
+  .editorial-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #fafafa;
+    color: #121212;
+  }
+
+  .editorial-shell-with-side {
+    flex-direction: row;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .editorial-content {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .editorial-sidebar {
+    display: none;
+    width: 15.5rem;
+    flex-shrink: 0;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding: 1rem 0.75rem 1rem;
+    border-right: 1px solid #e8eaed;
+    background: #fff;
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 40;
+    transition:
+      width 420ms cubic-bezier(0.22, 1, 0.36, 1),
+      padding 420ms cubic-bezier(0.22, 1, 0.36, 1),
+      gap 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @media (min-width: 768px) {
+    .editorial-sidebar {
+      display: flex;
+    }
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-sidebar {
+    width: 4.25rem;
+    padding-inline: 0.45rem;
+    gap: 0.45rem;
+    overflow: hidden;
+  }
+
+  .editorial-shell:not(.is-ready) .editorial-sidebar {
+    transition: none;
+  }
+
+  .editorial-shell:not(.is-ready) .editorial-side-label,
+  .editorial-shell:not(.is-ready) .editorial-side-group-label,
+  .editorial-shell:not(.is-ready) .editorial-side-link,
+  .editorial-shell:not(.is-ready) .editorial-sport-rail {
+    transition: none !important;
+  }
+
+  .editorial-sidebar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    min-height: 2.25rem;
+    padding-inline: 0.35rem;
+    flex-shrink: 0;
+    transition:
+      padding 420ms cubic-bezier(0.22, 1, 0.36, 1),
+      gap 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .editorial-brand {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    flex-shrink: 1;
+    min-width: 0;
+    font-family: var(--font-display), sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #121212;
+    text-decoration: none;
+  }
+
+  .editorial-brand-side {
+    position: relative;
+    font-size: 1.15rem;
+    border-radius: 2px;
+    transition:
+      width 420ms cubic-bezier(0.22, 1, 0.36, 1),
+      height 420ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 160ms ease;
+  }
+
+  .editorial-brand-side:hover {
+    background: #f3f4f6;
+  }
+
+  .editorial-brand i {
+    width: 0.42rem;
+    height: 0.42rem;
+    background: #d6001c;
+    border-radius: 1px;
+    translate: 0 -0.12em;
+    flex-shrink: 0;
+  }
+
+  .editorial-collapse-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    border: 0;
+    background: transparent;
+    color: #667077;
+    cursor: pointer;
+    flex-shrink: 0;
+    border-radius: 2px;
+    transition: color 160ms ease, background-color 160ms ease;
+  }
+
+  .editorial-collapse-btn:hover {
+    color: #121212;
+    background: #f3f4f6;
+  }
+
+  /* Collapsed top: stack mark + expand so nothing overflows the rail */
+  .editorial-shell[data-sidebar="collapsed"] .editorial-sidebar-top {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    padding-inline: 0;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-brand-side {
+    justify-content: center;
+    align-items: center;
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-collapse-btn {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-brand-side i {
+    translate: 0;
+  }
+
+  .editorial-sidebar-sports {
+    padding-inline: 0.2rem;
+    flex-shrink: 0;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-sidebar-sports {
+    padding-inline: 0;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid #e8eaed;
+  }
+
+  /* Expanded: horizontal sports strip */
+  .editorial-sidebar-sports [role="tablist"] {
+    gap: 0.25rem;
+  }
+
+  .editorial-sidebar-sports [role="tab"] {
+    position: relative;
+  }
+
+  .editorial-shell[data-sidebar="expanded"] .editorial-sidebar-sports [role="tab"] {
+    min-height: 3.1rem;
+    border-radius: 2px;
+    transition:
+      color 160ms ease,
+      background-color 160ms ease;
+  }
+
+  .editorial-shell[data-sidebar="expanded"] .editorial-sidebar-sports [role="tab"]:hover {
+    color: #121212 !important;
+    background: #f3f4f6;
+  }
+
+  .editorial-shell[data-sidebar="expanded"] .editorial-sidebar-sports [role="tab"][aria-selected="true"]:hover {
+    color: #d6001c !important;
+    background: rgba(214, 0, 28, 0.08);
+  }
+
+  /*
+   * Collapsed: sports stack vertically (3 icons in a narrow rail).
+   * Horizontal 3-up overflows ~4rem and breaks the strip.
+   */
+  .editorial-shell[data-sidebar="collapsed"] .editorial-sidebar-sports [role="tablist"] {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-sidebar-sports [role="tablist"] > span[aria-hidden] {
+    display: none !important;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-sidebar-sports [role="tab"] {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-sidebar-sports [role="tab"] > span:not(.sr-only) {
+    display: none !important;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-sidebar-sports .editorial-side-icon {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-sidebar-sports [role="tab"]:hover {
+    color: #121212;
+    background: #f3f4f6;
+  }
+
+  .editorial-sport-rail-list {
+    gap: 0.1rem;
+  }
+
+  .editorial-sport-rail,
+  .editorial-sport-compact {
+    position: relative;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-collapse-btn::after,
+  .editorial-shell[data-sidebar="collapsed"] .editorial-brand-side::after {
+    display: none;
+  }
+
+  .editorial-sidebar-nav {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 1.35rem;
+    min-height: 14rem;
+    overflow: visible;
+    transition: gap 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-sidebar-nav {
+    flex: 0 0 auto;
+    gap: 0.35rem;
+  }
+
+  .editorial-side-group-label {
+    margin: 0 0 0.45rem;
+    padding-inline: 0.65rem;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #8a939c;
+    max-height: 1.2rem;
+    opacity: 1;
+    overflow: hidden;
+    transition:
+      opacity 220ms ease,
+      max-height 380ms cubic-bezier(0.22, 1, 0.36, 1),
+      margin 380ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .editorial-side-group-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-side-group-items {
+    gap: 0.1rem;
+  }
+
+  .editorial-side-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 2.2rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 2px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #667077;
+    text-decoration: none;
+    flex-shrink: 0;
+    transition:
+      color 140ms ease,
+      background-color 140ms ease,
+      padding 380ms cubic-bezier(0.22, 1, 0.36, 1),
+      gap 380ms cubic-bezier(0.22, 1, 0.36, 1),
+      min-height 380ms cubic-bezier(0.22, 1, 0.36, 1),
+      justify-content 380ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .editorial-side-link:hover {
+    color: #121212;
+    background: #f3f4f6;
+  }
+
+  .editorial-side-link:hover .editorial-side-icon {
+    opacity: 1;
+  }
+
+  .editorial-side-link.is-active {
+    color: #d6001c;
+    background: rgba(214, 0, 28, 0.06);
+  }
+
+  .editorial-side-link.is-active:hover {
+    color: #d6001c;
+    background: rgba(214, 0, 28, 0.1);
+  }
+
+  .editorial-side-icon {
+    width: 1.05rem;
+    height: 1.05rem;
+    flex-shrink: 0;
+    opacity: 0.85;
+    transition: opacity 140ms ease;
+  }
+
+  .editorial-side-link.is-active .editorial-side-icon {
+    opacity: 1;
+  }
+
+  .editorial-side-label {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 1;
+    max-width: 10rem;
+    transition:
+      opacity 200ms ease,
+      max-width 380ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-side-label,
+  .editorial-shell[data-sidebar="collapsed"] .editorial-side-group-label {
+    position: absolute;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+    max-width: none;
+    max-height: none;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-side-link {
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    width: 2rem;
+    min-height: 2rem;
+    margin-inline: auto;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-side-link:hover {
+    color: #121212;
+    background: #f3f4f6;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-side-link.is-active:hover {
+    color: #d6001c;
+    background: rgba(214, 0, 28, 0.1);
+  }
+
+  .editorial-sidebar-foot {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+    margin-top: auto;
+    padding-top: 0.65rem;
+    border-top: 1px solid #e8eaed;
+    flex-shrink: 0;
+  }
+
+  .editorial-shell[data-sidebar="collapsed"] .editorial-sidebar-foot {
+    align-items: center;
+    margin-top: 0.35rem;
+    padding-top: 0.35rem;
+  }
+
+  .editorial-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: rgba(250, 250, 250, 0.94);
+    border-bottom: 1px solid #e8eaed;
+    backdrop-filter: saturate(1.2) blur(10px);
+  }
+
+  .editorial-topbar-compact .editorial-topbar-inner {
+    min-height: 3rem;
+  }
+
+  .editorial-topbar-inner {
+    width: min(1120px, calc(100% - 2rem));
+    margin-inline: auto;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 3.75rem;
+  }
+
+  .editorial-topbar-inner-flush,
+  .editorial-footer-inner-flush {
+    width: auto;
+    margin-inline: 0;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 900px) {
+    .editorial-topbar-inner-flush,
+    .editorial-footer-inner-flush {
+      padding-inline: 1.75rem;
+    }
+  }
+
+  .editorial-topbar-context {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #667077;
+  }
+
+  .editorial-side-label-always {
+    color: #121212;
+  }
+
+  .editorial-topbar-end {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .editorial-main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 0 2rem;
+    padding-bottom: calc(2rem + 4.5rem);
+  }
+
+  @media (min-width: 768px) {
+    .editorial-main {
+      padding-bottom: 2.25rem;
+    }
+  }
+
+  .editorial-canvas {
+    width: min(1120px, calc(100% - 2rem));
+    margin-inline: auto;
+  }
+
+  @media (min-width: 900px) {
+    .editorial-canvas {
+      width: min(1160px, calc(100% - 3.5rem));
+    }
+  }
+
+  .editorial-pagehead {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .editorial-pagehead-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+  }
+
+  .editorial-pagehead-title {
+    margin: 0;
+    font-family: var(--font-display), sans-serif;
+    font-size: clamp(2rem, 4vw, 2.85rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    color: #121212;
+  }
+
+  .editorial-pagehead-lede {
+    margin: 0.7rem 0 0;
+    max-width: 38rem;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    color: #667077;
+  }
+
+  .editorial-pagehead-meta {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #667077;
+  }
+
+  .editorial-footer {
+    border-top: 1px solid #e8eaed;
+    background: #fff;
+    margin-top: auto;
+  }
+
+  .editorial-footer-inner {
+    width: min(1120px, calc(100% - 2rem));
+    margin-inline: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding: 0.85rem 0;
+    font-size: 0.75rem;
+    color: #667077;
+  }
+
+  .editorial-footer a {
+    color: #d6001c;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .editorial-footer a:hover {
+    text-decoration: underline;
+  }
+
   @media (prefers-reduced-motion: reduce) {
+    .editorial-sidebar,
+    .editorial-side-label,
+    .editorial-side-group-label,
+    .editorial-side-link {
+      transition: none;
+    }
+
+    .editorial-shell[data-sidebar="collapsed"] .editorial-side-link.is-collapsed::after,
+    .editorial-shell[data-sidebar="collapsed"] .editorial-sidebar-sports [role="tab"]::after {
+      content: none;
+    }
+
     html.sport-theme-ready body,
     html.sport-theme-ready .sport-ambient,
     html.sport-theme-ready .sport-hero,

@@ -2,12 +2,22 @@
  * Valida requisições de cron (CLI local ou Vercel Cron).
  * Exige `Authorization: Bearer ${CRON_SECRET}`.
  */
+import { timingSafeEqual } from "node:crypto";
+
+function safeCompare(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
+
 export function isCronAuthorized(request: Request): boolean {
   const secret = process.env.CRON_SECRET?.trim();
   if (!secret) return false;
 
   const authorization = request.headers.get("authorization");
-  return authorization === `Bearer ${secret}`;
+  if (!authorization) return false;
+  return safeCompare(authorization, `Bearer ${secret}`);
 }
 
 export function cronUnauthorizedResponse(): Response {

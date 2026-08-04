@@ -25,9 +25,15 @@ export const AF_RATE_MIN_GAMES = 6;
 export const AF_RATE_MIN_MINUTES = 360;
 
 export const U23_MAX_AGE = 23;
-export const PROSPECT_MIN_RATING = 7;
+
+/**
+ * Productivity rating (6 + g90×0.35 + a90×0.25) tops out near ~7.0 even at the
+ * soft-cap. Thresholds below are calibrated to that scale — not Sofascore 0–10.
+ */
+export const PROSPECT_MIN_RATING = 6.25;
+export const BEST_PERFORMER_MIN_RATING = 6.35;
 export const OPPORTUNITY_MAX_AGE = 25;
-export const OPPORTUNITY_MIN_RATING = 7.2;
+export const OPPORTUNITY_MIN_RATING = 6.25;
 export const OPPORTUNITY_MAX_VALUE = 8_000_000;
 export const OPPORTUNITY_MAX_CAP_HIT = 5_000_000;
 

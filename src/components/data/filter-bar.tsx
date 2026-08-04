@@ -15,13 +15,17 @@ export function FilterBar({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-card shadow-panel transition-opacity",
+        "desk-filter-bar transition-opacity",
         pending && "opacity-70",
         className
       )}
     >
-      <div className="flex flex-wrap items-end gap-3 p-4">{children}</div>
-      {footer && <div className="flex flex-wrap items-center gap-3 border-t border-border px-4 py-3">{footer}</div>}
+      <div className="flex flex-wrap items-end gap-3 p-3.5 md:p-4">{children}</div>
+      {footer && (
+        <div className="flex flex-wrap items-center gap-3 border-t border-border px-3.5 py-2.5 md:px-4">
+          {footer}
+        </div>
+      )}
     </div>
   );
 }

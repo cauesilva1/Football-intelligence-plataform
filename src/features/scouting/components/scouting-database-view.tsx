@@ -33,9 +33,9 @@ export async function ScoutingDatabaseView({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-baseline justify-between gap-3 px-1">
-        <p className="text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">{result.total.toLocaleString()}</span>{" "}
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="desk-results-meta">
+          <strong>{result.total.toLocaleString()}</strong>{" "}
           {result.total === 1 ? "player" : "players"}
           {route === "scouting" ? " matching filters" : " in directory"}
         </p>

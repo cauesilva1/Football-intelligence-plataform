@@ -5,9 +5,12 @@ import { SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
 export type SoccerPositionGroup = "GK" | "DEF" | "MID" | "ATT";
 
 export function soccerPositionGroup(position: string): SoccerPositionGroup {
-  if (position === "GK") return "GK";
-  if (["ST", "LW", "RW", "CF"].includes(position)) return "ATT";
-  if (["CAM", "CM", "CDM", "LM", "RM"].includes(position)) return "MID";
+  const p = position.trim().toUpperCase();
+  if (p === "GK") return "GK";
+  // API feeds often use FW / ATT instead of ST/LW/RW
+  if (["ST", "LW", "RW", "CF", "FW", "ATT", "F", "SS"].includes(p)) return "ATT";
+  if (["CAM", "CM", "CDM", "LM", "RM", "MF", "MID", "AM", "DM"].includes(p)) return "MID";
+  if (["CB", "LB", "RB", "LWB", "RWB", "DF", "DEF", "WB"].includes(p)) return "DEF";
   return "DEF";
 }
 
@@ -156,9 +159,9 @@ export function buildPositionScorecard(
 export function similarPositionGroup(position: string): string[] {
   const group = soccerPositionGroup(position);
   if (group === "GK") return ["GK"];
-  if (group === "ATT") return ["ST", "LW", "RW", "CF", "CAM"];
-  if (group === "MID") return ["CM", "CDM", "CAM", "LM", "RM"];
-  return ["CB", "LB", "RB", "LWB", "RWB", "CDM"];
+  if (group === "ATT") return ["ST", "LW", "RW", "CF", "CAM", "FW", "ATT"];
+  if (group === "MID") return ["CM", "CDM", "CAM", "LM", "RM", "MF"];
+  return ["CB", "LB", "RB", "LWB", "RWB", "CDM", "DF"];
 }
 
 export type BasketballPositionGroup = "GUARD" | "WING" | "BIG";

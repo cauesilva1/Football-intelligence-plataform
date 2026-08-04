@@ -46,7 +46,7 @@ const SOCCER_PRESETS: RankingPreset[] = [
     slug: "u23",
     title: "Best U23 Players",
     description:
-      "Same rules as dashboard Top Prospects: U23, rating ≥ 7.0, and ≥ 450' in the current season.",
+      "Same rules as dashboard Top Prospects: U23, productivity rating ≥ 6.25, and ≥ 450' in the current season.",
     href: "/rankings/u23",
     filters: {
       ...SOCCER_U23_RANKING_FILTERS,
@@ -84,7 +84,7 @@ const SOCCER_PRESETS: RankingPreset[] = [
     filters: {
       position: "CB,LB,RB,LWB,RWB",
       minMinutes: 450,
-      minRating: 6.5,
+      minRating: 6.2,
       sortBy: "defensiveActionsPer90",
       sortDir: "desc",
       page: 1,
@@ -95,7 +95,7 @@ const SOCCER_PRESETS: RankingPreset[] = [
     slug: "hidden-gems",
     title: "Hidden Gems",
     description:
-      "Strong rating (≥ 7.2), age ≤ 25, value ≤ €8M, and ≥ 450' — ranked by rating per million euro.",
+      "Strong productivity rating (≥ 6.25), age ≤ 25, value ≤ €8M, and ≥ 450' — ranked by rating per million euro.",
     href: "/rankings/hidden-gems",
     filters: {
       ...SOCCER_HIDDEN_GEM_FILTERS,

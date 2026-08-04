@@ -4,8 +4,8 @@
  */
 export const SCORE_DEFINITIONS = {
   topProspects:
-    "U23 players who meet a minimum performance rating and a reliable sample (soccer minutes / BB·AF games).",
-  bestPerformers: "Players with the highest overall rating in the current dataset (reliable sample only).",
+    "U23 players with a strong productivity rating and a reliable sample (soccer minutes / BB·AF games).",
+  bestPerformers: "Players with the highest productivity rating in the current dataset (reliable sample only).",
   marketOpportunities:
     "Strong rating, age ≤ 25, reliable sample — soccer ≤ €8M market value; NBA/NFL ≤ $5M Cap Hit (no Cap Hit feed for NCAA, EuroLeague, or CFB).",
   topScorers:

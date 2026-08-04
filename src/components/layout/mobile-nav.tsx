@@ -17,9 +17,6 @@ import {
 import { cn } from "@/lib/utils";
 import { APP_NAME } from "@/lib/config";
 import { useSport } from "@/context/sport-context";
-import { sportTheme } from "@/lib/sport-theme";
-import { OmniScoutMark } from "@/components/icons/sport-balls";
-import { useIsMounted } from "@/hooks/use-is-mounted";
 import type { Sport } from "@/lib/sport";
 
 export type NavItem = {
@@ -128,18 +125,14 @@ export function MobileNav() {
 }
 
 export function SidebarLogo() {
-  const { currentSport } = useSport();
-  const mounted = useIsMounted();
-  // Defer sport-specific chrome until after mount to avoid SSR/cookie hydration mismatch.
-  const theme = sportTheme(mounted ? currentSport : "SOCCER");
-  const markSport = mounted ? currentSport : "SOCCER";
-
   return (
-    <Link href="/dashboard" className="mb-6 flex items-center gap-3 px-1">
-      <OmniScoutMark sport={markSport} />
+    <Link href="/" className="mb-6 flex items-baseline gap-2 px-1">
+      <i className="desk-logo-mark" aria-hidden />
       <div className="min-w-0 leading-tight">
-        <p className="font-display text-[15px] font-bold tracking-tight text-foreground">{APP_NAME}</p>
-        <p className="mt-0.5 text-[10px] uppercase tracking-[0.14em] text-primary/70">{theme.tagline}</p>
+        <p className="font-display text-[1.15rem] font-bold tracking-tight text-foreground">{APP_NAME}</p>
+        <p className="mt-0.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+          Sports intelligence
+        </p>
       </div>
     </Link>
   );

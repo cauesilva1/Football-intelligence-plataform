@@ -60,7 +60,7 @@ export async function TeamsGrid({
             <>
               {" · "}
               {isDbSource()
-                ? `Cached data (${teams[0]?.stats?.season ?? CURRENT_SEASON})`
+                ? `Cached data (${teams[0]?.stats?.season ?? teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`
                 : `Demo (${teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`}
             </>
           )}
@@ -93,8 +93,18 @@ export async function TeamsGrid({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {teams.map((team) => {
           const sb = team.statsBomb;
-          const goalBalance = sb ? sb.goalBalance : 0;
-          const balanceLabel = goalBalance > 0 ? `+${goalBalance}` : String(goalBalance);
+          const cached = team.stats;
+          const wins = sb?.wins ?? cached?.wins;
+          const draws = sb?.draws ?? cached?.draws;
+          const losses = sb?.losses ?? cached?.losses;
+          const goalBalance = sb
+            ? sb.goalBalance
+            : cached
+              ? cached.goalsFor - cached.goalsAgainst
+              : null;
+          const balanceLabel =
+            goalBalance == null ? "—" : goalBalance > 0 ? `+${goalBalance}` : String(goalBalance);
+          const seasonLabel = sb?.seasonLabel ?? cached?.season;
 
           return (
             <Link key={team.id} href={`/teams/${team.id}`}>
@@ -114,7 +124,7 @@ export async function TeamsGrid({
                   <p className="text-xs text-muted-foreground">
                     {team.country}
                     {!isFranchiseSport && team.stadium ? ` · ${team.stadium}` : ""}
-                    {!isFranchiseSport && sb ? ` · ${sb.seasonLabel}` : ""}
+                    {!isFranchiseSport && seasonLabel ? ` · ${seasonLabel}` : ""}
                   </p>
 
                   {isFranchiseSport ? (
@@ -141,25 +151,25 @@ export async function TeamsGrid({
                   ) : (
                     <div className="mt-4 grid grid-cols-4 gap-2 text-center">
                       <div>
-                        <p className="font-display text-sm font-bold text-primary">{sb?.wins ?? "—"}</p>
+                        <p className="font-display text-sm font-bold text-primary">
+                          {wins ?? "—"}
+                        </p>
                         <p className="text-2xs uppercase text-muted-foreground">W</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">
-                          {sb?.draws ?? "—"}
+                          {draws ?? "—"}
                         </p>
                         <p className="text-2xs uppercase text-muted-foreground">D</p>
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-foreground">
-                          {sb?.losses ?? "—"}
+                          {losses ?? "—"}
                         </p>
                         <p className="text-2xs uppercase text-muted-foreground">L</p>
                       </div>
                       <div>
-                        <p className="font-display text-sm font-bold text-foreground">
-                          {sb ? balanceLabel : "—"}
-                        </p>
+                        <p className="font-display text-sm font-bold text-foreground">{balanceLabel}</p>
                         <p className="text-2xs uppercase text-muted-foreground">GD</p>
                       </div>
                     </div>
@@ -169,8 +179,8 @@ export async function TeamsGrid({
                     <span className="inline-flex items-center gap-1">
                       <Users className="h-3 w-3" /> {team.squadSize ?? 0} players
                     </span>
-                    {!isFranchiseSport && sb ? (
-                      <span className="text-primary/80">{sb.seasonLabel}</span>
+                    {!isFranchiseSport && seasonLabel ? (
+                      <span className="text-primary/80">{seasonLabel}</span>
                     ) : null}
                   </div>
                 </CardContent>

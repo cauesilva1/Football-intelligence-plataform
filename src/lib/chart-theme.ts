@@ -1,6 +1,6 @@
 /**
- * Centralized Recharts theme — values mirror CSS variables in globals.css.
- * Recharts requires resolved color strings; keep in sync with :root tokens.
+ * Centralized Recharts theme — mirrors CSS variables in globals.css (editorial light).
+ * Recharts needs resolved color strings; keep in sync with :root --chart-* tokens.
  */
 
 const hsl = (channel: string, alpha?: number) =>
@@ -8,26 +8,26 @@ const hsl = (channel: string, alpha?: number) =>
 
 /** Static theme (SSR-safe). Matches --chart-* variables in globals.css. */
 export const chartTheme = {
-  grid: hsl("215 18% 14%"),
-  axis: hsl("215 18% 18%"),
-  tick: hsl("215 10% 55%"),
-  label: hsl("214 20% 80%"),
+  grid: hsl("210 10% 92%"),
+  axis: hsl("210 10% 84%"),
+  tick: hsl("200 7% 42%"),
+  label: hsl("0 0% 18%"),
   tooltip: {
-    background: hsl("220 20% 8%"),
-    border: hsl("215 18% 18%"),
-    borderRadius: 8,
+    background: hsl("0 0% 100%"),
+    border: hsl("210 10% 90%"),
+    borderRadius: 2,
     fontSize: 12,
-    color: hsl("214 32% 91%"),
+    color: hsl("0 0% 7%"),
   },
-  cursor: hsl("215 18% 14%", 0.35),
+  cursor: hsl("210 10% 96%", 0.85),
   series: {
-    primary: hsl("142 71% 45%"),
-    secondary: hsl("217 91% 65%"),
-    negative: hsl("350 72% 58%"),
+    primary: hsl("353 100% 42%"),
+    secondary: hsl("210 70% 40%"),
+    negative: hsl("148 55% 32%"),
   },
   legend: {
     fontSize: 12,
-    color: hsl("214 20% 80%"),
+    color: hsl("200 7% 40%"),
   },
   axisTick: { fontSize: 11 },
   radiusTick: { fontSize: 9 },

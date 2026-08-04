@@ -45,7 +45,7 @@ export async function DashboardStatsSection() {
         value={String(overview.topProspectsCount)}
         icon={Sparkles}
         accent="primary"
-        trend="U23 · rating ≥ 7.0 · ≥450'"
+        trend="U23 · rating ≥ 6.25 · ≥450'"
       />
       <MetricCard
         label="Average Age"
