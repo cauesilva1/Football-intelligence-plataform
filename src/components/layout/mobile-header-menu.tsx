@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSport } from "@/context/sport-context";
 import { NAV_GROUPS, navLabel } from "./mobile-nav";
+import { SportSwitcher } from "./sport-switcher";
 
 export function MobileHeaderMenu() {
   const [open, setOpen] = useState(false);
@@ -14,7 +15,7 @@ export function MobileHeaderMenu() {
   const { currentSport } = useSport();
 
   return (
-    <div className="md:hidden">
+    <div className="relative md:hidden">
       <button
         type="button"
         aria-label={open ? "Close menu" : "Open menu"}
@@ -33,7 +34,14 @@ export function MobileHeaderMenu() {
             className="fixed inset-0 z-40 bg-black/50"
             onClick={() => setOpen(false)}
           />
-          <nav className="absolute right-0 top-full z-[60] mt-2 max-h-[70vh] w-64 space-y-4 overflow-y-auto rounded-xl border border-border bg-background p-3 shadow-panel">
+          <nav className="absolute right-0 top-full z-[60] mt-2 max-h-[70vh] w-[min(18rem,calc(100vw-1.5rem))] space-y-4 overflow-y-auto rounded-xl border border-border bg-background p-3 shadow-panel">
+            <div className="space-y-2">
+              <p className="px-1 text-2xs font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
+                Sport
+              </p>
+              <SportSwitcher layout="grid" />
+            </div>
+
             {NAV_GROUPS.map((group) => (
               <div key={group.id} className="space-y-1">
                 <p className="px-3 text-2xs font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">

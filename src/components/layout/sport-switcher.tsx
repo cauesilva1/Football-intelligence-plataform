@@ -49,7 +49,7 @@ export function SportSwitcher({
     cn(
       "relative z-[1] flex items-center gap-1.5 text-2xs font-medium transition-[color,background-color,padding,gap,min-height,justify-content] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
       rail && "editorial-sport-rail editorial-sport-compact min-h-[2.15rem] w-full justify-start rounded-sm px-2.5 py-1.5",
-      compact && !rail && "h-8 w-8 justify-center rounded-sm px-0",
+      compact && !rail && "h-9 w-9 justify-center rounded-sm px-0",
       !iconsOnly && "min-w-0 flex-col justify-center gap-1 rounded-sm px-1 py-2",
       active
         ? rail

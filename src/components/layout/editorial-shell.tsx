@@ -173,7 +173,8 @@ export function EditorialShell({ children }: { children: React.ReactNode }) {
               <span>{sportTheme(currentSport).label}</span>
             </p>
             <div className="editorial-topbar-end">
-              <div className="md:hidden">
+              <div className="flex items-center gap-2 md:hidden">
+                <SportSwitcher compact />
                 <MobileHeaderMenu />
               </div>
             </div>
