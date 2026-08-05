@@ -16,6 +16,7 @@ import {
   DashboardChartsSkeleton,
   DashboardRankingsSkeleton,
 } from "@/features/analytics/components/dashboard-skeletons";
+import { PrototypeBanner } from "@/components/common/prototype-banner";
 
 export const metadata = { title: `Overview · ${APP_NAME}` };
 
@@ -30,14 +31,15 @@ export default async function DashboardPage() {
   return (
     <DashboardShell subtitle="Overview">
       <div className="space-y-6">
+        <PrototypeBanner />
         <PageHeader
           title="Overview"
           description={
             sport === "SOCCER"
-              ? "Soccer is the reference sport for the full scout workflow — use the sport switcher above for basketball or American football."
+              ? "Soccer is the reference sport for the full scout workflow — basketball and American football are secondary desks."
               : sport === "BASKETBALL"
-                ? "Basketball overview. Soccer remains the reference sport for the full scout workflow."
-                : "American football overview. Soccer remains the reference sport for the full scout workflow."
+                ? "Basketball overview (secondary desk). Soccer remains the reference for the full scout workflow."
+                : "American football overview (secondary desk). Soccer remains the reference for the full scout workflow."
           }
           badge={
             <span className="rounded-md border border-border bg-surface-muted/50 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">

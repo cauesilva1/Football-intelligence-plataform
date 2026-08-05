@@ -454,9 +454,13 @@ function SoccerScoutingTable({
               ) : null}
               {showDefensiveRates ? (
                 <TableCell className="font-mono tabular-nums">
-                  {reliable
-                    ? (stats.per90.tackles + stats.per90.interceptions).toFixed(2)
-                    : "—"}
+                  {(() => {
+                    if (!reliable) return "—";
+                    const def90 = (stats.per90.tackles ?? 0) + (stats.per90.interceptions ?? 0);
+                    // ESPN often omits defense — all-zero with full minutes is treated as missing.
+                    if (def90 === 0) return "—";
+                    return def90.toFixed(2);
+                  })()}
                 </TableCell>
               ) : null}
               <TableCell className="text-right">

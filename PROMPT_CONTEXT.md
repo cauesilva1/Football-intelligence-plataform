@@ -21,29 +21,20 @@ Europeus abrem ~14/08; Brasileirão **2026** já corre. Freeze de dados **reaber
 
 | Frente | Estado | Nota |
 |--------|--------|------|
-| Big5 | ~**85%** → meta **≥90%** | Low-quota diário (`data:backfill-soccer-seasons --low-quota`) |
-| Brasileirão 2026 | Boxscores ESPN ativos | `data:backfill-boxscores --slug=bra.1 --seasonYear=2026` |
-| Clubs / team stats | **ESPN + DB only** | StatsBomb open-data **não** alimentar Clubs (épocas stale) |
-| Desk UI | Editorial light shipped | Manter estável; não expandir BB/AF |
+| Big5 | ~**85%** → meta **≥90%** | Low-quota diário; showcase season **2025/26** |
+| Brasileirão 2026 | Boxscores ESPN + cron | `bra.1` seasonYear=2026 |
+| Clubs / team stats | **ESPN + DB only** | Sem StatsBomb open-data |
+| Desk UI | Editorial + public beta copy | `/demo` roteiro; BB/AF secondary |
+| Época EU | `CURRENT_SEASON=2025/26` | `NEXT_EUROPEAN_SEASON=2026/27` + `EUROPEAN_NEXT_SEASON_LIVE=false` até kickoff |
 
 Piso AND mantém-se (≥4 apps **e** ≥270′). Um ETL pesado de cada vez (P1017).
 
-## Ordem estratégica
-
-| Fase | Foco | Estado |
-|------|------|--------|
-| **1** | Big5 showcase live | **Ativo** — push 90% + prep 2026/27 |
-| **2** | Brasileirão 2026 | **Ativo** — cron/boxscores |
-| **3** | Product UI desk | Landing + desk editorial ✅ — polish só se não bloquear dados |
-| **4** | Ligas de transição (PT, NL; MLS depois) | Depois do go-live europeu |
-| **5** | Colleges + High School | Tese; ETL só com soccer estável |
-| **6** | BB/AF profundos · auth/piloto | Depois |
-
 ## O que fazer AGORA
 
-1. **Dados soccer:** BR 2026 live + Big5 low-quota → 90% + flip `CURRENT_SEASON` para 2026/27 antes de 14/08.
-2. **Sem StatsBomb** em Clubs/detail — só ESPN standings + `TeamStatistic`.
-3. Um ETL pesado de cada vez; commit por fatia.
+1. Continuar low-quota até Big5 ≥90%; BR boxscores recentes.
+2. Em ~14/08: `EUROPEAN_NEXT_SEASON_LIVE=true` + `ESPN_EUROPEAN_SEASON_YEAR=2026`.
+3. Demo pública: seguir `/demo` (soccer first).
+4. Cron soccer já faz boxscores 2d + enrich-defense (limit 40).
 
 ## Regras de dados (ainda válidas)
 

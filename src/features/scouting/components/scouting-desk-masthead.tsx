@@ -2,6 +2,7 @@ import { ScoutWorkflowNav } from "@/features/scouting/components/scout-workflow-
 import { sportTheme } from "@/lib/sport-theme";
 import type { Sport } from "@/lib/sport";
 import { appConfig } from "@/lib/config";
+import { CURRENT_SEASON, NEXT_EUROPEAN_SEASON, BRAZIL_SEASON_LABEL, EUROPEAN_NEXT_SEASON_LIVE } from "@/lib/seasons";
 import { cn } from "@/lib/utils";
 
 const COPY: Record<Sport, { title: string; lede: string }> = {
@@ -11,11 +12,11 @@ const COPY: Record<Sport, { title: string; lede: string }> = {
   },
   BASKETBALL: {
     title: "Basketball scouting",
-    lede: "Filter by metrics and archetypes — then open a profile with season evidence on the table.",
+    lede: "Secondary desk — thinner coverage than soccer. Filter by metrics, then open a profile with season evidence.",
   },
   AMERICAN_FOOTBALL: {
     title: "American football scouting",
-    lede: "Filter NFL and college by position — production lands on the profile, not as a vanity overall.",
+    lede: "Secondary desk — NFL/CFB coverage is partial. Filter by position; production on the profile, not a vanity overall.",
   },
 };
 
@@ -29,16 +30,25 @@ export function ScoutingDeskMasthead({
 }) {
   const copy = COPY[sport] ?? COPY.SOCCER;
   const theme = sportTheme(sport);
+  const seasonMeta =
+    sport === "SOCCER"
+      ? EUROPEAN_NEXT_SEASON_LIVE
+        ? `Season ${NEXT_EUROPEAN_SEASON} · BR ${BRAZIL_SEASON_LABEL}`
+        : `Showcase ${CURRENT_SEASON} · BR ${BRAZIL_SEASON_LABEL}`
+      : `Season ${appConfig.season}`;
 
   return (
     <header className={cn("editorial-pagehead", className)}>
       <div className="editorial-pagehead-row">
         <div>
-          <p className="desk-kicker">{theme.label}</p>
+          <p className="desk-kicker">
+            {theme.label}
+            {sport !== "SOCCER" ? " · secondary" : ""}
+          </p>
           <h1 className="editorial-pagehead-title">{copy.title}</h1>
           <p className="editorial-pagehead-lede">{copy.lede}</p>
         </div>
-        <p className="editorial-pagehead-meta">Season {appConfig.season}</p>
+        <p className="editorial-pagehead-meta">{seasonMeta}</p>
       </div>
       <ScoutWorkflowNav current="discover" />
     </header>

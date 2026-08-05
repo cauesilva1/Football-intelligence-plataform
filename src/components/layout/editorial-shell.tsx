@@ -190,11 +190,14 @@ export function EditorialShell({ children }: { children: React.ReactNode }) {
         <footer className="editorial-footer">
           <div className="editorial-footer-inner editorial-footer-inner-flush">
             <span>
-              Prototype dataset — models still refining.{" "}
+              Public beta — ESPN / API-Football feeds · own ratings.{" "}
               <Link href="/methodology">Methodology</Link>
+              {" · "}
+              <Link href="/demo">Demo path</Link>
             </span>
             <span className="hidden sm:inline">
               {APP_NAME} · {sportTheme(currentSport).label}
+              {currentSport !== "SOCCER" ? " · secondary sport" : ""}
             </span>
           </div>
         </footer>

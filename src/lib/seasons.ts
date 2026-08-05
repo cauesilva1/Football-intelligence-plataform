@@ -1,7 +1,10 @@
-/** Human-readable active season label shown across the UI. */
+/** Human-readable active season label shown across the UI (showcase / primary filter). */
 export const CURRENT_SEASON = "2025/26";
 
-export const SEASONS = ["2023/24", "2024/25", CURRENT_SEASON] as const;
+/** Next European cross-year season — standings/cron flip here as 2026/27 kicks off. */
+export const NEXT_EUROPEAN_SEASON = "2026/27";
+
+export const SEASONS = ["2023/24", "2024/25", CURRENT_SEASON, NEXT_EUROPEAN_SEASON] as const;
 
 /** API-Football `season` param for European cross-year leagues (2025/26 → 2025). */
 export const API_FOOTBALL_EUROPEAN_SEASON_YEAR = 2025;
@@ -10,8 +13,14 @@ export const API_FOOTBALL_EUROPEAN_SEASON_YEAR = 2025;
 export const API_FOOTBALL_BRAZIL_SEASON_YEAR = 2026;
 export const API_FOOTBALL_MLS_SEASON_YEAR = 2026;
 
-/** ESPN standings `season` query param for European leagues. */
+/**
+ * ESPN standings `season` for European leagues.
+ * Keep on the completed showcase year until 2026/27 has a stable table; bump to 2026 at kickoff.
+ */
 export const ESPN_EUROPEAN_SEASON_YEAR = 2025;
+
+/** When true, UI treats NEXT_EUROPEAN_SEASON as the live European label (post-kickoff). */
+export const EUROPEAN_NEXT_SEASON_LIVE = false;
 
 /** ESPN `season` query param for Brasileirão — temporada 2026 em andamento. */
 export const ESPN_BRAZIL_SEASON_YEAR = 2026;

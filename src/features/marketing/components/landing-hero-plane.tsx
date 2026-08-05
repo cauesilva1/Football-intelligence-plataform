@@ -169,7 +169,7 @@ export function LandingSportsStrip() {
       <div className="landing-wrap">
         <p className="landing-kicker">Three sports. One desk.</p>
         <h2 className="landing-section-title">
-          Soccer, basketball, and American football as equal peers
+          Soccer first — basketball and American football as secondary desks
         </h2>
         <p className="landing-sports-lede">
           Same scout workflow, honesty rules, and decision layer for every sport we cover.

@@ -10,8 +10,8 @@ const CLAIMS = [
     body: "Productive seasons only when apps and minutes clear the bar.",
   },
   {
-    label: "Equal peers",
-    body: "Soccer, basketball, and American football share one scout desk.",
+    label: "Soccer reference",
+    body: "Soccer is the mature desk; basketball and American football follow the same workflow.",
   },
   {
     label: "Decision support",

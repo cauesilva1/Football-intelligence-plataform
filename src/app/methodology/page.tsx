@@ -27,13 +27,15 @@ export default function MethodologyPage() {
       <div className="mx-auto max-w-3xl space-y-6">
         <PageHeader
           title="Methodology"
-          description="Transparent prototype notes — how ratings, fit, and opportunity flags are defined today."
+          description="How ratings, sample floors, and opportunity flags work in this public beta."
         />
 
-        <DataPanel title="Prototype disclaimer" density="dense">
+        <DataPanel title="Public beta" density="dense">
           <p className="text-sm leading-relaxed text-muted-foreground">
-            The current version uses a prototype dataset and scoring models that are still being
-            refined. This is a portfolio demo, not a live deployment used by professional clubs.
+            OmniScout is a public beta for sports intelligence / scouting. Season lines come from
+            ESPN boxscores and API-Football enrichment; ratings and opportunity flags are our models,
+            not Opta or Sofascore. Soccer is the reference sport — basketball and American football
+            reuse the same workflow with thinner coverage.
           </p>
         </DataPanel>
 
@@ -136,21 +138,52 @@ export default function MethodologyPage() {
           </p>
         </DataPanel>
 
-        <DataPanel title="Real vs prototype data" density="dense">
+        <DataPanel title="Real vs derived data" density="dense">
           <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
             <li>
-              <span className="text-foreground">Live / synced:</span> ESPN hubs and match feeds when
-              configured; DB season rows when <code>DATA_SOURCE=db</code>.
+              <span className="text-foreground">Live / synced:</span> ESPN hubs and match feeds;
+              DB season rows when <code>DATA_SOURCE=db</code>.
             </li>
             <li>
-              <span className="text-foreground">Derived:</span> Goals/90, Assists/90, proxy ratings,
-              prospect / opportunity labels.
+              <span className="text-foreground">Derived:</span> Goals/90, Assists/90, Def/90, proxy
+              ratings, prospect / opportunity labels.
             </li>
             <li>
-              <span className="text-foreground">Mock:</span> local seed generators when not on DB;
-              market values are estimates.
+              <span className="text-foreground">Not covered:</span> Opta eventing, paid tracking,
+              video — we do not invent those fields.
             </li>
           </ul>
+        </DataPanel>
+
+        <DataPanel title="Suggested demo path" density="dense">
+          <ol className="list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
+            <li>
+              <a href="/dashboard" className="text-primary underline-offset-2 hover:underline">
+                Overview
+              </a>{" "}
+              — soccer lists with sample floors.
+            </li>
+            <li>
+              <a
+                href="/rankings/defenders"
+                className="text-primary underline-offset-2 hover:underline"
+              >
+                Defensive Actions
+              </a>{" "}
+              — Def/90 with ≥450′.
+            </li>
+            <li>Open a Big5 centre-back profile — scorecard + recent appearances.</li>
+            <li>
+              <a href="/teams?league=bra" className="text-primary underline-offset-2 hover:underline">
+                Clubs · Brasileirão
+              </a>{" "}
+              — 2026 W/D/L from live standings.
+            </li>
+            <li>Shortlist → Compare → Report for the same player.</li>
+          </ol>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Full checklist: <a href="/demo" className="text-primary hover:underline">/demo</a>
+          </p>
         </DataPanel>
 
         <p className="text-xs text-muted-foreground">

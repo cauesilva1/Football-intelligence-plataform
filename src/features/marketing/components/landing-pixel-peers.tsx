@@ -130,7 +130,7 @@ export function LandingPixelPeers() {
         <p className="landing-kicker">Sports desk</p>
         <h2 className="landing-sport-cards-title">Three games. One scout workflow.</h2>
         <p className="landing-sport-cards-lede">
-          Equal peers across soccer, basketball, and American football — open the desk for each sport.
+          Soccer as the reference desk — basketball and American football follow the same workflow.
         </p>
       </div>
 

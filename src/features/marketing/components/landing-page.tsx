@@ -14,7 +14,7 @@ const STEPS = [
   },
   {
     title: "Intelligence",
-    body: "Roles, trajectory, and fit across soccer, basketball, and American football in one desk.",
+    body: "Roles, trajectory, and fit — soccer as the reference sport, with basketball and American football on the same desk.",
     href: "/scouting",
     cta: "Open scouting",
   },
@@ -36,8 +36,8 @@ const TRUST = [
     body: "Provisional ratings and gaps are declared the way a trusted desk would say them.",
   },
   {
-    title: "Three equal sports",
-    body: "Soccer, basketball, and American football share the same scout workflow.",
+    title: "Soccer first",
+    body: "Soccer is the reference desk; basketball and American football follow the same workflow with thinner coverage.",
   },
 ] as const;
 
