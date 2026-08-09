@@ -27,15 +27,14 @@ export default function MethodologyPage() {
       <div className="mx-auto max-w-3xl space-y-6">
         <PageHeader
           title="Methodology"
-          description="How ratings, sample floors, and opportunity flags work in this public beta."
+          description="How ratings, sample floors, and opportunity flags are computed."
         />
 
-        <DataPanel title="Public beta" density="dense">
+        <DataPanel title="Data sources" density="dense">
           <p className="text-sm leading-relaxed text-muted-foreground">
-            OmniScout is a public beta for sports intelligence / scouting. Season lines come from
-            ESPN boxscores and API-Football enrichment; ratings and opportunity flags are our models,
-            not Opta or Sofascore. Soccer is the reference sport — basketball and American football
-            reuse the same workflow with thinner coverage.
+            Season lines come from ESPN boxscores and API-Football enrichment. Ratings and
+            opportunity flags are OmniScout models. Soccer is the reference sport — basketball and
+            American football reuse the same workflow with thinner coverage today.
           </p>
         </DataPanel>
 

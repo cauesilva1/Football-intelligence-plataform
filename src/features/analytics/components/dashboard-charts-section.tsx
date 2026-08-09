@@ -12,9 +12,11 @@ export async function DashboardChartsSection() {
   const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
   const latest = overview.ratingTrend[overview.ratingTrend.length - 1];
   const changeLabel =
-    overview.ratingChange >= 0
-      ? `+${overview.ratingChange.toFixed(2)} vs previous season`
-      : `${overview.ratingChange.toFixed(2)} vs previous season`;
+    overview.ratingTrend.length < 2
+      ? "current season"
+      : overview.ratingChange >= 0
+        ? `+${overview.ratingChange.toFixed(2)} vs previous season`
+        : `${overview.ratingChange.toFixed(2)} vs previous season`;
 
   const chartTitle = isBasketball
     ? "Points by Position"

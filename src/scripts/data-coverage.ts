@@ -292,6 +292,75 @@ async function main() {
     byLeague,
   };
 
+  // Calendar-year desks (ESPN boxscore path — not API-Football quota).
+  const calendarPlayers = await prisma.player.findMany({
+    where: {
+      sport: "SOCCER",
+      OR: [
+        { league: { contains: "Brasileir", mode: "insensitive" } },
+        { league: { contains: "MLS", mode: "insensitive" } },
+        { team: { competition: { name: { contains: "Brasileir", mode: "insensitive" } } } },
+        { team: { competition: { name: { contains: "MLS", mode: "insensitive" } } } },
+      ],
+    },
+    select: {
+      league: true,
+      team: { select: { competition: { select: { name: true } } } },
+      stats: {
+        select: { season: true, matchesPlayed: true, minutesPlayed: true },
+      },
+      statistics: {
+        select: { season: true, appearances: true, minutesPlayed: true },
+      },
+    },
+  });
+
+  const calendarByLeague: Record<
+    string,
+    { players: number; zero: number; onePlus: number; withOnePlusPct: number }
+  > = {
+    Brasileirão: { players: 0, zero: 0, onePlus: 0, withOnePlusPct: 0 },
+    MLS: { players: 0, zero: 0, onePlus: 0, withOnePlusPct: 0 },
+  };
+
+  for (const player of calendarPlayers) {
+    const label = `${player.league} ${player.team?.competition?.name ?? ""}`.toLowerCase();
+    const leagueKey = label.includes("mls")
+      ? "MLS"
+      : label.includes("brasileir")
+        ? "Brasileirão"
+        : null;
+    if (!leagueKey) continue;
+
+    const bySeason = new Map<string, { apps: number; minutes: number }>();
+    for (const row of player.stats) {
+      const key = String(row.season);
+      const bucket = bySeason.get(key) ?? { apps: 0, minutes: 0 };
+      bucket.apps += row.matchesPlayed;
+      bucket.minutes += row.minutesPlayed;
+      bySeason.set(key, bucket);
+    }
+    for (const row of player.statistics) {
+      const key = row.season;
+      const bucket = bySeason.get(key) ?? { apps: 0, minutes: 0 };
+      bucket.apps += row.appearances;
+      bucket.minutes += row.minutesPlayed;
+      bySeason.set(key, bucket);
+    }
+    let productive = 0;
+    for (const bucket of bySeason.values()) {
+      if (isProductiveSeasonRow(bucket.apps, bucket.minutes, "SOCCER")) productive += 1;
+    }
+    calendarByLeague[leagueKey].players += 1;
+    if (productive === 0) calendarByLeague[leagueKey].zero += 1;
+    else calendarByLeague[leagueKey].onePlus += 1;
+  }
+
+  for (const row of Object.values(calendarByLeague)) {
+    const n = row.players || 1;
+    row.withOnePlusPct = Number(((row.onePlus / n) * 100).toFixed(1));
+  }
+
   const report = {
     generatedAt: new Date().toISOString(),
     dataSource: process.env.DATA_SOURCE ?? "unset",
@@ -310,6 +379,7 @@ async function main() {
     })),
     depthBySport,
     showcase,
+    calendarLeagues: calendarByLeague,
     euroLeague: {
       players: euroLeaguePlayers,
       playersWithAnySeasonStats: euroLeagueWithStats,
@@ -320,6 +390,14 @@ async function main() {
     },
     americanFootballSplit,
     opsHints: [
+      "npm run data:sync-mls",
+      "npm run data:sync-br",
+      "npm run data:sync-mls",
+      "npm run data:backfill-boxscores -- --days=90 --slug=bra.1 --seasonYear=2026",
+      "npm run data:backfill-boxscores -- --days=90 --slug=usa.1 --seasonYear=2026",
+      "npm run data:backfill-boxscores -- --days=90 --slug=bra.copa_do_brazil --seasonYear=2026",
+      "npm run data:backfill-boxscores -- --days=90 --slug=conmebol.libertadores --seasonYear=2026",
+      "npm run data:backfill-boxscores -- --days=90 --slug=conmebol.sudamericana --seasonYear=2026",
       "npm run data:backfill-soccer-seasons -- --teams=40 --season=2024",
       "npm run data:backfill-big5 -- --days=40 --end=2025-05-25 --seasonYear=2024",
       "npm run data:sync-euroleague -- --all-played --limit=100",
@@ -351,6 +429,12 @@ async function main() {
     for (const [league, row] of Object.entries(showcase.byLeague)) {
       console.log(
         `  ${league}: n=${row.players} ≥1=${row.withOnePlusPct}% ≥2=${row.twoPlusPct}% (zero=${row.zero})`
+      );
+    }
+    console.log("\nCalendar leagues (ESPN path — Bra / MLS)");
+    for (const [league, row] of Object.entries(report.calendarLeagues)) {
+      console.log(
+        `  ${league}: n=${row.players} ≥1=${row.withOnePlusPct}% (zero=${row.zero})`
       );
     }
     console.log("\nEuroLeague");

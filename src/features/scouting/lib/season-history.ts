@@ -34,9 +34,10 @@ export function aggregateSeasonTimeline(
     bySeason.set(record.season, bucket);
   }
 
+  const knownSeasons = new Set<string>(SEASONS);
   const seasons = sortSeasonLabels([
     ...SEASONS.filter((season) => bySeason.has(season)),
-    ...[...bySeason.keys()].filter((season) => !SEASONS.includes(season as (typeof SEASONS)[number])),
+    ...[...bySeason.keys()].filter((season) => !knownSeasons.has(season)),
   ]);
 
   return seasons.map((season) => {

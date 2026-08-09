@@ -21,7 +21,7 @@ export function MobileHeaderMenu() {
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-sm border border-border bg-card text-foreground"
       >
         {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
       </button>

@@ -1,13 +1,20 @@
 import { readSystemCache, writeSystemCache, canUseDatabase } from "@/lib/system-cache";
 import {
   BRAZIL_SEASON_LABEL,
+  COPA_DO_BRASIL_LABEL,
   CURRENT_SEASON,
   ESPN_BRAZIL_SEASON_YEAR,
+  ESPN_COPA_DO_BRASIL_SLUG,
+  ESPN_CONMEBOL_SEASON_YEAR,
   ESPN_EUROPEAN_SEASON_YEAR,
+  ESPN_LIBERTADORES_SLUG,
   ESPN_MLS_SEASON_YEAR,
+  ESPN_SUDAMERICANA_SLUG,
   FIFA_WORLD_CUP_SEASON_YEAR,
+  LIBERTADORES_LABEL,
   MLS_LABEL,
   MLS_SEASON_LABEL,
+  SUDAMERICANA_LABEL,
 } from "@/lib/seasons";
 import { isStale, MATCH_SYNC_TTL_MS } from "@/lib/sync/data-staleness";
 import {
@@ -58,6 +65,24 @@ const ESPN_LEAGUES: EspnLeagueConfig[] = [
     competitionLabel: "Brasileirão Série A",
     cacheKey: `espn:standings:brasileirao:${ESPN_BRAZIL_SEASON_YEAR}`,
     preferredSeason: ESPN_BRAZIL_SEASON_YEAR,
+  },
+  {
+    match: (n) => n.includes("copa do brasil") || n.includes("bra.copa_do_brazil"),
+    slug: ESPN_COPA_DO_BRASIL_SLUG,
+    competitionLabel: COPA_DO_BRASIL_LABEL,
+    preferredSeason: ESPN_BRAZIL_SEASON_YEAR,
+  },
+  {
+    match: (n) => n.includes("libertadores") || n.includes("conmebol.libertadores"),
+    slug: ESPN_LIBERTADORES_SLUG,
+    competitionLabel: LIBERTADORES_LABEL,
+    preferredSeason: ESPN_CONMEBOL_SEASON_YEAR,
+  },
+  {
+    match: (n) => n.includes("sudamericana") || n.includes("conmebol.sudamericana"),
+    slug: ESPN_SUDAMERICANA_SLUG,
+    competitionLabel: SUDAMERICANA_LABEL,
+    preferredSeason: ESPN_CONMEBOL_SEASON_YEAR,
   },
   {
     match: (n) => n.includes("mls") || n.includes("major league soccer") || n.includes("usa.1"),
@@ -279,7 +304,14 @@ const WORLD_CUP_SEASON_CANDIDATES = [
 ] as const;
 
 function seasonCandidatesForLeague(config: EspnLeagueConfig) {
-  if (config.slug === "bra.1") return BRAZIL_SEASON_CANDIDATES;
+  if (
+    config.slug === "bra.1" ||
+    config.slug === ESPN_COPA_DO_BRASIL_SLUG ||
+    config.slug === ESPN_LIBERTADORES_SLUG ||
+    config.slug === ESPN_SUDAMERICANA_SLUG
+  ) {
+    return BRAZIL_SEASON_CANDIDATES;
+  }
   if (config.slug === "usa.1") return MLS_SEASON_CANDIDATES;
   if (config.slug === "fifa.world") return WORLD_CUP_SEASON_CANDIDATES;
   return EUROPEAN_SEASON_CANDIDATES;

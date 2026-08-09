@@ -311,20 +311,26 @@ export function buildDashboardOverview(
       }, 0),
   }));
 
-  const ratingTrend = SEASONS.map((season) => {
+  const ratingTrend: { season: string; avgRating: number }[] = [];
+  for (const season of SEASONS) {
     const seasonRatings = players
       .flatMap((p) => p.history.filter((h) => h.season === season))
-      .map((h) => h.rating);
-    return {
+      .map((h) => h.rating)
+      .filter((rating) => Number.isFinite(rating) && rating > 0);
+    if (seasonRatings.length === 0) continue;
+    ratingTrend.push({
       season,
       avgRating: Number(
-        (seasonRatings.reduce((s, r) => s + r, 0) / Math.max(seasonRatings.length, 1)).toFixed(2)
+        (seasonRatings.reduce((s, r) => s + r, 0) / seasonRatings.length).toFixed(2)
       ),
-    };
-  });
+    });
+  }
 
   const currentSeasonRating = ratingTrend[ratingTrend.length - 1]?.avgRating ?? avgRating;
-  const previousSeasonRating = ratingTrend[ratingTrend.length - 2]?.avgRating ?? currentSeasonRating;
+  const previousSeasonRating =
+    ratingTrend.length >= 2
+      ? (ratingTrend[ratingTrend.length - 2]?.avgRating ?? currentSeasonRating)
+      : currentSeasonRating;
   const ratingChange = Number((currentSeasonRating - previousSeasonRating).toFixed(2));
 
   const base = {

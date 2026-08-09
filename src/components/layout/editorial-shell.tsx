@@ -141,39 +141,40 @@ export function EditorialShell({ children }: { children: React.ReactNode }) {
                     />
                   );
                 })}
+                {group.id === "tools" ? (
+                  <Link
+                    href="/methodology"
+                    data-label="Methodology"
+                    aria-label="Methodology"
+                    title={collapsed ? "Methodology" : undefined}
+                    className={cn(
+                      "editorial-side-link",
+                      pathname?.startsWith("/methodology") && "is-active",
+                      collapsed && "is-collapsed"
+                    )}
+                  >
+                    <BookOpen className="editorial-side-icon" aria-hidden />
+                    <span className="editorial-side-label">Methodology</span>
+                  </Link>
+                ) : null}
               </div>
             </div>
           ))}
         </nav>
-
-        <div className="editorial-sidebar-foot">
-          <Link
-            href="/methodology"
-            data-label="Methodology"
-            aria-label="Methodology"
-            title={collapsed ? "Methodology" : undefined}
-            className={cn(
-              "editorial-side-link",
-              pathname?.startsWith("/methodology") && "is-active",
-              collapsed && "is-collapsed"
-            )}
-          >
-            <BookOpen className="editorial-side-icon" aria-hidden />
-            <span className="editorial-side-label">Methodology</span>
-          </Link>
-        </div>
       </aside>
 
       <div className="editorial-content">
         <header className="editorial-topbar editorial-topbar-compact">
           <div className="editorial-topbar-inner editorial-topbar-inner-flush">
             <p className="editorial-topbar-context">
-              <span className="editorial-side-label-always">{APP_NAME}</span>
-              <span aria-hidden>·</span>
-              <span>{sportTheme(currentSport).label}</span>
+              <span className="editorial-side-label-always md:hidden">{APP_NAME}</span>
+              <span className="hidden text-[#667077] md:inline">{sportTheme(currentSport).label}</span>
+              {currentSport !== "SOCCER" ? (
+                <span className="hidden text-[#8a939c] md:inline">· secondary</span>
+              ) : null}
             </p>
             <div className="editorial-topbar-end">
-              <div className="flex items-center gap-2 md:hidden">
+              <div className="flex items-center gap-1.5 md:hidden">
                 <SportSwitcher compact />
                 <MobileHeaderMenu />
               </div>
@@ -190,7 +191,6 @@ export function EditorialShell({ children }: { children: React.ReactNode }) {
         <footer className="editorial-footer">
           <div className="editorial-footer-inner editorial-footer-inner-flush">
             <span>
-              Public beta — ESPN / API-Football feeds · own ratings.{" "}
               <Link href="/methodology">Methodology</Link>
               {" · "}
               <Link href="/demo">Demo path</Link>

@@ -40,7 +40,7 @@ export async function RankingView({
 
       {showPrototypeNote ? (
         <p className="rounded-lg border border-border/70 bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
-          Ratings are a prototype productivity score (not Opta/Sofascore). Soccer lists require ≥ 450&apos;
+          Ratings are a productivity score (not Opta/Sofascore). Soccer lists require ≥ 450&apos;
           for reliable samples — see{" "}
           <Link href="/methodology" className="text-primary underline-offset-2 hover:underline">
             methodology

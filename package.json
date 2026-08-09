@@ -19,6 +19,8 @@
     "data:sync-br2025-db": "tsx src/scripts/sync-brasileirao-2025-db.ts",
     "data:sync-match-2026": "tsx src/scripts/sync-match-stats-2026.ts",
     "data:cron-sync-2026": "tsx src/scripts/auto-sync-completed-matches-2026.ts",
+    "data:sync-mls": "tsx src/scripts/sync-mls-rosters.ts",
+    "data:sync-br": "tsx src/scripts/sync-brasileirao-rosters.ts",
     "data:backfill-boxscores": "tsx src/scripts/backfill-soccer-boxscores.ts",
     "data:backfill-big5": "tsx src/scripts/backfill-soccer-big5.ts",
     "data:enrich-defense": "tsx src/scripts/enrich-defensive-stats.ts",

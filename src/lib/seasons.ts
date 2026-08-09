@@ -4,7 +4,18 @@ export const CURRENT_SEASON = "2025/26";
 /** Next European cross-year season — standings/cron flip here as 2026/27 kicks off. */
 export const NEXT_EUROPEAN_SEASON = "2026/27";
 
-export const SEASONS = ["2023/24", "2024/25", CURRENT_SEASON, NEXT_EUROPEAN_SEASON] as const;
+/** When true, UI treats NEXT_EUROPEAN_SEASON as the live European label (post-kickoff). */
+export const EUROPEAN_NEXT_SEASON_LIVE = false;
+
+/** Seasons with real showcase data — do not include NEXT until EUROPEAN_NEXT_SEASON_LIVE. */
+export const SHOWCASE_SEASONS = ["2023/24", "2024/25", CURRENT_SEASON] as const;
+
+/** All season labels the UI may list (includes NEXT when live). */
+export type SeasonLabel = (typeof SHOWCASE_SEASONS)[number] | typeof NEXT_EUROPEAN_SEASON;
+
+export const SEASONS: readonly SeasonLabel[] = EUROPEAN_NEXT_SEASON_LIVE
+  ? [...SHOWCASE_SEASONS, NEXT_EUROPEAN_SEASON]
+  : [...SHOWCASE_SEASONS];
 
 /** API-Football `season` param for European cross-year leagues (2025/26 → 2025). */
 export const API_FOOTBALL_EUROPEAN_SEASON_YEAR = 2025;
@@ -18,9 +29,6 @@ export const API_FOOTBALL_MLS_SEASON_YEAR = 2026;
  * Keep on the completed showcase year until 2026/27 has a stable table; bump to 2026 at kickoff.
  */
 export const ESPN_EUROPEAN_SEASON_YEAR = 2025;
-
-/** When true, UI treats NEXT_EUROPEAN_SEASON as the live European label (post-kickoff). */
-export const EUROPEAN_NEXT_SEASON_LIVE = false;
 
 /** ESPN `season` query param for Brasileirão — temporada 2026 em andamento. */
 export const ESPN_BRAZIL_SEASON_YEAR = 2026;
@@ -37,6 +45,15 @@ export const TRANSFERMARKT_MLS_SEASON_ID = 2026;
 
 /** Rótulo persistido no banco para dados do Brasileirão (campanha calendário 2026). */
 export const BRAZIL_SEASON_LABEL = "2026";
+
+/** Copas / CONMEBOL em andamento no calendário 2026 (ESPN). */
+export const ESPN_COPA_DO_BRASIL_SLUG = "bra.copa_do_brazil";
+export const ESPN_LIBERTADORES_SLUG = "conmebol.libertadores";
+export const ESPN_SUDAMERICANA_SLUG = "conmebol.sudamericana";
+export const ESPN_CONMEBOL_SEASON_YEAR = 2026;
+export const COPA_DO_BRASIL_LABEL = "Copa do Brasil";
+export const LIBERTADORES_LABEL = "CONMEBOL Libertadores";
+export const SUDAMERICANA_LABEL = "CONMEBOL Sudamericana";
 
 /** ESPN slug + season para a Copa do Mundo 2026 (torneio em andamento). */
 export const FIFA_WORLD_CUP_SLUG = "fifa.world";
@@ -64,16 +81,44 @@ export function isMlsLeague(competitionName?: string | null): boolean {
   return n.includes("mls") || n.includes("major league soccer") || n.includes("usa.1");
 }
 
+export function isCopaDoBrasil(competitionName?: string | null): boolean {
+  const n = competitionName?.toLowerCase() ?? "";
+  return n.includes("copa do brasil") || n.includes("bra.copa_do_brazil");
+}
+
+export function isLibertadores(competitionName?: string | null): boolean {
+  const n = competitionName?.toLowerCase() ?? "";
+  return n.includes("libertadores") || n.includes("conmebol.libertadores");
+}
+
+export function isSudamericana(competitionName?: string | null): boolean {
+  const n = competitionName?.toLowerCase() ?? "";
+  return n.includes("sudamericana") || n.includes("conmebol.sudamericana");
+}
+
 /** Calendar-year domestic leagues (not European cross-year). */
 export function isCalendarYearLeague(competitionName?: string | null): boolean {
-  return isBrazilianLeague(competitionName) || isMlsLeague(competitionName);
+  return (
+    isBrazilianLeague(competitionName) ||
+    isMlsLeague(competitionName) ||
+    isCopaDoBrasil(competitionName) ||
+    isLibertadores(competitionName) ||
+    isSudamericana(competitionName)
+  );
 }
 
 /** Season label used when persisting TeamStatistic / Match for a competition. */
 export function resolvePersistedSeasonLabel(competitionName?: string | null): string {
   if (isWorldCupCompetition(competitionName)) return FIFA_WORLD_CUP_SEASON_LABEL;
   if (isMlsLeague(competitionName)) return MLS_SEASON_LABEL;
-  if (isBrazilianLeague(competitionName)) return BRAZIL_SEASON_LABEL;
+  if (
+    isBrazilianLeague(competitionName) ||
+    isCopaDoBrasil(competitionName) ||
+    isLibertadores(competitionName) ||
+    isSudamericana(competitionName)
+  ) {
+    return BRAZIL_SEASON_LABEL;
+  }
   return CURRENT_SEASON;
 }
 
@@ -89,7 +134,13 @@ export function resolveApiFootballSeasonYear(competitionName?: string | null): n
 export function resolveEspnSeasonYear(competitionName?: string | null): number {
   if (isWorldCupCompetition(competitionName)) return FIFA_WORLD_CUP_SEASON_YEAR;
   if (isMlsLeague(competitionName)) return ESPN_MLS_SEASON_YEAR;
-  return isBrazilianLeague(competitionName)
-    ? ESPN_BRAZIL_SEASON_YEAR
-    : ESPN_EUROPEAN_SEASON_YEAR;
+  if (
+    isBrazilianLeague(competitionName) ||
+    isCopaDoBrasil(competitionName) ||
+    isLibertadores(competitionName) ||
+    isSudamericana(competitionName)
+  ) {
+    return ESPN_BRAZIL_SEASON_YEAR;
+  }
+  return ESPN_EUROPEAN_SEASON_YEAR;
 }

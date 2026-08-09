@@ -514,6 +514,7 @@ type ApiPlayerSeasonItem = {
 /**
  * Full season totals for one club (paginated /players?team=&season=).
  * Free tier typically allows season ≤ 2024 — use that for prior-season depth.
+ * Completed seasons are cached in systemCache so prefer-zeros / retries don't re-burn quota.
  */
 export async function fetchTeamSeasonPlayerLines(
   teamApiId: number,
@@ -521,6 +522,12 @@ export async function fetchTeamSeasonPlayerLines(
   maxPages = 3
 ): Promise<ApiSportsSeasonPlayerLine[]> {
   const pages = Math.max(1, Math.min(maxPages, 5));
+  const cacheKey = `api-sports:team-season-players:${teamApiId}:${season}:p${pages}`;
+  const cached = await readSystemCache<{ lines?: ApiSportsSeasonPlayerLine[]; cachedAt?: string }>(
+    cacheKey
+  );
+  if (cached?.lines?.length) return cached.lines;
+
   const lines: ApiSportsSeasonPlayerLine[] = [];
   for (let page = 1; page <= pages; page += 1) {
     const q = await getQuotaCount();
@@ -564,6 +571,18 @@ export async function fetchTeamSeasonPlayerLines(
 
     if (response.length < 20) break;
   }
+
+  // Historical seasons are stable — cache even empty results to avoid quota loops.
+  if (season < new Date().getUTCFullYear() || lines.length > 0) {
+    await writeSystemCache(cacheKey, {
+      lines,
+      cachedAt: new Date().toISOString(),
+      teamApiId,
+      season,
+      pages,
+    });
+  }
+
   return lines;
 }
 

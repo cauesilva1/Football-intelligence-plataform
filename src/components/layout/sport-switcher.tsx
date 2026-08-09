@@ -49,7 +49,7 @@ export function SportSwitcher({
     cn(
       "relative z-[1] flex items-center gap-1.5 text-2xs font-medium transition-[color,background-color,padding,gap,min-height,justify-content] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
       rail && "editorial-sport-rail editorial-sport-compact min-h-[2.15rem] w-full justify-start rounded-sm px-2.5 py-1.5",
-      compact && !rail && "h-9 w-9 justify-center rounded-sm px-0",
+      compact && !rail && "h-8 w-8 justify-center rounded-sm px-0",
       !iconsOnly && "min-w-0 flex-col justify-center gap-1 rounded-sm px-1 py-2",
       active
         ? rail
@@ -91,23 +91,28 @@ export function SportSwitcher({
         const content = (
           <>
             <Icon
+              title=""
               className={cn(
                 "editorial-side-icon shrink-0 transition-transform duration-200",
                 active && popSport === value && "sport-switcher-icon-active"
               )}
             />
             {rail ? (
-              <span className="editorial-side-label truncate leading-none">{shortLabel}</span>
+              <span className="editorial-side-label truncate leading-none" aria-hidden>
+                {shortLabel}
+              </span>
             ) : !iconsOnly ? (
-              <span className="truncate leading-none">{shortLabel}</span>
+              <span className="truncate leading-none" aria-hidden>
+                {shortLabel}
+              </span>
             ) : null}
-            <span className="sr-only">{label}</span>
           </>
         );
 
         const sharedProps = {
           role: "tab" as const,
           "aria-selected": active,
+          "aria-label": label,
           "data-label": label,
           title: label,
           className: cn(tabClass(value, active), rail && "editorial-sport-compact"),

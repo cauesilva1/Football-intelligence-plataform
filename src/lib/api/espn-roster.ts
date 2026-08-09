@@ -177,19 +177,25 @@ export async function resolveEspnTeamId(
   const cached = teamIdCache.get(cacheKey);
   if (cached) return { espnTeamId: cached, espnSlug: config.slug };
 
-  const data = await fetchJson<EspnTeamListResponse>(`${ESPN_SITE}/${config.slug}/teams`);
-  const wraps =
-    data?.sports?.flatMap((s) => s.leagues?.flatMap((l) => l.teams ?? []) ?? []) ?? [];
+  const slugCandidates =
+    config.slug === "bra.1" ? [config.slug, "bra.2"] : [config.slug];
 
-  for (const wrap of wraps) {
-    const team = wrap.team;
-    if (!team?.id) continue;
-    const candidates = [team.displayName, team.name, team.shortDisplayName].filter(
-      Boolean
-    ) as string[];
-    if (candidates.some((name) => namesLikelyMatch(name, teamName))) {
-      teamIdCache.set(cacheKey, team.id);
-      return { espnTeamId: team.id, espnSlug: config.slug };
+  for (const espnSlug of slugCandidates) {
+    const data = await fetchJson<EspnTeamListResponse>(`${ESPN_SITE}/${espnSlug}/teams`);
+    const wraps =
+      data?.sports?.flatMap((s) => s.leagues?.flatMap((l) => l.teams ?? []) ?? []) ?? [];
+
+    for (const wrap of wraps) {
+      const team = wrap.team;
+      if (!team?.id) continue;
+      const candidates = [team.displayName, team.name, team.shortDisplayName].filter(
+        Boolean
+      ) as string[];
+      if (candidates.some((name) => namesLikelyMatch(name, teamName))) {
+        teamIdCache.set(cacheKey, team.id);
+        // Prefer the slug where the team was actually found (promoted clubs may still live on bra.2).
+        return { espnTeamId: team.id, espnSlug };
+      }
     }
   }
 

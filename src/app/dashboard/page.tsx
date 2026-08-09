@@ -16,7 +16,6 @@ import {
   DashboardChartsSkeleton,
   DashboardRankingsSkeleton,
 } from "@/features/analytics/components/dashboard-skeletons";
-import { PrototypeBanner } from "@/components/common/prototype-banner";
 
 export const metadata = { title: `Overview · ${APP_NAME}` };
 
@@ -31,7 +30,6 @@ export default async function DashboardPage() {
   return (
     <DashboardShell subtitle="Overview">
       <div className="space-y-6">
-        <PrototypeBanner />
         <PageHeader
           title="Overview"
           description={
