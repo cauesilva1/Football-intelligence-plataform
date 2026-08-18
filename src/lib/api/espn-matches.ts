@@ -2,13 +2,11 @@ import { getPrisma } from "@/lib/prisma";
 import { canUseDatabase } from "@/lib/system-cache";
 import {
   BRAZIL_SEASON_LABEL,
-  CURRENT_SEASON,
   ESPN_BRAZIL_SEASON_YEAR,
   FIFA_WORLD_CUP_LABEL,
   FIFA_WORLD_CUP_SEASON_LABEL,
   FIFA_WORLD_CUP_SEASON_YEAR,
   FIFA_WORLD_CUP_SLUG,
-  MLS_SEASON_LABEL,
   isMlsLeague,
   isWorldCupCompetition,
   resolveEspnSeasonYear,
@@ -141,9 +139,7 @@ export function brasileiraoHistoricalFetchDates(): Date[] {
 
 function resolveSeasonLabel(competitionLabel: string, override?: string): string {
   if (override) return override;
-  if (isWorldCupCompetition(competitionLabel)) return FIFA_WORLD_CUP_SEASON_LABEL;
-  if (isMlsLeague(competitionLabel)) return MLS_SEASON_LABEL;
-  return isBrazilianLeague(competitionLabel) ? BRAZIL_SEASON_LABEL : CURRENT_SEASON;
+  return resolvePersistedSeasonLabel(competitionLabel);
 }
 
 function resolveSeasonYearForSlug(slug: string, competitionLabel: string, override?: number): number {
@@ -516,7 +512,7 @@ export async function refreshStaleEspnMatches(
       return fetchEspnScoreboard(config.slug, config.competitionLabel, {
         date: new Date(y, m, d),
         seasonYear,
-        seasonLabel: CURRENT_SEASON,
+        seasonLabel,
       });
     })
   );

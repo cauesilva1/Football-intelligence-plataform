@@ -3,6 +3,7 @@ import {
   BRAZIL_SEASON_LABEL,
   CURRENT_SEASON,
   FIFA_WORLD_CUP_SEASON_LABEL,
+  NEXT_EUROPEAN_SEASON,
   resolvePersistedSeasonLabel,
 } from "@/lib/seasons";
 import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
@@ -19,7 +20,12 @@ import { ensureAmericanFootballTeamRoster } from "@/lib/sync/american-football-r
 import type { TeamRepository } from "./types";
 import { playerListInclude, prismaPlayerRepository } from "./player.repository.prisma";
 
-const TEAM_STAT_SEASONS = [CURRENT_SEASON, BRAZIL_SEASON_LABEL, FIFA_WORLD_CUP_SEASON_LABEL] as const;
+const TEAM_STAT_SEASONS = [
+  CURRENT_SEASON,
+  NEXT_EUROPEAN_SEASON,
+  BRAZIL_SEASON_LABEL,
+  FIFA_WORLD_CUP_SEASON_LABEL,
+] as const;
 
 async function listAllCompetitionIds(): Promise<string[]> {
   const rows = await getPrisma().competition.findMany({ select: { id: true } });

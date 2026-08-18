@@ -1,6 +1,7 @@
 import {
   BRAZIL_SEASON_LABEL,
   CURRENT_SEASON,
+  LIVE_EUROPEAN_SEASON,
   isBrazilianLeague,
   resolveApiFootballSeasonYear,
 } from "@/lib/seasons";
@@ -36,7 +37,7 @@ export function isSeasonCurrentForCompetition(
   if (isBrazilianLeague(competitionName)) {
     return seasonLabel === BRAZIL_SEASON_LABEL;
   }
-  if (seasonLabel === CURRENT_SEASON) return true;
+  if (seasonLabel === LIVE_EUROPEAN_SEASON || seasonLabel === CURRENT_SEASON) return true;
 
   const minYear = resolveApiFootballSeasonYear(competitionName);
   const storedYear = parseSeasonStartYear(seasonLabel);

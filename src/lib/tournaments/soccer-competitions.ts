@@ -1,7 +1,6 @@
 import {
   BRAZIL_SEASON_LABEL,
   COPA_DO_BRASIL_LABEL,
-  CURRENT_SEASON,
   ESPN_BRAZIL_SEASON_YEAR,
   ESPN_COPA_DO_BRASIL_SLUG,
   ESPN_CONMEBOL_SEASON_YEAR,
@@ -13,6 +12,7 @@ import {
   FIFA_WORLD_CUP_LABEL,
   FIFA_WORLD_CUP_SEASON_YEAR,
   FIFA_WORLD_CUP_SLUG,
+  LIVE_EUROPEAN_SEASON,
   LIBERTADORES_LABEL,
   MLS_LABEL,
   MLS_SEASON_LABEL,
@@ -122,7 +122,7 @@ export const SOCCER_COMPETITIONS: SoccerCompetitionConfig[] = [
     espnSlug: "eng.1",
     espnCompetitionLabel: "Premier League",
     seasonYear: ESPN_EUROPEAN_SEASON_YEAR,
-    seasonLabel: CURRENT_SEASON,
+    seasonLabel: LIVE_EUROPEAN_SEASON,
     badge: "England",
   },
   {
@@ -136,7 +136,7 @@ export const SOCCER_COMPETITIONS: SoccerCompetitionConfig[] = [
     espnSlug: "esp.1",
     espnCompetitionLabel: "La Liga",
     seasonYear: ESPN_EUROPEAN_SEASON_YEAR,
-    seasonLabel: CURRENT_SEASON,
+    seasonLabel: LIVE_EUROPEAN_SEASON,
     badge: "Spain",
   },
   {
@@ -150,7 +150,7 @@ export const SOCCER_COMPETITIONS: SoccerCompetitionConfig[] = [
     espnSlug: "ita.1",
     espnCompetitionLabel: "Serie A",
     seasonYear: ESPN_EUROPEAN_SEASON_YEAR,
-    seasonLabel: CURRENT_SEASON,
+    seasonLabel: LIVE_EUROPEAN_SEASON,
     badge: "Italy",
   },
   {
@@ -164,7 +164,7 @@ export const SOCCER_COMPETITIONS: SoccerCompetitionConfig[] = [
     espnSlug: "ger.1",
     espnCompetitionLabel: "Bundesliga",
     seasonYear: ESPN_EUROPEAN_SEASON_YEAR,
-    seasonLabel: CURRENT_SEASON,
+    seasonLabel: LIVE_EUROPEAN_SEASON,
     badge: "Germany",
   },
   {
@@ -178,7 +178,7 @@ export const SOCCER_COMPETITIONS: SoccerCompetitionConfig[] = [
     espnSlug: "fra.1",
     espnCompetitionLabel: "Ligue 1",
     seasonYear: ESPN_EUROPEAN_SEASON_YEAR,
-    seasonLabel: CURRENT_SEASON,
+    seasonLabel: LIVE_EUROPEAN_SEASON,
     badge: "France",
   },
   {
@@ -192,7 +192,7 @@ export const SOCCER_COMPETITIONS: SoccerCompetitionConfig[] = [
     espnSlug: "uefa.champions",
     espnCompetitionLabel: "UEFA Champions League",
     seasonYear: ESPN_EUROPEAN_SEASON_YEAR,
-    seasonLabel: CURRENT_SEASON,
+    seasonLabel: LIVE_EUROPEAN_SEASON,
     badge: "UEFA",
   },
   {

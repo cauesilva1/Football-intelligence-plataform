@@ -1,5 +1,5 @@
 import { getDataSource } from "@/lib/data-source";
-import { CURRENT_SEASON } from "@/lib/seasons";
+import { LIVE_EUROPEAN_SEASON } from "@/lib/seasons";
 
 export const APP_NAME = "OmniScout";
 export const APP_TAGLINE = "Multi-Sport Intelligence Platform";
@@ -8,7 +8,7 @@ export const APP_TAGLINE = "Multi-Sport Intelligence Platform";
 export const appConfig = {
   name: APP_NAME,
   tagline: APP_TAGLINE,
-  season: CURRENT_SEASON,
+  season: LIVE_EUROPEAN_SEASON,
   get dataSource() {
     return getDataSource();
   },

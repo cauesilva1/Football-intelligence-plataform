@@ -1,11 +1,16 @@
-/** Human-readable active season label shown across the UI (showcase / primary filter). */
+/** Completed European showcase season (kept in history / filters). */
 export const CURRENT_SEASON = "2025/26";
 
-/** Next European cross-year season — standings/cron flip here as 2026/27 kicks off. */
+/** Live European cross-year season after August kickoff. */
 export const NEXT_EUROPEAN_SEASON = "2026/27";
 
-/** When true, UI treats NEXT_EUROPEAN_SEASON as the live European label (post-kickoff). */
-export const EUROPEAN_NEXT_SEASON_LIVE = false;
+/** When true, UI + ESPN persist NEXT_EUROPEAN_SEASON as the live European label. */
+export const EUROPEAN_NEXT_SEASON_LIVE = true;
+
+/** Label used for live European standings, fixtures, and newly persisted stats. */
+export const LIVE_EUROPEAN_SEASON = EUROPEAN_NEXT_SEASON_LIVE
+  ? NEXT_EUROPEAN_SEASON
+  : CURRENT_SEASON;
 
 /** Seasons with real showcase data — do not include NEXT until EUROPEAN_NEXT_SEASON_LIVE. */
 export const SHOWCASE_SEASONS = ["2023/24", "2024/25", CURRENT_SEASON] as const;
@@ -17,18 +22,15 @@ export const SEASONS: readonly SeasonLabel[] = EUROPEAN_NEXT_SEASON_LIVE
   ? [...SHOWCASE_SEASONS, NEXT_EUROPEAN_SEASON]
   : [...SHOWCASE_SEASONS];
 
-/** API-Football `season` param for European cross-year leagues (2025/26 → 2025). */
-export const API_FOOTBALL_EUROPEAN_SEASON_YEAR = 2025;
+/** API-Football `season` param for European cross-year leagues (2026/27 → 2026). */
+export const API_FOOTBALL_EUROPEAN_SEASON_YEAR = 2026;
 
 /** API-Football `season` param for calendar-year leagues (Brasileirão / MLS 2026). */
 export const API_FOOTBALL_BRAZIL_SEASON_YEAR = 2026;
 export const API_FOOTBALL_MLS_SEASON_YEAR = 2026;
 
-/**
- * ESPN standings `season` for European leagues.
- * Keep on the completed showcase year until 2026/27 has a stable table; bump to 2026 at kickoff.
- */
-export const ESPN_EUROPEAN_SEASON_YEAR = 2025;
+/** ESPN standings `season` for European leagues (2026/27 → 2026). */
+export const ESPN_EUROPEAN_SEASON_YEAR = 2026;
 
 /** ESPN `season` query param for Brasileirão — temporada 2026 em andamento. */
 export const ESPN_BRAZIL_SEASON_YEAR = 2026;
@@ -119,7 +121,7 @@ export function resolvePersistedSeasonLabel(competitionName?: string | null): st
   ) {
     return BRAZIL_SEASON_LABEL;
   }
-  return CURRENT_SEASON;
+  return LIVE_EUROPEAN_SEASON;
 }
 
 /** Resolves the API-Football season year from a DB competition name. */

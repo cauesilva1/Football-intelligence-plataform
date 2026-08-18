@@ -3,7 +3,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { DataPanel } from "@/components/data/data-panel";
 import { APP_NAME } from "@/lib/config";
-import { CURRENT_SEASON, NEXT_EUROPEAN_SEASON, BRAZIL_SEASON_LABEL } from "@/lib/seasons";
+import { BRAZIL_SEASON_LABEL, LIVE_EUROPEAN_SEASON } from "@/lib/seasons";
 
 export const metadata = { title: `Demo path · ${APP_NAME}` };
 
@@ -51,7 +51,7 @@ export default function DemoPathPage() {
       <div className="mx-auto max-w-3xl space-y-6">
         <PageHeader
           title="Demo path"
-          description={`Soccer reference workflow · showcase season ${CURRENT_SEASON} · ${NEXT_EUROPEAN_SEASON} rolling in · Brasileirão ${BRAZIL_SEASON_LABEL} live.`}
+          description={`Soccer reference workflow · live season ${LIVE_EUROPEAN_SEASON} · Brasileirão ${BRAZIL_SEASON_LABEL}.`}
         />
 
         <DataPanel title="Seven clicks" density="dense">
