@@ -16,6 +16,7 @@ import {
   soccerPositionGroupLabel,
   type SoccerPositionGroup,
 } from "@/features/scouting/lib/position-scorecard";
+import { formatMeasuredExpectedGoal } from "@/lib/metrics/expected-goals";
 import { toRadarProfile } from "@/lib/normalize";
 import {
   AF_RATE_MIN_GAMES,
@@ -270,8 +271,16 @@ function buildSoccerDetailedMetrics(
       label: "Dribbles / 90",
       value: smallSample ? "—" : s.per90.dribbles.toFixed(2),
     },
-    { label: "xG total", value: s.xG.toFixed(2), glossary: METRIC_GLOSSARY.xG },
-    { label: "xA total", value: s.xA.toFixed(2), glossary: METRIC_GLOSSARY.xA },
+    {
+      label: "xG total",
+      value: formatMeasuredExpectedGoal(s.xG, s.xG, s.xA) ?? "—",
+      glossary: METRIC_GLOSSARY.xG,
+    },
+    {
+      label: "xA total",
+      value: formatMeasuredExpectedGoal(s.xA, s.xG, s.xA) ?? "—",
+      glossary: METRIC_GLOSSARY.xA,
+    },
     {
       label: "Duels Won",
       value: s.duelsWonPct > 0 ? `${s.duelsWonPct.toFixed(0)}%` : "—",

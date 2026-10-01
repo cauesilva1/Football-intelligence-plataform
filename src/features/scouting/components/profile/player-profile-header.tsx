@@ -123,8 +123,13 @@ export function PlayerProfileHeader({
               <span className="inline-flex items-center gap-1">
                 <ShieldHalf className="h-3.5 w-3.5" style={{ color: theme.accent }} />
                 <span className="font-medium text-white/90">
-                  {player.teamName ?? "No club"}
-                  {player.teamShortName ? ` (${player.teamShortName})` : ""}
+                  {player.teamName?.trim() && player.teamName.trim().toUpperCase() !== "NAN"
+                    ? player.teamName
+                    : "Unknown"}
+                  {player.teamShortName &&
+                  !["NAN", "NA", "NULL", "UNDEFINED"].includes(player.teamShortName.trim().toUpperCase())
+                    ? ` (${player.teamShortName})`
+                    : ""}
                 </span>
               </span>
               {heightLabel && (

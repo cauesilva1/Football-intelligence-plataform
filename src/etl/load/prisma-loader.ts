@@ -3,12 +3,14 @@ import csv from "csv-parser";
 import { getPrisma } from "@/lib/prisma";
 import type { CsvPlayerRow } from "@/etl/data-dictionary";
 import { resolveCsvPath } from "@/etl/paths";
-import { buildPlayerTeamKey, transformCsvRow } from "@/etl/transform/transformer";
+import { transformCsvRow } from "@/etl/transform/transformer";
 import {
   europeanCsvToSeasonStatsPayload,
   resolveSeasonYearFromLabel,
   upsertPlayerSeasonStats,
 } from "@/lib/metrics/upsert-player-season-stats";
+import { clubShortCode } from "@/lib/soccer/club-label";
+import { fbrefIdentityKey } from "@/lib/soccer/fbref-identity";
 
 const PROGRESS_INTERVAL = 100;
 
@@ -35,23 +37,18 @@ function parseCompetition(raw: string): { country: string; name: string } {
 }
 
 function teamShortName(name: string): string {
-  const words = name.split(/\s+/).filter(Boolean);
-  if (words.length === 1) return words[0].slice(0, 3).toUpperCase();
-  return words
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 3)
-    .toUpperCase();
+  return clubShortCode(name);
 }
 
-function playerCacheKey(fullName: string, teamName: string): string {
-  return buildPlayerTeamKey(fullName, teamName);
+interface PlayerCacheEntry {
+  id: string;
+  minutes: number;
 }
 
 interface EntityCache {
   competitionIdByName: Map<string, string>;
   teamIdByName: Map<string, string>;
-  playerIdByKey: Map<string, string>;
+  playerByIdentity: Map<string, PlayerCacheEntry>;
 }
 
 async function getOrCreateCompetition(name: string, country: string, cache: EntityCache): Promise<string> {
@@ -118,20 +115,47 @@ async function getOrCreatePlayer(
   teamId: string,
   cache: EntityCache
 ): Promise<string> {
-  const key = playerCacheKey(record.player.fullName, record.player.teamName);
-  const cached = cache.playerIdByKey.get(key);
-  if (cached) return cached;
+  const dob =
+    record.player.dateOfBirth instanceof Date
+      ? record.player.dateOfBirth
+      : new Date(record.player.dateOfBirth);
+  const birthYear = dob.getUTCFullYear();
+  const key = fbrefIdentityKey(record.player.fullName, birthYear);
+  const minutes = record.statistic.minutesPlayed ?? 0;
+  const cached = cache.playerByIdentity.get(key);
+
+  const attachClub = async (playerId: string) => {
+    await getPrisma().player.update({
+      where: { id: playerId },
+      data: {
+        teamId,
+        position: record.player.position,
+        secondaryPosition: record.player.secondaryPosition,
+        knownAs: record.player.knownAs,
+      },
+    });
+  };
+
+  if (cached) {
+    if (minutes > cached.minutes) {
+      await attachClub(cached.id);
+      cached.minutes = minutes;
+    }
+    return cached.id;
+  }
 
   const existing = await getPrisma().player.findFirst({
     where: {
       fullName: record.player.fullName,
-      teamId,
+      dateOfBirth: record.player.dateOfBirth,
+      sport: "SOCCER",
     },
     select: { id: true },
   });
 
   if (existing) {
-    cache.playerIdByKey.set(key, existing.id);
+    await attachClub(existing.id);
+    cache.playerByIdentity.set(key, { id: existing.id, minutes });
     return existing.id;
   }
 
@@ -150,11 +174,12 @@ async function getOrCreatePlayer(
       strengths: record.player.strengths,
       weaknesses: record.player.weaknesses,
       teamId,
+      sport: "SOCCER",
     },
     select: { id: true },
   });
 
-  cache.playerIdByKey.set(key, created.id);
+  cache.playerByIdentity.set(key, { id: created.id, minutes });
   return created.id;
 }
 
@@ -192,7 +217,7 @@ export async function loadDataToDatabase(filePath?: string): Promise<number> {
   const cache: EntityCache = {
     competitionIdByName: new Map(),
     teamIdByName: new Map(),
-    playerIdByKey: new Map(),
+    playerByIdentity: new Map(),
   };
 
   let processed = 0;

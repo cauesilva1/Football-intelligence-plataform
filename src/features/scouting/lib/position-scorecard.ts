@@ -1,4 +1,5 @@
 import type { PlayerStatistic } from "@/types";
+import { formatExpectedGoalsRate, formatExpectedGoalsTotal } from "@/lib/metrics/expected-goals";
 import { hasReliableSoccerSample, per90 } from "@/lib/metrics/per90";
 import { SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
 
@@ -94,13 +95,13 @@ export function buildPositionScorecard(
           ? {
               key: "xg90",
               label: "xG / 90",
-              value: (stats.minutesPlayed > 0 ? (stats.xG / stats.minutesPlayed) * 90 : 0).toFixed(2),
+              value: formatExpectedGoalsRate(stats.minutesPlayed, stats.xG, stats.xA) ?? "—",
             }
           : {
               key: "xg",
               label: "xG",
-              value: stats.xG.toFixed(2),
-              hint: "Season total (rates after ≥450′)",
+              value: formatExpectedGoalsTotal(stats.xG, stats.xA) ?? "—",
+              hint: "Not measured in this source",
             },
         rateOrTotal(stats.assists, "Assists / 90", "Assists"),
         { key: "sot", label: "Shots on target", value: String(stats.shotsOnTarget) },

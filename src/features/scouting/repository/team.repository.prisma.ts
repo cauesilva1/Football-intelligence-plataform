@@ -19,6 +19,7 @@ import {
 import { ensureAmericanFootballTeamRoster } from "@/lib/sync/american-football-roster";
 import type { TeamRepository } from "./types";
 import { playerListInclude, prismaPlayerRepository } from "./player.repository.prisma";
+import { isNationalSideDirectoryTeam } from "@/lib/soccer/fixture-integrity";
 
 const TEAM_STAT_SEASONS = [
   CURRENT_SEASON,
@@ -59,7 +60,19 @@ export const prismaTeamRepository: TeamRepository = {
     const take = options.take != null ? Math.min(Math.max(options.take, 1), 100) : undefined;
     const skip = options.skip != null ? Math.max(options.skip, 0) : undefined;
     const includeStats = options.includeStats !== false;
-    const where = { competitionId: { in: competitionIds } };
+    const where = {
+      competitionId: { in: competitionIds },
+      NOT: {
+        OR: [
+          { competition: { name: { contains: "World Cup", mode: "insensitive" as const } } },
+          { competition: { name: { contains: "UEFA Euro", mode: "insensitive" as const } } },
+          { competition: { name: { contains: "European Championship", mode: "insensitive" as const } } },
+          { competition: { name: { contains: "Copa America", mode: "insensitive" as const } } },
+          { competition: { name: { contains: "Nations League", mode: "insensitive" as const } } },
+          { competition: { espnSlug: "fifa.world" } },
+        ],
+      },
+    };
     const prisma = getPrisma();
 
     const [total, teams] = await Promise.all([
@@ -165,7 +178,19 @@ export const prismaTeamRepository: TeamRepository = {
       };
     });
 
-    return { items, total };
+    const clubItems = items.filter(
+      (team) =>
+        !isNationalSideDirectoryTeam({
+          name: team.name,
+          country: team.country,
+          competitionName: team.competition?.name,
+        })
+    );
+
+    return {
+      items: clubItems,
+      total: total - (items.length - clubItems.length),
+    };
   },
 
   async findById(id) {

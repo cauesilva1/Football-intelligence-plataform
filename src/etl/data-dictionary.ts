@@ -89,8 +89,11 @@ export const playerIdentityMapping = {
 const POSITION_ALIASES: Record<string, string> = {
   GK: "GK",
   DF: "CB",
+  DEF: "CB",
   MF: "CM",
+  MID: "CM",
   FW: "ST",
+  ATT: "ST",
   CB: "CB",
   LB: "LB",
   RB: "RB",
@@ -102,8 +105,11 @@ const POSITION_ALIASES: Record<string, string> = {
   ST: "ST",
 };
 
+const FORWARD_TOKENS = new Set(["FW", "ST", "LW", "RW", "ATT"]);
+
 /**
  * Normalizes FBref position strings (e.g. `"MF,FW"`) into primary + optional secondary codes.
+ * A coarse MF bucket with an FW token is an attacker (Yamal), not a central midfielder.
  */
 export function normalizePosition(raw: string): { primary: string; secondary?: string } {
   const tokens = raw
@@ -116,9 +122,20 @@ export function normalizePosition(raw: string): { primary: string; secondary?: s
   }
 
   const mapped = tokens.map((token) => POSITION_ALIASES[token] ?? token);
-  const [primary, secondary] = mapped;
+  let primary = mapped[0];
+  if (primary === "CM" && tokens.some((token) => FORWARD_TOKENS.has(token))) {
+    primary = "ST";
+  }
 
+  const secondary = mapped.find((code) => code !== primary);
   return secondary ? { primary, secondary } : { primary };
+}
+
+/** Turn coarse feed labels into a specific code. Never leave the group word "MID". */
+export function canonicalSoccerPosition(position: string): string {
+  const token = position.trim().toUpperCase();
+  if (!token) return position;
+  return POSITION_ALIASES[token] ?? position;
 }
 
 /**

@@ -137,6 +137,13 @@ export function computeFootballMatchRating(stat: {
   interceptions?: number;
 }): number | null {
   if (stat.minutesPlayed <= 0) return null;
+  const hasSignal =
+    stat.totalYards > 0 ||
+    stat.touchdowns > 0 ||
+    stat.tackles > 0 ||
+    stat.sacks > 0 ||
+    (stat.interceptions ?? 0) > 0;
+  if (!hasSignal) return null;
 
   let rating = 6.5;
   rating += Math.min(stat.totalYards, 400) * 0.004;

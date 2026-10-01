@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { canonicalSoccerPosition } from "@/etl/data-dictionary";
 import { getPrisma } from "@/lib/prisma";
 import { CURRENT_SEASON } from "@/lib/data/generators";
 import { toPlayerStatistic } from "@/lib/metrics/map-statistic";
@@ -20,6 +21,7 @@ import { localizeScoutLabels } from "@/lib/scout-labels";
 import { reliableSoccerRating } from "@/lib/scoring/soccer-rankings";
 import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
 import { isDbSource } from "@/lib/data-source";
+import { dedupeSoccerIdentities, lookupFbrefIdentity } from "@/lib/soccer/fbref-identity";
 import type { Sport } from "@/lib/sport";
 import type { Foot, Player, PlayerFilters, PlayerStatistic } from "@/types";
 import type { PlayerRepository } from "./types";
@@ -245,6 +247,11 @@ function mapPlayer(record: PrismaPlayerRow, options?: { season?: string }): Play
     record.sport
   );
   const dob = record.dateOfBirth.toISOString();
+  const sport = (record.sport as Player["sport"]) ?? "SOCCER";
+  const birthYear = record.dateOfBirth.getUTCFullYear();
+  const identity = sport === "SOCCER" ? lookupFbrefIdentity(record.fullName, birthYear) : null;
+  const position =
+    identity?.position ?? (sport === "SOCCER" ? canonicalSoccerPosition(record.position) : record.position);
 
   return {
     id: record.id,
@@ -253,7 +260,7 @@ function mapPlayer(record: PrismaPlayerRow, options?: { season?: string }): Play
     dateOfBirth: dob,
     age: calcAge(dob),
     nationality: record.nationality,
-    position: record.position,
+    position,
     secondaryPosition: record.secondaryPosition ?? undefined,
     height: record.height,
     weight: record.weight,
@@ -266,7 +273,7 @@ function mapPlayer(record: PrismaPlayerRow, options?: { season?: string }): Play
       apiSportsId: record.apiSportsId,
     }),
     apiSportsId: record.apiSportsId ?? undefined,
-    sport: (record.sport as Player["sport"]) ?? "SOCCER",
+    sport,
     league: record.league,
     teamId: record.teamId ?? "",
     teamName: record.team?.name,
@@ -830,6 +837,20 @@ export const prismaPlayerRepository: PlayerRepository & {
 
     const where = buildStatWhere(filters);
     const orderBy = buildStatOrderBy(filters);
+
+    if (filters.search?.trim()) {
+      const statistics = await getPrisma().playerStatistic.findMany({
+        where,
+        orderBy,
+        take: 200,
+        include: {
+          player: { include: playerListInclude },
+        },
+      });
+      const items = dedupeSoccerIdentities(statistics.map((row) => mapPlayerList(row.player)));
+      return paginatePlayers(items, page, pageSize);
+    }
+
     const skip = (page - 1) * pageSize;
 
     const [total, statistics] = await Promise.all([
@@ -845,7 +866,7 @@ export const prismaPlayerRepository: PlayerRepository & {
       }),
     ]);
 
-    let items = statistics.map((row) => mapPlayerList(row.player));
+    let items = dedupeSoccerIdentities(statistics.map((row) => mapPlayerList(row.player)));
 
     if (typeof filters.minGoalsPer90 === "number" || typeof filters.minXGPer90 === "number") {
       items = filterAndSortPlayers(items, filters, { prismaPrefiltered: true });
@@ -931,23 +952,37 @@ export const prismaPlayerRepository: PlayerRepository & {
     const byId = new Map<string, (typeof records)[number]>();
     for (const row of [...records, ...ensured]) byId.set(row.id, row);
 
-    return [...byId.values()]
-      .sort((a, b) => a.fullName.localeCompare(b.fullName))
-      .map((r) => {
-        const ageMs = Date.now() - new Date(r.dateOfBirth).getTime();
-        const age = Math.max(15, Math.min(50, Math.floor(ageMs / (365.25 * 24 * 60 * 60 * 1000))));
-        return {
-          id: r.id,
-          fullName: r.fullName,
-          knownAs: r.knownAs,
-          position: r.position,
-          age,
-          sport: r.sport as Sport,
-          teamId: r.teamId ?? "",
-          teamShortName: r.team?.shortName,
-          teamName: r.team?.name,
-        };
-      });
+    const rows = [...byId.values()].sort((a, b) => a.fullName.localeCompare(b.fullName));
+    const unique = dedupeSoccerIdentities(
+      rows.map((row) => ({
+        ...row,
+        dateOfBirth: row.dateOfBirth.toISOString(),
+        teamName: row.team?.name,
+      }))
+    );
+
+    return unique.map((r) => {
+      const ageMs = Date.now() - new Date(r.dateOfBirth).getTime();
+      const age = Math.max(15, Math.min(50, Math.floor(ageMs / (365.25 * 24 * 60 * 60 * 1000))));
+      const identity =
+        (r.sport ?? "SOCCER") === "SOCCER"
+          ? lookupFbrefIdentity(r.fullName, new Date(r.dateOfBirth).getUTCFullYear())
+          : null;
+      const position =
+        identity?.position ??
+        ((r.sport ?? "SOCCER") === "SOCCER" ? canonicalSoccerPosition(r.position) : r.position);
+      return {
+        id: r.id,
+        fullName: r.fullName,
+        knownAs: r.knownAs,
+        position,
+        age,
+        sport: r.sport as Sport,
+        teamId: r.teamId ?? "",
+        teamShortName: r.team?.shortName,
+        teamName: r.team?.name,
+      };
+    });
   },
 
   async findForComparison(idA, idB) {

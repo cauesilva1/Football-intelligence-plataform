@@ -8,7 +8,7 @@ export interface SeasonTimelinePoint {
   season: string;
   rating: number;
   goalsPer90: number;
-  xGPer90: number;
+  xGPer90: number | null;
   minutes: number;
   appearances: number;
 }
@@ -83,7 +83,7 @@ export function aggregateSeasonTimeline(
       season,
       rating: Number(rating.toFixed(2)),
       goalsPer90: per90(goals, minutes, { softCap: SOCCER_RATE_SOFT_CAP }),
-      xGPer90: minutes > 0 ? Number(((xG / minutes) * 90).toFixed(2)) : 0,
+      xGPer90: xG > 0 && minutes > 0 ? Number(((xG / minutes) * 90).toFixed(2)) : null,
       minutes,
       appearances,
     };

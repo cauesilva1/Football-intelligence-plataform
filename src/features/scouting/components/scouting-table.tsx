@@ -16,8 +16,9 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { SortableTableHead } from "@/features/scouting/components/sortable-table-head";
 import { ShortlistButton } from "@/features/shortlist/components/shortlist-button";
-import { computeXGPer90 } from "@/features/scouting/lib/filter-players";
 import { type ScoutingRoute } from "@/features/scouting/lib/filter-defaults";
+import { formatExpectedGoalsRate } from "@/lib/metrics/expected-goals";
+import { formatClubLabel } from "@/lib/soccer/club-label";
 import { ratingColor, formatMarketValue, formatCapHit, playerDisplayName } from "@/lib/utils";
 import { soccerValueScore } from "@/lib/scoring/soccer-rankings";
 import { capValueScore } from "@/lib/scoring";
@@ -101,7 +102,7 @@ function BasketballRosterTable({
               </div>
             </TableCell>
             <TableCell className="tabular-nums">{player.age}</TableCell>
-            <TableCell className="text-muted-foreground">{player.teamName ?? player.teamShortName ?? "—"}</TableCell>
+            <TableCell className="text-muted-foreground">{formatClubLabel(player.teamName, player.teamShortName)}</TableCell>
             <TableCell>
               <GlossaryTooltip
                 label={<Badge variant="neutral">{player.position}</Badge>}
@@ -230,7 +231,7 @@ function BasketballScoutingTable({
                 </div>
               </TableCell>
               <TableCell className="tabular-nums">{player.age}</TableCell>
-              <TableCell className="text-muted-foreground">{player.teamShortName ?? "—"}</TableCell>
+              <TableCell className="text-muted-foreground">{formatClubLabel(player.teamName, player.teamShortName)}</TableCell>
               <TableCell>
                 <GlossaryTooltip
                   label={<Badge variant="neutral">{player.position}</Badge>}
@@ -385,7 +386,7 @@ function SoccerScoutingTable({
         {players.map((player) => {
           const stats = player.currentSeasonStats;
           const reliable = hasReliableSoccerSample(stats.minutesPlayed);
-          const xg90 = reliable ? computeXGPer90(stats.minutesPlayed, stats.xG) : null;
+          const xg90 = formatExpectedGoalsRate(stats.minutesPlayed, stats.xG, stats.xA);
           const valueScore = soccerValueScore(stats.rating, player.marketValue);
 
           return (
@@ -410,7 +411,7 @@ function SoccerScoutingTable({
                 </div>
               </TableCell>
               <TableCell className="tabular-nums">{player.age}</TableCell>
-              <TableCell className="text-muted-foreground">{player.teamShortName ?? "—"}</TableCell>
+              <TableCell className="text-muted-foreground">{formatClubLabel(player.teamName, player.teamShortName)}</TableCell>
               <TableCell>
                 <GlossaryTooltip
                   label={<Badge variant="neutral">{player.position}</Badge>}
@@ -448,7 +449,7 @@ function SoccerScoutingTable({
                     {reliable ? stats.per90.goals.toFixed(2) : "—"}
                   </TableCell>
                   <TableCell className="font-mono tabular-nums">
-                    {xg90 != null ? xg90.toFixed(2) : "—"}
+                    {xg90 ?? "—"}
                   </TableCell>
                 </>
               ) : null}
@@ -605,7 +606,7 @@ function AmericanFootballScoutingTable({
                 </div>
               </TableCell>
               <TableCell className="tabular-nums">{player.age}</TableCell>
-              <TableCell className="text-muted-foreground">{player.teamShortName ?? "—"}</TableCell>
+              <TableCell className="text-muted-foreground">{formatClubLabel(player.teamName, player.teamShortName)}</TableCell>
               <TableCell>
                 <GlossaryTooltip
                   label={<Badge variant="neutral">{player.position}</Badge>}

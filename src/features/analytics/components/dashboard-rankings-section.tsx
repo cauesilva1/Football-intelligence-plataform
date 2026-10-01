@@ -3,6 +3,7 @@ import { queryDashboardOverview } from "@/features/analytics/queries/dashboard";
 import { getPlayerRepository } from "@/features/scouting/repository";
 import { DataPanel } from "@/components/data/data-panel";
 import { Badge } from "@/components/ui/badge";
+import { formatClubLabel } from "@/lib/soccer/club-label";
 import { ratingColor, formatMarketValue, formatCapHit, playerDisplayName } from "@/lib/utils";
 import { getServerSport } from "@/lib/sport-server";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
@@ -69,7 +70,7 @@ function BasketballLeaderList({
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-foreground">{playerDisplayName(player)}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {player.teamShortName ?? "—"} · {player.position}
+                  {formatClubLabel(player.teamName, player.teamShortName)} · {player.position}
                 </p>
               </div>
               <Badge variant="neutral">{player.league ?? "NBA"}</Badge>
@@ -114,7 +115,7 @@ function RatingList({
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-foreground">{playerDisplayName(player)}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {player.teamShortName ?? "—"} · {player.age}y
+                  {formatClubLabel(player.teamName, player.teamShortName)} · {player.age}y
                 </p>
               </div>
               <Badge variant="neutral">{player.position}</Badge>
@@ -153,7 +154,7 @@ function CapBargainList({
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-foreground">{playerDisplayName(player)}</p>
               <p className="truncate text-xs text-muted-foreground">
-                {player.teamShortName ?? "—"} · {player.age}y · {player.currentSeasonStats.rating.toFixed(1)}
+                {formatClubLabel(player.teamName, player.teamShortName)} · {player.age}y · {player.currentSeasonStats.rating.toFixed(1)}
               </p>
             </div>
             <Badge variant="neutral">{player.position}</Badge>
@@ -191,7 +192,7 @@ function SoccerRankingList({
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-foreground">{playerDisplayName(player)}</p>
               <p className="truncate text-xs text-muted-foreground">
-                {player.teamShortName ?? "—"} · {player.age}y
+                {formatClubLabel(player.teamName, player.teamShortName)} · {player.age}y
               </p>
             </div>
             <Badge variant="neutral">{player.position}</Badge>

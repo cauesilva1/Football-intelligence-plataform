@@ -19,9 +19,12 @@ import {
   MATCH_SYNC_TTL_MS,
   matchNeedsScoreRefresh,
   namesLikelyMatch,
+  clubNamesMatch,
   needsMatchSync,
 } from "@/lib/sync/data-staleness";
 import { resolveEspnLeague } from "@/lib/crests/espn-standings";
+import { big5SquadNames } from "@/lib/soccer/fbref-identity";
+import { shouldQuarantineFixture } from "@/lib/soccer/fixture-integrity";
 
 const ESPN_SCOREBOARD_BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer";
 const EUROPEAN_MATCH_WINDOW_DAYS = 21;
@@ -296,10 +299,21 @@ async function resolveTeamIdByName(
   competitionId?: string | null
 ): Promise<string | null> {
   const prisma = getPrisma();
+  const scoped = competitionId
+    ? await prisma.team.findMany({
+        where: { competitionId },
+        select: { id: true, name: true, shortName: true },
+      })
+    : [];
+  const scopedMatch = scoped.find(
+    (team) => clubNamesMatch(team.name, name) || clubNamesMatch(team.shortName, name)
+  );
+  if (scopedMatch) return scopedMatch.id;
+
   const teams = await prisma.team.findMany({ select: { id: true, name: true, shortName: true } });
 
   const match = teams.find(
-    (team) => namesLikelyMatch(team.name, name) || namesLikelyMatch(team.shortName, name)
+    (team) => clubNamesMatch(team.name, name) || clubNamesMatch(team.shortName, name)
   );
   if (match) return match.id;
 
@@ -407,6 +421,39 @@ export async function persistEspnMatches(events: EspnScoreboardEvent[]): Promise
         ]);
 
     if (!homeTeamId || !awayTeamId) continue;
+
+    const [homeTeam, awayTeam, competition] = await Promise.all([
+      prisma.team.findUnique({
+        where: { id: homeTeamId },
+        select: { name: true, country: true },
+      }),
+      prisma.team.findUnique({
+        where: { id: awayTeamId },
+        select: { name: true, country: true },
+      }),
+      competitionId
+        ? prisma.competition.findUnique({
+            where: { id: competitionId },
+            select: { name: true },
+          })
+        : Promise.resolve(null),
+    ]);
+
+    if (
+      homeTeam &&
+      awayTeam &&
+      shouldQuarantineFixture({
+        competitionName: competition?.name ?? event.competitionLabel,
+        homeTeam: homeTeam.name,
+        awayTeam: awayTeam.name,
+        homeCountry: homeTeam.country,
+        awayCountry: awayTeam.country,
+        stageName: event.round,
+        big5Squads: big5SquadNames(),
+      })
+    ) {
+      continue;
+    }
 
     const existing = await prisma.match.findUnique({
       where: { externalKey: event.externalKey },

@@ -6,6 +6,8 @@ import {
 } from "@/lib/api/espn-boxscore";
 import { persistEspnBoxScoresForKnownPlayers } from "@/lib/api/player-match-stats";
 import { isDbSource } from "@/lib/data-source";
+import { big5SquadNames } from "@/lib/soccer/fbref-identity";
+import { shouldQuarantineFixture } from "@/lib/soccer/fixture-integrity";
 import { fetchEspnScoreboard } from "@/lib/api/espn-matches";
 import { resolveEspnLeagueBySlug } from "@/lib/crests/espn-standings";
 import { fromEspnScoreboardEvent, fromStatsBombMatch } from "@/lib/tournaments/match-normalizer";
@@ -41,13 +43,27 @@ async function loadFromDatabase(id: string): Promise<MatchDetailPayload | null> 
       OR: [{ id }, { externalKey: id }],
     },
     include: {
-      homeTeam: { select: { name: true, crestUrl: true } },
-      awayTeam: { select: { name: true, crestUrl: true } },
+      homeTeam: { select: { name: true, crestUrl: true, country: true } },
+      awayTeam: { select: { name: true, crestUrl: true, country: true } },
       competition: { select: { name: true, espnSlug: true } },
     },
   });
 
   if (!row) return null;
+
+  if (
+    shouldQuarantineFixture({
+      competitionName: row.competition?.name,
+      homeTeam: row.homeTeam.name,
+      awayTeam: row.awayTeam.name,
+      homeCountry: row.homeTeam.country,
+      awayCountry: row.awayTeam.country,
+      stageName: row.round,
+      big5Squads: big5SquadNames(),
+    })
+  ) {
+    return null;
+  }
 
   const externalKey = row.externalKey ?? row.id;
   const status = mapDbStatus(row.status);

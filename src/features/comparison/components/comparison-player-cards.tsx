@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { PlayerAvatar } from "@/components/players/player-avatar";
-import { computeXGPer90 } from "@/features/scouting/lib/filter-players";
+import { formatExpectedGoalsRate, formatExpectedGoalsTotal } from "@/lib/metrics/expected-goals";
 import {
   buildBasketballPositionScorecard,
   buildFootballPositionScorecard,
@@ -48,7 +48,6 @@ function SoccerStatStrip({ player }: { player: Player }) {
     );
   }
 
-  const xg90 = computeXGPer90(s.minutesPlayed, s.xG);
   return (
     <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/15 pt-3 text-center">
       <div>
@@ -65,7 +64,9 @@ function SoccerStatStrip({ player }: { player: Player }) {
       </div>
       <div>
         <p className="font-mono text-sm font-semibold tabular-nums text-white">
-          {smallSample ? s.xG.toFixed(2) : xg90.toFixed(2)}
+          {formatExpectedGoalsTotal(s.xG, s.xA) ??
+            formatExpectedGoalsRate(s.minutesPlayed, s.xG, s.xA) ??
+            "—"}
         </p>
         <p className="text-2xs text-white/60">{smallSample ? "xG" : "xG/90"}</p>
       </div>

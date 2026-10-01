@@ -108,6 +108,14 @@ export function computeBasketballMatchRating(stat: {
   fieldGoalsAttempted?: number;
 }): number | null {
   if (stat.minutesPlayed <= 0) return null;
+  const hasSignal =
+    stat.points > 0 ||
+    stat.rebounds > 0 ||
+    stat.assists > 0 ||
+    stat.steals > 0 ||
+    stat.blocks > 0 ||
+    (stat.fieldGoalsAttempted ?? 0) > 0;
+  if (!hasSignal) return null;
 
   let rating = 6.5;
   rating += Math.min(stat.points, 40) * 0.045;

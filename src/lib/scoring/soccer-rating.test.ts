@@ -54,14 +54,20 @@ describe("computeMatchRating", () => {
     );
   });
 
-  it("starts near baseline and rises with goals", () => {
-    const base = computeMatchRating({
-      minutesPlayed: 90,
-      goals: 0,
-      assists: 0,
-      tackles: 0,
-      interceptions: 0,
-    });
+  it("does not invent a flat 6.5 when the box score has no actions", () => {
+    assert.equal(
+      computeMatchRating({
+        minutesPlayed: 90,
+        goals: 0,
+        assists: 0,
+        tackles: 0,
+        interceptions: 0,
+      }),
+      null
+    );
+  });
+
+  it("rises above the baseline when the player scores", () => {
     const scored = computeMatchRating({
       minutesPlayed: 90,
       goals: 1,
@@ -69,7 +75,14 @@ describe("computeMatchRating", () => {
       tackles: 0,
       interceptions: 0,
     });
-    assert.ok(base != null && base >= 6.4 && base <= 6.6);
-    assert.ok(scored != null && scored > base);
+    const twoGoals = computeMatchRating({
+      minutesPlayed: 90,
+      goals: 2,
+      assists: 0,
+      tackles: 1,
+      interceptions: 0,
+    });
+    assert.ok(scored != null && scored > 6.5);
+    assert.ok(twoGoals != null && scored != null && twoGoals > scored);
   });
 });

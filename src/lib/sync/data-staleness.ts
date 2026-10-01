@@ -107,6 +107,31 @@ export function normalizeNameForMatch(name: string): string {
     .trim();
 }
 
+export function clubNamesMatch(a: string, b: string): boolean {
+  const na = normalizeNameForMatch(a);
+  const nb = normalizeNameForMatch(b);
+  if (!na || !nb) return false;
+  if (na === nb) return true;
+
+  const generic = new Set([
+    "united",
+    "city",
+    "real",
+    "club",
+    "sporting",
+    "nacional",
+    "athletic",
+    "atletico",
+    "football",
+    "fc",
+    "cf",
+    "ac",
+  ]);
+  const [shorter, longer] = na.length <= nb.length ? [na, nb] : [nb, na];
+  if (shorter.length < 6 || generic.has(shorter)) return false;
+  return longer.includes(shorter);
+}
+
 export function namesLikelyMatch(a: string, b: string): boolean {
   const na = normalizeNameForMatch(a);
   const nb = normalizeNameForMatch(b);

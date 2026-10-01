@@ -104,14 +104,16 @@ describe("computeFootballMatchRating", () => {
     );
   });
 
-  it("starts near baseline", () => {
-    const rating = computeFootballMatchRating({
-      minutesPlayed: 60,
-      totalYards: 0,
-      touchdowns: 0,
-      tackles: 0,
-      sacks: 0,
-    });
-    assert.equal(rating, 6.5);
+  it("does not invent a flat 6.5 when the box score has no production", () => {
+    assert.equal(
+      computeFootballMatchRating({
+        minutesPlayed: 60,
+        totalYards: 0,
+        touchdowns: 0,
+        tackles: 0,
+        sacks: 0,
+      }),
+      null
+    );
   });
 });

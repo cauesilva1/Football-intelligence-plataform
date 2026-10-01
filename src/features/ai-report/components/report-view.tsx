@@ -5,6 +5,7 @@ import { Download, ExternalLink, FileText, ShieldCheck, Sparkles, Target, Trendi
 import { DataPanel } from "@/components/data/data-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { formatClubLabel } from "@/lib/soccer/club-label";
 import { ratingColor } from "@/lib/utils";
 import type { PlayerLite, ScoutingReport } from "@/types";
 
@@ -40,7 +41,7 @@ export function ReportView({
             <p className="text-xs uppercase tracking-wider text-muted-foreground">Scouting Report</p>
             <p className="font-display text-base font-bold text-foreground">{player.fullName}</p>
             <p className="text-xs text-muted-foreground">
-              {player.position} · {player.teamShortName ?? "—"}
+              {player.position} · {formatClubLabel(player.teamName, player.teamShortName)}
             </p>
           </div>
         </div>

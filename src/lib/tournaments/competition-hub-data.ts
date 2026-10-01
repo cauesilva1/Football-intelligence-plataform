@@ -18,6 +18,8 @@ import {
   FIFA_WORLD_CUP_SEASON_LABEL,
   FIFA_WORLD_CUP_SLUG,
 } from "@/lib/seasons";
+import { big5SquadNames } from "@/lib/soccer/fbref-identity";
+import { shouldQuarantineFixture } from "@/lib/soccer/fixture-integrity";
 import {
   fromEspnScoreboardEvent,
   fromStatsBombMatch,
@@ -147,7 +149,7 @@ async function loadDbMatchesForEspnSlug(
   const prisma = getPrisma();
   const competition = await prisma.competition.findFirst({
     where: { espnSlug },
-    select: { id: true },
+    select: { id: true, name: true },
   });
   if (!competition) return [];
 
@@ -157,14 +159,27 @@ async function loadDbMatchesForEspnSlug(
       ...(seasonLabel ? { seasonLabel } : {}),
     },
     include: {
-      homeTeam: { select: { name: true, crestUrl: true } },
-      awayTeam: { select: { name: true, crestUrl: true } },
+      homeTeam: { select: { name: true, crestUrl: true, country: true } },
+      awayTeam: { select: { name: true, crestUrl: true, country: true } },
     },
     orderBy: { matchDate: "desc" },
     take,
   });
 
-  return rows.map((row) => {
+  return rows
+    .filter(
+      (row) =>
+        !shouldQuarantineFixture({
+          competitionName: competition.name,
+          homeTeam: row.homeTeam.name,
+          awayTeam: row.awayTeam.name,
+          homeCountry: row.homeTeam.country,
+          awayCountry: row.awayTeam.country,
+          stageName: row.round,
+          big5Squads: big5SquadNames(),
+        })
+    )
+    .map((row) => {
     const mapped = fromEspnScoreboardEvent({
       externalKey: row.externalKey ?? row.id,
       homeTeamName: row.homeTeam.name,

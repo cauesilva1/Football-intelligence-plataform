@@ -8,6 +8,7 @@ import {
   getPlayerMatchAppearances,
   type PlayerMatchAppearance,
 } from "@/features/scouting/queries/player-match-appearances";
+import { formatStoredMatchRating } from "@/lib/scoring/soccer-rating";
 import type { Player } from "@/types";
 
 function TeamMatchRow({ match }: { match: PlayerRecentMatch }) {
@@ -110,7 +111,7 @@ function SoccerAppearanceRow({
         {formatDefCell(row, hasDefensiveData)}
       </span>
       <span className="font-mono text-xs font-semibold tabular-nums text-primary sm:text-right">
-        {row.rating != null ? row.rating.toFixed(1) : "—"}
+        {formatStoredMatchRating(row.rating, row)}
       </span>
       {href ? (
         <Link href={href} className="text-2xs text-primary hover:underline sm:text-right">
@@ -161,7 +162,9 @@ function BasketballAppearanceRow({ row }: { row: PlayerMatchAppearance }) {
         Stl {Number(steals).toFixed(0)} · Blk {Number(blocks).toFixed(0)}
       </span>
       <span className="font-mono text-xs font-semibold tabular-nums text-primary sm:text-right">
-        {row.rating != null ? row.rating.toFixed(1) : "—"}
+        {points + rebounds + row.assists + Number(steals) + Number(blocks) > 0 && row.rating != null
+          ? row.rating.toFixed(1)
+          : "—"}
       </span>
       <span aria-hidden className="hidden text-2xs text-muted-foreground/50 sm:inline sm:text-right">
         —
@@ -207,7 +210,9 @@ function FootballAppearanceRow({ row }: { row: PlayerMatchAppearance }) {
         Tkl {Number(row.tackles ?? 0).toFixed(0)} · Sk {Number(sacks).toFixed(1)}
       </span>
       <span className="font-mono text-xs font-semibold tabular-nums text-primary sm:text-right">
-        {row.rating != null ? row.rating.toFixed(1) : "—"}
+        {passYds + rushYds + recYds + tds + sacks + (row.tackles ?? 0) > 0 && row.rating != null
+          ? row.rating.toFixed(1)
+          : "—"}
       </span>
       <span aria-hidden className="hidden text-2xs text-muted-foreground/50 sm:inline sm:text-right">
         —

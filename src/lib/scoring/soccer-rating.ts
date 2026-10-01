@@ -80,6 +80,36 @@ export function computeReportOverallRating(stat: SoccerRatingStat & { rating: nu
  * Single-match productivity proxy (Sofascore-inspired publicly: start ~6.5).
  * Not Opta/Sofascore — transparent weights on the boxscore fields we store.
  */
+export function matchRatingHasSignal(stat: {
+  goals: number;
+  assists: number;
+  tackles?: number | null;
+  interceptions?: number | null;
+  passesAttempted?: number | null;
+}): boolean {
+  if (stat.goals > 0 || stat.assists > 0) return true;
+  if ((stat.tackles ?? 0) > 0 || (stat.interceptions ?? 0) > 0) return true;
+  return (stat.passesAttempted ?? 0) >= 15;
+}
+
+/**
+ * Stored rows that are the untouched 6.5 baseline (no goals, tackles, or pass volume)
+ * are not a measured rating.
+ */
+export function formatStoredMatchRating(
+  rating: number | null | undefined,
+  stat: {
+    goals: number;
+    assists: number;
+    tackles?: number | null;
+    interceptions?: number | null;
+    passesAttempted?: number | null;
+  }
+): string {
+  if (rating == null || !matchRatingHasSignal(stat)) return "—";
+  return rating.toFixed(1);
+}
+
 export function computeMatchRating(stat: {
   minutesPlayed: number;
   goals: number;
@@ -90,6 +120,7 @@ export function computeMatchRating(stat: {
   passesAttempted?: number;
 }): number | null {
   if (stat.minutesPlayed <= 0) return null;
+  if (!matchRatingHasSignal(stat)) return null;
 
   let rating = 6.5;
   rating += Math.min(stat.goals, 3) * 1.0;
