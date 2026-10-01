@@ -1,7 +1,5 @@
-import { readFileSync } from "fs";
-import path from "path";
-import { normalizePosition } from "@/etl/data-dictionary";
 import { normalizeNameForMatch } from "@/lib/sync/data-staleness";
+import { fbrefIdentityRows, fbrefSquadNames } from "@/lib/soccer/fbref-index-data";
 
 export interface FbrefIdentity {
   fullName: string;
@@ -13,65 +11,11 @@ export interface FbrefIdentity {
   minutes: number;
 }
 
-const CSV_PATH = path.join(process.cwd(), "data/raw/players_data_light-2025_2026.csv");
-
 let indexCache: {
   byKey: Map<string, FbrefIdentity>;
   byName: Map<string, FbrefIdentity[]>;
   squads: Set<string>;
 } | null = null;
-
-function parseCsv(text: string): Record<string, string>[] {
-  const rows: string[][] = [];
-  let cell = "";
-  let row: string[] = [];
-  let inQuotes = false;
-
-  for (let i = 0; i < text.length; i += 1) {
-    const char = text[i];
-    if (inQuotes) {
-      if (char === '"') {
-        if (text[i + 1] === '"') {
-          cell += '"';
-          i += 1;
-        } else {
-          inQuotes = false;
-        }
-      } else {
-        cell += char;
-      }
-      continue;
-    }
-    if (char === '"') {
-      inQuotes = true;
-    } else if (char === ",") {
-      row.push(cell);
-      cell = "";
-    } else if (char === "\n" || char === "\r") {
-      if (char === "\r" && text[i + 1] === "\n") i += 1;
-      row.push(cell);
-      cell = "";
-      if (row.some((value) => value.length > 0)) rows.push(row);
-      row = [];
-    } else {
-      cell += char;
-    }
-  }
-  if (cell.length > 0 || row.length > 0) {
-    row.push(cell);
-    if (row.some((value) => value.length > 0)) rows.push(row);
-  }
-
-  const [header, ...body] = rows;
-  if (!header) return [];
-  return body.map((values) => {
-    const record: Record<string, string> = {};
-    header.forEach((column, index) => {
-      record[column] = values[index] ?? "";
-    });
-    return record;
-  });
-}
 
 export function fbrefIdentityKey(fullName: string, birthYear: number): string {
   return `${normalizeNameForMatch(fullName)}::${birthYear}`;
@@ -82,48 +26,18 @@ function readIndex() {
 
   const byKey = new Map<string, FbrefIdentity>();
   const byName = new Map<string, FbrefIdentity[]>();
-  const squads = new Set<string>();
 
-  let text = "";
-  try {
-    text = readFileSync(CSV_PATH, "utf8");
-  } catch {
-    indexCache = { byKey, byName, squads };
-    return indexCache;
-  }
-
-  for (const row of parseCsv(text)) {
-    const fullName = row.Player?.trim();
-    const squad = row.Squad?.trim();
-    if (!fullName || !squad) continue;
-
-    const birthYear = Number.parseInt(row.Born ?? "", 10);
-    const minutes = Number.parseInt(row.Min ?? "", 10);
-    const safeMinutes = Number.isFinite(minutes) ? minutes : 0;
-    const { primary } = normalizePosition(row.Pos ?? "");
-    const nameKey = normalizeNameForMatch(fullName);
-    squads.add(normalizeNameForMatch(squad));
-
-    if (!Number.isFinite(birthYear)) continue;
+  for (const [fullName, birthYear, position, club, minutes] of fbrefIdentityRows) {
+    const identity: FbrefIdentity = { fullName, birthYear, position, club, minutes };
     const key = fbrefIdentityKey(fullName, birthYear);
-    const existing = byKey.get(key);
-    if (!existing || safeMinutes > existing.minutes) {
-      const identity: FbrefIdentity = {
-        fullName,
-        birthYear,
-        position: primary,
-        club: squad,
-        minutes: safeMinutes,
-      };
-      byKey.set(key, identity);
-      const list = byName.get(nameKey) ?? [];
-      const without = list.filter((item) => item.birthYear !== birthYear);
-      without.push(identity);
-      byName.set(nameKey, without);
-    }
+    byKey.set(key, identity);
+    const nameKey = normalizeNameForMatch(fullName);
+    const list = byName.get(nameKey) ?? [];
+    list.push(identity);
+    byName.set(nameKey, list);
   }
 
-  indexCache = { byKey, byName, squads };
+  indexCache = { byKey, byName, squads: new Set(fbrefSquadNames) };
   return indexCache;
 }
 
