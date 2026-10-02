@@ -45,7 +45,7 @@ Fixes credibility. A hiring manager clicking around hits these within minutes.
 
 ## Batch 2 — Number formatting
 
-- [ ] **2.1 Shared formatter.** Create (or reuse) a single number-formatting helper and apply it to every user-facing number.
+- [x] **2.1 Shared formatter.** Create (or reuse) a single number-formatting helper and apply it to every user-facing number.
   - Known leaks to fix: compare tooltip "Creativity — Escandell: 3.869047619047619"; recruitment "Min rating" spinbutton showing 6.800000190734863; recruitment League field placeholder literally reading "competitionId" (replace with a human label).
   - Audit all numeric UI output for similar leaks (tooltips, inputs, table cells).
   - Acceptance: no raw float with more than 2 decimals visible anywhere in the UI; no raw variable names as placeholder/label text.
@@ -99,4 +99,6 @@ The generator exists (server action `createScoutingReport` in `src/lib/actions/r
 | Date | Batch | Notes |
 |------|-------|-------|
 | 2026-09-30 | — | Backlog created from live UX review + repo brief. Nothing started. |
-| 2026-09-30 | 1 | Data cleanup in code. No database deletes. Live site [UNVERIFIED] until this build is deployed. Identity comes from `data/raw/players_data_light-2025_2026.csv`: one row per player, club = squad with more minutes (Anselmino → Dortmund, Ramsdale → Newcastle United). `MF,FW` maps to ST because the light file has no wing side. Joint xG/xA of 0 renders as not measured (nullable columns would need a schema change). |
+| 2026-09-30 | 1 | Data cleanup in code. Identity comes from the embedded FBref index: one row per player, club = squad with more minutes (Anselmino → Dortmund, Ramsdale → Newcastle United). `MF,FW` maps to ST because the light file has no wing side. Joint xG/xA of 0 renders as not measured (nullable columns would need a schema change). |
+| 2026-09-30 | 1 | Deploy of `065a5e4` verified live. Production cleanup: deleted 26 fabricated fixtures (European clubs in CONMEBOL and/or contradictory phase text). 0 violating rows remained. |
+| 2026-10-02 | 2 | Shared `formatDisplayNumber` in `src/lib/format/display-number.ts`. Chart tooltips/axes, recruitment min rating, and soccer leader cells no longer show raw floats. League placeholder is "Premier League". Basketball standings PCT stays a rounded 3-decimal ratio (`.667`), the usual standings form. |

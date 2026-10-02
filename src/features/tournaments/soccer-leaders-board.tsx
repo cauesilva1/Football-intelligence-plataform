@@ -1,4 +1,5 @@
 import type { CompetitionLeaderRow, CompetitionLeaders } from "@/lib/api/espn-leaders";
+import { formatDisplayNumber } from "@/lib/format/display-number";
 
 function LeaderTable({
   title,
@@ -37,7 +38,7 @@ function LeaderTable({
                 <td className="px-3 py-2 font-medium text-foreground">{row.playerName}</td>
                 <td className="px-3 py-2 text-muted-foreground">{row.teamName}</td>
                 <td className="px-3 py-2 text-right font-semibold tabular-nums text-primary">
-                  {row.value}
+                  {formatDisplayNumber(row.value)}
                 </td>
               </tr>
             ))}

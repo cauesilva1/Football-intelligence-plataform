@@ -11,6 +11,7 @@ import {
   Tooltip,
 } from "recharts";
 import { chartTheme, chartTooltipStyle } from "@/lib/chart-theme";
+import { formatChartNumber } from "@/lib/format/display-number";
 
 export interface RadarSeries {
   name: string;
@@ -48,6 +49,7 @@ export function StatRadarChart({ metrics, series }: { metrics: string[]; series:
           angle={30}
           domain={[0, 100]}
           tick={{ fill: chartTheme.tick, fontSize: chartTheme.radiusTick.fontSize }}
+          tickFormatter={(value) => formatChartNumber(value)}
         />
         {series.map((s) => {
           const color = isTooLightForPaper(s.color) ? chartTheme.series.primary : s.color;
@@ -64,7 +66,7 @@ export function StatRadarChart({ metrics, series }: { metrics: string[]; series:
           );
         })}
         <Legend wrapperStyle={chartTheme.legend} />
-        <Tooltip contentStyle={chartTooltipStyle()} />
+        <Tooltip contentStyle={chartTooltipStyle()} formatter={(value) => formatChartNumber(value)} />
       </RadarChart>
     </ResponsiveContainer>
   );

@@ -11,6 +11,7 @@ import {
   Legend,
 } from "recharts";
 import { chartTheme, chartTooltipStyle } from "@/lib/chart-theme";
+import { formatChartNumber } from "@/lib/format/display-number";
 import type { SeasonTimelinePoint } from "@/features/scouting/lib/season-history";
 import type { Sport } from "@/lib/sport";
 
@@ -56,6 +57,7 @@ export function PlayerSeasonChart({
             yAxisId="rating"
             domain={[5, 9]}
             tick={{ fill: chartTheme.tick, fontSize: chartTheme.axisTick.fontSize }}
+            tickFormatter={(value) => formatChartNumber(value, 1)}
             axisLine={{ stroke: chartTheme.axis }}
           />
           <YAxis
@@ -63,9 +65,10 @@ export function PlayerSeasonChart({
             orientation="right"
             domain={[0, "auto"]}
             tick={{ fill: chartTheme.tick, fontSize: chartTheme.axisTick.fontSize }}
+            tickFormatter={(value) => formatChartNumber(value)}
             axisLine={{ stroke: chartTheme.axis }}
           />
-          <Tooltip contentStyle={chartTooltipStyle()} />
+          <Tooltip contentStyle={chartTooltipStyle()} formatter={(value) => formatChartNumber(value)} />
           <Legend wrapperStyle={chartTheme.legend} />
           <Line
             yAxisId="rating"

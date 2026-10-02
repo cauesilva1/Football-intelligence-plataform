@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { fetchRecruitmentBriefHistory } from "@/lib/actions/workspace";
+import { formatDisplayNumber } from "@/lib/format/display-number";
 
 function formatBriefLabel(brief: {
   position: string;
@@ -26,8 +27,10 @@ function buildBriefHref(brief: {
 }): string {
   const params = new URLSearchParams({ position: brief.position });
   if (brief.maxAge != null) params.set("maxAge", String(brief.maxAge));
-  if (brief.maxMarketValue != null) params.set("maxValue", String(brief.maxMarketValue));
-  if (brief.minRating != null) params.set("minRating", String(brief.minRating));
+  if (brief.maxMarketValue != null) {
+    params.set("maxValue", formatDisplayNumber(brief.maxMarketValue, 0));
+  }
+  if (brief.minRating != null) params.set("minRating", formatDisplayNumber(brief.minRating, 1));
   if (brief.league) params.set("league", brief.league);
   if (brief.limit != null) params.set("limit", String(brief.limit));
   return `/recruitment?${params.toString()}`;

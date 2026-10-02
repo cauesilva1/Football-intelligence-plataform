@@ -7,6 +7,7 @@ import {
 } from "@/lib/intelligence/seed-recruitment-brief";
 import type { RecruitmentBrief } from "@/lib/intelligence/recruitment-types";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
+import { formatDisplayNumber } from "@/lib/format/display-number";
 import type { Player } from "@/types";
 
 export interface ReplaceRecruitmentSeed {
@@ -84,10 +85,11 @@ export const loadReplaceRecruitmentSeed = cache(
       brief,
       formDefaults: {
         position: brief.position,
-        maxAge: brief.maxAge != null ? String(brief.maxAge) : undefined,
-        maxValue: brief.maxMarketValue != null ? String(brief.maxMarketValue) : undefined,
-        maxCapHit: brief.maxCapHit != null ? String(brief.maxCapHit) : undefined,
-        minRating: brief.minRating != null ? String(brief.minRating) : undefined,
+        maxAge: brief.maxAge != null ? formatDisplayNumber(brief.maxAge, 0) : undefined,
+        maxValue:
+          brief.maxMarketValue != null ? formatDisplayNumber(brief.maxMarketValue, 0) : undefined,
+        maxCapHit: brief.maxCapHit != null ? formatDisplayNumber(brief.maxCapHit, 0) : undefined,
+        minRating: brief.minRating != null ? formatDisplayNumber(brief.minRating, 1) : undefined,
         league: brief.league,
         limit: String(brief.limit ?? 15),
         replacePlayerId: player.id,

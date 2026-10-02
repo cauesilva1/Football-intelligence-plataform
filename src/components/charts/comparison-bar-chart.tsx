@@ -11,6 +11,7 @@ import {
   Legend,
 } from "recharts";
 import { chartTheme, chartTooltipStyle } from "@/lib/chart-theme";
+import { formatChartNumber } from "@/lib/format/display-number";
 import type { ComparisonCategory } from "@/features/comparison/lib/categories";
 
 export function ComparisonBarChart({
@@ -40,6 +41,7 @@ export function ComparisonBarChart({
           type="number"
           domain={[0, 100]}
           tick={{ fill: chartTheme.tick, fontSize: chartTheme.axisTick.fontSize }}
+          tickFormatter={(value) => formatChartNumber(value)}
           axisLine={{ stroke: chartTheme.axis }}
         />
         <YAxis
@@ -49,7 +51,7 @@ export function ComparisonBarChart({
           tick={{ fill: chartTheme.label, fontSize: chartTheme.axisTick.fontSize }}
           axisLine={{ stroke: chartTheme.axis }}
         />
-        <Tooltip contentStyle={chartTooltipStyle()} />
+        <Tooltip contentStyle={chartTooltipStyle()} formatter={(value) => formatChartNumber(value)} />
         <Legend wrapperStyle={chartTheme.legend} />
         <Bar dataKey={playerAName} fill={chartTheme.series.primary} radius={[0, 4, 4, 0]} barSize={14} />
         <Bar dataKey={playerBName} fill={chartTheme.series.secondary} radius={[0, 4, 4, 0]} barSize={14} />

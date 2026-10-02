@@ -2,6 +2,7 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { chartTheme, chartTooltipStyle } from "@/lib/chart-theme";
+import { formatChartNumber } from "@/lib/format/display-number";
 
 export function RatingTrendChart({ data }: { data: { season: string; avgRating: number }[] }) {
   return (
@@ -16,9 +17,10 @@ export function RatingTrendChart({ data }: { data: { season: string; avgRating: 
         <YAxis
           domain={[5, 9]}
           tick={{ fill: chartTheme.tick, fontSize: chartTheme.axisTick.fontSize }}
+          tickFormatter={(value) => formatChartNumber(value, 1)}
           axisLine={{ stroke: chartTheme.axis }}
         />
-        <Tooltip contentStyle={chartTooltipStyle()} />
+        <Tooltip contentStyle={chartTooltipStyle()} formatter={(value) => formatChartNumber(value, 1)} />
         <Line
           type="monotone"
           dataKey="avgRating"

@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { useSport } from "@/context/sport-context";
+import { formatInputNumber } from "@/lib/format/display-number";
 import { AMERICAN_FOOTBALL_POSITIONS, BASKETBALL_POSITIONS } from "@/lib/positions";
 import type { Sport } from "@/lib/sport";
 
@@ -144,9 +145,12 @@ export function RecruitmentSearchForm({
           min={16}
           max={40}
           defaultValue={
-            seedDefaults?.maxAge ??
-            params.get("maxAge") ??
-            (sport === "BASKETBALL" ? "26" : sport === "AMERICAN_FOOTBALL" ? "28" : "23")
+            formatInputNumber(
+              seedDefaults?.maxAge ??
+                params.get("maxAge") ??
+                (sport === "BASKETBALL" ? "26" : sport === "AMERICAN_FOOTBALL" ? "28" : "23"),
+              0
+            ) || (sport === "BASKETBALL" ? "26" : sport === "AMERICAN_FOOTBALL" ? "28" : "23")
           }
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
         />
@@ -159,9 +163,12 @@ export function RecruitmentSearchForm({
           min={0}
           step={100000}
           defaultValue={
-            seedDefaults?.maxValue ??
-            params.get("maxValue") ??
-            (sport === "SOCCER" ? "5000000" : "")
+            formatInputNumber(
+              seedDefaults?.maxValue ??
+                params.get("maxValue") ??
+                (sport === "SOCCER" ? "5000000" : ""),
+              0
+            )
           }
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
         />
@@ -174,7 +181,10 @@ export function RecruitmentSearchForm({
             type="number"
             min={0}
             step={100000}
-            defaultValue={seedDefaults?.maxCapHit ?? params.get("maxCapHit") ?? ""}
+            defaultValue={formatInputNumber(
+              seedDefaults?.maxCapHit ?? params.get("maxCapHit") ?? "",
+              0
+            )}
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
           />
         </label>
@@ -187,7 +197,10 @@ export function RecruitmentSearchForm({
           min={0}
           max={10}
           step={0.1}
-          defaultValue={seedDefaults?.minRating ?? params.get("minRating") ?? "6.8"}
+          defaultValue={
+            formatInputNumber(seedDefaults?.minRating ?? params.get("minRating") ?? "6.8", 1) ||
+            "6.8"
+          }
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
         />
       </label>
@@ -209,7 +222,7 @@ export function RecruitmentSearchForm({
               ? "NBA"
               : sport === "AMERICAN_FOOTBALL"
                 ? "NFL"
-                : "competitionId"
+                : "Premier League"
           }
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
         />
