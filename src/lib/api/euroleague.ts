@@ -26,17 +26,30 @@ export const EUROLEAGUE_LABEL = "EuroLeague";
 /** Sentinel espnSlug so Competition rows resolve without an ESPN path. */
 export const EUROLEAGUE_ESPN_SLUG = "euroleague";
 
+/** The official feed was unreachable or answered with an error (not a parsing/DB problem). */
+export class EuroLeagueApiError extends Error {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "EuroLeagueApiError";
+  }
+}
+
 async function fetchJson<T>(path: string): Promise<T> {
   const url = `${API_BASE}${path}`;
-  const response = await fetch(url, {
-    headers: {
-      Accept: "application/json",
-      "User-Agent": "football-intelligence-platform/1.0 (euroleague)",
-    },
-    signal: AbortSignal.timeout(25_000),
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "football-intelligence-platform/1.0 (euroleague)",
+      },
+      signal: AbortSignal.timeout(25_000),
+    });
+  } catch (error) {
+    throw new EuroLeagueApiError(`EuroLeague API unreachable — ${path}`, { cause: error });
+  }
   if (!response.ok) {
-    throw new Error(`EuroLeague API HTTP ${response.status} — ${path}`);
+    throw new EuroLeagueApiError(`EuroLeague API HTTP ${response.status} — ${path}`);
   }
   return (await response.json()) as T;
 }

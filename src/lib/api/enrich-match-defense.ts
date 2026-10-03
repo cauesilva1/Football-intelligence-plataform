@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { isDbSource } from "@/lib/data-source";
 import { namesLikelyMatch } from "@/lib/sync/data-staleness";
@@ -8,14 +9,32 @@ import {
   getApiSportsQuotaStatus,
   type ApiSportsFixturePlayerLine,
 } from "@/lib/api-sports";
+import type { ApiQuotaTracker } from "@/lib/api-quota";
+import {
+  buildEnrichmentPlan,
+  type EnrichmentPlanEntry,
+  type LeagueRunSummary,
+} from "@/lib/soccer/enrichment-plan";
+
+const LOG = "[enrich-defense]";
+/** Newest pending rows read per league in quota-aware mode (one match ≈ 20–30 rows). */
+const PLANNED_ROWS_PER_LEAGUE = 150;
+/** A new match costs one fixture lookup plus one fixture-players call. */
+const CALLS_PER_NEW_MATCH = 2;
 
 export type EnrichDefenseOptions = {
-  /** Max PlayerMatchStat rows to attempt (each may cost 1–2 API calls). */
+  /** Max PlayerMatchStat rows to attempt (each may cost 1–2 API calls). Ignored when `quota` is set. */
   limit?: number;
   /** Substring match on competitionLabel (case-insensitive). */
   competition?: string;
   /** Only rows on/after this ISO date (YYYY-MM-DD). */
   since?: string;
+  /**
+   * Quota-aware mode (cron): leagues in season are served first, the rest rotate daily,
+   * and the run stops when fewer than the tracker's minimum calls remain.
+   */
+  quota?: ApiQuotaTracker;
+  now?: Date;
 };
 
 export type EnrichDefenseResult = {
@@ -27,6 +46,9 @@ export type EnrichDefenseResult = {
   skippedQuota: number;
   failed: number;
   quota: { used: number; limit: number; date: string };
+  /** Per-league budget and spend (quota-aware mode only). */
+  leagues?: LeagueRunSummary[];
+  skippedReason?: string;
 };
 
 function dateKey(d: Date): string {
@@ -51,6 +73,7 @@ function matchLineToPlayer(
 export async function enrichPlayerMatchDefense(
   options: EnrichDefenseOptions = {}
 ): Promise<EnrichDefenseResult> {
+  const tracker = options.quota;
   const limit = Math.max(1, Math.min(options.limit ?? 40, 100));
   const quota = await getApiSportsQuotaStatus();
   const empty: EnrichDefenseResult = {
@@ -66,56 +89,107 @@ export async function enrichPlayerMatchDefense(
 
   if (!isDbSource()) return empty;
 
+  if (tracker && !tracker.canSpend(CALLS_PER_NEW_MATCH)) {
+    tracker.recordSkip("defense enrichment: fewer than the minimum API-Football calls remain");
+    empty.skippedReason = "low-quota";
+    console.warn(
+      `${LOG} skipped — API-Football quota low (remaining ${tracker.remaining}, floor ${tracker.minRemaining}).`
+    );
+    return empty;
+  }
+
   const prisma = getPrisma();
   const sinceDate = options.since ? new Date(`${options.since}T00:00:00.000Z`) : undefined;
 
-  const rows = await prisma.playerMatchStat.findMany({
-    where: {
-      AND: [
-        {
-          OR: [
-            { tackles: null },
-            { interceptions: null },
-            // Legacy ESPN rows: both zeros usually mean "missing", not a clean sheet of zeros.
-            {
-              AND: [
-                { tackles: 0 },
-                { interceptions: 0 },
-                { apiSportsFixtureId: null },
-                { source: { in: ["espn"] } },
-              ],
+  const baseWhere: Prisma.PlayerMatchStatWhereInput = {
+    AND: [
+      {
+        OR: [
+          { tackles: null },
+          { interceptions: null },
+          // Legacy ESPN rows: both zeros usually mean "missing", not a clean sheet of zeros.
+          {
+            AND: [
+              { tackles: 0 },
+              { interceptions: 0 },
+              { apiSportsFixtureId: null },
+              { source: { in: ["espn"] } },
+            ],
+          },
+        ],
+      },
+      options.competition
+        ? {
+            competitionLabel: {
+              contains: options.competition,
+              mode: "insensitive",
             },
-          ],
-        },
-        options.competition
-          ? {
-              competitionLabel: {
-                contains: options.competition,
-                mode: "insensitive",
-              },
-            }
-          : {},
-        sinceDate ? { matchDate: { gte: sinceDate } } : {},
-        { matchDate: { not: null } },
-      ],
-    },
-    orderBy: { matchDate: "desc" },
-    take: limit,
-    include: {
-      player: {
-        select: {
-          id: true,
-          fullName: true,
-          knownAs: true,
-          apiSportsId: true,
-          team: { select: { id: true, name: true, apiSportsId: true } },
+          }
+        : {},
+      sinceDate ? { matchDate: { gte: sinceDate } } : {},
+      { matchDate: { not: null } },
+    ],
+  };
+
+  const loadRows = (extra: Prisma.PlayerMatchStatWhereInput, take: number) =>
+    prisma.playerMatchStat.findMany({
+      where: { AND: [baseWhere, extra] },
+      orderBy: { matchDate: "desc" },
+      take,
+      include: {
+        player: {
+          select: {
+            id: true,
+            fullName: true,
+            knownAs: true,
+            apiSportsId: true,
+            team: { select: { id: true, name: true, apiSportsId: true } },
+          },
         },
       },
-    },
-  });
+    });
 
-  empty.candidates = rows.length;
-  if (rows.length === 0) {
+  type Row = Awaited<ReturnType<typeof loadRows>>[number];
+
+  // Legacy mode: one pass over the newest rows. Quota-aware mode: one lazily loaded bucket per league.
+  let plan: EnrichmentPlanEntry[];
+  const leagueFilter = new Map<string, Prisma.PlayerMatchStatWhereInput>();
+  let legacyRows: Row[] = [];
+
+  if (tracker) {
+    const groups = await prisma.playerMatchStat.groupBy({
+      by: ["competitionLabel"],
+      where: baseWhere,
+      _count: { _all: true },
+    });
+    for (const group of groups) {
+      const label = group.competitionLabel?.trim() || "Unknown";
+      empty.candidates += group._count._all;
+      leagueFilter.set(
+        label,
+        group.competitionLabel == null
+          ? { competitionLabel: null }
+          : { competitionLabel: group.competitionLabel }
+      );
+    }
+    plan = buildEnrichmentPlan({
+      leagues: [...leagueFilter.keys()],
+      now: options.now ?? new Date(),
+      usableCalls: tracker.usableCalls(),
+    });
+    console.log(
+      `${LOG} plan — ${plan
+        .map((e) => `${e.league}[${e.tier}${e.inSeason ? "" : ",off-season"}]=${e.budget}`)
+        .join(" · ") || "no leagues with pending rows"}`
+    );
+    empty.leagues = [];
+  } else {
+    legacyRows = await loadRows({}, limit);
+    empty.candidates = legacyRows.length;
+    plan = [{ league: "all", tier: "core", inSeason: true, budget: Number.POSITIVE_INFINITY }];
+  }
+
+  if (empty.candidates === 0) {
     empty.quota = await getApiSportsQuotaStatus();
     return empty;
   }
@@ -126,17 +200,11 @@ export async function enrichPlayerMatchDefense(
     { fixtureId: number | null; lines: ApiSportsFixturePlayerLine[] | null }
   >();
 
-  for (const row of rows) {
-    const q = await getApiSportsQuotaStatus();
-    if (q.used >= q.limit) {
-      empty.skippedQuota += 1;
-      break;
-    }
-
+  const processRow = async (row: Row): Promise<boolean> => {
     const teamApiId = row.player.team?.apiSportsId;
     if (teamApiId == null || !row.matchDate) {
       empty.skippedNoTeamId += 1;
-      continue;
+      return false;
     }
 
     const day = dateKey(row.matchDate);
@@ -149,24 +217,22 @@ export async function enrichPlayerMatchDefense(
         if (fixtureId == null) {
           fixtureCache.set(cacheKey, { fixtureId: null, lines: null });
           empty.skippedNoFixture += 1;
-          continue;
+          return false;
         }
         const lines = await fetchApiSportsFixturePlayers(fixtureId);
         cached = { fixtureId, lines };
         fixtureCache.set(cacheKey, cached);
       } else if (cached.fixtureId == null) {
         empty.skippedNoFixture += 1;
-        continue;
+        return false;
       } else if (!cached.lines) {
         cached.lines = await fetchApiSportsFixturePlayers(cached.fixtureId);
       }
 
-      const line = (cached.lines ?? []).find((l) =>
-        matchLineToPlayer(l, row.player)
-      );
+      const line = (cached.lines ?? []).find((l) => matchLineToPlayer(l, row.player));
       if (!line) {
         empty.skippedNoPlayerMatch += 1;
-        continue;
+        return false;
       }
 
       // Only fill fields that are still null — never invent; 0 from API is real.
@@ -175,7 +241,7 @@ export async function enrichPlayerMatchDefense(
 
       if (tackles == null && interceptions == null) {
         empty.skippedNoPlayerMatch += 1;
-        continue;
+        return false;
       }
 
       const rating = computeMatchRating({
@@ -203,9 +269,6 @@ export async function enrichPlayerMatchDefense(
           apiSportsFixtureId: cached.fixtureId,
           source: nextSource,
           rating: rating ?? row.rating,
-          ...(row.player.apiSportsId == null
-            ? {}
-            : {}),
         },
       });
 
@@ -217,12 +280,61 @@ export async function enrichPlayerMatchDefense(
       }
 
       empty.updated += 1;
+      return true;
     } catch (error) {
       empty.failed += 1;
       console.warn(
-        `[enrich-defense] fail ${row.player.knownAs} ${day}:`,
+        `${LOG} fail ${row.player.knownAs} ${day}:`,
         error instanceof Error ? error.message : error
       );
+      return false;
+    }
+  };
+
+  let carry = 0;
+  let stopAll = false;
+
+  for (const entry of plan) {
+    if (stopAll) break;
+    const bucket = tracker
+      ? await loadRows(leagueFilter.get(entry.league) ?? {}, PLANNED_ROWS_PER_LEAGUE)
+      : legacyRows;
+    const allowance = entry.budget + carry;
+    const callsBefore = tracker?.callCount ?? 0;
+    let updatedHere = 0;
+
+    for (const row of bucket) {
+      const q = await getApiSportsQuotaStatus();
+      if (q.used >= q.limit) {
+        empty.skippedQuota += 1;
+        stopAll = true;
+        break;
+      }
+
+      if (tracker) {
+        if (!tracker.canSpend(CALLS_PER_NEW_MATCH)) {
+          tracker.recordSkip("defense enrichment: stopped, fewer than the minimum calls remain");
+          empty.skippedQuota += 1;
+          stopAll = true;
+          break;
+        }
+        if (tracker.callCount - callsBefore >= allowance) break;
+      }
+
+      if (await processRow(row)) updatedHere += 1;
+    }
+
+    if (tracker) {
+      const spent = tracker.callCount - callsBefore;
+      carry = Math.max(0, allowance - spent);
+      empty.leagues?.push({
+        league: entry.league,
+        tier: entry.tier,
+        inSeason: entry.inSeason,
+        budget: entry.budget,
+        spent,
+        updated: updatedHere,
+      });
     }
   }
 

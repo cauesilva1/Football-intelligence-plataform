@@ -6,6 +6,7 @@ import {
   getApiSportsQuotaStatus,
 } from "@/lib/api-sports";
 import { API_FOOTBALL_PLAYER_MEDIA_SEASON } from "@/lib/seasons";
+import type { ApiQuotaTracker } from "@/lib/api-quota";
 import { namesLikelyMatch } from "@/lib/sync/data-staleness";
 
 const BIG5_LEAGUE_IDS = [
@@ -32,6 +33,8 @@ export type EnsureTeamApiSportsIdsResult = {
 export async function ensureSoccerTeamApiSportsIds(options?: {
   /** Also call API-Football /teams per Big-5 league (≈5 requests). Default true. */
   syncLeagues?: boolean;
+  /** Cron quota tracker: league sync is skipped when fewer than the minimum calls remain. */
+  quota?: ApiQuotaTracker;
 }): Promise<EnsureTeamApiSportsIdsResult> {
   const syncLeagues = options?.syncLeagues !== false;
   const prisma = getPrisma();
@@ -102,6 +105,11 @@ export async function ensureSoccerTeamApiSportsIds(options?: {
     for (const league of BIG5_LEAGUE_IDS) {
       const q = await getApiSportsQuotaStatus();
       if (q.used >= q.limit) break;
+      if (options?.quota && !options.quota.canSpend(1)) {
+        options.quota.recordSkip("team id league sync: fewer than the minimum calls remain");
+        console.warn("[ensure-team-api-sports-ids] league sync skipped — API-Football quota low.");
+        break;
+      }
 
       const apiTeams = await fetchTeamsForLeagueSeason(league.id, season);
       if (!apiTeams.length) continue;

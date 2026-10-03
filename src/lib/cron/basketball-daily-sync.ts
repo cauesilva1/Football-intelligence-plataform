@@ -5,6 +5,13 @@ import {
   type BasketballLeagueSlug,
 } from "@/lib/api/espn-basketball-boxscore";
 import { resolveNbaBoxscoreSeason } from "@/lib/basketball/season";
+import { formatQuotaLog, type ApiQuotaSnapshot } from "@/lib/api-quota";
+import {
+  checkEuroLeagueOutage,
+  startBasketballQuotaRun,
+  type EuroLeagueOutageReport,
+} from "@/lib/api/api-basketball";
+import { EuroLeagueApiError } from "@/lib/api/euroleague";
 import {
   ensureEuroLeagueCompetition,
   syncEuroLeagueClubs,
@@ -50,6 +57,10 @@ export interface BasketballCronResult {
     statsUpdated: number;
   };
   rosters: BasketballCronRosterResult;
+  /** Set only when the official EuroLeague API failed and API-Basketball was consulted. */
+  euroleagueOutage?: EuroLeagueOutageReport;
+  /** API-Basketball (paid, 100 req/day) usage for this run. */
+  apiSportsQuota: ApiQuotaSnapshot;
   elapsedMs: number;
   totals: {
     eventsFound: number;
@@ -142,6 +153,7 @@ export async function runBasketballDailySync(
   const remainingMs = () => deadlineMs - Date.now();
   const now = options.now ?? new Date();
   const season = resolveNbaBoxscoreSeason(now);
+  const apiBasketballQuota = await startBasketballQuotaRun();
   const daysWindow = options.days ?? 2;
   const scanDates = buildBasketballScanDates(now, daysWindow);
   const leagues = options.leagues ?? (["nba", "mens-college-basketball"] as BasketballLeagueSlug[]);
@@ -217,6 +229,7 @@ export async function runBasketballDailySync(
   }
 
   let euroleague: BasketballCronResult["euroleague"];
+  let euroleagueOutage: EuroLeagueOutageReport | undefined;
   try {
     const catchUp = options.days === undefined && !options.force;
     console.log(
@@ -242,6 +255,17 @@ export async function runBasketballDailySync(
     );
   } catch (error) {
     console.warn(`${LOG_PREFIX} EuroLeague FAIL:`, error);
+    // Only an official-feed outage uses the paid API-Basketball quota (≤ 1 call/day checked).
+    if (error instanceof EuroLeagueApiError && !options.skipRosters) {
+      try {
+        euroleagueOutage = await checkEuroLeagueOutage({ reason: error.message, now, days: daysWindow });
+        console.warn(
+          `${LOG_PREFIX} EuroLeague fora do ar — API-Basketball: ${euroleagueOutage.finishedGames} jogo(s) finalizado(s) em ${euroleagueOutage.datesChecked.length} dia(s)${euroleagueOutage.skipped ? ` · ${euroleagueOutage.skipped}` : ""}`
+        );
+      } catch (fallbackError) {
+        console.warn(`${LOG_PREFIX} EuroLeague outage check FAIL:`, fallbackError);
+      }
+    }
   }
 
   if (runRosters) {
@@ -266,6 +290,8 @@ export async function runBasketballDailySync(
   }
 
   const elapsedMs = Date.now() - startedAt;
+  const apiSportsQuota = apiBasketballQuota.snapshot();
+  console.log(`${LOG_PREFIX} ${formatQuotaLog(apiSportsQuota)}`);
   console.log(
     `${LOG_PREFIX} Concluído em ${Math.round(elapsedMs / 1000)}s — temporada: ${season} · eventos: ${totals.eventsFound} · finalizados: ${totals.finalEvents} · novos: ${totals.processed} · cache: ${totals.skipped} · stats: ${totals.statsUpdated} · falhas: ${totals.failed}`
   );
@@ -280,6 +306,8 @@ export async function runBasketballDailySync(
     days,
     euroleague,
     rosters,
+    euroleagueOutage,
+    apiSportsQuota,
     elapsedMs,
     totals,
   };

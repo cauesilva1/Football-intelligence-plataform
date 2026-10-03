@@ -5,9 +5,28 @@ import { CURRENT_SEASON, API_FOOTBALL_PLAYER_MEDIA_SEASON, resolveApiFootballSea
 import { isDbSource } from "@/lib/data-source";
 import { sanitizeApiSportsSearch } from "@/lib/crests/sanitize-search";
 import { apiSportsTeamLogoUrl, resolveClubCrestUrlSync } from "@/lib/crests/club-crests";
+import {
+  API_SPORTS_DAILY_LIMIT,
+  ApiQuotaTracker,
+  formatQuotaLog,
+} from "@/lib/api-quota";
 
 const API_BASE = "https://v3.football.api-sports.io";
-const DAILY_LIMIT = 100;
+const DAILY_LIMIT = API_SPORTS_DAILY_LIMIT;
+
+let footballQuota = new ApiQuotaTracker("football");
+
+/** Tracker for the current run (cron routes read `snapshot()` into their response). */
+export function getFootballQuotaTracker(): ApiQuotaTracker {
+  return footballQuota;
+}
+
+/** Start a fresh per-run tracker seeded with today's persisted usage. */
+export async function startFootballQuotaRun(): Promise<ApiQuotaTracker> {
+  const usedBeforeRun = await getQuotaCount();
+  footballQuota = new ApiQuotaTracker("football", { usedBeforeRun });
+  return footballQuota;
+}
 
 type JsonRecord = Record<string, unknown>;
 
@@ -154,6 +173,8 @@ async function fetchApiSports<T>(endpoint: string, params: Record<string, string
   }
 
   syncQuotaFromHeaders(response.headers);
+  footballQuota.recordCall(response.headers);
+  console.log(`[api-sports] ${endpoint} → ${formatQuotaLog(footballQuota.snapshot())}`);
 
   if (!response.ok) {
     await decrementQuota();
