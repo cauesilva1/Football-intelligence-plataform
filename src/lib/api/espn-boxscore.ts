@@ -1,4 +1,5 @@
 import { getPrisma, withPrismaRetry } from "@/lib/prisma";
+import { errorMessage, logCron } from "@/lib/cron/cron-log";
 import { namesLikelyMatch } from "@/lib/sync/data-staleness";
 import { upsertPlayerMatchStat, buildEspnEventKey } from "@/lib/api/player-match-stats";
 import { ESPN_BRAZIL_SEASON_YEAR } from "@/lib/seasons";
@@ -506,14 +507,27 @@ export async function processMatchBoxScore(
     }
   }
 
+  const summaryStartedAt = Date.now();
   const summary = await fetchMatchSummary(eventId, espnSlug);
   if (!isMatchFinished(summary)) {
+    logCron(
+      "espn_summary_not_finished",
+      { league: espnSlug, eventId, durationMs: Date.now() - summaryStartedAt },
+      "warn"
+    );
     throw new Error(
       `Match ${espnSlug}/${eventId} is not finished on ESPN yet — wait for full time.`
     );
   }
 
   const boxScores = extractMatchPlayerBoxScores(summary);
+  logCron(boxScores.length === 0 ? "espn_summary_no_players" : "espn_summary_fetched", {
+    league: espnSlug,
+    eventId,
+    athletes: boxScores.length,
+    rosterTeams: summary.rosters?.length ?? 0,
+    durationMs: Date.now() - summaryStartedAt,
+  });
   const playerCache = new Map<string, PlayerRef>();
 
   let playersProcessed = 0;
@@ -557,6 +571,12 @@ export async function processMatchBoxScore(
 
           if (!resolved) {
             skipped += 1;
+            logCron("boxscore_player_unmapped", {
+              league: espnSlug,
+              eventId,
+              team: boxScore.teamName,
+              player: boxScore.fullName,
+            });
             return;
           }
 
@@ -605,6 +625,17 @@ export async function processMatchBoxScore(
     } catch (error) {
       failed += 1;
       console.warn(`[boxscore] FAIL ${espnSlug} ${boxScore.fullName}:`, error);
+      logCron(
+        "boxscore_player_error",
+        {
+          league: espnSlug,
+          eventId,
+          team: boxScore.teamName,
+          player: boxScore.fullName,
+          error: errorMessage(error),
+        },
+        "warn"
+      );
     }
   }
 

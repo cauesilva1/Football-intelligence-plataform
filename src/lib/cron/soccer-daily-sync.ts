@@ -1,6 +1,7 @@
 import { processMatchBoxScore } from "@/lib/api/espn-boxscore";
 import { SOCCER_COMPETITIONS } from "@/lib/tournaments/soccer-competitions";
 import { getPrisma, resetPrismaConnection, withPrismaRetry } from "@/lib/prisma";
+import { errorMessage, logCron } from "@/lib/cron/cron-log";
 
 const LOG_PREFIX = "[cron-soccer-boxscores]";
 
@@ -150,7 +151,9 @@ export async function runSoccerDailySync(
       const { syncEspnMatchesForCompetition, syncWorldCup2026Matches } = await import(
         "@/lib/api/espn-matches"
       );
+      logCron("fixtures_stage_start", { leagues: leagues.length, date: formatEspnDate(date) });
       for (const league of leagues) {
+        const leagueStartedAt = Date.now();
         try {
           const saved =
             league.espnSlug === "fifa.world"
@@ -159,12 +162,28 @@ export async function runSoccerDailySync(
           console.log(
             `${LOG_PREFIX} Fixtures ${league.shortName} (${league.espnSlug}): ${saved}`
           );
+          logCron("fixtures_league_done", {
+            league: league.espnSlug,
+            saved,
+            durationMs: Date.now() - leagueStartedAt,
+          });
         } catch (error) {
           console.warn(`${LOG_PREFIX} Fixtures sync failed for ${league.espnSlug}:`, error);
+          logCron(
+            "fixtures_league_error",
+            {
+              league: league.espnSlug,
+              durationMs: Date.now() - leagueStartedAt,
+              error: errorMessage(error),
+            },
+            "warn"
+          );
         }
       }
+      logCron("fixtures_stage_done", { leagues: leagues.length });
     } catch (error) {
       console.warn(`${LOG_PREFIX} Fixtures sync import failed (continuing boxscores):`, error);
+      logCron("fixtures_stage_import_error", { error: errorMessage(error) }, "warn");
     }
   }
 
@@ -179,24 +198,49 @@ export async function runSoccerDailySync(
   let skipped = 0;
   let failed = 0;
 
+  logCron("boxscore_stage_start", {
+    leagues: leagues.length,
+    date: formatEspnDate(date),
+    fixturesSkipped: Boolean(options.skipFixtures),
+  });
+
   for (const league of leagues) {
     let events: EspnScoreboardEvent[] = [];
+    const scoreboardStartedAt = Date.now();
     try {
       events = await fetchScoreboard(league.espnSlug, date);
     } catch (error) {
       console.warn(`${LOG_PREFIX} Scoreboard fail ${league.espnSlug}:`, error);
+      logCron(
+        "scoreboard_error",
+        {
+          league: league.espnSlug,
+          date: formatEspnDate(date),
+          durationMs: Date.now() - scoreboardStartedAt,
+          error: errorMessage(error),
+        },
+        "warn"
+      );
       continue;
     }
 
-    const finished = events.filter(isFinalEvent).filter((e) =>
-      eventMatchesTeams(e, options.teamNames)
-    );
+    const finalsAll = events.filter(isFinalEvent);
+    const finished = finalsAll.filter((e) => eventMatchesTeams(e, options.teamNames));
     eventsFound += events.length;
     finalEvents += finished.length;
+    logCron("scoreboard_done", {
+      league: league.espnSlug,
+      date: formatEspnDate(date),
+      events: events.length,
+      finals: finalsAll.length,
+      finalsAfterTeamFilter: finished.length,
+      durationMs: Date.now() - scoreboardStartedAt,
+    });
 
     for (const event of finished) {
       const matchId = event.id;
       const label = event.name ?? matchId;
+      const matchStartedAt = Date.now();
 
       try {
         const result = await withPrismaRetry(
@@ -211,6 +255,7 @@ export async function runSoccerDailySync(
         );
 
         if (result.alreadyProcessed) {
+          logCron("boxscore_cached", { league: league.espnSlug, eventId: matchId });
           skipped += 1;
           matches.push({
             matchId,
@@ -235,6 +280,21 @@ export async function runSoccerDailySync(
         console.log(
           `${LOG_PREFIX} OK ${league.shortName} ${label} — athletes: ${result.playersProcessed} · match rows: ${result.statsUpserted}`
         );
+        logCron(
+          result.statsUpserted === 0 ? "boxscore_written_empty" : "boxscore_written",
+          {
+            league: league.espnSlug,
+            eventId: matchId,
+            label,
+            athletes: result.playersProcessed,
+            rowsWritten: result.statsUpserted,
+            playersCreated: result.playersCreated,
+            playersSkippedNoMapping: result.skipped,
+            playersFailed: result.failed,
+            durationMs: Date.now() - matchStartedAt,
+          },
+          result.statsUpserted === 0 ? "warn" : "log"
+        );
 
         // Long ESPN days idle the pooler — refresh after each finished match.
         await resetPrismaConnection();
@@ -250,6 +310,17 @@ export async function runSoccerDailySync(
           error: message,
         });
         console.warn(`${LOG_PREFIX} FAIL ${league.espnSlug} ${label}:`, error);
+        logCron(
+          "boxscore_error",
+          {
+            league: league.espnSlug,
+            eventId: matchId,
+            label,
+            durationMs: Date.now() - matchStartedAt,
+            error: errorMessage(error),
+          },
+          "warn"
+        );
       }
     }
   }
@@ -257,6 +328,14 @@ export async function runSoccerDailySync(
   console.log(
     `${LOG_PREFIX} Done — leagues: ${leagues.length} · finals: ${finalEvents} · processed: ${processed} · cached: ${skipped} · failed: ${failed}`
   );
+  logCron("boxscore_stage_done", {
+    date: formatEspnDate(date),
+    events: eventsFound,
+    finals: finalEvents,
+    processed,
+    cached: skipped,
+    failed,
+  });
 
   return {
     date: formatEspnDate(date),

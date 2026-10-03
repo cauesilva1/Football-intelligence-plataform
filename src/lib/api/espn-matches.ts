@@ -1,4 +1,5 @@
 import { getPrisma } from "@/lib/prisma";
+import { errorMessage, logCron } from "@/lib/cron/cron-log";
 import { canUseDatabase } from "@/lib/system-cache";
 import {
   BRAZIL_SEASON_LABEL,
@@ -253,6 +254,11 @@ export async function fetchEspnScoreboard(
 
     if (!response.ok) {
       console.warn(`[espn-matches] HTTP ${response.status} on ${slug} season=${seasonYear}`);
+      logCron(
+        "espn_scoreboard_http_error",
+        { league: slug, seasonYear, date: options.date?.toISOString().slice(0, 10), status: response.status },
+        "warn"
+      );
       return [];
     }
 
@@ -290,6 +296,16 @@ export async function fetchEspnScoreboard(
       .filter((row): row is EspnScoreboardEvent => row != null);
   } catch (error) {
     console.warn(`[espn-matches] fetch failed on ${slug}:`, error);
+    logCron(
+      "espn_scoreboard_fetch_error",
+      {
+        league: slug,
+        seasonYear,
+        date: options.date?.toISOString().slice(0, 10),
+        error: errorMessage(error),
+      },
+      "warn"
+    );
     return [];
   }
 }
@@ -400,6 +416,10 @@ export async function persistEspnMatches(events: EspnScoreboardEvent[]): Promise
 
   const prisma = getPrisma();
   let saved = 0;
+  let skippedNoTeamMapping = 0;
+  let skippedQuarantine = 0;
+  let skippedUnchanged = 0;
+  const persistStartedAt = Date.now();
 
   for (const event of events) {
     const isWorldCup = event.espnSlug === FIFA_WORLD_CUP_SLUG;
@@ -420,7 +440,22 @@ export async function persistEspnMatches(events: EspnScoreboardEvent[]): Promise
           resolveTeamIdByName(event.awayTeamName, competitionId),
         ]);
 
-    if (!homeTeamId || !awayTeamId) continue;
+    if (!homeTeamId || !awayTeamId) {
+      skippedNoTeamMapping += 1;
+      logCron(
+        "fixtures_skip_team_mapping",
+        {
+          league: event.espnSlug,
+          eventKey: event.externalKey,
+          home: event.homeTeamName,
+          away: event.awayTeamName,
+          homeMapped: Boolean(homeTeamId),
+          awayMapped: Boolean(awayTeamId),
+        },
+        "warn"
+      );
+      continue;
+    }
 
     const [homeTeam, awayTeam, competition] = await Promise.all([
       prisma.team.findUnique({
@@ -452,6 +487,7 @@ export async function persistEspnMatches(events: EspnScoreboardEvent[]): Promise
         big5Squads: big5SquadNames(),
       })
     ) {
+      skippedQuarantine += 1;
       continue;
     }
 
@@ -460,7 +496,10 @@ export async function persistEspnMatches(events: EspnScoreboardEvent[]): Promise
       select: { status: true, homeScore: true, awayScore: true },
     });
 
-    if (!shouldApplyEspnUpdate(existing, event)) continue;
+    if (!shouldApplyEspnUpdate(existing, event)) {
+      skippedUnchanged += 1;
+      continue;
+    }
 
     await prisma.match.upsert({
       where: { externalKey: event.externalKey },
@@ -492,6 +531,16 @@ export async function persistEspnMatches(events: EspnScoreboardEvent[]): Promise
 
     saved += 1;
   }
+
+  logCron("fixtures_persist_done", {
+    events: events.length,
+    saved,
+    skippedNoTeamMapping,
+    skippedQuarantine,
+    skippedUnchanged,
+    durationMs: Date.now() - persistStartedAt,
+    msPerEvent: Math.round((Date.now() - persistStartedAt) / events.length),
+  });
 
   return saved;
 }
@@ -779,7 +828,10 @@ export async function syncWorldCup2026Matches(): Promise<number> {
 /** Ingest Brasileirão fixtures from ESPN season 2026 (live window). */
 export async function syncBrasileiraoHistoricalMatches(): Promise<number> {
   const key = "bra.1";
-  if (recentlyAttemptedSync(key)) return 0;
+  if (recentlyAttemptedSync(key)) {
+    logCron("fixtures_skip_recent_attempt", { league: key });
+    return 0;
+  }
 
   const existing = syncInFlight.get(key);
   if (existing) return existing;
@@ -814,11 +866,22 @@ export async function syncBrasileiraoHistoricalMatches(): Promise<number> {
         }
       }
 
+      logCron("fixtures_fetched", {
+        league: config.slug,
+        windowDays: BRAZIL_LIVE_MATCH_WINDOW_DAYS,
+        seasonBoardEvents: seasonBoard.length,
+        mergedEvents: merged.size,
+      });
       const saved = await persistEspnMatches([...merged.values()]);
       const refreshed = await refreshStaleEspnMatches("Brasileirão Série A");
       return saved + refreshed;
     } catch (error) {
       console.warn("[espn-matches] Brasileirão 2026 sync failed:", error);
+      logCron(
+        "fixtures_sync_error",
+        { league: config.slug, error: errorMessage(error) },
+        "warn"
+      );
       return 0;
     }
   })().finally(() => {
@@ -896,6 +959,7 @@ export async function syncEspnMatchesForCompetition(
   if (!config) return 0;
 
   if (!(await competitionNeedsEspnMatchSync(competitionName))) {
+    logCron("fixtures_skip_fresh", { league: config.slug });
     return 0;
   }
 
@@ -908,7 +972,10 @@ export async function syncEspnMatchesForCompetition(
   }
 
   const key = config.slug;
-  if (recentlyAttemptedSync(key)) return 0;
+  if (recentlyAttemptedSync(key)) {
+    logCron("fixtures_skip_recent_attempt", { league: key });
+    return 0;
+  }
 
   const existing = syncInFlight.get(key);
   if (existing) return existing;
@@ -944,11 +1011,22 @@ export async function syncEspnMatchesForCompetition(
         merged.set(event.externalKey, event);
       }
 
+      logCron("fixtures_fetched", {
+        league: config.slug,
+        windowDays,
+        seasonBoardEvents: recentEvents.length,
+        mergedEvents: merged.size,
+      });
       const saved = await persistEspnMatches([...merged.values()]);
       const refreshed = await refreshStaleEspnMatches(competitionName);
       return saved + refreshed;
     } catch (error) {
       console.warn("[espn-matches] Sync failed for", competitionName, error);
+      logCron(
+        "fixtures_sync_error",
+        { league: config.slug, error: errorMessage(error) },
+        "warn"
+      );
       return 0;
     }
   })().finally(() => {

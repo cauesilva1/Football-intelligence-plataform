@@ -9,6 +9,7 @@ import { ensureSoccerTeamApiSportsIds } from "@/lib/api/ensure-team-api-sports-i
 import { enrichPlayerMatchDefense } from "@/lib/api/enrich-match-defense";
 import { startFootballQuotaRun } from "@/lib/api-sports";
 import { formatQuotaLog } from "@/lib/api-quota";
+import { endCronRun, errorMessage, logCron, startCronRun } from "@/lib/cron/cron-log";
 
 export const dynamic = "force-dynamic";
 /** Cover all configured leagues × last few days of finals + light defense enrich. */
@@ -32,10 +33,17 @@ export async function GET(request: Request) {
   }
 
   const startedAt = Date.now();
+  startCronRun("cron-soccer", maxDuration * 1000, startedAt);
+  logCron("run_start", { maxDurationSec: maxDuration });
 
   try {
     const quota = await startFootballQuotaRun();
     const result = await runSoccerBoxscoreBackfill({ days: 2 });
+    logCron("backfill_done", {
+      processed: result.processed,
+      cached: result.skipped,
+      failed: result.failed,
+    });
 
     let teams: Awaited<ReturnType<typeof ensureSoccerTeamApiSportsIds>> | undefined;
     let defense: Awaited<ReturnType<typeof enrichPlayerMatchDefense>> | undefined;
@@ -59,6 +67,7 @@ export async function GET(request: Request) {
 
     const apiSportsQuota = quota.snapshot();
     console.log(`[api/cron/soccer] ${formatQuotaLog(apiSportsQuota)}`);
+    logCron("run_done", { elapsedMs: Date.now() - startedAt });
 
     return NextResponse.json({
       ok: true,
@@ -72,7 +81,10 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("[api/cron/soccer]", error);
+    logCron("run_error", { error: errorMessage(error) }, "warn");
     const message = error instanceof Error ? error.message : "Cron soccer sync failed";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
+  } finally {
+    endCronRun();
   }
 }
