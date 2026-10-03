@@ -81,14 +81,29 @@ export function RecruitmentSearchForm({
     if (fromUrl && allKnown.includes(fromUrl)) return fromUrl;
     return defaultPosition;
   });
+  const [minRating, setMinRating] = useState(
+    () => formatInputNumber(seedDefaults?.minRating ?? params.get("minRating") ?? "6.8", 1) || "6.8"
+  );
+  const [maxValue, setMaxValue] = useState(() =>
+    formatInputNumber(
+      seedDefaults?.maxValue ?? params.get("maxValue") ?? (sport === "SOCCER" ? "5000000" : ""),
+      0
+    )
+  );
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const rating = formatInputNumber(minRating, 1) || "6.8";
+    const value = formatInputNumber(maxValue, 0);
+    setMinRating(rating);
+    setMaxValue(value);
     const form = new FormData(event.currentTarget);
     const query = new URLSearchParams();
     query.set("sport", sport);
-    for (const [key, value] of form.entries()) {
-      const text = String(value).trim();
+    for (const [key, valueEntry] of form.entries()) {
+      let text = String(valueEntry).trim();
+      if (key === "minRating") text = rating;
+      if (key === "maxValue") text = value;
       if (text) query.set(key, text);
     }
     router.push(`/recruitment?${query.toString()}`);
@@ -159,17 +174,11 @@ export function RecruitmentSearchForm({
         <span className="font-medium text-muted-foreground">Max value (USD)</span>
         <input
           name="maxValue"
-          type="number"
-          min={0}
-          step={100000}
-          defaultValue={
-            formatInputNumber(
-              seedDefaults?.maxValue ??
-                params.get("maxValue") ??
-                (sport === "SOCCER" ? "5000000" : ""),
-              0
-            )
-          }
+          type="text"
+          inputMode="numeric"
+          value={maxValue}
+          onChange={(event) => setMaxValue(event.target.value)}
+          onBlur={() => setMaxValue((current) => formatInputNumber(current, 0))}
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
         />
       </label>
@@ -193,13 +202,12 @@ export function RecruitmentSearchForm({
         <span className="font-medium text-muted-foreground">Min rating</span>
         <input
           name="minRating"
-          type="number"
-          min={0}
-          max={10}
-          step={0.1}
-          defaultValue={
-            formatInputNumber(seedDefaults?.minRating ?? params.get("minRating") ?? "6.8", 1) ||
-            "6.8"
+          type="text"
+          inputMode="decimal"
+          value={minRating}
+          onChange={(event) => setMinRating(event.target.value)}
+          onBlur={() =>
+            setMinRating((current) => formatInputNumber(current, 1) || current)
           }
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
         />

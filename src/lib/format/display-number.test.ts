@@ -17,6 +17,7 @@ describe("formatDisplayNumber", () => {
 
   it("formats number inputs and chart values without grouping separators", () => {
     assert.equal(formatInputNumber("6.800000190734863", 1), "6.8");
+    assert.equal(formatInputNumber("99999999999", 0), "99999999999");
     assert.equal(formatInputNumber("", 1), "");
     assert.equal(formatChartNumber(3.869047619047619), "3.87");
   });
