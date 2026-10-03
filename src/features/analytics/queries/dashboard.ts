@@ -18,8 +18,8 @@ async function loadDashboardOverview(sport: Sport): Promise<DashboardOverview> {
 function getCachedDashboardOverview(sport: Sport): Promise<DashboardOverview> {
   return unstable_cache(
     () => loadDashboardOverview(sport),
-    // v6: force refresh after productivity threshold calibration
-    ["dashboard-overview-v7", sport],
+    // v8: soccer goals chart is mean g/90 by role, not a raw sum by position
+    ["dashboard-overview-v8", sport],
     {
       revalidate: DASHBOARD_REVALIDATE_SECONDS,
       tags: ["dashboard", `dashboard-${sport}`],

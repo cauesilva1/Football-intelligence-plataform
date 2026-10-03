@@ -4,6 +4,46 @@ function clamp(value: number, min = 0, max = 100) {
   return Math.min(max, Math.max(min, value));
 }
 
+/**
+ * The light file stores crosses in `keyPasses` (`Crs`).
+ * A per-90 above 15 is a season total that leaked into the rate.
+ */
+export function soccerCrossesPer90(stat: Pick<PlayerStatistic, "per90" | "keyPasses" | "minutesPlayed">): number {
+  const rate = stat.per90.keyPasses;
+  if (!Number.isFinite(rate) || rate < 0) return 0;
+  if (rate <= 15) return rate;
+  if (stat.minutesPlayed > 0 && Number.isFinite(stat.keyPasses)) {
+    return Math.max(0, (stat.keyPasses / stat.minutesPlayed) * 90);
+  }
+  return 15;
+}
+
+/** 0–100 share of a rate, capped at twice the benchmark so one input cannot leave the scale. */
+function rateShare(rate: number, benchmark: number): number {
+  if (!Number.isFinite(rate) || rate <= 0 || benchmark <= 0) return 0;
+  return (Math.min(rate, benchmark * 2) / benchmark) * 100;
+}
+
+const ASSISTS_PER90_BENCHMARK = 0.45;
+/** Elite cross volume in the light file, not an elite key-pass rate. */
+const CROSSES_PER90_BENCHMARK = 8;
+
+/** Equal-weight creativity index for the comparison bars. */
+export function soccerCreativityIndex(stat: PlayerStatistic): number {
+  return clamp(
+    rateShare(stat.per90.assists, ASSISTS_PER90_BENCHMARK) * 0.5 +
+      rateShare(soccerCrossesPer90(stat), CROSSES_PER90_BENCHMARK) * 0.5
+  );
+}
+
+/** Assist-weighted creation index for the radar. */
+export function soccerCreationIndex(stat: PlayerStatistic): number {
+  return clamp(
+    rateShare(stat.per90.assists, ASSISTS_PER90_BENCHMARK) * 0.6 +
+      rateShare(soccerCrossesPer90(stat), CROSSES_PER90_BENCHMARK) * 0.4
+  );
+}
+
 /** Radar profile uses per-90 (futebol), per-game (basquete) ou produção AF. */
 export function toRadarProfile(stat: PlayerStatistic): Record<string, number> {
   if (stat.sport === "BASKETBALL" && stat.perGame) {
@@ -33,7 +73,7 @@ export function toRadarProfile(stat: PlayerStatistic): Record<string, number> {
   const p = stat.per90;
   return {
     Finishing: clamp((p.goals / 0.65) * 100),
-    Creation: clamp((p.assists / 0.45) * 100 * 0.6 + (p.keyPasses / 2.8) * 100 * 0.4),
+    Creation: soccerCreationIndex(stat),
     Passing: clamp(stat.passAccuracy),
     Dribbling: clamp((p.dribbles / 4) * 100),
     Defense: clamp((p.tackles / 3.5) * 100 * 0.5 + (p.interceptions / 2.5) * 100 * 0.5),

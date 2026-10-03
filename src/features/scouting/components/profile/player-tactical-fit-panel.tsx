@@ -23,7 +23,9 @@ export async function PlayerTacticalFitPanel({
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="default">{fit.fitScore}/100 fit</Badge>
-          <Badge variant="secondary">{fit.teamStyleLabel}</Badge>
+          <Badge variant="secondary" className="font-sans normal-case tracking-normal">
+            {fit.teamStyleLabel}
+          </Badge>
         </div>
         <ul className="space-y-1.5">
           {fit.reasons.map((reason) => (

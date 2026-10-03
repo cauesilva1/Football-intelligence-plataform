@@ -19,6 +19,10 @@ function categoryAdvantageLabel(category: string, playerName: string, margin: nu
   return `${category}: ${playerName} (+${margin} index pts)`;
 }
 
+function dimensionCount(count: number): string {
+  return count === 1 ? "1 superior dimension" : `${count} superior dimensions`;
+}
+
 function buildSoccerInsights(a: Player, b: Player): string[] {
   const sa = a.currentSeasonStats;
   const sb = b.currentSeasonStats;
@@ -28,7 +32,7 @@ function buildSoccerInsights(a: Player, b: Player): string[] {
     const better = sa.per90.goals > sb.per90.goals ? a : b;
     const diff = Math.abs(sa.per90.goals - sb.per90.goals).toFixed(2);
     insights.push(
-      `${better.knownAs} produces ${diff} more goal(s) per 90 in the current season.`
+      `${better.knownAs} produces ${diff} more goals per 90 in the current season.`
     );
   }
 
@@ -196,9 +200,9 @@ export function buildComparisonReport(a: Player, b: Player): ComparisonReport {
   if (Math.abs(ratingDiff) < 0.15 && categoryWinsA.length === categoryWinsB.length) {
     recommendation = "Profiles are closely matched. The decision should prioritize tactical or scheme fit, position, and cost efficiency in context.";
   } else if (ratingDiff > 0.15 || categoryWinsA.length > categoryWinsB.length) {
-    recommendation = `${a.knownAs} shows the stronger aggregate scouting case with ${categoryWinsA.length} superior dimension(s).`;
+    recommendation = `${a.knownAs} shows the stronger aggregate scouting case with ${dimensionCount(categoryWinsA.length)}.`;
   } else {
-    recommendation = `${b.knownAs} shows the stronger aggregate scouting case with ${categoryWinsB.length} superior dimension(s).`;
+    recommendation = `${b.knownAs} shows the stronger aggregate scouting case with ${dimensionCount(categoryWinsB.length)}.`;
   }
 
   const categoryLeader = categoryWinsA.length >= categoryWinsB.length ? a : b;

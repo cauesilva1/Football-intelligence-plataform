@@ -52,16 +52,16 @@ Fixes credibility. A hiring manager clicking around hits these within minutes.
 
 ## Batch 3 — Dashboard charts + copy polish
 
-- [ ] **3.1 "Goals by Position" aggregation.** Shows CM with ~1,100 goals vs ST ~430.
+- [x] **3.1 "Goals by Position" aggregation.** Shows CM with ~1,100 goals vs ST ~430.
   - Investigate the query. Fix the aggregation or remove the chart if the metric is not meaningful.
   - Acceptance: chart values are defensible, or the chart is gone.
-- [ ] **3.2 "Average Rating Trend" single dot.** Renders one data point on a 9–5 y-axis; looks broken.
+- [x] **3.2 "Average Rating Trend" single dot.** Renders one data point on a 9–5 y-axis; looks broken.
   - Fix: build a real time series, or replace with an honest empty state.
   - Acceptance: no chart renders a single dot presented as a trend.
-- [ ] **3.3 Compare-page scale bug.** The Creativity bar renders absurdly oversized against the 0–100 scale.
+- [x] **3.3 Compare-page scale bug.** The Creativity bar renders absurdly oversized against the 0–100 scale.
   - Fix the normalization so all dimension bars share the 0–100 scale.
   - Acceptance: no bar overflows its 0–100 track.
-- [ ] **3.4 Copy polish.** "2 superior dimension(s)" → proper pluralization; "Ba l a n c e d block" letter-spacing artifact in the tactical-fit section.
+- [x] **3.4 Copy polish.** "2 superior dimension(s)" → proper pluralization; "Ba l a n c e d block" letter-spacing artifact in the tactical-fit section.
   - Acceptance: no "(s)" pluralization hacks; no letter-spaced rendering artifacts in user-facing copy.
 
 ## Batch 4 — AI report generator on the player profile
@@ -102,3 +102,4 @@ The generator exists (server action `createScoutingReport` in `src/lib/actions/r
 | 2026-09-30 | 1 | Data cleanup in code. Identity comes from the embedded FBref index: one row per player, club = squad with more minutes (Anselmino → Dortmund, Ramsdale → Newcastle United). `MF,FW` maps to ST because the light file has no wing side. Joint xG/xA of 0 renders as not measured (nullable columns would need a schema change). |
 | 2026-09-30 | 1 | Deploy of `065a5e4` verified live. Production cleanup: deleted 26 fabricated fixtures (European clubs in CONMEBOL and/or contradictory phase text). 0 violating rows remained. |
 | 2026-10-02 | 2 | Shared `formatDisplayNumber` in `src/lib/format/display-number.ts`. Chart tooltips/axes, recruitment min rating, and soccer leader cells no longer show raw floats. League placeholder is "Premier League". Basketball standings PCT stays a rounded 3-decimal ratio (`.667`), the usual standings form. |
+| 2026-10-02 | 3 | Soccer goals chart is mean goals/90 by role (GK, DEF, MID, ATT) on players with ≥270 minutes, so a large CM bucket cannot outscore attackers. Rating trend renders only with two or more seasons; one season shows the average and an empty state. Creativity/Creation treat `keyPasses` as crosses (benchmark 8/90) and stay on a 0–100 scale. Compare copy uses real plurals. The tactical-fit style badge uses normal letter-spacing. Checked locally on the dashboard, Kane vs Lewandowski, and Kane's profile. |

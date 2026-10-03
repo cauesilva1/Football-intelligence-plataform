@@ -13,6 +13,11 @@ import {
 import { chartTheme, chartTooltipStyle } from "@/lib/chart-theme";
 import { formatChartNumber } from "@/lib/format/display-number";
 
+function onIndexScale(value: number | undefined): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 0;
+  return Math.min(100, Math.max(0, value));
+}
+
 export interface RadarSeries {
   name: string;
   color: string;
@@ -32,7 +37,7 @@ export function StatRadarChart({ metrics, series }: { metrics: string[]; series:
   const data = metrics.map((metric) => {
     const point: Record<string, string | number> = { metric };
     series.forEach((s) => {
-      point[s.name] = s.values[metric] ?? 0;
+      point[s.name] = onIndexScale(s.values[metric]);
     });
     return point;
   });
@@ -48,6 +53,7 @@ export function StatRadarChart({ metrics, series }: { metrics: string[]; series:
         <PolarRadiusAxis
           angle={30}
           domain={[0, 100]}
+          allowDataOverflow
           tick={{ fill: chartTheme.tick, fontSize: chartTheme.radiusTick.fontSize }}
           tickFormatter={(value) => formatChartNumber(value)}
         />

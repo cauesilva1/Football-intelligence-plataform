@@ -14,6 +14,11 @@ import { chartTheme, chartTooltipStyle } from "@/lib/chart-theme";
 import { formatChartNumber } from "@/lib/format/display-number";
 import type { ComparisonCategory } from "@/features/comparison/lib/categories";
 
+function onIndexScale(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(100, Math.max(0, value));
+}
+
 export function ComparisonBarChart({
   categories,
   playerAName,
@@ -29,8 +34,8 @@ export function ComparisonBarChart({
 }) {
   const data = categories.map((category) => ({
     category,
-    [playerAName]: valuesA[category],
-    [playerBName]: valuesB[category],
+    [playerAName]: onIndexScale(valuesA[category]),
+    [playerBName]: onIndexScale(valuesB[category]),
   }));
 
   return (
@@ -40,6 +45,7 @@ export function ComparisonBarChart({
         <XAxis
           type="number"
           domain={[0, 100]}
+          allowDataOverflow
           tick={{ fill: chartTheme.tick, fontSize: chartTheme.axisTick.fontSize }}
           tickFormatter={(value) => formatChartNumber(value)}
           axisLine={{ stroke: chartTheme.axis }}

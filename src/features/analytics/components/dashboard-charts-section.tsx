@@ -11,26 +11,26 @@ export async function DashboardChartsSection() {
   const isBasketball = sport === "BASKETBALL";
   const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
   const latest = overview.ratingTrend[overview.ratingTrend.length - 1];
-  const changeLabel =
-    overview.ratingTrend.length < 2
-      ? "current season"
-      : overview.ratingChange >= 0
-        ? `+${overview.ratingChange.toFixed(2)} vs previous season`
-        : `${overview.ratingChange.toFixed(2)} vs previous season`;
+  const trendReady = overview.ratingTrend.length >= 2;
+  const changeLabel = !trendReady
+    ? "this season"
+    : overview.ratingChange >= 0
+      ? `+${overview.ratingChange.toFixed(2)} vs previous season`
+      : `${overview.ratingChange.toFixed(2)} vs previous season`;
 
   const chartTitle = isBasketball
     ? "Points by Position"
     : isAmericanFootball
       ? "Roster by Position"
-      : "Goals by Position";
+      : "Goals per 90 by Role";
 
   const chartDescription = isBasketball
     ? "Sum of points-per-game averages (PPG) by position."
     : isAmericanFootball
       ? "Players synced to the database, grouped by position (QB, WR, LB…)."
-      : "Aggregated offensive distribution this season.";
+      : "Mean goals per 90 for goalkeepers, defenders, midfielders, and attackers in this sample (at least 270 minutes).";
 
-  const valueLabel = isBasketball ? "points" : isAmericanFootball ? "players" : "goals";
+  const valueLabel = isBasketball ? "points" : isAmericanFootball ? "players" : "g/90";
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -41,10 +41,22 @@ export async function DashboardChartsSection() {
         title={
           isBasketball || isAmericanFootball ? "Rating Trend" : "Average Rating Trend"
         }
-        description={`${latest?.season ?? "—"} · ${latest?.avgRating.toFixed(2)} (${changeLabel})`}
+        description={
+          latest
+            ? `${latest.season} · ${latest.avgRating.toFixed(2)} (${changeLabel})`
+            : "No season ratings on file."
+        }
         density="dense"
       >
-        <LazyRatingTrendChart data={overview.ratingTrend} />
+        {trendReady ? (
+          <LazyRatingTrendChart data={overview.ratingTrend} />
+        ) : (
+          <p className="px-2 py-10 text-center text-sm text-muted-foreground">
+            {latest
+              ? "One season is on file. The figure above is that season's average."
+              : "No rated seasons are on file for this sample."}
+          </p>
+        )}
       </DataPanel>
     </div>
   );

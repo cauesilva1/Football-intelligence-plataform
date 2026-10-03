@@ -22,9 +22,23 @@ import {
 } from "@/lib/scoring";
 import { BASKETBALL_POSITIONS, type Sport } from "@/lib/sport";
 import { AMERICAN_FOOTBALL_POSITIONS } from "@/lib/positions";
+import { soccerPositionGroup } from "@/features/scouting/lib/position-scorecard";
 import type { Competition, DashboardInsight, DashboardOverview, Player, Team } from "@/types";
 
-const SOCCER_POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"];
+const SOCCER_ROLE_ORDER = ["GK", "DEF", "MID", "ATT"] as const;
+
+/** Mean goals per 90 by role. A raw sum makes the largest bucket (CM) look like the attack. */
+export function soccerGoalsPer90ByRole(players: Player[]): { position: string; goals: number }[] {
+  return SOCCER_ROLE_ORDER.map((position) => {
+    const rates = players
+      .filter((player) => soccerPositionGroup(player.position ?? "") === position)
+      .filter((player) => hasReliableSoccerSample(player.currentSeasonStats.minutesPlayed))
+      .map((player) => player.currentSeasonStats.per90.goals)
+      .filter((goals) => Number.isFinite(goals));
+    const mean = rates.length === 0 ? 0 : rates.reduce((sum, goals) => sum + goals, 0) / rates.length;
+    return { position, goals: Number(mean.toFixed(2)) };
+  });
+}
 
 function hasReliableSample(player: Player, sport: Sport): boolean {
   if (sport === "BASKETBALL") {
@@ -285,31 +299,31 @@ export function buildDashboardOverview(
       ? [...BASKETBALL_POSITIONS]
       : sport === "AMERICAN_FOOTBALL"
         ? [...AMERICAN_FOOTBALL_POSITIONS]
-        : SOCCER_POSITIONS;
-  const goalsByPosition = positions.map((position) => ({
-    position,
-    goals: players
-      .filter((player) => {
-        const pos = player.position?.toUpperCase() ?? "";
-        if (sport === "AMERICAN_FOOTBALL") {
-          if (position === "OL") return /^(OL|OT|OG|C|G|T)$/.test(pos);
-          if (position === "DL") return /^(DL|DE|DT|NT)$/.test(pos);
-          if (position === "LB") return /^(LB|ILB|OLB|MLB)$/.test(pos);
-          if (position === "S") return /^(S|SS|FS|SAF)$/.test(pos);
-          return pos === position || pos.startsWith(position);
-        }
-        return player.position === position;
-      })
-      .reduce((sum, player) => {
-        if (sport === "BASKETBALL") {
-          return sum + statPoints(pickBasketballDisplayStats(player));
-        }
-        if (sport === "AMERICAN_FOOTBALL") {
-          return sum + 1;
-        }
-        return sum + player.currentSeasonStats.goals;
-      }, 0),
-  }));
+        : [];
+  const goalsByPosition =
+    sport === "SOCCER"
+      ? soccerGoalsPer90ByRole(players)
+      : positions.map((position) => ({
+          position,
+          goals: players
+            .filter((player) => {
+              const pos = player.position?.toUpperCase() ?? "";
+              if (sport === "AMERICAN_FOOTBALL") {
+                if (position === "OL") return /^(OL|OT|OG|C|G|T)$/.test(pos);
+                if (position === "DL") return /^(DL|DE|DT|NT)$/.test(pos);
+                if (position === "LB") return /^(LB|ILB|OLB|MLB)$/.test(pos);
+                if (position === "S") return /^(S|SS|FS|SAF)$/.test(pos);
+                return pos === position || pos.startsWith(position);
+              }
+              return player.position === position;
+            })
+            .reduce((sum, player) => {
+              if (sport === "BASKETBALL") {
+                return sum + statPoints(pickBasketballDisplayStats(player));
+              }
+              return sum + 1;
+            }, 0),
+        }));
 
   const ratingTrend: { season: string; avgRating: number }[] = [];
   for (const season of SEASONS) {
