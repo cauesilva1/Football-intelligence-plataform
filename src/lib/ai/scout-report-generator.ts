@@ -1,18 +1,29 @@
 import { derivePlayingStyle } from "@/features/scouting/lib/playing-style";
+import { loadLeaguePercentileContext } from "@/features/scouting/queries/league-percentiles";
 import { withBriefContext } from "@/lib/export/scout-brief-context";
 import { toBriefIntelligenceSnapshot } from "@/lib/export/scout-brief-intelligence";
 import { buildAmericanFootballIntelligenceProfile } from "@/lib/intelligence/american-football/build-american-football-intelligence-profile";
 import { adaptSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/adapter";
 import { buildSoccerIntelligenceProfile } from "@/lib/intelligence/soccer/build-soccer-intelligence-profile";
+import { lookupPlayerPercentileScores } from "@/lib/intelligence/soccer/league-percentiles";
 import { buildBasketballIntelligenceProfile } from "@/lib/intelligence/basketball/build-basketball-intelligence-profile";
+import { expectedGoalsAreMeasured } from "@/lib/metrics/expected-goals";
 import { computeReportOverallRating } from "@/lib/scoring/soccer-rating";
 import { computeBasketballReportOverallRating } from "@/lib/scoring/basketball-rating";
 import { computeFootballReportOverallRating } from "@/lib/scoring/football-rating";
 import type { Player, ScoutingReport, TacticalFit } from "@/lib/types";
 import { formatCapHit, formatMarketValue } from "@/lib/utils";
 
-const OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
+const DEFAULT_OPENROUTER_MODEL = "qwen/qwen3.8-27b:free";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+
+/** Free OpenRouter IDs rotate. Override with OPENROUTER_MODEL when the default 404s. */
+export function resolveOpenRouterModel(
+  env: { OPENROUTER_MODEL?: string } = process.env as { OPENROUTER_MODEL?: string }
+): string {
+  const configured = env.OPENROUTER_MODEL?.trim();
+  return configured || DEFAULT_OPENROUTER_MODEL;
+}
 
 const SYSTEM_PROMPT_SOCCER = `You are a professional football scout analyst writing structured scouting reports for a analytics platform.
 
@@ -36,7 +47,9 @@ Return ONLY valid JSON matching this schema:
   "recommendation": "string — scouting verdict for recruitment"
 }
 
-Use industry-standard analytics language (per 90, xG, xA). Do not invent overall rating — it is computed server-side from the same rules as the player profile.`;
+Use industry-standard analytics language (per 90, xG, xA). The only overall rating is serverOverallRating in the dataset. If you mention an overall rating, repeat that number. Do not compute a different one.
+When expected goals are marked not measured, omit xG and xA. Never invent them or treat a missing value as zero.
+When the dataset says league percentiles are unavailable, omit percentile ranks. Never invent them.`;
 
 const SYSTEM_PROMPT_BASKETBALL = `You are a professional basketball scout analyst writing structured scouting reports for an analytics platform.
 
@@ -406,6 +419,96 @@ function buildMockReport(player: Player): ScoutingReport {
   );
 }
 
+export interface ScoutPercentilePrompt {
+  available: boolean;
+  cohortSize?: number;
+  league?: string;
+  position?: string;
+  season?: string;
+  rows?: Array<{ label: string; percentile: number }>;
+}
+
+const PERCENTILE_LABELS: Record<string, string> = {
+  production: "Production (per-90 composite)",
+  creation: "Creation (per-90 composite)",
+  defense: "Defense (per-90 composite)",
+  ball_progression: "Ball progression (per-90 composite)",
+};
+
+/** League percentile rows for the prompt. Null table or cohort under 8 stays unavailable. */
+export async function resolveSoccerPercentilePrompt(
+  player: Player
+): Promise<ScoutPercentilePrompt> {
+  const table = await loadLeaguePercentileContext(player);
+  if (!table || table.sport !== "SOCCER" || table.cohortSize < 8) {
+    return { available: false, cohortSize: table && "cohortSize" in table ? table.cohortSize : 0 };
+  }
+
+  const scores = lookupPlayerPercentileScores(player, table);
+  if (!scores) return { available: false, cohortSize: table.cohortSize };
+
+  return {
+    available: true,
+    cohortSize: table.cohortSize,
+    league: table.league,
+    position: table.position,
+    season: table.season,
+    rows: (Object.keys(PERCENTILE_LABELS) as Array<keyof typeof scores>).map((key) => ({
+      label: PERCENTILE_LABELS[key],
+      percentile: scores[key],
+    })),
+  };
+}
+
+export function alignNarrativeWithServerRating(text: string, rating: number): string {
+  const canonical = rating.toFixed(1);
+  return text.replace(
+    /\b((?:overall|scout|scouting) rating(?:\s+of|\s+is|:)?)\s*\d+(?:\.\d+)?/gi,
+    `$1 ${canonical}`
+  );
+}
+
+function percentileBlock(prompt: ScoutPercentilePrompt | null): string {
+  if (!prompt || !prompt.available || !prompt.rows?.length) {
+    const size = prompt?.cohortSize ?? 0;
+    return [
+      "PER-90 LEAGUE PERCENTILES",
+      `Unavailable (cohort ${size}, minimum 8). Omit percentile ranks. Do not invent them.`,
+    ].join("\n");
+  }
+
+  const header = [
+    "PER-90 LEAGUE PERCENTILES",
+    `Cohort ${prompt.cohortSize} (minimum 8) · ${prompt.league} · ${prompt.position} · ${prompt.season}`,
+    ...prompt.rows.map((row) => `- ${row.label}: ${row.percentile}`),
+  ];
+  return header.join("\n");
+}
+
+export function buildScoutUserPrompt(
+  player: Player,
+  percentiles: ScoutPercentilePrompt | null = null
+): string {
+  const rating = computeOverallRating(player);
+  const dataset = JSON.parse(buildPlayerContext(player)) as Record<string, unknown>;
+  dataset.serverOverallRating = rating;
+  const soccer = playerSport(player) === "SOCCER";
+
+  return [
+    "Generate a scouting report JSON for this player dataset:",
+    JSON.stringify(dataset, null, 2),
+    "",
+    ...(soccer ? [percentileBlock(percentiles), ""] : []),
+    `HONESTY: serverOverallRating is ${rating.toFixed(1)}. Repeat that number if you mention an overall rating. Do not state a different one.`,
+    ...(soccer
+      ? [
+          "If expected goals are not measured, omit xG and xA.",
+          "If league percentiles are unavailable, omit percentile ranks.",
+        ]
+      : []),
+  ].join("\n");
+}
+
 function buildPlayerContext(player: Player): string {
   const s = player.currentSeasonStats;
   const sport = playerSport(player);
@@ -448,10 +551,14 @@ function buildPlayerContext(player: Player): string {
             goals: s.goals,
             assists: s.assists,
             rating: s.rating,
-            xG: s.xG,
-            xA: s.xA,
             passAccuracy: s.passAccuracy,
             per90: s.per90,
+            ...(expectedGoalsAreMeasured(s.xG, s.xA)
+              ? { xG: s.xG, xA: s.xA, expectedGoals: "measured" }
+              : {
+                  expectedGoals:
+                    "not measured — omit xG and xA; do not invent values or treat them as zero",
+                }),
           };
 
   return JSON.stringify(
@@ -507,12 +614,21 @@ function parseLlmPayload(content: string): LlmReportPayload | null {
   }
 }
 
-async function generateWithOpenRouter(player: Player): Promise<ScoutingReport | null> {
+function withServerRating(text: string | undefined, rating: number, fallback: string): string {
+  const source = text?.trim() ? text : fallback;
+  return alignNarrativeWithServerRating(source, rating);
+}
+
+async function generateWithOpenRouter(
+  player: Player,
+  userPrompt: string
+): Promise<ScoutingReport | null> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) return null;
 
   const fallbackFit = resolveTacticalFit(player);
   const systemPrompt = resolveSystemPrompt(player);
+  const model = resolveOpenRouterModel();
 
   const response = await fetch(OPENROUTER_URL, {
     method: "POST",
@@ -523,12 +639,12 @@ async function generateWithOpenRouter(player: Player): Promise<ScoutingReport | 
       "X-Title": "Football Intelligence Platform",
     },
     body: JSON.stringify({
-      model: OPENROUTER_MODEL,
+      model,
       messages: [
         { role: "system", content: systemPrompt },
         {
           role: "user",
-          content: `Generate a scouting report JSON for this player dataset:\n${buildPlayerContext(player)}`,
+          content: userPrompt,
         },
       ],
       temperature: 0.4,
@@ -557,24 +673,35 @@ async function generateWithOpenRouter(player: Player): Promise<ScoutingReport | 
     {
       id: `report-${player.id}-${Date.now()}`,
       playerId: player.id,
-      summary: payload.summary,
-      strengths: payload.strengths?.length ? payload.strengths : player.strengths,
-      weaknesses: payload.weaknesses?.length ? payload.weaknesses : player.weaknesses,
+      summary: withServerRating(payload.summary, rating, ""),
+      strengths: (payload.strengths?.length ? payload.strengths : player.strengths).map((line) =>
+        alignNarrativeWithServerRating(line, rating)
+      ),
+      weaknesses: (payload.weaknesses?.length ? payload.weaknesses : player.weaknesses).map((line) =>
+        alignNarrativeWithServerRating(line, rating)
+      ),
       playingStyle: {
         label: payload.playingStyle?.label ?? fallbackStyle.label,
-        description: payload.playingStyle?.description ?? fallbackStyle.description,
-        traits: payload.playingStyle?.traits?.length ? payload.playingStyle.traits : fallbackStyle.traits,
+        description: withServerRating(
+          payload.playingStyle?.description,
+          rating,
+          fallbackStyle.description
+        ),
+        traits: (payload.playingStyle?.traits?.length
+          ? payload.playingStyle.traits
+          : fallbackStyle.traits
+        ).map((line) => alignNarrativeWithServerRating(line, rating)),
       },
       tacticalFit: {
         systems: payload.tacticalFit?.systems?.length
           ? payload.tacticalFit.systems
           : fallbackFit.systems,
         roles: payload.tacticalFit?.roles?.length ? payload.tacticalFit.roles : fallbackFit.roles,
-        narrative: payload.tacticalFit?.narrative ?? fallbackFit.narrative,
+        narrative: withServerRating(payload.tacticalFit?.narrative, rating, fallbackFit.narrative),
       },
-      recommendation: payload.recommendation,
+      recommendation: withServerRating(payload.recommendation, rating, ""),
       overallRating: rating,
-      generatedBy: OPENROUTER_MODEL,
+      generatedBy: model,
       createdAt: new Date().toISOString(),
     },
     player
@@ -582,8 +709,18 @@ async function generateWithOpenRouter(player: Player): Promise<ScoutingReport | 
 }
 
 export async function generateScoutingReport(player: Player): Promise<ScoutingReport> {
+  let percentiles: ScoutPercentilePrompt | null = null;
+  if (playerSport(player) === "SOCCER") {
+    try {
+      percentiles = await resolveSoccerPercentilePrompt(player);
+    } catch (error) {
+      console.warn("[scout-report] percentile table unavailable:", error);
+      percentiles = { available: false, cohortSize: 0 };
+    }
+  }
+
   try {
-    const llmReport = await generateWithOpenRouter(player);
+    const llmReport = await generateWithOpenRouter(player, buildScoutUserPrompt(player, percentiles));
     if (llmReport) return llmReport;
   } catch (error) {
     console.warn("[openrouter] Failed to generate report:", error);

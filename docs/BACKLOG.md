@@ -68,10 +68,10 @@ Fixes credibility. A hiring manager clicking around hits these within minutes.
 
 The generator exists (server action `createScoutingReport` in `src/lib/actions/reports.ts`, OpenRouter `meta-llama/llama-3.3-70b-instruct:free`, 5 reports / 10 min rate limit, heuristic fallback). Today its trigger lives only in `/reports`.
 
-- [ ] **4.1 Profile trigger.** Add "Generate scout brief" as a fixed section on `src/app/players/[id]/page.tsx`. Keep `/reports` working as-is.
-- [ ] **4.2 Percentiles in the prompt.** Include an explicit per-90 percentile table in the LLM prompt (see `src/lib/intelligence/soccer/league-percentiles.ts`, minimum cohort 8). Today the model only receives a generic player JSON.
-- [ ] **4.3 Honesty rules.** When xG is 0/missing or the league cohort has fewer than 8 players, the prompt must instruct the model to omit or hedge those metrics — never invent.
-- [ ] **4.4 Keep the architecture.** Server action (no new REST route), same OpenRouter free model, same rate limit, same heuristic fallback.
+- [x] **4.1 Profile trigger.** Add "Generate scout brief" as a fixed section on `src/app/players/[id]/page.tsx`. Keep `/reports` working as-is.
+- [x] **4.2 Percentiles in the prompt.** Include an explicit per-90 percentile table in the LLM prompt (see `src/lib/intelligence/soccer/league-percentiles.ts`, minimum cohort 8). Today the model only receives a generic player JSON.
+- [x] **4.3 Honesty rules.** When xG is 0/missing or the league cohort has fewer than 8 players, the prompt must instruct the model to omit or hedge those metrics — never invent.
+- [x] **4.4 Keep the architecture.** Server action (no new REST route), same OpenRouter free model, same rate limit, same heuristic fallback.
   - Acceptance: generating a brief from a player profile works end-to-end; the brief's narrative never contradicts the server-computed rating; missing-data cases are hedged, not hallucinated.
 
 ## Batch 5 — Secondary sports + demo page
@@ -103,3 +103,4 @@ The generator exists (server action `createScoutingReport` in `src/lib/actions/r
 | 2026-09-30 | 1 | Deploy of `065a5e4` verified live. Production cleanup: deleted 26 fabricated fixtures (European clubs in CONMEBOL and/or contradictory phase text). 0 violating rows remained. |
 | 2026-10-02 | 2 | Shared `formatDisplayNumber` in `src/lib/format/display-number.ts`. Chart tooltips/axes, recruitment min rating, and soccer leader cells no longer show raw floats. League placeholder is "Premier League". Basketball standings PCT stays a rounded 3-decimal ratio (`.667`), the usual standings form. |
 | 2026-10-02 | 3 | Soccer goals chart is mean goals/90 by role (GK, DEF, MID, ATT) on players with ≥270 minutes, so a large CM bucket cannot outscore attackers. Rating trend renders only with two or more seasons; one season shows the average and an empty state. Creativity/Creation treat `keyPasses` as crosses (benchmark 8/90) and stay on a 0–100 scale. Compare copy uses real plurals. The tactical-fit style badge uses normal letter-spacing. Checked locally on the dashboard, Kane vs Lewandowski, and Kane's profile. |
+| 2026-10-03 | 4 | Player profile has a fixed "Generate scout brief" section that calls `createScoutingReport`. The prompt adds a per-90 percentile table (cohort minimum 8) and tells the model to omit unmeasured xG and missing percentiles. Overall rating stays the server number; a contradictory "overall rating" phrase is rewritten to it. Same server action, rate limit, and heuristic fallback. OpenRouter model is `OPENROUTER_MODEL`, default `qwen/qwen3.8-27b:free`, after `meta-llama/llama-3.3-70b-instruct:free` returned 404. Checked on A. Abqar: the brief rendered with overall rating 6.0 matching the summary via the heuristic fallback — live LLM wording is [UNVERIFIED]. `/reports` still loads. |

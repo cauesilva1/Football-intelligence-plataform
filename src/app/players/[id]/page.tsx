@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PlayerScoutBriefSection } from "@/features/ai-report/components/player-scout-brief-section";
 import { queryPlayerById } from "@/features/scouting/queries/players";
 import { PlayerProfileView } from "@/features/scouting/components/player-profile-view";
 import { PlayerProfileSkeleton } from "@/features/scouting/components/player-profile-skeleton";
@@ -38,6 +39,23 @@ export default async function PlayerDetailPage({
       <Suspense fallback={<PlayerProfileSkeleton />}>
         <PlayerProfileView playerId={id} season={query.season} />
       </Suspense>
+      {player ? (
+        <div className="mt-6">
+          <PlayerScoutBriefSection
+            player={{
+              id: player.id,
+              fullName: player.fullName,
+              knownAs: player.knownAs,
+              position: player.position,
+              age: player.age,
+              sport: player.sport,
+              teamId: player.teamId,
+              teamShortName: player.teamShortName,
+              teamName: player.teamName,
+            }}
+          />
+        </div>
+      ) : null}
     </DashboardShell>
   );
 }
