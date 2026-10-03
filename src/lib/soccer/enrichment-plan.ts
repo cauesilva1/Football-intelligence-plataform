@@ -25,6 +25,8 @@ const LEAGUE_RULES: Array<{ needles: string[]; profile: LeagueProfile }> = [
   { needles: ["copa do brasil"], profile: { priority: 20, core: false, months: CONMEBOL_MONTHS } },
   { needles: ["libertadores"], profile: { priority: 21, core: false, months: CONMEBOL_MONTHS } },
   { needles: ["sudamericana"], profile: { priority: 22, core: false, months: CONMEBOL_MONTHS } },
+  // Before "premier league" — "Canadian Premier League" contains that phrase.
+  { needles: ["canadian premier"], profile: { priority: 90, core: false, months: [] } },
   { needles: ["premier league"], profile: { priority: 1, core: true, months: EUROPE_DOMESTIC_MONTHS } },
   { needles: ["la liga"], profile: { priority: 2, core: true, months: EUROPE_DOMESTIC_MONTHS } },
   { needles: ["serie a"], profile: { priority: 3, core: true, months: EUROPE_DOMESTIC_MONTHS } },

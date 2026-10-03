@@ -18,7 +18,7 @@ const SOCCER_TAB_DEFINITIONS: LeagueDef[] = [
   {
     key: "premier-league",
     label: "Premier League",
-    match: (name) => name.includes("premier"),
+    match: (name) => name.includes("premier") && !name.includes("canadian"),
   },
   {
     key: "la-liga",
@@ -52,6 +52,11 @@ const SOCCER_TAB_DEFINITIONS: LeagueDef[] = [
     key: "mls",
     label: "MLS",
     match: (name) => name.includes("mls") || name.includes("major league"),
+  },
+  {
+    key: "cpl",
+    label: "Canadian Premier League",
+    match: (name) => name.includes("canadian premier") || name === "cpl",
   },
 ];
 

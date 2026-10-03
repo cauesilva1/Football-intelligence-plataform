@@ -83,6 +83,27 @@ export function isMlsLeague(competitionName?: string | null): boolean {
   return n.includes("mls") || n.includes("major league soccer") || n.includes("usa.1");
 }
 
+/** API-Football v3 league id. Stable across seasons. ESPN has no CPL slug. */
+export const API_FOOTBALL_CPL_LEAGUE_ID = 479;
+export const CPL_LABEL = "Canadian Premier League";
+
+export function isCanadianPremierLeague(competitionName?: string | null): boolean {
+  const n = competitionName?.toLowerCase() ?? "";
+  return n.includes("canadian premier") || n === "cpl";
+}
+
+/**
+ * Domestic calendars whose rosters live on Player / PlayerSeasonStats
+ * (ESPN or API-Football squads), not on European PlayerStatistic "2025/26" rows.
+ */
+export function isCalendarRosterCompetition(competitionName?: string | null): boolean {
+  return (
+    isMlsLeague(competitionName) ||
+    isBrazilianLeague(competitionName) ||
+    isCanadianPremierLeague(competitionName)
+  );
+}
+
 export function isCopaDoBrasil(competitionName?: string | null): boolean {
   const n = competitionName?.toLowerCase() ?? "";
   return n.includes("copa do brasil") || n.includes("bra.copa_do_brazil");

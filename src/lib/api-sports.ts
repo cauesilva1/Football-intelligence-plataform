@@ -1,7 +1,12 @@
 import { getPrisma } from "@/lib/prisma";
 import { canUseDatabase, readSystemCache, writeSystemCache } from "@/lib/system-cache";
 import { isUsablePlayerPhotoUrl, resolvePlayerPhotoUrl } from "@/lib/player-media";
-import { CURRENT_SEASON, API_FOOTBALL_PLAYER_MEDIA_SEASON, resolveApiFootballSeasonYear } from "@/lib/seasons";
+import {
+  API_FOOTBALL_CPL_LEAGUE_ID,
+  CURRENT_SEASON,
+  API_FOOTBALL_PLAYER_MEDIA_SEASON,
+  resolveApiFootballSeasonYear,
+} from "@/lib/seasons";
 import { isDbSource } from "@/lib/data-source";
 import { sanitizeApiSportsSearch } from "@/lib/crests/sanitize-search";
 import { apiSportsTeamLogoUrl, resolveClubCrestUrlSync } from "@/lib/crests/club-crests";
@@ -65,7 +70,8 @@ interface ApiPlayerSearchItem {
 
 const LEAGUE_IDS: Array<{ match: (name: string) => boolean; id: number }> = [
   { match: (n) => n.includes("brasileir"), id: 71 },
-  { match: (n) => n.includes("premier"), id: 39 },
+  { match: (n) => n.includes("canadian premier"), id: API_FOOTBALL_CPL_LEAGUE_ID },
+  { match: (n) => n.includes("premier") && !n.includes("canadian"), id: 39 },
   {
     match: (n) => n.includes("la liga") || (n.includes("liga") && !n.includes("bundesliga") && !n.includes("brasileir")),
     id: 140,
@@ -492,6 +498,56 @@ export async function fetchTeamsForLeagueSeason(
   }));
   await writeSystemCache(cacheKey, { teams });
   return teams;
+}
+
+export type ApiSportsSquadPlayer = {
+  id: number;
+  name: string;
+  age: number | null;
+  position: string | null;
+  photo: string | null;
+};
+
+/**
+ * Current squad for one club (`/players/squads`). One call, independent of the
+ * free-tier season cap on `/players?season=`. Cached only when players come back.
+ */
+export async function fetchTeamSquad(teamApiId: number): Promise<ApiSportsSquadPlayer[] | null> {
+  const cacheKey = `api-sports:squad:${teamApiId}`;
+  const cached = await readSystemCache<{ players?: ApiSportsSquadPlayer[] }>(cacheKey);
+  if (cached?.players?.length) return cached.players;
+
+  const response = await fetchApiSports<
+    Array<{
+      players?: Array<{
+        id?: number;
+        name?: string;
+        age?: number | null;
+        position?: string | null;
+        photo?: string | null;
+      }>;
+    }>
+  >("/players/squads", { team: teamApiId });
+  if (!response) return null;
+
+  const players: ApiSportsSquadPlayer[] = [];
+  for (const block of response) {
+    for (const player of block.players ?? []) {
+      if (player.id == null || !player.name?.trim()) continue;
+      players.push({
+        id: player.id,
+        name: player.name.trim(),
+        age: player.age ?? null,
+        position: player.position ?? null,
+        photo: player.photo ?? null,
+      });
+    }
+  }
+
+  if (players.length > 0) {
+    await writeSystemCache(cacheKey, { players, teamApiId });
+  }
+  return players;
 }
 
 export type ApiSportsSeasonPlayerDefense = {

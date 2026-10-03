@@ -25,6 +25,16 @@ test("European leagues, Brasileirão and MLS are core and in season in early Oct
   }
 });
 
+test("Canadian Premier League is not the Premier League and is not core", () => {
+  assert.equal(leagueProfile("Premier League").priority, 1);
+  assert.equal(leagueProfile("Premier League").core, true);
+  const cpl = leagueProfile("Canadian Premier League");
+  assert.equal(cpl.core, false);
+  assert.notEqual(cpl.priority, 1);
+  assert.equal(isCoreInSeason("Canadian Premier League", OCT_3_2026), false);
+  assert.equal(isLeagueInSeason("Canadian Premier League", OCT_3_2026), false);
+});
+
 test("Brasileirão is not mistaken for the Italian Serie A", () => {
   assert.equal(leagueProfile("Brasileirão Série A").priority, 7);
   assert.equal(leagueProfile("Serie A").priority, 3);

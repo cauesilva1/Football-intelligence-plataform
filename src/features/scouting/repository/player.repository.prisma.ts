@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { canonicalSoccerPosition } from "@/etl/data-dictionary";
 import { getPrisma } from "@/lib/prisma";
 import { CURRENT_SEASON } from "@/lib/data/generators";
+import { isCalendarRosterCompetition } from "@/lib/seasons";
 import { toPlayerStatistic } from "@/lib/metrics/map-statistic";
 import {
   mapSeasonStatsRow,
@@ -488,6 +489,46 @@ function buildPlayerWhere(filters: PlayerFilters): Prisma.PlayerWhereInput {
   return where;
 }
 
+/** Name fragments for competitions whose roster is not stored as European PlayerStatistic rows. */
+const CALENDAR_ROSTER_NAME_NEEDLES = ["mls", "major league soccer", "brasileir", "canadian premier"] as const;
+
+/**
+ * /players lists rostered athletes. European leagues stay gated on a current-season
+ * PlayerStatistic row (that is what makes Premier League = 497). MLS, Brasileirão and
+ * the Canadian Premier League keep full squads without those rows — include them by
+ * competition name so the club filter matches the team pages.
+ */
+export function playerListedInSoccerDirectory(input: {
+  hasCurrentSeasonStat: boolean;
+  competitionName?: string | null;
+}): boolean {
+  return input.hasCurrentSeasonStat || isCalendarRosterCompetition(input.competitionName);
+}
+
+export function buildSoccerDirectoryWhere(filters: PlayerFilters): Prisma.PlayerWhereInput {
+  const where = buildPlayerWhere({ ...filters, sport: "SOCCER" });
+  const eligibility: Prisma.PlayerWhereInput = {
+    OR: [
+      { statistics: { some: { season: CURRENT_SEASON } } },
+      {
+        team: {
+          competition: {
+            OR: [
+              ...CALENDAR_ROSTER_NAME_NEEDLES.map((needle) => ({
+                name: { contains: needle, mode: "insensitive" as const },
+              })),
+              { espnSlug: "usa.1" },
+            ],
+          },
+        },
+      },
+    ],
+  };
+  const existingAnd = where.AND ? (Array.isArray(where.AND) ? where.AND : [where.AND]) : [];
+  where.AND = [...existingAnd, eligibility];
+  return where;
+}
+
 function buildWhere(filters: PlayerFilters): Prisma.PlayerWhereInput {
   const { minRating, minMinutes } = filters;
   const where = buildPlayerWhere(filters);
@@ -823,6 +864,19 @@ export const prismaPlayerRepository: PlayerRepository & {
       }
 
       return findManyCappedThenPage(where, filters, {
+        prismaPrefiltered: true,
+        rosterBrowse: true,
+      });
+    }
+
+    if (filters.route === "players") {
+      const directoryWhere = buildSoccerDirectoryWhere(filters);
+      const useDbPage =
+        !needsMappedPlayerFilter(filters) && !needsMappedPlayerSort(filters);
+      if (useDbPage) {
+        return findManyPaginatedOnPlayer(directoryWhere, filters);
+      }
+      return findManyCappedThenPage(directoryWhere, filters, {
         prismaPrefiltered: true,
         rosterBrowse: true,
       });
