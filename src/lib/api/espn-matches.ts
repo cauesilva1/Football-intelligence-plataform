@@ -1,5 +1,7 @@
 import { getPrisma } from "@/lib/prisma";
 import { errorMessage, logCron } from "@/lib/cron/cron-log";
+import { isPastDeadline } from "@/lib/cron/soccer-stage-plan";
+import { isFixtureUnchanged } from "@/lib/soccer/fixture-diff";
 import { canUseDatabase } from "@/lib/system-cache";
 import {
   BRAZIL_SEASON_LABEL,
@@ -203,19 +205,46 @@ async function ensureWorldCupCompetitionId(): Promise<string | null> {
   return competition.id;
 }
 
-async function resolveNationalTeamId(name: string, competitionId: string): Promise<string | null> {
+type TeamLite = { id: string; name: string; shortName: string };
+
+/** Per-sync lookup cache so a league sync loads each team list once, not once per event. */
+type TeamLookupCache = {
+  byCompetition: Map<string, TeamLite[]>;
+  all: TeamLite[] | null;
+  resolved: Map<string, string | null>;
+};
+
+function createTeamLookupCache(): TeamLookupCache {
+  return { byCompetition: new Map(), all: null, resolved: new Map() };
+}
+
+async function resolveNationalTeamId(
+  name: string,
+  competitionId: string,
+  cache?: TeamLookupCache
+): Promise<string | null> {
   const prisma = getPrisma();
+  const memoKey = `wc|${competitionId}|${name}`;
+  if (cache?.resolved.has(memoKey)) return cache.resolved.get(memoKey) ?? null;
+
   // Only resolve within the World Cup competition — never match club rows by country
   // (e.g. "Spain" → Atlético Madrid / St. Pauli via team.country).
-  const teams = await prisma.team.findMany({
-    where: { competitionId },
-    select: { id: true, name: true, shortName: true },
-  });
+  let teams = cache?.byCompetition.get(competitionId);
+  if (!teams) {
+    teams = await prisma.team.findMany({
+      where: { competitionId },
+      select: { id: true, name: true, shortName: true },
+    });
+    cache?.byCompetition.set(competitionId, teams);
+  }
 
   const match = teams.find(
     (team) => namesLikelyMatch(team.name, name) || namesLikelyMatch(team.shortName, name)
   );
-  if (match) return match.id;
+  if (match) {
+    cache?.resolved.set(memoKey, match.id);
+    return match.id;
+  }
 
   const created = await prisma.team.create({
     data: {
@@ -229,6 +258,12 @@ async function resolveNationalTeamId(name: string, competitionId: string): Promi
     select: { id: true },
   });
 
+  cache?.byCompetition.get(competitionId)?.push({
+    id: created.id,
+    name,
+    shortName: nationalTeamShortName(name),
+  });
+  cache?.resolved.set(memoKey, created.id);
   return created.id;
 }
 
@@ -312,26 +347,47 @@ export async function fetchEspnScoreboard(
 
 async function resolveTeamIdByName(
   name: string,
-  competitionId?: string | null
+  competitionId?: string | null,
+  cache?: TeamLookupCache
 ): Promise<string | null> {
   const prisma = getPrisma();
-  const scoped = competitionId
-    ? await prisma.team.findMany({
+  const memoKey = `club|${competitionId ?? ""}|${name}`;
+  if (cache?.resolved.has(memoKey)) return cache.resolved.get(memoKey) ?? null;
+
+  let scoped: TeamLite[] = [];
+  if (competitionId) {
+    const cachedScoped = cache?.byCompetition.get(competitionId);
+    if (cachedScoped) {
+      scoped = cachedScoped;
+    } else {
+      scoped = await prisma.team.findMany({
         where: { competitionId },
         select: { id: true, name: true, shortName: true },
-      })
-    : [];
+      });
+      cache?.byCompetition.set(competitionId, scoped);
+    }
+  }
   const scopedMatch = scoped.find(
     (team) => clubNamesMatch(team.name, name) || clubNamesMatch(team.shortName, name)
   );
-  if (scopedMatch) return scopedMatch.id;
+  if (scopedMatch) {
+    cache?.resolved.set(memoKey, scopedMatch.id);
+    return scopedMatch.id;
+  }
 
-  const teams = await prisma.team.findMany({ select: { id: true, name: true, shortName: true } });
+  let teams = cache?.all ?? null;
+  if (!teams) {
+    teams = await prisma.team.findMany({ select: { id: true, name: true, shortName: true } });
+    if (cache) cache.all = teams;
+  }
 
   const match = teams.find(
     (team) => clubNamesMatch(team.name, name) || clubNamesMatch(team.shortName, name)
   );
-  if (match) return match.id;
+  if (match) {
+    cache?.resolved.set(memoKey, match.id);
+    return match.id;
+  }
 
   if (!competitionId) return null;
 
@@ -354,6 +410,10 @@ async function resolveTeamIdByName(
     },
     select: { id: true },
   });
+  const createdLite = { id: created.id, name, shortName };
+  scoped.push(createdLite);
+  cache?.all?.push(createdLite);
+  cache?.resolved.set(memoKey, created.id);
   return created.id;
 }
 
@@ -410,35 +470,80 @@ function shouldApplyEspnUpdate(
   return true;
 }
 
-/** Persist ESPN fixtures into the Match table (upsert by externalKey). */
-export async function persistEspnMatches(events: EspnScoreboardEvent[]): Promise<number> {
+export type PersistEspnMatchesOptions = {
+  /** Epoch ms after which no further writes are started (remaining events wait for the next run). */
+  deadlineAt?: number;
+};
+
+/**
+ * Persist ESPN fixtures into the Match table (upsert by externalKey).
+ *
+ * Lookups are batched per call (team lists, team/competition rows, existing matches), and rows
+ * that would not change any column are only "touched" with one updateMany so the freshness
+ * heartbeat (`updatedAt`) is preserved without a write per event.
+ */
+export async function persistEspnMatches(
+  events: EspnScoreboardEvent[],
+  options: PersistEspnMatchesOptions = {}
+): Promise<number> {
   if (!canUseDatabase() || events.length === 0) return 0;
 
   const prisma = getPrisma();
-  let saved = 0;
+  const startedAt = Date.now();
+  const ordered = [...events].sort((a, b) => b.matchDate.getTime() - a.matchDate.getTime());
+
+  const teamCache = createTeamLookupCache();
+  const competitionIdCache = new Map<string, string | null>();
+  let worldCupCompetitionId: string | null | undefined;
+
   let skippedNoTeamMapping = 0;
   let skippedQuarantine = 0;
-  let skippedUnchanged = 0;
-  const persistStartedAt = Date.now();
+  let skippedRule = 0;
+  let deferredByDeadline = 0;
 
-  for (const event of events) {
+  type ResolvedEvent = {
+    event: EspnScoreboardEvent;
+    competitionId: string | null;
+    homeTeamId: string;
+    awayTeamId: string;
+  };
+  const resolved: ResolvedEvent[] = [];
+
+  for (let index = 0; index < ordered.length; index += 1) {
+    if (isPastDeadline(options.deadlineAt)) {
+      deferredByDeadline = ordered.length - index;
+      break;
+    }
+    const event = ordered[index];
     const isWorldCup = event.espnSlug === FIFA_WORLD_CUP_SLUG;
-    const worldCupCompetitionId = isWorldCup ? await ensureWorldCupCompetitionId() : null;
+
+    if (isWorldCup && worldCupCompetitionId === undefined) {
+      worldCupCompetitionId = await ensureWorldCupCompetitionId();
+    }
 
     const config = resolveEspnLeague(event.competitionLabel);
-    const competitionId =
-      worldCupCompetitionId ??
-      (config ? await resolveCompetitionId(config.competitionLabel, config.slug) : null);
+    let competitionId: string | null;
+    if (isWorldCup) {
+      competitionId = worldCupCompetitionId ?? null;
+    } else if (config) {
+      const cacheKey = `${config.competitionLabel}|${config.slug}`;
+      if (!competitionIdCache.has(cacheKey)) {
+        competitionIdCache.set(
+          cacheKey,
+          await resolveCompetitionId(config.competitionLabel, config.slug)
+        );
+      }
+      competitionId = competitionIdCache.get(cacheKey) ?? null;
+    } else {
+      competitionId = null;
+    }
 
-    const [homeTeamId, awayTeamId] = isWorldCup
-      ? await Promise.all([
-          resolveNationalTeamId(event.homeTeamName, worldCupCompetitionId!),
-          resolveNationalTeamId(event.awayTeamName, worldCupCompetitionId!),
-        ])
-      : await Promise.all([
-          resolveTeamIdByName(event.homeTeamName, competitionId),
-          resolveTeamIdByName(event.awayTeamName, competitionId),
-        ]);
+    const homeTeamId = isWorldCup
+      ? await resolveNationalTeamId(event.homeTeamName, worldCupCompetitionId!, teamCache)
+      : await resolveTeamIdByName(event.homeTeamName, competitionId, teamCache);
+    const awayTeamId = isWorldCup
+      ? await resolveNationalTeamId(event.awayTeamName, worldCupCompetitionId!, teamCache)
+      : await resolveTeamIdByName(event.awayTeamName, competitionId, teamCache);
 
     if (!homeTeamId || !awayTeamId) {
       skippedNoTeamMapping += 1;
@@ -457,47 +562,110 @@ export async function persistEspnMatches(events: EspnScoreboardEvent[]): Promise
       continue;
     }
 
-    const [homeTeam, awayTeam, competition] = await Promise.all([
-      prisma.team.findUnique({
-        where: { id: homeTeamId },
-        select: { name: true, country: true },
-      }),
-      prisma.team.findUnique({
-        where: { id: awayTeamId },
-        select: { name: true, country: true },
-      }),
-      competitionId
-        ? prisma.competition.findUnique({
-            where: { id: competitionId },
-            select: { name: true },
-          })
-        : Promise.resolve(null),
-    ]);
+    resolved.push({ event, competitionId, homeTeamId, awayTeamId });
+  }
+
+  if (resolved.length === 0) {
+    logCron("fixtures_persist_done", {
+      events: events.length,
+      saved: 0,
+      skippedNoTeamMapping,
+      deferredByDeadline,
+      durationMs: Date.now() - startedAt,
+    });
+    return 0;
+  }
+
+  const teamIds = [...new Set(resolved.flatMap((r) => [r.homeTeamId, r.awayTeamId]))];
+  const competitionIds = [
+    ...new Set(resolved.map((r) => r.competitionId).filter((id): id is string => id != null)),
+  ];
+  const [teamRows, competitionRows, existingRows] = await Promise.all([
+    prisma.team.findMany({
+      where: { id: { in: teamIds } },
+      select: { id: true, name: true, country: true },
+    }),
+    competitionIds.length
+      ? prisma.competition.findMany({
+          where: { id: { in: competitionIds } },
+          select: { id: true, name: true },
+        })
+      : Promise.resolve([] as Array<{ id: string; name: string }>),
+    prisma.match.findMany({
+      where: { externalKey: { in: resolved.map((r) => r.event.externalKey) } },
+      select: {
+        externalKey: true,
+        status: true,
+        homeScore: true,
+        awayScore: true,
+        homeTeamId: true,
+        awayTeamId: true,
+        matchDate: true,
+        round: true,
+        seasonLabel: true,
+        competitionId: true,
+      },
+    }),
+  ]);
+  const teamById = new Map(teamRows.map((t) => [t.id, t]));
+  const competitionNameById = new Map(competitionRows.map((c) => [c.id, c.name]));
+  const existingByKey = new Map(existingRows.map((m) => [m.externalKey ?? "", m]));
+  const squads = big5SquadNames();
+
+  let saved = 0;
+  let unchanged = 0;
+  const touchKeys: string[] = [];
+
+  for (const { event, competitionId, homeTeamId, awayTeamId } of resolved) {
+    const homeTeam = teamById.get(homeTeamId);
+    const awayTeam = teamById.get(awayTeamId);
 
     if (
       homeTeam &&
       awayTeam &&
       shouldQuarantineFixture({
-        competitionName: competition?.name ?? event.competitionLabel,
+        competitionName:
+          (competitionId ? competitionNameById.get(competitionId) : undefined) ??
+          event.competitionLabel,
         homeTeam: homeTeam.name,
         awayTeam: awayTeam.name,
         homeCountry: homeTeam.country,
         awayCountry: awayTeam.country,
         stageName: event.round,
-        big5Squads: big5SquadNames(),
+        big5Squads: squads,
       })
     ) {
       skippedQuarantine += 1;
       continue;
     }
 
-    const existing = await prisma.match.findUnique({
-      where: { externalKey: event.externalKey },
-      select: { status: true, homeScore: true, awayScore: true },
-    });
+    const existing = existingByKey.get(event.externalKey) ?? null;
 
     if (!shouldApplyEspnUpdate(existing, event)) {
-      skippedUnchanged += 1;
+      skippedRule += 1;
+      continue;
+    }
+
+    if (
+      isFixtureUnchanged(existing, {
+        homeTeamId,
+        awayTeamId,
+        homeScore: event.homeScore,
+        awayScore: event.awayScore,
+        matchDate: event.matchDate,
+        round: event.round,
+        status: event.status,
+        seasonLabel: event.seasonLabel,
+        competitionId,
+      })
+    ) {
+      unchanged += 1;
+      touchKeys.push(event.externalKey);
+      continue;
+    }
+
+    if (isPastDeadline(options.deadlineAt)) {
+      deferredByDeadline += 1;
       continue;
     }
 
@@ -532,15 +700,29 @@ export async function persistEspnMatches(events: EspnScoreboardEvent[]): Promise
     saved += 1;
   }
 
-  logCron("fixtures_persist_done", {
-    events: events.length,
-    saved,
-    skippedNoTeamMapping,
-    skippedQuarantine,
-    skippedUnchanged,
-    durationMs: Date.now() - persistStartedAt,
-    msPerEvent: Math.round((Date.now() - persistStartedAt) / events.length),
-  });
+  if (touchKeys.length > 0) {
+    await prisma.match.updateMany({
+      where: { externalKey: { in: touchKeys } },
+      data: { updatedAt: new Date() },
+    });
+  }
+
+  const durationMs = Date.now() - startedAt;
+  logCron(
+    deferredByDeadline > 0 ? "fixtures_persist_truncated" : "fixtures_persist_done",
+    {
+      events: events.length,
+      saved,
+      unchanged,
+      skippedNoTeamMapping,
+      skippedQuarantine,
+      skippedByRule: skippedRule,
+      deferredByDeadline,
+      durationMs,
+      msPerEvent: Math.round(durationMs / events.length),
+    },
+    deferredByDeadline > 0 ? "warn" : "log"
+  );
 
   return saved;
 }
@@ -548,9 +730,11 @@ export async function persistEspnMatches(events: EspnScoreboardEvent[]): Promise
 /** Re-fetch ESPN scoreboards for matches stuck as scheduled/0x0 after kickoff. */
 export async function refreshStaleEspnMatches(
   competitionName?: string | null,
-  teamIds?: string[]
+  teamIds?: string[],
+  options: PersistEspnMatchesOptions = {}
 ): Promise<number> {
   if (!canUseDatabase()) return 0;
+  if (isPastDeadline(options.deadlineAt)) return 0;
 
   if (isWorldCupCompetition(competitionName) || competitionName === FIFA_WORLD_CUP_LABEL) {
     return refreshStaleWorldCupMatches();
@@ -624,7 +808,7 @@ export async function refreshStaleEspnMatches(
     .map((match) => merged.get(match.externalKey ?? ""))
     .filter((event): event is EspnScoreboardEvent => event != null);
 
-  return persistEspnMatches(targeted);
+  return persistEspnMatches(targeted, options);
 }
 
 function teamsMatchPair(homeA: string, awayA: string, homeB: string, awayB: string): boolean {
@@ -826,7 +1010,9 @@ export async function syncWorldCup2026Matches(): Promise<number> {
 }
 
 /** Ingest Brasileirão fixtures from ESPN season 2026 (live window). */
-export async function syncBrasileiraoHistoricalMatches(): Promise<number> {
+export async function syncBrasileiraoHistoricalMatches(
+  options: PersistEspnMatchesOptions = {}
+): Promise<number> {
   const key = "bra.1";
   if (recentlyAttemptedSync(key)) {
     logCron("fixtures_skip_recent_attempt", { league: key });
@@ -872,8 +1058,8 @@ export async function syncBrasileiraoHistoricalMatches(): Promise<number> {
         seasonBoardEvents: seasonBoard.length,
         mergedEvents: merged.size,
       });
-      const saved = await persistEspnMatches([...merged.values()]);
-      const refreshed = await refreshStaleEspnMatches("Brasileirão Série A");
+      const saved = await persistEspnMatches([...merged.values()], options);
+      const refreshed = await refreshStaleEspnMatches("Brasileirão Série A", undefined, options);
       return saved + refreshed;
     } catch (error) {
       console.warn("[espn-matches] Brasileirão 2026 sync failed:", error);
@@ -953,7 +1139,8 @@ async function competitionNeedsEspnMatchSync(
 
 /** Sync recent fixtures for a competition (European / Brasileirão live board). */
 export async function syncEspnMatchesForCompetition(
-  competitionName?: string | null
+  competitionName?: string | null,
+  options: PersistEspnMatchesOptions = {}
 ): Promise<number> {
   const config = resolveEspnLeague(competitionName);
   if (!config) return 0;
@@ -968,7 +1155,7 @@ export async function syncEspnMatchesForCompetition(
   }
 
   if (isBrazilianLeague(competitionName)) {
-    return syncBrasileiraoHistoricalMatches();
+    return syncBrasileiraoHistoricalMatches(options);
   }
 
   const key = config.slug;
@@ -1017,8 +1204,8 @@ export async function syncEspnMatchesForCompetition(
         seasonBoardEvents: recentEvents.length,
         mergedEvents: merged.size,
       });
-      const saved = await persistEspnMatches([...merged.values()]);
-      const refreshed = await refreshStaleEspnMatches(competitionName);
+      const saved = await persistEspnMatches([...merged.values()], options);
+      const refreshed = await refreshStaleEspnMatches(competitionName, undefined, options);
       return saved + refreshed;
     } catch (error) {
       console.warn("[espn-matches] Sync failed for", competitionName, error);

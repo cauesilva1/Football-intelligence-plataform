@@ -10,18 +10,19 @@ import { enrichPlayerMatchDefense } from "@/lib/api/enrich-match-defense";
 import { startFootballQuotaRun } from "@/lib/api-sports";
 import { formatQuotaLog } from "@/lib/api-quota";
 import { endCronRun, errorMessage, logCron, startCronRun } from "@/lib/cron/cron-log";
+import { SOCCER_CRON_STAGE_BUDGET, deadlineFrom } from "@/lib/cron/soccer-stage-plan";
 
 export const dynamic = "force-dynamic";
 /** Cover all configured leagues × last few days of finals + light defense enrich. */
 export const maxDuration = 300;
 
-/** Stop starting paid enrichment this late in the 300s function window. */
-const ENRICHMENT_DEADLINE_MS = 240_000;
-
 /**
- * Daily soccer cron: ESPN (free) boxscores for the last 2 days, then API-Football
- * defensive enrichment using the 100 calls/day quota — leagues in season first, the
- * rest on a daily rotation, never below the minimum-remaining floor.
+ * Daily soccer cron, three time-boxed stages inside the 300s window:
+ *   1. ESPN (free) scoreboards + boxscores for the last 2 days (until ~150s),
+ *   2. fixtures catalogue sync, stalest leagues first (until ~200s),
+ *   3. API-Football defensive enrichment using the 100 calls/day quota — leagues in season
+ *      first, the rest on a daily rotation, never below the minimum-remaining floor.
+ * Boxscores run first so a slow fixtures sync can never starve them again.
  */
 export async function GET(request: Request) {
   if (!process.env.CRON_SECRET?.trim()) {
@@ -38,11 +39,18 @@ export async function GET(request: Request) {
 
   try {
     const quota = await startFootballQuotaRun();
-    const result = await runSoccerBoxscoreBackfill({ days: 2 });
+    const result = await runSoccerBoxscoreBackfill({
+      days: 2,
+      deadlineAt: deadlineFrom(startedAt, SOCCER_CRON_STAGE_BUDGET.boxscoresUntilMs),
+      fixturesDeadlineAt: deadlineFrom(startedAt, SOCCER_CRON_STAGE_BUDGET.fixturesUntilMs),
+    });
     logCron("backfill_done", {
       processed: result.processed,
       cached: result.skipped,
       failed: result.failed,
+      truncated: result.truncated,
+      fixturesAttempted: result.fixtures?.attempted,
+      fixturesDeferred: result.fixtures?.deferred.length,
     });
 
     let teams: Awaited<ReturnType<typeof ensureSoccerTeamApiSportsIds>> | undefined;
@@ -51,7 +59,7 @@ export async function GET(request: Request) {
     if (!process.env.APISPORTS_KEY?.trim()) {
       quota.recordSkip("APISPORTS_KEY not set");
       console.warn("[api/cron/soccer] APISPORTS_KEY missing — API-Football enrichment skipped.");
-    } else if (Date.now() - startedAt > ENRICHMENT_DEADLINE_MS) {
+    } else if (Date.now() - startedAt > SOCCER_CRON_STAGE_BUDGET.enrichmentStartsBeforeMs) {
       quota.recordSkip("no time left for enrichment");
       console.warn("[api/cron/soccer] No time left — API-Football enrichment deferred to tomorrow.");
     } else {

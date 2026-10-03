@@ -2,6 +2,11 @@ import { processMatchBoxScore } from "@/lib/api/espn-boxscore";
 import { SOCCER_COMPETITIONS } from "@/lib/tournaments/soccer-competitions";
 import { getPrisma, resetPrismaConnection, withPrismaRetry } from "@/lib/prisma";
 import { errorMessage, logCron } from "@/lib/cron/cron-log";
+import {
+  interleaveRoundRobin,
+  isPastDeadline,
+  orderBySyncStaleness,
+} from "@/lib/cron/soccer-stage-plan";
 
 const LOG_PREFIX = "[cron-soccer-boxscores]";
 
@@ -42,6 +47,8 @@ export interface SoccerCronResult {
   processed: number;
   skipped: number;
   failed: number;
+  /** True when the boxscore deadline stopped this day early. */
+  truncated?: boolean;
   matches: SoccerCronMatchResult[];
 }
 
@@ -107,6 +114,10 @@ export type SoccerSyncOptions = {
    * (case-insensitive), e.g. ["Real Sociedad", "Real Madrid", "Bayern"].
    */
   teamNames?: string[];
+  /** Epoch ms: stop starting new boxscores after this point (stage time budget). */
+  deadlineAt?: number;
+  /** Epoch ms: stop the fixtures stage after this point (stage time budget). */
+  fixturesDeadlineAt?: number;
 };
 
 function eventMatchesTeams(event: EspnScoreboardEvent, teamNames?: string[]): boolean {
@@ -133,6 +144,157 @@ function leaguesForSync(espnSlug?: string) {
   return all.filter((l) => l.espnSlug === espnSlug);
 }
 
+export type SoccerFixturesResult = {
+  leagues: number;
+  attempted: number;
+  saved: number;
+  /** Leagues not reached before the stage deadline; they go first on the next run. */
+  deferred: string[];
+  orphanStatsLinked: number;
+  durationMs: number;
+};
+
+async function loadFixturesLastSyncedBySlug(): Promise<Map<string, Date>> {
+  const prisma = getPrisma();
+  const competitions = await prisma.competition.findMany({
+    where: { espnSlug: { not: null } },
+    select: { id: true, espnSlug: true },
+  });
+  const slugById = new Map(competitions.map((c) => [c.id, c.espnSlug as string]));
+  const grouped = await prisma.match.groupBy({
+    by: ["competitionId"],
+    where: { source: "espn", competitionId: { in: [...slugById.keys()] } },
+    _max: { updatedAt: true },
+  });
+
+  const bySlug = new Map<string, Date>();
+  for (const row of grouped) {
+    const slug = row.competitionId ? slugById.get(row.competitionId) : undefined;
+    const at = row._max.updatedAt;
+    if (!slug || !at) continue;
+    const current = bySlug.get(slug);
+    if (!current || at > current) bySlug.set(slug, at);
+  }
+  return bySlug;
+}
+
+/** Stats written before their Match row existed (boxscores run first) get linked afterwards. */
+async function linkOrphanMatchStats(): Promise<number> {
+  const prisma = getPrisma();
+  return prisma.$executeRaw`
+    UPDATE player_match_stats AS s
+    SET "matchId" = m.id
+    FROM matches AS m
+    WHERE s."matchId" IS NULL
+      AND s."externalEventKey" = m."externalKey"
+  `;
+}
+
+/**
+ * Fixture catalogue sync, time-boxed. Least recently synced leagues go first so every league
+ * is reached over a few days even when a run only has time for some of them.
+ */
+export async function runSoccerFixturesSync(
+  options: { espnSlug?: string; deadlineAt?: number } = {}
+): Promise<SoccerFixturesResult> {
+  const startedAt = Date.now();
+  const configured = leaguesForSync(options.espnSlug);
+  const result: SoccerFixturesResult = {
+    leagues: configured.length,
+    attempted: 0,
+    saved: 0,
+    deferred: [],
+    orphanStatsLinked: 0,
+    durationMs: 0,
+  };
+
+  let leagues = configured;
+  try {
+    leagues = orderBySyncStaleness(configured, await loadFixturesLastSyncedBySlug());
+  } catch (error) {
+    logCron("fixtures_order_error", { error: errorMessage(error) }, "warn");
+  }
+
+  try {
+    const { syncEspnMatchesForCompetition, syncWorldCup2026Matches } = await import(
+      "@/lib/api/espn-matches"
+    );
+    logCron("fixtures_stage_start", {
+      leagues: leagues.length,
+      order: leagues.map((l) => l.espnSlug).join(","),
+    });
+
+    for (const [index, league] of leagues.entries()) {
+      if (isPastDeadline(options.deadlineAt)) {
+        result.deferred = leagues.slice(index).map((l) => l.espnSlug);
+        logCron(
+          "fixtures_deadline_reached",
+          { deferred: result.deferred.join(","), attempted: result.attempted },
+          "warn"
+        );
+        break;
+      }
+
+      const leagueStartedAt = Date.now();
+      result.attempted += 1;
+      try {
+        const saved =
+          league.espnSlug === "fifa.world"
+            ? await syncWorldCup2026Matches()
+            : await syncEspnMatchesForCompetition(league.espnCompetitionLabel ?? league.name, {
+                deadlineAt: options.deadlineAt,
+              });
+        result.saved += saved;
+        console.log(`${LOG_PREFIX} Fixtures ${league.shortName} (${league.espnSlug}): ${saved}`);
+        logCron("fixtures_league_done", {
+          league: league.espnSlug,
+          saved,
+          durationMs: Date.now() - leagueStartedAt,
+        });
+      } catch (error) {
+        console.warn(`${LOG_PREFIX} Fixtures sync failed for ${league.espnSlug}:`, error);
+        logCron(
+          "fixtures_league_error",
+          {
+            league: league.espnSlug,
+            durationMs: Date.now() - leagueStartedAt,
+            error: errorMessage(error),
+          },
+          "warn"
+        );
+      }
+    }
+  } catch (error) {
+    console.warn(`${LOG_PREFIX} Fixtures sync import failed:`, error);
+    logCron("fixtures_stage_import_error", { error: errorMessage(error) }, "warn");
+  }
+
+  try {
+    result.orphanStatsLinked = await linkOrphanMatchStats();
+  } catch (error) {
+    logCron("link_orphan_stats_error", { error: errorMessage(error) }, "warn");
+  }
+
+  result.durationMs = Date.now() - startedAt;
+  logCron("fixtures_stage_done", {
+    attempted: result.attempted,
+    deferred: result.deferred.length,
+    saved: result.saved,
+    orphanStatsLinked: result.orphanStatsLinked,
+    durationMs: result.durationMs,
+  });
+  return result;
+}
+
+type PendingFinal = {
+  league: ReturnType<typeof espnSoccerLeagues>[number];
+  event: EspnScoreboardEvent;
+};
+
+/**
+ * Scoreboards → ESPN boxscores for one calendar day. Fixtures run AFTER boxscores (unless
+ * `skipFixtures`), so a slow catalogue sync can never starve the boxscore stage.
+ */
 export async function runSoccerDailySync(
   date = new Date(),
   options: SoccerSyncOptions = {}
@@ -146,47 +308,6 @@ export async function runSoccerDailySync(
     throw new Error(`Nenhuma liga ESPN encontrada para slug=${options.espnSlug}`);
   }
 
-  if (!options.skipFixtures) {
-    try {
-      const { syncEspnMatchesForCompetition, syncWorldCup2026Matches } = await import(
-        "@/lib/api/espn-matches"
-      );
-      logCron("fixtures_stage_start", { leagues: leagues.length, date: formatEspnDate(date) });
-      for (const league of leagues) {
-        const leagueStartedAt = Date.now();
-        try {
-          const saved =
-            league.espnSlug === "fifa.world"
-              ? await syncWorldCup2026Matches()
-              : await syncEspnMatchesForCompetition(league.espnCompetitionLabel ?? league.name);
-          console.log(
-            `${LOG_PREFIX} Fixtures ${league.shortName} (${league.espnSlug}): ${saved}`
-          );
-          logCron("fixtures_league_done", {
-            league: league.espnSlug,
-            saved,
-            durationMs: Date.now() - leagueStartedAt,
-          });
-        } catch (error) {
-          console.warn(`${LOG_PREFIX} Fixtures sync failed for ${league.espnSlug}:`, error);
-          logCron(
-            "fixtures_league_error",
-            {
-              league: league.espnSlug,
-              durationMs: Date.now() - leagueStartedAt,
-              error: errorMessage(error),
-            },
-            "warn"
-          );
-        }
-      }
-      logCron("fixtures_stage_done", { leagues: leagues.length });
-    } catch (error) {
-      console.warn(`${LOG_PREFIX} Fixtures sync import failed (continuing boxscores):`, error);
-      logCron("fixtures_stage_import_error", { error: errorMessage(error) }, "warn");
-    }
-  }
-
   console.log(
     `${LOG_PREFIX} Scanning scoreboards for ${leagues.length} leagues on ${formatEspnDate(date)}...`
   );
@@ -197,6 +318,7 @@ export async function runSoccerDailySync(
   let processed = 0;
   let skipped = 0;
   let failed = 0;
+  let truncated = false;
 
   logCron("boxscore_stage_start", {
     leagues: leagues.length,
@@ -204,124 +326,142 @@ export async function runSoccerDailySync(
     fixturesSkipped: Boolean(options.skipFixtures),
   });
 
-  for (const league of leagues) {
-    let events: EspnScoreboardEvent[] = [];
-    const scoreboardStartedAt = Date.now();
-    try {
-      events = await fetchScoreboard(league.espnSlug, date);
-    } catch (error) {
-      console.warn(`${LOG_PREFIX} Scoreboard fail ${league.espnSlug}:`, error);
-      logCron(
-        "scoreboard_error",
-        {
+  const perLeague = await Promise.all(
+    leagues.map(async (league) => {
+      const scoreboardStartedAt = Date.now();
+      try {
+        const events = await fetchScoreboard(league.espnSlug, date);
+        const finalsAll = events.filter(isFinalEvent);
+        const finished = finalsAll.filter((e) => eventMatchesTeams(e, options.teamNames));
+        logCron("scoreboard_done", {
           league: league.espnSlug,
           date: formatEspnDate(date),
+          events: events.length,
+          finals: finalsAll.length,
+          finalsAfterTeamFilter: finished.length,
           durationMs: Date.now() - scoreboardStartedAt,
-          error: errorMessage(error),
-        },
-        "warn"
-      );
-      continue;
-    }
-
-    const finalsAll = events.filter(isFinalEvent);
-    const finished = finalsAll.filter((e) => eventMatchesTeams(e, options.teamNames));
-    eventsFound += events.length;
-    finalEvents += finished.length;
-    logCron("scoreboard_done", {
-      league: league.espnSlug,
-      date: formatEspnDate(date),
-      events: events.length,
-      finals: finalsAll.length,
-      finalsAfterTeamFilter: finished.length,
-      durationMs: Date.now() - scoreboardStartedAt,
-    });
-
-    for (const event of finished) {
-      const matchId = event.id;
-      const label = event.name ?? matchId;
-      const matchStartedAt = Date.now();
-
-      try {
-        const result = await withPrismaRetry(
-          () =>
-            processMatchBoxScore(league.espnSlug, matchId, {
-              seasonYear: options.seasonYear ?? league.seasonYear,
-              competitionLabel: league.espnCompetitionLabel ?? league.name,
-              createMissingPlayers: options.createMissingPlayers ?? true,
-              force: options.force,
-            }),
-          { label: `match:${league.espnSlug}:${matchId}`, attempts: 3 }
-        );
-
-        if (result.alreadyProcessed) {
-          logCron("boxscore_cached", { league: league.espnSlug, eventId: matchId });
-          skipped += 1;
-          matches.push({
-            matchId,
-            espnSlug: league.espnSlug,
-            label,
-            status: "skipped",
-          });
-          continue;
-        }
-
-        processed += 1;
-        matches.push({
-          matchId,
-          espnSlug: league.espnSlug,
-          label,
-          status: "processed",
-          playersProcessed: result.playersProcessed,
-          statsUpserted: result.statsUpserted,
-          playersCreated: result.playersCreated,
-          failedPlayers: result.failed,
         });
-        console.log(
-          `${LOG_PREFIX} OK ${league.shortName} ${label} — athletes: ${result.playersProcessed} · match rows: ${result.statsUpserted}`
-        );
-        logCron(
-          result.statsUpserted === 0 ? "boxscore_written_empty" : "boxscore_written",
-          {
-            league: league.espnSlug,
-            eventId: matchId,
-            label,
-            athletes: result.playersProcessed,
-            rowsWritten: result.statsUpserted,
-            playersCreated: result.playersCreated,
-            playersSkippedNoMapping: result.skipped,
-            playersFailed: result.failed,
-            durationMs: Date.now() - matchStartedAt,
-          },
-          result.statsUpserted === 0 ? "warn" : "log"
-        );
-
-        // Long ESPN days idle the pooler — refresh after each finished match.
-        await resetPrismaConnection();
-        await getPrisma().$connect();
+        return { league, events, finished };
       } catch (error) {
-        failed += 1;
-        const message = error instanceof Error ? error.message : String(error);
-        matches.push({
-          matchId,
-          espnSlug: league.espnSlug,
-          label,
-          status: "failed",
-          error: message,
-        });
-        console.warn(`${LOG_PREFIX} FAIL ${league.espnSlug} ${label}:`, error);
+        console.warn(`${LOG_PREFIX} Scoreboard fail ${league.espnSlug}:`, error);
         logCron(
-          "boxscore_error",
+          "scoreboard_error",
           {
             league: league.espnSlug,
-            eventId: matchId,
-            label,
-            durationMs: Date.now() - matchStartedAt,
+            date: formatEspnDate(date),
+            durationMs: Date.now() - scoreboardStartedAt,
             error: errorMessage(error),
           },
           "warn"
         );
+        return null;
       }
+    })
+  );
+
+  const groups: PendingFinal[][] = [];
+  for (const entry of perLeague) {
+    if (!entry) continue;
+    eventsFound += entry.events.length;
+    finalEvents += entry.finished.length;
+    groups.push(entry.finished.map((event) => ({ league: entry.league, event })));
+  }
+  const queue = interleaveRoundRobin(groups);
+
+  for (const [position, { league, event }] of queue.entries()) {
+    if (isPastDeadline(options.deadlineAt)) {
+      truncated = true;
+      logCron(
+        "boxscore_deadline_reached",
+        { date: formatEspnDate(date), attempted: position, pending: queue.length - position },
+        "warn"
+      );
+      break;
+    }
+
+    const matchId = event.id;
+    const label = event.name ?? matchId;
+    const matchStartedAt = Date.now();
+
+    try {
+      const result = await withPrismaRetry(
+        () =>
+          processMatchBoxScore(league.espnSlug, matchId, {
+            seasonYear: options.seasonYear ?? league.seasonYear,
+            competitionLabel: league.espnCompetitionLabel ?? league.name,
+            createMissingPlayers: options.createMissingPlayers ?? true,
+            force: options.force,
+          }),
+        { label: `match:${league.espnSlug}:${matchId}`, attempts: 3 }
+      );
+
+      if (result.alreadyProcessed) {
+        logCron("boxscore_cached", { league: league.espnSlug, eventId: matchId });
+        skipped += 1;
+        matches.push({
+          matchId,
+          espnSlug: league.espnSlug,
+          label,
+          status: "skipped",
+        });
+        continue;
+      }
+
+      processed += 1;
+      matches.push({
+        matchId,
+        espnSlug: league.espnSlug,
+        label,
+        status: "processed",
+        playersProcessed: result.playersProcessed,
+        statsUpserted: result.statsUpserted,
+        playersCreated: result.playersCreated,
+        failedPlayers: result.failed,
+      });
+      console.log(
+        `${LOG_PREFIX} OK ${league.shortName} ${label} — athletes: ${result.playersProcessed} · match rows: ${result.statsUpserted}`
+      );
+      logCron(
+        result.statsUpserted === 0 ? "boxscore_written_empty" : "boxscore_written",
+        {
+          league: league.espnSlug,
+          eventId: matchId,
+          label,
+          athletes: result.playersProcessed,
+          rowsWritten: result.statsUpserted,
+          playersCreated: result.playersCreated,
+          playersSkippedNoMapping: result.skipped,
+          playersFailed: result.failed,
+          durationMs: Date.now() - matchStartedAt,
+        },
+        result.statsUpserted === 0 ? "warn" : "log"
+      );
+
+      // Long ESPN days idle the pooler — refresh after each finished match.
+      await resetPrismaConnection();
+      await getPrisma().$connect();
+    } catch (error) {
+      failed += 1;
+      const message = error instanceof Error ? error.message : String(error);
+      matches.push({
+        matchId,
+        espnSlug: league.espnSlug,
+        label,
+        status: "failed",
+        error: message,
+      });
+      console.warn(`${LOG_PREFIX} FAIL ${league.espnSlug} ${label}:`, error);
+      logCron(
+        "boxscore_error",
+        {
+          league: league.espnSlug,
+          eventId: matchId,
+          label,
+          durationMs: Date.now() - matchStartedAt,
+          error: errorMessage(error),
+        },
+        "warn"
+      );
     }
   }
 
@@ -335,7 +475,15 @@ export async function runSoccerDailySync(
     processed,
     cached: skipped,
     failed,
+    truncated,
   });
+
+  if (!options.skipFixtures) {
+    await runSoccerFixturesSync({
+      espnSlug: options.espnSlug,
+      deadlineAt: options.fixturesDeadlineAt,
+    });
+  }
 
   return {
     date: formatEspnDate(date),
@@ -345,6 +493,7 @@ export async function runSoccerDailySync(
     processed,
     skipped,
     failed,
+    truncated,
     matches,
   };
 }
@@ -355,9 +504,15 @@ export type SoccerBackfillResult = {
   processed: number;
   skipped: number;
   failed: number;
+  /** True when the boxscore deadline cut the run short; the rest is picked up next run. */
+  truncated: boolean;
+  fixtures?: SoccerFixturesResult;
 };
 
-/** Walk backwards from `endDate` and process finished boxscores (fills Recent appearances). */
+/**
+ * Walk backwards from `endDate` and process finished boxscores (fills Recent appearances),
+ * then sync fixtures once. Both stages are time-boxed when deadlines are given.
+ */
 export async function runSoccerBoxscoreBackfill(options: {
   days: number;
   espnSlug?: string;
@@ -370,6 +525,12 @@ export async function runSoccerBoxscoreBackfill(options: {
   createMissingPlayers?: boolean;
   /** Only process matches involving these team name substrings. */
   teamNames?: string[];
+  /** Skip the fixtures stage entirely. */
+  skipFixtures?: boolean;
+  /** Epoch ms: boxscore stage budget. */
+  deadlineAt?: number;
+  /** Epoch ms: fixtures stage budget. */
+  fixturesDeadlineAt?: number;
 }): Promise<SoccerBackfillResult> {
   const days = Math.max(1, Math.min(options.days, 90));
   const end = options.endDate ?? new Date();
@@ -377,8 +538,15 @@ export async function runSoccerBoxscoreBackfill(options: {
   let processed = 0;
   let skipped = 0;
   let failed = 0;
+  let truncated = false;
 
   for (let i = 0; i < days; i++) {
+    if (isPastDeadline(options.deadlineAt)) {
+      truncated = true;
+      logCron("backfill_deadline_reached", { dayIndex: i, days }, "warn");
+      break;
+    }
+
     const date = new Date(end);
     date.setUTCDate(date.getUTCDate() - i);
     // Long backfills idle the pooler — refresh the client every calendar day.
@@ -388,21 +556,30 @@ export async function runSoccerBoxscoreBackfill(options: {
     }
     const result = await runSoccerDailySync(date, {
       espnSlug: options.espnSlug,
-      skipFixtures: i > 0,
+      skipFixtures: true,
       force: options.force,
       seasonYear: options.seasonYear,
       createMissingPlayers: options.createMissingPlayers,
       teamNames: options.teamNames,
+      deadlineAt: options.deadlineAt,
     });
     dayResults.push(result);
     processed += result.processed;
     skipped += result.skipped;
     failed += result.failed;
+    if (result.truncated) truncated = true;
   }
 
   console.log(
     `${LOG_PREFIX} Backfill done — days: ${days} · processed: ${processed} · cached: ${skipped} · failed: ${failed}`
   );
 
-  return { days, dayResults, processed, skipped, failed };
+  const fixtures = options.skipFixtures
+    ? undefined
+    : await runSoccerFixturesSync({
+        espnSlug: options.espnSlug,
+        deadlineAt: options.fixturesDeadlineAt,
+      });
+
+  return { days, dayResults, processed, skipped, failed, truncated, fixtures };
 }

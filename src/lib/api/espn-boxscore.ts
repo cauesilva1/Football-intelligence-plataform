@@ -1,5 +1,6 @@
 import { getPrisma, withPrismaRetry } from "@/lib/prisma";
 import { errorMessage, logCron } from "@/lib/cron/cron-log";
+import { isBoxscoreCacheComplete, shouldCacheBoxscore } from "@/lib/soccer/boxscore-cache";
 import { namesLikelyMatch } from "@/lib/sync/data-staleness";
 import { upsertPlayerMatchStat, buildEspnEventKey } from "@/lib/api/player-match-stats";
 import { ESPN_BRAZIL_SEASON_YEAR } from "@/lib/seasons";
@@ -493,7 +494,10 @@ export async function processMatchBoxScore(
 
   if (!options.force) {
     const cached = await prisma.systemCache.findUnique({ where: { key: cacheKey } });
-    if (cached) {
+    if (cached && !isBoxscoreCacheComplete(cached.json)) {
+      logCron("boxscore_cache_incomplete_reprocess", { league: espnSlug, eventId });
+    }
+    if (cached && isBoxscoreCacheComplete(cached.json)) {
       return {
         matchId: eventId,
         espnSlug,
@@ -586,7 +590,10 @@ export async function processMatchBoxScore(
           const isHome = homeName ? namesLikelyMatch(homeName, boxScore.teamName) : undefined;
 
           // Appearances first — season aggregate must not block Recent appearances on race errors.
-          await upsertPlayerMatchStat({
+          // Season aggregates are incremental, so they must only grow when this match's
+          // appearance row is new — re-running a partially written match stays idempotent.
+          const { created: appearanceCreated } = await upsertPlayerMatchStat({
+            detectCreated: true,
             playerId,
             externalEventKey: buildEspnEventKey(espnSlug, eventId),
             matchId: matchRow?.id,
@@ -607,6 +614,8 @@ export async function processMatchBoxScore(
           });
 
           statsUpserted += 1;
+
+          if (!appearanceCreated) return;
 
           try {
             await accumulateSeasonStats(playerId, boxScore, options.seasonYear);
@@ -639,28 +648,35 @@ export async function processMatchBoxScore(
     }
   }
 
-  await prisma.systemCache.upsert({
-    where: { key: cacheKey },
-    create: {
-      key: cacheKey,
-      json: {
-        espnSlug,
+  if (shouldCacheBoxscore({ statsUpserted, failed })) {
+    const payload = {
+      espnSlug,
+      eventId,
+      processedAt: new Date().toISOString(),
+      playersProcessed,
+      statsUpserted,
+      failed,
+      complete: true,
+    };
+    await prisma.systemCache.upsert({
+      where: { key: cacheKey },
+      create: { key: cacheKey, json: payload },
+      update: { json: payload },
+    });
+  } else {
+    logCron(
+      "boxscore_not_cached",
+      {
+        league: espnSlug,
         eventId,
-        processedAt: new Date().toISOString(),
-        playersProcessed,
-        statsUpserted,
+        reason: statsUpserted === 0 ? "no_rows_written" : "player_failures",
+        athletes: playersProcessed,
+        rowsWritten: statsUpserted,
+        playersFailed: failed,
       },
-    },
-    update: {
-      json: {
-        espnSlug,
-        eventId,
-        processedAt: new Date().toISOString(),
-        playersProcessed,
-        statsUpserted,
-      },
-    },
-  });
+      "warn"
+    );
+  }
 
   return {
     matchId: eventId,

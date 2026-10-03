@@ -39,16 +39,32 @@ export type PlayerMatchStatUpsertInput = {
   source?: string;
   /** When set, skip soccer computeMatchRating (basketball/AF boxscores). */
   ratingOverride?: number | null;
+  /** Look up the row first so the caller learns whether this call created it (one extra query). */
+  detectCreated?: boolean;
 };
 
 export function buildEspnEventKey(espnSlug: string, eventId: string): string {
   return `espn:${espnSlug}:${eventId}`;
 }
 
-export async function upsertPlayerMatchStat(input: PlayerMatchStatUpsertInput): Promise<void> {
-  if (!isDbSource()) return;
+/** `created` is true only when this call inserted a new appearance row. */
+export async function upsertPlayerMatchStat(
+  input: PlayerMatchStatUpsertInput
+): Promise<{ created: boolean }> {
+  if (!isDbSource()) return { created: false };
 
   const prisma = getPrisma();
+  const existingRow = input.detectCreated
+    ? await prisma.playerMatchStat.findUnique({
+        where: {
+          playerId_externalEventKey: {
+            playerId: input.playerId,
+            externalEventKey: input.externalEventKey,
+          },
+        },
+        select: { id: true },
+      })
+    : null;
   const rating =
     input.ratingOverride !== undefined
       ? input.ratingOverride
@@ -140,6 +156,8 @@ export async function upsertPlayerMatchStat(input: PlayerMatchStatUpsertInput): 
       ...(input.source ? { source: input.source } : {}),
     },
   });
+
+  return { created: input.detectCreated ? existingRow == null : false };
 }
 
 async function resolveExistingPlayerId(fullName: string): Promise<string | null> {
