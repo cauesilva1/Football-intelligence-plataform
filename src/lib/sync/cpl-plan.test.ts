@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "fs";
 import { describe, it } from "node:test";
 import {
   CPL_CRON_MAX_DURATION_SEC,
@@ -90,6 +91,12 @@ describe("CPL backfill plan", () => {
   it("keeps its own budget under a minute so it cannot extend the daily 300s cron", () => {
     assert.ok(CPL_SYNC_BUDGET_MS < CPL_CRON_MAX_DURATION_SEC * 1000);
     assert.ok(CPL_CRON_MAX_DURATION_SEC < 300);
+    const route = fs.readFileSync(
+      new URL("../../app/api/cron/cpl/route.ts", import.meta.url),
+      "utf8"
+    );
+    assert.match(route, /export const maxDuration = 60/);
+    assert.equal(CPL_CRON_MAX_DURATION_SEC, 60);
   });
 });
 

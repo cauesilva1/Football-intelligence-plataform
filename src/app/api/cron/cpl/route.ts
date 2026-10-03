@@ -7,12 +7,12 @@ import {
 import { startFootballQuotaRun } from "@/lib/api-sports";
 import { formatQuotaLog } from "@/lib/api-quota";
 import { endCronRun, errorMessage, logCron, startCronRun } from "@/lib/cron/cron-log";
-import { CPL_CRON_MAX_DURATION_SEC, CPL_SYNC_BUDGET_MS } from "@/lib/sync/cpl-plan";
+import { CPL_SYNC_BUDGET_MS } from "@/lib/sync/cpl-plan";
 import { runCplBackfill } from "@/lib/sync/cpl-sync";
 
 export const dynamic = "force-dynamic";
-/** Separate from the daily soccer cron (300s). Teams + players only. */
-export const maxDuration = CPL_CRON_MAX_DURATION_SEC;
+/** Literal required by Next. Keep equal to CPL_CRON_MAX_DURATION_SEC. Teams + players only. */
+export const maxDuration = 60;
 
 /**
  * Weekly CPL roster backfill. Scheduled after the daily soccer cron so defensive
