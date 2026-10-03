@@ -76,13 +76,13 @@ export async function PlayerProfileView({
       ) : null}
       {showTacticalFit ? (
         <Suspense fallback={<IntelligenceSkeleton />}>
-          <PlayerTacticalFitPanel playerId={playerId} teamId={player.teamId} />
+          <PlayerTacticalFitPanel playerId={playerId} teamId={player.teamId} sport={sport} />
         </Suspense>
       ) : null}
       <PlayerCompetitionContext player={player} />
       <PlayerAnalysisSection player={player} />
       <div className="grid items-start gap-6 xl:grid-cols-2">
-        <ScoutNotesPanel playerId={playerId} />
+        <ScoutNotesPanel playerId={playerId} sport={sport} />
         <Suspense fallback={<SimilarSkeleton />}>
           <PlayerSimilarSection playerId={playerId} />
         </Suspense>

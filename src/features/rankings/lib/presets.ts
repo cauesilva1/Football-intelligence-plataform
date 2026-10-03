@@ -175,7 +175,7 @@ const BASKETBALL_PRESETS: RankingPreset[] = [
     slug: "bargains",
     title: "Bargains (cap hit)",
     description:
-      "Rating ≥ 7.0, age ≤ 28, Cap Hit ≤ $12M, ≥ 200' — ranked by rating per $1M Cap Hit (NBA ESPN salaries; NCAA/EuroLeague usually blank).",
+      "Rating ≥ 7.0, age ≤ 28, Cap Hit ≤ $12M, ≥ 200 minutes — ranked by rating per $1M Cap Hit (NBA ESPN salaries; NCAA/EuroLeague usually blank).",
     href: "/rankings/bargains",
     filters: {
       sport: "BASKETBALL",

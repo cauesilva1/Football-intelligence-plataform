@@ -2,14 +2,17 @@ import Link from "next/link";
 import { Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataPanel } from "@/components/data/data-panel";
+import type { Sport } from "@/lib/sport";
 import { queryTacticalFit } from "@/features/scouting/queries/tactical-fit";
 
 export async function PlayerTacticalFitPanel({
   playerId,
   teamId,
+  sport = "SOCCER",
 }: {
   playerId: string;
   teamId: string;
+  sport?: Sport;
 }) {
   const fit = await queryTacticalFit(playerId, teamId);
   if (!fit) return null;
@@ -45,7 +48,11 @@ export async function PlayerTacticalFitPanel({
           </ul>
         ) : null}
         <Link href={`/teams/${fit.teamId}`} className="text-2xs font-medium text-primary hover:underline">
-          View club profile →
+          {sport === "BASKETBALL"
+            ? "View franchise profile →"
+            : sport === "AMERICAN_FOOTBALL"
+              ? "View team profile →"
+              : "View club profile →"}
         </Link>
       </div>
     </DataPanel>

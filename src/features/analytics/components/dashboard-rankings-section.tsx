@@ -239,7 +239,7 @@ export async function DashboardRankingsSection() {
             <RatingList
               players={overview.topProspects}
               sport="BASKETBALL"
-              emptyMessage="No U23 prospects with rating ≥ 6.25 and a reliable sample (≥ 10 games / 200') yet."
+              emptyMessage="No U23 prospects with rating ≥ 6.25 and a reliable sample (≥ 10 games / 200 minutes) yet."
             />
           </DataPanel>
           <DataPanel
@@ -250,7 +250,7 @@ export async function DashboardRankingsSection() {
             <RatingList
               players={overview.bestPerformers}
               sport="BASKETBALL"
-              emptyMessage="No performers with rating ≥ 6.35 and a reliable sample (≥ 10 games / 200') yet."
+              emptyMessage="No performers with rating ≥ 6.35 and a reliable sample (≥ 10 games / 200 minutes) yet."
             />
           </DataPanel>
           <DataPanel

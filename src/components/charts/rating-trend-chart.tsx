@@ -3,6 +3,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { chartTheme, chartTooltipStyle } from "@/lib/chart-theme";
 import { formatChartNumber } from "@/lib/format/display-number";
+import { formatSeasonLabel } from "@/lib/format/season-label";
 
 export function RatingTrendChart({ data }: { data: { season: string; avgRating: number }[] }) {
   return (
@@ -11,6 +12,7 @@ export function RatingTrendChart({ data }: { data: { season: string; avgRating: 
         <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
         <XAxis
           dataKey="season"
+          tickFormatter={(value) => formatSeasonLabel(String(value))}
           tick={{ fill: chartTheme.tick, fontSize: chartTheme.axisTick.fontSize }}
           axisLine={{ stroke: chartTheme.axis }}
         />
@@ -20,7 +22,11 @@ export function RatingTrendChart({ data }: { data: { season: string; avgRating: 
           tickFormatter={(value) => formatChartNumber(value, 1)}
           axisLine={{ stroke: chartTheme.axis }}
         />
-        <Tooltip contentStyle={chartTooltipStyle()} formatter={(value) => formatChartNumber(value, 1)} />
+        <Tooltip
+          contentStyle={chartTooltipStyle()}
+          labelFormatter={(label) => formatSeasonLabel(String(label))}
+          formatter={(value) => formatChartNumber(value, 1)}
+        />
         <Line
           type="monotone"
           dataKey="avgRating"

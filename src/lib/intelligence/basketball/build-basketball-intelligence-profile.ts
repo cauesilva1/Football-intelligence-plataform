@@ -35,7 +35,7 @@ function buildLimitations(
     })
   ) {
     limitations.push(
-      `Small sample (${stats.appearances}G / ${stats.minutesPlayed}′) — rates and confidence are provisional until ≥10G and ≥200′.`
+      `Small sample (${stats.appearances} games / ${stats.minutesPlayed} minutes) — rates and confidence are provisional until ≥10 games and ≥200 minutes.`
     );
   }
 

@@ -343,8 +343,8 @@ function BasketballPerformanceSection({
     <>
       {smallSample ? (
         <p className="rounded-lg border border-amber-600/25 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-          Small sample ({s.appearances} G / {s.minutesPlayed}&apos;). Rating stays provisional until ≥{" "}
-          {BB_RATE_MIN_GAMES} games and ≥ {BB_RATE_MIN_MINUTES}&apos;.
+          Small sample ({s.appearances} games / {s.minutesPlayed} minutes). Rating stays provisional until ≥{" "}
+          {BB_RATE_MIN_GAMES} games and ≥ {BB_RATE_MIN_MINUTES} minutes.
         </p>
       ) : null}
 

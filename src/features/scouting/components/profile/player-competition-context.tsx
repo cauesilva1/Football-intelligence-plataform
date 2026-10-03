@@ -153,7 +153,7 @@ function BasketballAppearanceRow({ row }: { row: PlayerMatchAppearance }) {
         </p>
       </div>
       <span className="font-mono text-xs tabular-nums text-muted-foreground sm:text-right">
-        {row.minutesPlayed}&apos;
+        {row.minutesPlayed} min
       </span>
       <span className="hidden font-mono text-xs tabular-nums sm:inline">
         {points} / {rebounds} / {row.assists}
@@ -254,7 +254,7 @@ export async function PlayerCompetitionContext({ player }: { player: Player }) {
           density="dense"
         >
           <div className="mb-1 hidden text-2xs uppercase tracking-wider text-muted-foreground sm:grid sm:grid-cols-[minmax(0,1.4fr)_repeat(5,auto)] sm:gap-2">
-            <span>Fixture</span>
+            <span>{isBasketball || isFootball ? "Game" : "Fixture"}</span>
             <span className="text-right">Min</span>
             <span>{isBasketball ? "Pts / Reb / Ast" : isFootball ? "Yds / TD" : "G / A"}</span>
             <span>{isBasketball ? "Stl / Blk" : isFootball ? "Tkl / Sk" : "Def"}</span>

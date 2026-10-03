@@ -147,7 +147,7 @@ function buildInsights(
   if (overview.topProspectsCount > 0) {
     const sampleCopy =
       sport === "BASKETBALL"
-        ? `≥ ${BB_RATE_MIN_GAMES} G / ${BB_RATE_MIN_MINUTES}'`
+        ? `≥ ${BB_RATE_MIN_GAMES} G / ${BB_RATE_MIN_MINUTES} min`
         : sport === "AMERICAN_FOOTBALL"
           ? `≥ ${AF_RATE_MIN_GAMES} G / ${AF_RATE_MIN_MINUTES}' proxy`
           : `≥ ${SOCCER_RATE_MIN_MINUTES}'`;

@@ -193,7 +193,7 @@ export function EditorialShell({ children }: { children: React.ReactNode }) {
             <span>
               <Link href="/methodology">Methodology</Link>
               {" · "}
-              <Link href="/demo">Demo path</Link>
+              <Link href="/demo">Product overview</Link>
             </span>
             <span className="hidden sm:inline">
               {APP_NAME} · {sportTheme(currentSport).label}

@@ -21,7 +21,7 @@ const SPORT_SCORE_DEFINITIONS: Record<Sport, ScoreDefinitions> = {
   BASKETBALL: {
     ...SCORE_DEFINITIONS,
     topProspects:
-      "U23 players with a strong productivity rating and a reliable sample (≥ 10 games and ≥ 200').",
+      "U23 players with a strong productivity rating and a reliable sample (≥ 10 games and ≥ 200 minutes).",
     marketOpportunities:
       "Strong rating, age ≤ 25, reliable sample, NBA Cap Hit ≤ $5M (no Cap Hit feed for NCAA or EuroLeague).",
   },
@@ -40,7 +40,7 @@ export function scoreDefinitionsFor(sport: Sport): ScoreDefinitions {
 
 /** Sample floor shown under the Top Prospects tile. */
 export function dashboardSampleFloorLabel(sport: Sport): string {
-  if (sport === "BASKETBALL") return "U23 · rating ≥ 6.25 · ≥10 G / 200'";
+  if (sport === "BASKETBALL") return "U23 · rating ≥ 6.25 · ≥10 G / 200 min";
   if (sport === "AMERICAN_FOOTBALL") return "U23 · rating ≥ 6.25 · ≥6 G / 360' proxy";
   return "U23 · rating ≥ 6.25 · ≥450'";
 }

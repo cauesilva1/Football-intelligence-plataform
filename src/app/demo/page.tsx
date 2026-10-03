@@ -3,74 +3,100 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { DataPanel } from "@/components/data/data-panel";
 import { APP_NAME } from "@/lib/config";
-import { BRAZIL_SEASON_LABEL, LIVE_EUROPEAN_SEASON } from "@/lib/seasons";
 
 export const metadata = {
-  title: `Demo path · ${APP_NAME}`,
+  title: `Product overview · ${APP_NAME}`,
   robots: { index: false, follow: false },
 };
 
-const STEPS: { href: string; title: string; why: string }[] = [
+const FEATURES: { href: string; title: string; body: string }[] = [
   {
     href: "/dashboard",
-    title: "1 · Overview",
-    why: "Soccer-first lists with sample floors.",
-  },
-  {
-    href: "/rankings/defenders",
-    title: "2 · Defensive Actions",
-    why: "Centre-backs and full-backs ranked by Def/90 (≥450′).",
-  },
-  {
-    href: "/rankings/u23",
-    title: "3 · U23 prospects",
-    why: "Young productive sample — rating rules match methodology.",
+    title: "Overview dashboard",
+    body: "Top prospects, best performers, and market opportunities, each built from a minimum sample so a handful of games cannot top a list.",
   },
   {
     href: "/scouting",
-    title: "4 · Scouting filters",
-    why: "Role + league filters; open any Big5 profile from the table.",
+    title: "Scouting search",
+    body: "Filter players by role, league, age, rating, and minutes, then open a full profile with per-90 stats, season history, and league percentiles.",
   },
   {
-    href: "/teams?league=bra",
-    title: "5 · Clubs · Brasileirão",
-    why: `Season ${BRAZIL_SEASON_LABEL} W/D/L from ESPN/DB — not StatsBomb archives.`,
+    href: "/rankings",
+    title: "Rankings",
+    body: "Ready-made lists such as U23 prospects and defensive actions per 90, with the sample rules shown next to every list.",
   },
   {
-    href: "/shortlist",
-    title: "6 · My Players",
-    why: "Tag 2–3 players on this device, then Compare.",
+    href: "/recruitment",
+    title: "Recruitment search",
+    body: "Describe the profile you need and get ranked candidates scored for fit against that brief.",
   },
   {
     href: "/compare",
-    title: "7 · Compare → Report",
-    why: "Head-to-head + optional brief — same rating rules as the profile.",
+    title: "Player comparison",
+    body: "Put two players side by side using the same rating rules as their profiles.",
+  },
+  {
+    href: "/shortlist",
+    title: "My Players",
+    body: "Tag players as priority, watch, or reject and keep notes. The list is saved in your browser, so no account is needed.",
+  },
+  {
+    href: "/reports",
+    title: "Scout briefs",
+    body: "Generate a written scouting brief for a player. The overall rating always comes from the platform's rating rules, and missing data is stated instead of filled in.",
+  },
+  {
+    href: "/teams",
+    title: "Clubs, franchises, and tournaments",
+    body: "Browse squads, standings, and recent results alongside the player data.",
   },
 ];
 
-export default function DemoPathPage() {
+export default function ProductOverviewPage() {
   return (
-    <DashboardShell subtitle="Demo">
+    <DashboardShell subtitle="Overview">
       <div className="mx-auto max-w-3xl space-y-6">
         <PageHeader
-          title="Demo path"
-          description={`Soccer reference workflow · live season ${LIVE_EUROPEAN_SEASON} · Brasileirão ${BRAZIL_SEASON_LABEL}.`}
+          title={`What ${APP_NAME} does`}
+          description="A scouting workspace that turns match statistics into shortlists, comparisons, and written briefs, with the sample rules visible."
         />
 
-        <DataPanel title="Seven clicks" density="dense">
+        <DataPanel title="Who it is for" density="dense">
+          <p className="text-sm text-muted-foreground">
+            Scouts, analysts, and recruitment staff who need to find players, check them against peers,
+            and explain a recommendation. Soccer is the primary desk; basketball and American football
+            run on the same workflow with smaller samples and partial coverage.
+          </p>
+        </DataPanel>
+
+        <DataPanel title="Key features" density="dense">
           <ul className="space-y-4">
-            {STEPS.map((step) => (
-              <li key={step.href} className="border-b border-border/60 pb-3 last:border-0 last:pb-0">
+            {FEATURES.map((feature) => (
+              <li
+                key={feature.href}
+                className="border-b border-border/60 pb-3 last:border-0 last:pb-0"
+              >
                 <Link
-                  href={step.href}
+                  href={feature.href}
                   className="font-medium text-foreground hover:text-primary"
                 >
-                  {step.title}
+                  {feature.title}
                 </Link>
-                <p className="mt-1 text-sm text-muted-foreground">{step.why}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{feature.body}</p>
               </li>
             ))}
           </ul>
+        </DataPanel>
+
+        <DataPanel title="How the numbers are built" density="dense">
+          <p className="text-sm text-muted-foreground">
+            Ratings use fixed formulas with a minimum number of games or minutes, and players below that
+            sample are marked provisional. Read the full rules on the{" "}
+            <Link href="/methodology" className="text-primary hover:underline">
+              methodology page
+            </Link>
+            .
+          </p>
         </DataPanel>
       </div>
     </DashboardShell>

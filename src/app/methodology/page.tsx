@@ -58,7 +58,7 @@ export default function MethodologyPage() {
         <DataPanel title="Player Rating (basketball)" density="dense">
           <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
             <li>
-              With ≥ {BB_RATE_MIN_GAMES} games and ≥ {BB_RATE_MIN_MINUTES}&apos;:{" "}
+              With ≥ {BB_RATE_MIN_GAMES} games and ≥ {BB_RATE_MIN_MINUTES} minutes:{" "}
               <code className="text-foreground">
                 6 + PPG×0.08 + RPG×0.04 + APG×0.06 + SPG×0.18 + BPG×0.14
               </code>

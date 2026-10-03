@@ -20,7 +20,7 @@ export const METRIC_GLOSSARY = {
   rating:
     "Prototype productivity score (soccer): ≈ 6 + goals/90×0.35 + assists/90×0.25 when minutes ≥ 450. Soft-capped rates; not a commercial provider rating.",
   ratingBasketball:
-    "Prototype productivity score (basketball): from PPG/RPG/APG/SPG/BPG when ≥ 10 games and ≥ 200'. Below that sample, rating stays provisional (max 7.0).",
+    "Prototype productivity score (basketball): from PPG/RPG/APG/SPG/BPG when ≥ 10 games and ≥ 200 minutes. Below that sample, rating stays provisional (max 7.0).",
   ratingFootball:
     "Prototype productivity score (American football): role-aware yards/TDs/tackles/sacks when ≥ 6 games and ≥ 360' proxy minutes. Small samples stay provisional (max 7.0).",
   valueScore:

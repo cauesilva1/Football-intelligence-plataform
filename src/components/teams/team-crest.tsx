@@ -28,7 +28,7 @@ export function TeamCrest({
   return (
     <CrestImage
       src={resolvedUrl}
-      alt={`Escudo ${name}`}
+      alt={`${name} logo`}
       theme={theme}
       fallbackLabel={initial}
       sizeClass={cn(sizeClass, className)}

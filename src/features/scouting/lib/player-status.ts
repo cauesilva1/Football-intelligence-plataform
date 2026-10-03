@@ -27,7 +27,7 @@ export function derivePlayerStatus(
     ) {
       return {
         label: "Small Sample",
-        description: `Under ${BB_RATE_MIN_GAMES} games or ${BB_RATE_MIN_MINUTES}' — rating is provisional`,
+        description: `Under ${BB_RATE_MIN_GAMES} games or ${BB_RATE_MIN_MINUTES} minutes — rating is provisional`,
         variant: "amber",
       };
     }

@@ -16,6 +16,7 @@ import {
   SHORTLIST_CHANGED_EVENT,
   type ShortlistTag,
 } from "@/lib/client/browser-storage";
+import type { Sport } from "@/lib/sport";
 import { cn } from "@/lib/utils";
 
 const TAG_OPTIONS: {
@@ -28,7 +29,19 @@ const TAG_OPTIONS: {
   { value: "reject", label: "Reject", variant: "neutral" },
 ];
 
-export function ScoutNotesPanel({ playerId }: { playerId: string }) {
+const SCOUT_NOTE_PLACEHOLDERS: Record<Sport, string> = {
+  SOCCER: 'e.g. "Good movement behind the defensive line"',
+  BASKETBALL: 'e.g. "Strong off-ball cutter, needs a better catch-and-shoot release"',
+  AMERICAN_FOOTBALL: 'e.g. "Clean route runner, struggles against press coverage"',
+};
+
+export function ScoutNotesPanel({
+  playerId,
+  sport = "SOCCER",
+}: {
+  playerId: string;
+  sport?: Sport;
+}) {
   const [text, setText] = useState("");
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "saved">("idle");
@@ -123,7 +136,7 @@ export function ScoutNotesPanel({ playerId }: { playerId: string }) {
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder='e.g. "Good movement behind the defensive line"'
+          placeholder={SCOUT_NOTE_PLACEHOLDERS[sport]}
           rows={4}
           className="w-full resize-y rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />

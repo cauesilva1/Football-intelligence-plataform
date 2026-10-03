@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { chartTheme, chartTooltipStyle } from "@/lib/chart-theme";
 import { formatChartNumber } from "@/lib/format/display-number";
+import { formatSeasonLabel } from "@/lib/format/season-label";
 import type { SeasonTimelinePoint } from "@/features/scouting/lib/season-history";
 import type { Sport } from "@/lib/sport";
 
@@ -50,6 +51,7 @@ export function PlayerSeasonChart({
           <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
           <XAxis
             dataKey="season"
+            tickFormatter={(value) => formatSeasonLabel(String(value))}
             tick={{ fill: chartTheme.tick, fontSize: chartTheme.axisTick.fontSize }}
             axisLine={{ stroke: chartTheme.axis }}
           />
@@ -68,7 +70,11 @@ export function PlayerSeasonChart({
             tickFormatter={(value) => formatChartNumber(value)}
             axisLine={{ stroke: chartTheme.axis }}
           />
-          <Tooltip contentStyle={chartTooltipStyle()} formatter={(value) => formatChartNumber(value)} />
+          <Tooltip
+            contentStyle={chartTooltipStyle()}
+            labelFormatter={(label) => formatSeasonLabel(String(label))}
+            formatter={(value) => formatChartNumber(value)}
+          />
           <Legend wrapperStyle={chartTheme.legend} />
           <Line
             yAxisId="rating"

@@ -55,7 +55,7 @@ export function buildScoutBriefContext(player: Player): ScoutingReportBriefConte
       appearances: s.appearances,
       smallSample,
       sampleNote: smallSample
-        ? "Provisional rating — need ≥10 games and ≥200′ for full rates."
+        ? "Provisional rating — need ≥10 games and ≥200 minutes for full rates."
         : "Reliable sample — rates match profile methodology.",
       keyRates: [
         ...scorecardToKeyRates(scorecard.metrics),
