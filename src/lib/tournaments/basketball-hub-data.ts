@@ -27,7 +27,8 @@ import type { BasketballCompetitionConfig } from "@/lib/tournaments/basketball-c
 import {
   EUROLEAGUE_ESPN_SLUG,
   EUROLEAGUE_LABEL,
-  EUROLEAGUE_SEASON_YEAR,
+  currentEuroLeagueSeasonYear,
+  euroLeagueSeasonLabel,
 } from "@/lib/api/euroleague";
 import type { NbaLeaderRow } from "@/lib/api/espn-nba-leaders";
 
@@ -174,12 +175,13 @@ function toLeaderRows(
 }
 
 async function loadEuroLeagueLeadersFromDb(): Promise<NbaCompetitionLeaders> {
-  const empty = emptyNbaCompetitionLeaders(EUROLEAGUE_SEASON_YEAR);
+  const seasonYear = currentEuroLeagueSeasonYear();
+  const empty = emptyNbaCompetitionLeaders(seasonYear);
   if (!canUseDatabase()) return empty;
 
   const stats = await getPrisma().playerSeasonStats.findMany({
     where: {
-      season: EUROLEAGUE_SEASON_YEAR,
+      season: seasonYear,
       matchesPlayed: { gte: 5 },
       player: { sport: "BASKETBALL", league: EUROLEAGUE_LABEL },
     },
@@ -228,8 +230,8 @@ async function loadEuroLeagueLeadersFromDb(): Promise<NbaCompetitionLeaders> {
     assists: toLeaderRows(top("assists")),
     steals: toLeaderRows(top("steals")),
     blocks: toLeaderRows(top("blocks")),
-    seasonYear: EUROLEAGUE_SEASON_YEAR,
-    seasonLabel: "2025-26",
+    seasonYear,
+    seasonLabel: euroLeagueSeasonLabel(seasonYear),
     fetchedAt: new Date().toISOString(),
   };
 }
@@ -248,10 +250,12 @@ async function loadEuroLeagueHub(): Promise<BasketballCompetitionHubData> {
       leaders.blocks.length >
     0;
 
+  const seasonYear = currentEuroLeagueSeasonYear();
+  const seasonLabel = euroLeagueSeasonLabel(seasonYear);
   const slice: BasketballSeasonSlice = {
-    seasonYear: EUROLEAGUE_SEASON_YEAR,
-    seasonLabel: "2025-26",
-    kind: "past",
+    seasonYear,
+    seasonLabel,
+    kind: "current",
     standings: [],
     leaders,
     hasStandings: false,
@@ -270,10 +274,10 @@ async function loadEuroLeagueHub(): Promise<BasketballCompetitionHubData> {
     franchises,
     leaders,
     seasonSlices: [slice],
-    selectedSeasonYear: EUROLEAGUE_SEASON_YEAR,
+    selectedSeasonYear: seasonYear,
     notice: hasLeaders
-      ? "Season 2025-26 · leaders from synced EuroLeague boxscores"
-      : "Season 2025-26 · run npm run data:sync-euroleague to load clubs, rosters, and boxscores",
+      ? `Season ${seasonLabel} · leaders from synced EuroLeague boxscores`
+      : `Season ${seasonLabel} · run npm run data:sync-euroleague to load clubs, rosters, and boxscores`,
   };
 }
 

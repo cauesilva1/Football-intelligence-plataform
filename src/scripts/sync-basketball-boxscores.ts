@@ -1,5 +1,5 @@
 /**
- * Engine de box score NBA — varre jogos finalizados do dia e acumula stats na temporada 202627.
+ * Engine de box score NBA — varre jogos finalizados do dia e acumula stats na temporada vigente (resolvida pela data).
  *
  * Uso:
  *   npm run data:sync-boxscore-basquete
@@ -9,10 +9,10 @@
 import fs from "fs";
 import path from "path";
 import {
-  NBA_BOXSCORE_SEASON,
   processBasketballBoxScore,
   syncTodaysBasketballBoxScores,
 } from "@/lib/api/espn-basketball-boxscore";
+import { resolveNbaBoxscoreSeason } from "@/lib/basketball/season";
 
 function loadDotEnv(): void {
   const envPath = path.join(process.cwd(), ".env");
@@ -51,7 +51,7 @@ function parseArgs(): { eventId?: string; force: boolean } {
 async function main(): Promise<void> {
   const { eventId, force } = parseArgs();
 
-  console.log(`[sync-boxscore-basquete] Temporada alvo: ${NBA_BOXSCORE_SEASON}`);
+  console.log(`[sync-boxscore-basquete] Temporada alvo: ${resolveNbaBoxscoreSeason()}`);
 
   if (eventId) {
     console.log(`[sync-boxscore-basquete] Processando evento ESPN ${eventId}${force ? " (force)" : ""}...`);

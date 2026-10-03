@@ -1,12 +1,27 @@
 /**
  * EuroLeague official API client helpers — types aligned to api-live.euroleague.net/v2.
  */
+import { resolveEuroLeagueSeason } from "@/lib/basketball/season";
+
 const API_BASE = "https://api-live.euroleague.net/v2";
 export const EUROLEAGUE_COMPETITION = "E";
-/** Campaign 2025-26 season code on EuroLeague API. */
-export const EUROLEAGUE_SEASON_CODE = "E2025";
-/** Persisted PlayerSeasonStats / PlayerMatchStat season key. */
-export const EUROLEAGUE_SEASON_YEAR = 202526;
+/**
+ * Current campaign, resolved by date: API season code (E2026) and the persisted
+ * PlayerSeasonStats / PlayerMatchStat key (202627).
+ */
+export function currentEuroLeagueSeasonCode(now = new Date()): string {
+  return resolveEuroLeagueSeason(now).code;
+}
+
+export function currentEuroLeagueSeasonYear(now = new Date()): number {
+  return resolveEuroLeagueSeason(now).year;
+}
+
+/** "202627" → "2026-27" for display. */
+export function euroLeagueSeasonLabel(seasonYear: number): string {
+  const raw = String(seasonYear);
+  return `${raw.slice(0, 4)}-${raw.slice(4)}`;
+}
 export const EUROLEAGUE_LABEL = "EuroLeague";
 /** Sentinel espnSlug so Competition rows resolve without an ESPN path. */
 export const EUROLEAGUE_ESPN_SLUG = "euroleague";
@@ -94,7 +109,7 @@ export type EuroLeaguePlayerLine = {
 };
 
 export async function fetchEuroLeagueClubs(
-  seasonCode = EUROLEAGUE_SEASON_CODE
+  seasonCode = currentEuroLeagueSeasonCode()
 ): Promise<EuroLeagueClub[]> {
   const payload = await fetchJson<{ data?: EuroLeagueClub[] }>(
     `/competitions/${EUROLEAGUE_COMPETITION}/seasons/${seasonCode}/clubs`
@@ -103,7 +118,7 @@ export async function fetchEuroLeagueClubs(
 }
 
 export async function fetchEuroLeaguePeople(
-  seasonCode = EUROLEAGUE_SEASON_CODE
+  seasonCode = currentEuroLeagueSeasonCode()
 ): Promise<EuroLeaguePersonRow[]> {
   const payload = await fetchJson<{ data?: EuroLeaguePersonRow[] }>(
     `/competitions/${EUROLEAGUE_COMPETITION}/seasons/${seasonCode}/people`
@@ -116,7 +131,7 @@ export async function fetchEuroLeaguePeople(
 }
 
 export async function fetchEuroLeagueGames(
-  seasonCode = EUROLEAGUE_SEASON_CODE
+  seasonCode = currentEuroLeagueSeasonCode()
 ): Promise<EuroLeagueGame[]> {
   const payload = await fetchJson<{ data?: EuroLeagueGame[] }>(
     `/competitions/${EUROLEAGUE_COMPETITION}/seasons/${seasonCode}/games`
@@ -126,7 +141,7 @@ export async function fetchEuroLeagueGames(
 
 export async function fetchEuroLeagueGameStats(
   gameCode: number,
-  seasonCode = EUROLEAGUE_SEASON_CODE
+  seasonCode = currentEuroLeagueSeasonCode()
 ): Promise<{
   local?: { players?: EuroLeaguePlayerLine[] };
   road?: { players?: EuroLeaguePlayerLine[] };

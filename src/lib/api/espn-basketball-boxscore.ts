@@ -2,11 +2,14 @@ import { getPrisma } from "@/lib/prisma";
 import { buildEspnEventKey, upsertPlayerMatchStat } from "@/lib/api/player-match-stats";
 import { computeBasketballMatchRating } from "@/lib/scoring/basketball-rating";
 import { isDbSource } from "@/lib/data-source";
+import { resolveNbaBoxscoreSeason, resolveNcaaBoxscoreSeason } from "@/lib/basketball/season";
 
-export const NBA_BOXSCORE_SEASON = 202627;
 export type BasketballLeagueSlug = "nba" | "nba-summer" | "mens-college-basketball";
 
-const SUMMER_LEAGUE_CACHE_PREFIX = "espn:basketball:nba-summer:roster:2026:";
+function summerLeagueCachePrefix(now = new Date()): string {
+  const startYear = String(resolveNbaBoxscoreSeason(now)).slice(0, 4);
+  return `espn:basketball:nba-summer:roster:${startYear}:`;
+}
 
 function scoreboardUrl(league: BasketballLeagueSlug): string {
   return `https://site.api.espn.com/apis/site/v2/sports/basketball/${league}/scoreboard`;
@@ -16,12 +19,11 @@ function summaryUrl(league: BasketballLeagueSlug): string {
   return `https://site.api.espn.com/apis/site/v2/sports/basketball/${league}/summary`;
 }
 
-function boxscoreCachePrefix(league: BasketballLeagueSlug): string {
-  return `espn:basketball:${league}:boxscore:${NBA_BOXSCORE_SEASON}:`;
+function boxscoreCachePrefix(league: BasketballLeagueSlug, now = new Date()): string {
+  return `espn:basketball:${league}:boxscore:${resolveNbaBoxscoreSeason(now)}:`;
 }
 
 const ESPN_LEAGUE: BasketballLeagueSlug = "nba";
-const BOXSCORE_CACHE_PREFIX = boxscoreCachePrefix(ESPN_LEAGUE);
 const SCOREBOARD_URL = scoreboardUrl(ESPN_LEAGUE);
 const SUMMARY_URL = summaryUrl(ESPN_LEAGUE);
 
@@ -318,7 +320,7 @@ async function resolvePlayerId(espnAthleteId: string): Promise<string | null> {
 async function accumulateSeasonStats(
   playerId: string,
   boxScore: BasketballPlayerBoxScore,
-  season: number = NBA_BOXSCORE_SEASON
+  season: number = resolveNbaBoxscoreSeason()
 ): Promise<void> {
   const prisma = getPrisma();
 
@@ -383,9 +385,12 @@ async function accumulateSeasonStats(
   });
 }
 
-export function resolveBasketballBoxscoreSeason(league: BasketballLeagueSlug): number {
-  if (league === "mens-college-basketball") return 202526;
-  return NBA_BOXSCORE_SEASON;
+export function resolveBasketballBoxscoreSeason(
+  league: BasketballLeagueSlug,
+  now = new Date()
+): number {
+  if (league === "mens-college-basketball") return resolveNcaaBoxscoreSeason(now);
+  return resolveNbaBoxscoreSeason(now);
 }
 
 /**
@@ -396,7 +401,7 @@ export async function processSummerLeagueBoxScore(
   options: { force?: boolean } = {}
 ): Promise<ProcessSummerLeagueBoxScoreResult> {
   const prisma = getPrisma();
-  const cacheKey = `${SUMMER_LEAGUE_CACHE_PREFIX}${eventId}`;
+  const cacheKey = `${summerLeagueCachePrefix()}${eventId}`;
 
   if (!options.force) {
     const cached = await prisma.systemCache.findUnique({ where: { key: cacheKey } });
@@ -453,7 +458,7 @@ export async function processSummerLeagueBoxScore(
 }
 
 /**
- * Processa o box score NBA de um evento finalizado e acumula médias na temporada 202627.
+ * Processa o box score NBA de um evento finalizado e acumula médias na temporada corrente (resolvida por data).
  */
 export async function processBasketballBoxScore(
   eventId: string,
@@ -701,7 +706,7 @@ export async function persistBasketballBoxScoresForKnownPlayers(
   let upserted = 0;
   let skipped = 0;
   const externalEventKey = buildEspnEventKey(meta.espnSlug, meta.eventId);
-  const season = meta.season ?? NBA_BOXSCORE_SEASON;
+  const season = meta.season ?? resolveBasketballBoxscoreSeason(meta.espnSlug);
 
   for (const boxScore of boxScores) {
     if (boxScore.minutesPlayed <= 0) {
@@ -767,4 +772,4 @@ export async function persistBasketballBoxScoresForKnownPlayers(
   return { upserted, skipped };
 }
 
-export { BOXSCORE_CACHE_PREFIX, SCOREBOARD_URL, SUMMARY_URL };
+export { SCOREBOARD_URL, SUMMARY_URL };

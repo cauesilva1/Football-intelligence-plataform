@@ -9,9 +9,9 @@ import { computeBasketballMatchRating } from "@/lib/scoring/basketball-rating";
 import {
   EUROLEAGUE_ESPN_SLUG,
   EUROLEAGUE_LABEL,
-  EUROLEAGUE_SEASON_CODE,
-  EUROLEAGUE_SEASON_YEAR,
   buildEuroLeagueEventKey,
+  currentEuroLeagueSeasonCode,
+  currentEuroLeagueSeasonYear,
   euroLeagueClubApiId,
   euroLeagueMinutes,
   euroLeaguePersonApiId,
@@ -82,7 +82,7 @@ export async function ensureEuroLeagueCompetition(): Promise<string | null> {
 export async function syncEuroLeagueClubs(competitionId: string): Promise<number> {
   const prisma = getPrisma();
   const clubs = await fetchEuroLeagueClubs();
-  const seasonLabel = EUROLEAGUE_SEASON_CODE;
+  const seasonLabel = currentEuroLeagueSeasonCode();
   let upserted = 0;
 
   for (const club of clubs) {
@@ -135,9 +135,40 @@ export async function syncEuroLeagueClubs(competitionId: string): Promise<number
   return upserted;
 }
 
-export async function syncEuroLeagueRosters(competitionId: string): Promise<number> {
+const ROSTER_STALE_MS = 3 * 24 * 60 * 60 * 1000;
+
+export type EuroLeagueRosterSyncOptions = {
+  /** Epoch ms after which no new player is started (cron time budget). */
+  deadlineMs?: number;
+  /** Re-sync players already refreshed for the current season within the stale window. */
+  force?: boolean;
+  staleMs?: number;
+};
+
+export type EuroLeagueRosterSyncResult = {
+  total: number;
+  upserted: number;
+  skippedFresh: number;
+  timedOut: boolean;
+};
+
+export async function syncEuroLeagueRosters(
+  competitionId: string,
+  options: EuroLeagueRosterSyncOptions = {}
+): Promise<EuroLeagueRosterSyncResult> {
   const prisma = getPrisma();
+  const seasonCode = currentEuroLeagueSeasonCode();
+  const staleMs = options.staleMs ?? ROSTER_STALE_MS;
   const people = await fetchEuroLeaguePeople();
+  const syncedRows = await prisma.player.findMany({
+    where: { sport: "BASKETBALL", league: EUROLEAGUE_LABEL },
+    select: { apiSportsId: true, dataSyncedSeason: true, dataSyncedAt: true },
+  });
+  const lastSyncByApiId = new Map(
+    syncedRows
+      .filter((p) => p.apiSportsId != null && p.dataSyncedSeason === seasonCode && p.dataSyncedAt)
+      .map((p) => [p.apiSportsId!, p.dataSyncedAt!.getTime()] as const)
+  );
   const teams = await prisma.team.findMany({
     where: { competitionId },
     select: { id: true, name: true, apiSportsId: true },
@@ -148,13 +179,27 @@ export async function syncEuroLeagueRosters(competitionId: string): Promise<numb
   const teamByName = new Map(teams.map((t) => [t.name.toLowerCase(), t.id] as const));
 
   let upserted = 0;
+  let skippedFresh = 0;
+  let total = 0;
+  let timedOut = false;
 
   for (const row of people) {
     if (row.active === false) continue;
     const code = row.person?.code;
     if (!code) continue;
+    total += 1;
 
     const apiSportsId = euroLeaguePersonApiId(code);
+    const lastSync = lastSyncByApiId.get(apiSportsId);
+    if (!options.force && lastSync != null && Date.now() - lastSync < staleMs) {
+      skippedFresh += 1;
+      continue;
+    }
+    if (options.deadlineMs != null && Date.now() > options.deadlineMs) {
+      timedOut = true;
+      break;
+    }
+
     const { fullName, knownAs } = formatEuroLeaguePlayerName(row.person.name ?? "Unknown");
     const clubCode = row.club?.code;
     const teamId =
@@ -189,7 +234,7 @@ export async function syncEuroLeagueRosters(competitionId: string): Promise<numb
           photoUrl: photoUrl ?? undefined,
           teamId: teamId ?? undefined,
           league: EUROLEAGUE_LABEL,
-          dataSyncedSeason: EUROLEAGUE_SEASON_CODE,
+          dataSyncedSeason: currentEuroLeagueSeasonCode(),
           dataSyncedAt: new Date(),
         },
       });
@@ -208,7 +253,7 @@ export async function syncEuroLeagueRosters(competitionId: string): Promise<numb
           sport: "BASKETBALL",
           league: EUROLEAGUE_LABEL,
           teamId: teamId ?? undefined,
-          dataSyncedSeason: EUROLEAGUE_SEASON_CODE,
+          dataSyncedSeason: currentEuroLeagueSeasonCode(),
           dataSyncedAt: new Date(),
         },
       });
@@ -216,7 +261,7 @@ export async function syncEuroLeagueRosters(competitionId: string): Promise<numb
     upserted += 1;
   }
 
-  return upserted;
+  return { total, upserted, skippedFresh, timedOut };
 }
 
 async function resolvePlayerIdByEuroCode(code: string): Promise<string | null> {
@@ -245,7 +290,7 @@ async function accumulateEuroLeagueSeasonStats(
   }
 ): Promise<void> {
   const prisma = getPrisma();
-  const season = EUROLEAGUE_SEASON_YEAR;
+  const season = currentEuroLeagueSeasonYear();
   const existing = await prisma.playerSeasonStats.findUnique({
     where: { playerId_season: { playerId, season } },
   });
@@ -354,7 +399,7 @@ export async function processEuroLeagueGame(
   alreadyProcessed: boolean;
 }> {
   const prisma = getPrisma();
-  const cacheKey = `${CACHE_PREFIX}${EUROLEAGUE_SEASON_CODE}:${gameCode}`;
+  const cacheKey = `${CACHE_PREFIX}${currentEuroLeagueSeasonCode()}:${gameCode}`;
 
   if (!options.force) {
     const cached = await prisma.systemCache.findUnique({ where: { key: cacheKey } });
@@ -406,7 +451,7 @@ export async function processEuroLeagueGame(
         if (isDbSource()) {
           await upsertPlayerMatchStat({
             playerId,
-            externalEventKey: buildEuroLeagueEventKey(EUROLEAGUE_SEASON_CODE, gameCode),
+            externalEventKey: buildEuroLeagueEventKey(currentEuroLeagueSeasonCode(), gameCode),
             matchDate: options.matchDate ?? undefined,
             competitionLabel: EUROLEAGUE_LABEL,
             teamName: side.teamName,
@@ -425,8 +470,8 @@ export async function processEuroLeagueGame(
             blocks: Math.round(parsed.blocks),
             fieldGoalsMade: Math.round(parsed.fgMade),
             fieldGoalsAttempted: Math.round(parsed.fgAtt),
-            season: EUROLEAGUE_SEASON_YEAR,
-            source: `euroleague-${EUROLEAGUE_SEASON_CODE}`,
+            season: currentEuroLeagueSeasonYear(),
+            source: `euroleague-${currentEuroLeagueSeasonCode()}`,
             ratingOverride: computeBasketballMatchRating({
               minutesPlayed: parsed.minutes,
               points: parsed.points,
@@ -482,6 +527,8 @@ export async function syncEuroLeagueRecentBoxscores(options: {
   allPlayed?: boolean;
   /** Cap games processed this run (useful for long full-season backfills). */
   limit?: number;
+  /** Epoch ms after which no new game is started (cron time budget). */
+  deadlineMs?: number;
 }): Promise<{
   gamesFound: number;
   processed: number;
@@ -517,7 +564,7 @@ export async function syncEuroLeagueRecentBoxscores(options: {
   if (!options.force && typeof options.limit === "number" && options.limit > 0) {
     const prisma = getPrisma();
     const keys = played.map(
-      (g) => `${CACHE_PREFIX}${EUROLEAGUE_SEASON_CODE}:${g.gameCode}`
+      (g) => `${CACHE_PREFIX}${currentEuroLeagueSeasonCode()}:${g.gameCode}`
     );
     const cached = await prisma.systemCache.findMany({
       where: { key: { in: keys } },
@@ -525,7 +572,7 @@ export async function syncEuroLeagueRecentBoxscores(options: {
     });
     const cachedKeys = new Set(cached.map((row) => row.key));
     const pending = played.filter(
-      (g) => !cachedKeys.has(`${CACHE_PREFIX}${EUROLEAGUE_SEASON_CODE}:${g.gameCode}`)
+      (g) => !cachedKeys.has(`${CACHE_PREFIX}${currentEuroLeagueSeasonCode()}:${g.gameCode}`)
     );
     candidate = pending.length > 0 ? pending : played;
     console.log(
@@ -550,6 +597,10 @@ export async function syncEuroLeagueRecentBoxscores(options: {
   );
 
   for (const game of queue) {
+    if (options.deadlineMs != null && Date.now() > options.deadlineMs) {
+      console.warn(`${LOG} deadline reached — remaining games deferred to the next run`);
+      break;
+    }
     try {
       const result = await processEuroLeagueGame(game.gameCode, {
         force: options.force,
@@ -612,8 +663,9 @@ export async function runEuroLeagueSync(options: {
   console.log(`${LOG} clubs upserted: ${clubs}`);
 
   console.log(`${LOG} rosters…`);
-  const players = await syncEuroLeagueRosters(competitionId);
-  console.log(`${LOG} players upserted: ${players}`);
+  const roster = await syncEuroLeagueRosters(competitionId, { force: options.force });
+  const players = roster.upserted;
+  console.log(`${LOG} players upserted: ${players} (fresh skipped: ${roster.skippedFresh})`);
 
   const boxscores = options.skipBoxscores
     ? { gamesFound: 0, processed: 0, skipped: 0, failed: 0, statsUpdated: 0 }

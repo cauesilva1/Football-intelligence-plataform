@@ -1,13 +1,35 @@
 import {
-  NBA_BOXSCORE_SEASON,
   syncTodaysBasketballBoxScores,
   formatEspnDate,
   type SyncBasketballBoxScoresResult,
   type BasketballLeagueSlug,
 } from "@/lib/api/espn-basketball-boxscore";
-import { syncEuroLeagueRecentBoxscores } from "@/lib/sync/euroleague-sync";
+import { resolveNbaBoxscoreSeason } from "@/lib/basketball/season";
+import {
+  ensureEuroLeagueCompetition,
+  syncEuroLeagueClubs,
+  syncEuroLeagueRecentBoxscores,
+  syncEuroLeagueRosters,
+  type EuroLeagueRosterSyncResult,
+} from "@/lib/sync/euroleague-sync";
+import { syncNbaRosters, type NbaRosterSyncResult } from "@/lib/sync/nba-roster-sync";
 
 const LOG_PREFIX = "[BASKETBALL-CRON]";
+
+/** Vercel maxDuration is 300s; stop starting new work 30s before. */
+const DEFAULT_BUDGET_MS = 270_000;
+/** EuroLeague roster refresh must start before this share of the budget is spent. */
+const EUROLEAGUE_ROSTER_BUDGET_SHARE = 0.55;
+/** Games per run when catching up on uncached EuroLeague results. */
+const EUROLEAGUE_CATCHUP_GAMES = 15;
+/** Minimum remaining time worth starting a roster step. */
+const MIN_STEP_MS = 25_000;
+
+export interface BasketballCronRosterResult {
+  euroleague?: { clubs: number } & EuroLeagueRosterSyncResult;
+  nba?: NbaRosterSyncResult;
+  skipped: string[];
+}
 
 export interface BasketballCronDayResult {
   label: string;
@@ -27,6 +49,8 @@ export interface BasketballCronResult {
     failed: number;
     statsUpdated: number;
   };
+  rosters: BasketballCronRosterResult;
+  elapsedMs: number;
   totals: {
     eventsFound: number;
     finalEvents: number;
@@ -102,13 +126,22 @@ export async function runBasketballDailySync(
     days?: number;
     /** Leagues to scan — default NBA + NCAA. */
     leagues?: BasketballLeagueSlug[];
+    /** Skip roster steps (backfills only need boxscores). */
+    skipRosters?: boolean;
+    /** Total wall-clock budget; defaults to 270s of the 300s route limit. */
+    budgetMs?: number;
   } = {}
 ): Promise<BasketballCronResult> {
   if (!process.env.DATABASE_URL?.trim()) {
     throw new Error("DATABASE_URL ausente. Configure .env antes de executar o cron.");
   }
 
+  const startedAt = Date.now();
+  const budgetMs = options.budgetMs ?? DEFAULT_BUDGET_MS;
+  const deadlineMs = startedAt + budgetMs;
+  const remainingMs = () => deadlineMs - Date.now();
   const now = options.now ?? new Date();
+  const season = resolveNbaBoxscoreSeason(now);
   const daysWindow = options.days ?? 2;
   const scanDates = buildBasketballScanDates(now, daysWindow);
   const leagues = options.leagues ?? (["nba", "mens-college-basketball"] as BasketballLeagueSlug[]);
@@ -152,14 +185,51 @@ export async function runBasketballDailySync(
   }
 
   const totals = aggregateTotals(summaries);
+  console.log(
+    `${LOG_PREFIX} [1/4] NBA/NCAA boxscores concluídos — ${Math.round((Date.now() - startedAt) / 1000)}s · restante ${Math.round(remainingMs() / 1000)}s`
+  );
+
+  const rosters: BasketballCronRosterResult = { skipped: [] };
+  const runRosters = !options.skipRosters;
+
+  if (!runRosters) {
+    rosters.skipped.push("euroleague-rosters", "nba-rosters");
+  } else if (remainingMs() < MIN_STEP_MS) {
+    rosters.skipped.push("euroleague-rosters");
+    console.warn(`${LOG_PREFIX} [2/4] EuroLeague elencos adiados — sem orçamento de tempo.`);
+  } else {
+    try {
+      console.log(`${LOG_PREFIX} [2/4] EuroLeague clubes + elencos…`);
+      const competitionId = await ensureEuroLeagueCompetition();
+      if (!competitionId) throw new Error("Banco indisponível para EuroLeague.");
+      const clubs = await syncEuroLeagueClubs(competitionId);
+      const roster = await syncEuroLeagueRosters(competitionId, {
+        force: options.force,
+        deadlineMs: startedAt + budgetMs * EUROLEAGUE_ROSTER_BUDGET_SHARE,
+      });
+      rosters.euroleague = { clubs, ...roster };
+      console.log(
+        `${LOG_PREFIX} [2/4] EuroLeague elencos OK — clubes ${clubs} · jogadores ${roster.upserted}/${roster.total} (recentes: ${roster.skippedFresh})${roster.timedOut ? " · adiados por tempo" : ""}`
+      );
+    } catch (error) {
+      console.warn(`${LOG_PREFIX} [2/4] EuroLeague elencos FAIL:`, error);
+    }
+  }
 
   let euroleague: BasketballCronResult["euroleague"];
   try {
-    console.log(`${LOG_PREFIX} EuroLeague — últimos ${daysWindow} dia(s)…`);
+    const catchUp = options.days === undefined && !options.force;
+    console.log(
+      catchUp
+        ? `${LOG_PREFIX} [3/4] EuroLeague boxscores — recuperando jogos pendentes (até ${EUROLEAGUE_CATCHUP_GAMES})…`
+        : `${LOG_PREFIX} [3/4] EuroLeague boxscores — últimos ${daysWindow} dia(s)…`
+    );
     euroleague = await syncEuroLeagueRecentBoxscores({
       days: daysWindow,
       force: options.force,
       now,
+      deadlineMs: startedAt + budgetMs * 0.85,
+      ...(catchUp ? { allPlayed: true, limit: EUROLEAGUE_CATCHUP_GAMES } : {}),
     });
     totals.eventsFound += euroleague.gamesFound;
     totals.finalEvents += euroleague.gamesFound;
@@ -174,12 +244,34 @@ export async function runBasketballDailySync(
     console.warn(`${LOG_PREFIX} EuroLeague FAIL:`, error);
   }
 
+  if (runRosters) {
+    if (remainingMs() < MIN_STEP_MS) {
+      rosters.skipped.push("nba-rosters");
+      console.warn(`${LOG_PREFIX} [4/4] NBA elencos adiados — sem orçamento de tempo.`);
+    } else {
+      try {
+        console.log(
+          `${LOG_PREFIX} [4/4] NBA franquias + elencos — restante ${Math.round(remainingMs() / 1000)}s…`
+        );
+        rosters.nba = await syncNbaRosters({
+          now,
+          force: options.force,
+          deadlineMs,
+          log: (message) => console.log(`${LOG_PREFIX} [4/4] ${message}`),
+        });
+      } catch (error) {
+        console.warn(`${LOG_PREFIX} [4/4] NBA elencos FAIL:`, error);
+      }
+    }
+  }
+
+  const elapsedMs = Date.now() - startedAt;
   console.log(
-    `${LOG_PREFIX} Concluído — temporadas: ${NBA_BOXSCORE_SEASON} · eventos: ${totals.eventsFound} · finalizados: ${totals.finalEvents} · novos: ${totals.processed} · cache: ${totals.skipped} · stats: ${totals.statsUpdated} · falhas: ${totals.failed}`
+    `${LOG_PREFIX} Concluído em ${Math.round(elapsedMs / 1000)}s — temporada: ${season} · eventos: ${totals.eventsFound} · finalizados: ${totals.finalEvents} · novos: ${totals.processed} · cache: ${totals.skipped} · stats: ${totals.statsUpdated} · falhas: ${totals.failed}`
   );
 
   return {
-    season: NBA_BOXSCORE_SEASON,
+    season,
     reference: now.toISOString(),
     window: {
       from: formatEspnDate(scanDates[0]),
@@ -187,6 +279,8 @@ export async function runBasketballDailySync(
     },
     days,
     euroleague,
+    rosters,
+    elapsedMs,
     totals,
   };
 }
@@ -203,5 +297,6 @@ export async function runBasketballBoxscoreBackfill(options: {
     force: options.force,
     now: options.endDate ?? new Date(),
     leagues: options.leagues,
+    skipRosters: true,
   });
 }
