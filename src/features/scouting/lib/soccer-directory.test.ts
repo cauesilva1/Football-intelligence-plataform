@@ -8,7 +8,7 @@ import {
 import { CURRENT_SEASON } from "@/lib/seasons";
 
 describe("soccer directory listing", () => {
-  it("shows MLS and CPL squads that have no European 2025/26 statistic row", () => {
+  it("shows MLS, CPL and NWSL squads that have no European 2025/26 statistic row", () => {
     assert.equal(
       playerListedInSoccerDirectory({
         hasCurrentSeasonStat: false,
@@ -20,6 +20,13 @@ describe("soccer directory listing", () => {
       playerListedInSoccerDirectory({
         hasCurrentSeasonStat: false,
         competitionName: "Canadian Premier League",
+      }),
+      true
+    );
+    assert.equal(
+      playerListedInSoccerDirectory({
+        hasCurrentSeasonStat: false,
+        competitionName: "NWSL",
       }),
       true
     );
@@ -58,6 +65,7 @@ describe("soccer directory listing", () => {
     const calendar = JSON.stringify(or[1]);
     assert.match(calendar, /mls/);
     assert.match(calendar, /canadian premier/);
+    assert.match(calendar, /nwsl/);
     assert.equal(calendar.includes(CURRENT_SEASON), false);
   });
 });
@@ -71,5 +79,7 @@ describe("league tabs", () => {
     assert.equal(competitionMatchesLeagueKey("Premier League", "premier-league"), true);
     assert.equal(competitionMatchesLeagueKey("Canadian Premier League", "cpl"), true);
     assert.equal(competitionMatchesLeagueKey("MLS", "mls"), true);
+    assert.equal(competitionMatchesLeagueKey("NWSL", "nwsl"), true);
+    assert.equal(competitionMatchesLeagueKey("NWSL", "mls"), false);
   });
 });

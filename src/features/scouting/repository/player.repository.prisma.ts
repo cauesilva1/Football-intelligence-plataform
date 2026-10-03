@@ -490,7 +490,14 @@ function buildPlayerWhere(filters: PlayerFilters): Prisma.PlayerWhereInput {
 }
 
 /** Name fragments for competitions whose roster is not stored as European PlayerStatistic rows. */
-const CALENDAR_ROSTER_NAME_NEEDLES = ["mls", "major league soccer", "brasileir", "canadian premier"] as const;
+const CALENDAR_ROSTER_NAME_NEEDLES = [
+  "mls",
+  "major league soccer",
+  "brasileir",
+  "canadian premier",
+  "nwsl",
+  "national women's soccer",
+] as const;
 
 /**
  * /players lists rostered athletes. European leagues stay gated on a current-season

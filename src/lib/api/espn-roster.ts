@@ -202,18 +202,8 @@ export async function resolveEspnTeamId(
   return null;
 }
 
-export async function fetchEspnClubRoster(
-  teamName: string,
-  competitionName?: string | null
-): Promise<EspnRosterPlayer[]> {
-  const resolved = await resolveEspnTeamId(teamName, competitionName);
-  if (!resolved) return [];
-
-  const url = `${ESPN_SITE}/${resolved.espnSlug}/teams/${resolved.espnTeamId}/roster`;
-  const data = await fetchJson<EspnRosterResponse>(url);
-  const athletes = data?.athletes ?? [];
-
-  return athletes
+function mapRosterAthletes(athletes: EspnRosterResponse["athletes"]): EspnRosterPlayer[] {
+  return (athletes ?? [])
     .map((athlete): EspnRosterPlayer | null => {
       const fullName = athlete.displayName?.trim() || athlete.fullName?.trim() || "";
       if (!fullName || !athlete.id) return null;
@@ -238,6 +228,26 @@ export async function fetchEspnClubRoster(
       };
     })
     .filter((row): row is EspnRosterPlayer => row != null);
+}
+
+/** Roster for a known ESPN club id. One HTTP call, no league directory lookup. */
+export async function fetchEspnRosterByTeamId(
+  espnSlug: string,
+  espnTeamId: string
+): Promise<EspnRosterPlayer[]> {
+  const url = `${ESPN_SITE}/${espnSlug}/teams/${espnTeamId}/roster`;
+  const data = await fetchJson<EspnRosterResponse>(url);
+  if (!data) return [];
+  return mapRosterAthletes(data.athletes);
+}
+
+export async function fetchEspnClubRoster(
+  teamName: string,
+  competitionName?: string | null
+): Promise<EspnRosterPlayer[]> {
+  const resolved = await resolveEspnTeamId(teamName, competitionName);
+  if (!resolved) return [];
+  return fetchEspnRosterByTeamId(resolved.espnSlug, resolved.espnTeamId);
 }
 
 export function espnRosterSeasonHint(competitionName?: string | null): number {

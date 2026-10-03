@@ -87,9 +87,20 @@ export function isMlsLeague(competitionName?: string | null): boolean {
 export const API_FOOTBALL_CPL_LEAGUE_ID = 479;
 export const CPL_LABEL = "Canadian Premier League";
 
+/** ESPN site API slug. Confirmed: 16 clubs. Not in the daily fixture list. */
+export const ESPN_NWSL_SLUG = "usa.nwsl";
+export const NWSL_LABEL = "NWSL";
+/** ESPN labels the current NWSL campaign 2026–27. */
+export const NWSL_SEASON_LABEL = "2026/27";
+
 export function isCanadianPremierLeague(competitionName?: string | null): boolean {
   const n = competitionName?.toLowerCase() ?? "";
   return n.includes("canadian premier") || n === "cpl";
+}
+
+export function isNwslLeague(competitionName?: string | null): boolean {
+  const n = competitionName?.toLowerCase() ?? "";
+  return n.includes("nwsl") || n.includes("national women's soccer") || n.includes("usa.nwsl");
 }
 
 /**
@@ -100,7 +111,8 @@ export function isCalendarRosterCompetition(competitionName?: string | null): bo
   return (
     isMlsLeague(competitionName) ||
     isBrazilianLeague(competitionName) ||
-    isCanadianPremierLeague(competitionName)
+    isCanadianPremierLeague(competitionName) ||
+    isNwslLeague(competitionName)
   );
 }
 
@@ -133,6 +145,7 @@ export function isCalendarYearLeague(competitionName?: string | null): boolean {
 /** Season label used when persisting TeamStatistic / Match for a competition. */
 export function resolvePersistedSeasonLabel(competitionName?: string | null): string {
   if (isWorldCupCompetition(competitionName)) return FIFA_WORLD_CUP_SEASON_LABEL;
+  if (isNwslLeague(competitionName)) return NWSL_SEASON_LABEL;
   if (isMlsLeague(competitionName)) return MLS_SEASON_LABEL;
   if (
     isBrazilianLeague(competitionName) ||

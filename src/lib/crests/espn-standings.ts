@@ -13,8 +13,10 @@ import {
   FIFA_WORLD_CUP_SEASON_YEAR,
   LIBERTADORES_LABEL,
   LIVE_EUROPEAN_SEASON,
+  ESPN_NWSL_SLUG,
   MLS_LABEL,
   MLS_SEASON_LABEL,
+  NWSL_LABEL,
   SUDAMERICANA_LABEL,
 } from "@/lib/seasons";
 import { isStale, MATCH_SYNC_TTL_MS } from "@/lib/sync/data-staleness";
@@ -34,7 +36,11 @@ interface EspnLeagueConfig {
 }
 
 const ESPN_LEAGUES: EspnLeagueConfig[] = [
-  { match: (n) => n.includes("premier"), slug: "eng.1", competitionLabel: "Premier League" },
+  {
+    match: (n) => n.includes("premier") && !n.includes("canadian"),
+    slug: "eng.1",
+    competitionLabel: "Premier League",
+  },
   {
     match: (n) =>
       n.includes("la liga") ||
@@ -86,7 +92,15 @@ const ESPN_LEAGUES: EspnLeagueConfig[] = [
     preferredSeason: ESPN_CONMEBOL_SEASON_YEAR,
   },
   {
-    match: (n) => n.includes("mls") || n.includes("major league soccer") || n.includes("usa.1"),
+    match: (n) => n.includes("nwsl") || n.includes("national women's soccer") || n.includes(ESPN_NWSL_SLUG),
+    slug: ESPN_NWSL_SLUG,
+    competitionLabel: NWSL_LABEL,
+    preferredSeason: ESPN_EUROPEAN_SEASON_YEAR,
+  },
+  {
+    match: (n) =>
+      (n.includes("mls") || n.includes("major league soccer") || n === "usa.1") &&
+      !n.includes("nwsl"),
     slug: "usa.1",
     competitionLabel: MLS_LABEL,
     cacheKey: `espn:standings:mls:${ESPN_MLS_SEASON_YEAR}`,

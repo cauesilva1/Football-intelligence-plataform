@@ -58,6 +58,11 @@ const SOCCER_TAB_DEFINITIONS: LeagueDef[] = [
     label: "Canadian Premier League",
     match: (name) => name.includes("canadian premier") || name === "cpl",
   },
+  {
+    key: "nwsl",
+    label: "NWSL",
+    match: (name) => name.includes("nwsl") || name.includes("national women's soccer"),
+  },
 ];
 
 const BASKETBALL_TAB_DEFINITIONS: LeagueDef[] = [
