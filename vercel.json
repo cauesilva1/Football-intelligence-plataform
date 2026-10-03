@@ -19,10 +19,6 @@
     {
       "path": "/api/cron/nwsl",
       "schedule": "30 7 * * 0"
-    },
-    {
-      "path": "/api/cron/nwsl",
-      "schedule": "30 7 * * 0"
     }
   ]
 }
