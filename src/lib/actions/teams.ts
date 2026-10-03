@@ -1,6 +1,7 @@
 "use server";
 
 import { getDashboardRepository, getTeamRepository } from "@/features/scouting/repository";
+import { enforceActionRateLimit } from "@/lib/action-guard";
 
 async function simulateLatency(ms = 300) {
   if (process.env.DATA_SOURCE !== "db") {
@@ -21,6 +22,7 @@ export async function getTeam(id: string) {
 }
 
 export async function getDashboardOverview() {
+  await enforceActionRateLimit("dashboard-overview", { limit: 5, windowMs: 10 * 60_000 });
   await simulateLatency(400);
   return getDashboardRepository().getOverview();
 }

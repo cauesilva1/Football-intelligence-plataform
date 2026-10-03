@@ -52,7 +52,7 @@
     "perf:routes": "node scripts/measure-routes.mjs",
     "fetch:wc2026": "node scripts/fetch-wc2026.js",
     "data:seed-wc2026": "tsx src/scripts/seed-world-cup-2026.ts",
-    "test": "tsx --test src/lib/scoring/soccer-rankings.test.ts src/lib/scoring/soccer-rating.test.ts src/lib/scoring/basketball-rating.test.ts src/lib/scoring/football-rating.test.ts src/lib/metrics/per90.test.ts src/lib/export/scout-brief-context.test.ts src/lib/export/scout-brief-pdf.test.ts src/lib/intelligence/data-depth.test.ts src/lib/intelligence/seed-recruitment-brief.test.ts src/lib/intelligence/value-signals.test.ts src/lib/intelligence/soccer/build-soccer-intelligence-profile.test.ts src/lib/intelligence/soccer/league-percentiles.test.ts src/lib/intelligence/soccer/score-recruitment-fit.test.ts src/lib/intelligence/soccer/compute-tactical-fit.test.ts src/lib/intelligence/basketball/build-basketball-intelligence-profile.test.ts src/lib/intelligence/basketball/score-recruitment-fit.test.ts src/lib/intelligence/basketball/compute-tactical-fit.test.ts src/lib/intelligence/american-football/build-american-football-intelligence-profile.test.ts src/lib/intelligence/american-football/score-recruitment-fit.test.ts src/lib/intelligence/american-football/compute-tactical-fit.test.ts src/lib/workspace/shortlist-merge.test.ts src/lib/soccer/batch1-integrity.test.ts src/lib/format/display-number.test.ts src/features/comparison/lib/categories.test.ts src/features/analytics/lib/soccer-goals-by-role.test.ts"
+    "test": "tsx --test src/lib/scoring/soccer-rankings.test.ts src/lib/scoring/soccer-rating.test.ts src/lib/scoring/basketball-rating.test.ts src/lib/scoring/football-rating.test.ts src/lib/metrics/per90.test.ts src/lib/export/scout-brief-context.test.ts src/lib/export/scout-brief-pdf.test.ts src/lib/intelligence/data-depth.test.ts src/lib/intelligence/seed-recruitment-brief.test.ts src/lib/intelligence/value-signals.test.ts src/lib/intelligence/soccer/build-soccer-intelligence-profile.test.ts src/lib/intelligence/soccer/league-percentiles.test.ts src/lib/intelligence/soccer/score-recruitment-fit.test.ts src/lib/intelligence/soccer/compute-tactical-fit.test.ts src/lib/intelligence/basketball/build-basketball-intelligence-profile.test.ts src/lib/intelligence/basketball/score-recruitment-fit.test.ts src/lib/intelligence/basketball/compute-tactical-fit.test.ts src/lib/intelligence/american-football/build-american-football-intelligence-profile.test.ts src/lib/intelligence/american-football/score-recruitment-fit.test.ts src/lib/intelligence/american-football/compute-tactical-fit.test.ts src/lib/workspace/shortlist-merge.test.ts src/lib/soccer/batch1-integrity.test.ts src/lib/format/display-number.test.ts src/features/comparison/lib/categories.test.ts src/features/analytics/lib/soccer-goals-by-role.test.ts src/lib/security-controls.test.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.19.1",
@@ -68,7 +68,7 @@
     "cmdk": "^1.1.1",
     "csv-parser": "^3.2.1",
     "lucide-react": "^1.23.0",
-    "next": "^16.2.10",
+    "next": "^16.3.6",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "recharts": "^2.12.7",
@@ -81,8 +81,8 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.20",
-    "axios": "^1.18.1",
-    "postcss": "^8.4.41",
+    "axios": "^1.20.0",
+    "postcss": "^8.5.23",
     "prisma": "^5.19.1",
     "tailwindcss": "^3.4.10",
     "tsx": "^4.19.0"

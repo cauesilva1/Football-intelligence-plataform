@@ -2,13 +2,13 @@
  * Valida requisições de cron (CLI local ou Vercel Cron).
  * Exige `Authorization: Bearer ${CRON_SECRET}`.
  */
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 
+/** SHA-256 digests are always 32 bytes, so the compare does not leak length. */
 function safeCompare(a: string, b: string): boolean {
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
-  if (bufA.length !== bufB.length) return false;
-  return timingSafeEqual(bufA, bufB);
+  const left = createHash("sha256").update(a).digest();
+  const right = createHash("sha256").update(b).digest();
+  return timingSafeEqual(left, right);
 }
 
 export function isCronAuthorized(request: Request): boolean {

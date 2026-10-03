@@ -14,8 +14,13 @@ export async function createScoutingReport(playerId: string): Promise<ScoutingRe
     throw new Error("PLAYER_REQUIRED");
   }
 
-  // 5 reports / 10 min per client IP — protects OpenRouter spend + DB writes.
+  // Per IP, plus a process-wide cap so rotating the client address cannot drain OpenRouter.
   await enforceActionRateLimit("scout-report", { limit: 5, windowMs: 10 * 60_000 });
+  await enforceActionRateLimit("scout-report-global", {
+    limit: 40,
+    windowMs: 10 * 60_000,
+    global: true,
+  });
 
   const player = await getPlayerRepository().findById(playerId);
   if (!player) throw new Error(`PLAYER_NOT_FOUND:${playerId}`);

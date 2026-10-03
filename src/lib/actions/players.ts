@@ -7,6 +7,7 @@ import {
   searchPlayersLite,
 } from "@/features/scouting/queries/players";
 import { queryPlayersForComparison } from "@/features/comparison/queries/compare";
+import { enforceActionRateLimit } from "@/lib/action-guard";
 import type { Player, PlayerFilters, PaginatedResult, PlayerLite } from "@/types";
 
 async function simulateLatency(ms = 350) {
@@ -17,6 +18,7 @@ async function simulateLatency(ms = 350) {
 
 /** @deprecated Prefer queryPlayers in Server Components */
 export async function getPlayers(filters: PlayerFilters = {}): Promise<PaginatedResult<Player>> {
+  await enforceActionRateLimit("players-list", { limit: 5, windowMs: 10 * 60_000 });
   await simulateLatency();
   return queryPlayers(filters);
 }

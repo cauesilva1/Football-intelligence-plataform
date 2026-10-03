@@ -15,13 +15,8 @@ export async function getReportsForPlayerFromStore(
   playerId: string
 ): Promise<ScoutingReport[]> {
   if (isDbSource()) {
-    try {
-      const deviceId = await getOrCreateDeviceId();
-      const fromDb = await listWorkspaceReportsForPlayer(playerId, deviceId);
-      if (fromDb.length > 0) return fromDb;
-    } catch {
-      /* fall through to file store */
-    }
+    const deviceId = await getOrCreateDeviceId();
+    return listWorkspaceReportsForPlayer(playerId, deviceId);
   }
 
   const store = await readStore<ReportStore>("reports", {});
@@ -30,13 +25,9 @@ export async function getReportsForPlayerFromStore(
 
 export async function saveReport(report: ScoutingReport): Promise<void> {
   if (isDbSource()) {
-    try {
-      const deviceId = await getOrCreateDeviceId();
-      await saveWorkspaceReport(deviceId, report);
-      return;
-    } catch {
-      /* fall through to file store */
-    }
+    const deviceId = await getOrCreateDeviceId();
+    await saveWorkspaceReport(deviceId, report);
+    return;
   }
 
   await updateStore<ReportStore>("reports", {}, (store) => {
@@ -46,6 +37,7 @@ export async function saveReport(report: ScoutingReport): Promise<void> {
 }
 
 export async function getAllReports(): Promise<ScoutingReport[]> {
+  if (isDbSource()) return [];
   const store = await readStore<ReportStore>("reports", {});
   return Object.values(store).flat();
 }

@@ -3,6 +3,18 @@
  * Per-instance on Vercel (best-effort) — still blocks casual abuse.
  */
 
+/**
+ * Vercel sets `x-vercel-forwarded-for` and the client cannot overwrite it.
+ * The first `x-forwarded-for` hop is client-controlled, so it is ignored.
+ */
+export function clientAddressFromHeaders(h: { get(name: string): string | null }): string {
+  const vercel = h.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
+  if (vercel) return vercel;
+  const real = h.get("x-real-ip")?.trim();
+  if (real) return real;
+  return "anonymous";
+}
+
 type Bucket = { count: number; resetAt: number };
 
 const buckets = new Map<string, Bucket>();
