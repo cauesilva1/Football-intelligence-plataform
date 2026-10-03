@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatMarketValue(value: number): string {
-  if (!value || value <= 0) return "Sob consulta";
+  if (!value || value <= 0) return "Undisclosed";
   if (value >= 1_000_000) return `€${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1_000) return `€${(value / 1_000).toFixed(0)}K`;
   return `€${value}`;
@@ -17,7 +17,7 @@ export function formatCapHit(value: number): string {
   if (!value || value <= 0) return "—";
   if (value >= 1_000_000) {
     const millions = value / 1_000_000;
-    return `$${millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1).replace(".", ",")}M`;
+    return `$${millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)}M`;
   }
   if (value >= 1_000) return `$${Math.round(value / 1_000)}K`;
   return `$${value.toLocaleString("en-US")}`;

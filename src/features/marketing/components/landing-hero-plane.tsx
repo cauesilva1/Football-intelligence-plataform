@@ -182,19 +182,19 @@ export function LandingSportsStrip() {
               id: "SOCCER" as const,
               title: "Soccer",
               body: "Roles, percentiles, recruitment fit, tactical heuristics, and staff briefs on soccer-native lines.",
-              status: "First-class sport",
+              status: "Primary desk",
             },
             {
               id: "BASKETBALL" as const,
               title: "Basketball",
               body: "Basketball-native ratings, shortlist, compare, and reports — same desk, same decision language.",
-              status: "First-class sport",
+              status: "Secondary desk · smaller samples",
             },
             {
               id: "AMERICAN_FOOTBALL" as const,
               title: "American Football",
               body: "Position-aware ratings and briefs for NFL / college context inside the same product shell.",
-              status: "First-class sport",
+              status: "Secondary desk · partial coverage",
             },
           ].map((sport) => {
             const Icon = SPORT_ICONS[sport.id];

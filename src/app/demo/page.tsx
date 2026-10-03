@@ -5,18 +5,21 @@ import { DataPanel } from "@/components/data/data-panel";
 import { APP_NAME } from "@/lib/config";
 import { BRAZIL_SEASON_LABEL, LIVE_EUROPEAN_SEASON } from "@/lib/seasons";
 
-export const metadata = { title: `Demo path · ${APP_NAME}` };
+export const metadata = {
+  title: `Demo path · ${APP_NAME}`,
+  robots: { index: false, follow: false },
+};
 
 const STEPS: { href: string; title: string; why: string }[] = [
   {
     href: "/dashboard",
     title: "1 · Overview",
-    why: "Soccer-first lists with sample floors — confirm the desk is populated.",
+    why: "Soccer-first lists with sample floors.",
   },
   {
     href: "/rankings/defenders",
     title: "2 · Defensive Actions",
-    why: "Centre-backs / full-backs ranked by Def/90 (≥450′). Names + rates should be non-zero.",
+    why: "Centre-backs and full-backs ranked by Def/90 (≥450′).",
   },
   {
     href: "/rankings/u23",
@@ -68,14 +71,6 @@ export default function DemoPathPage() {
               </li>
             ))}
           </ul>
-        </DataPanel>
-
-        <DataPanel title="What not to lead with" density="dense">
-          <p className="text-sm text-muted-foreground">
-            Basketball and American football are secondary desks — thinner coverage on purpose.
-            Switch sport only after the soccer path looks solid. Do not open empty NCAA/CFB
-            corners as the first impression.
-          </p>
         </DataPanel>
       </div>
     </DashboardShell>

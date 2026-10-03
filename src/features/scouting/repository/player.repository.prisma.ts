@@ -1007,15 +1007,19 @@ export const prismaPlayerRepository: PlayerRepository & {
           : options?.position
             ? { position: options.position }
             : {}),
+        // BB/AF seasons live in PlayerSeasonStats as compact ints (202627, 2025), never in the
+        // legacy "2025/26" PlayerStatistic table, so the soccer season filter would match nothing.
         ...(typeof minMinutes === "number"
-          ? {
-              statistics: {
-                some: {
-                  season: CURRENT_SEASON,
-                  minutesPlayed: { gte: minMinutes },
+          ? sport === "BASKETBALL" || sport === "AMERICAN_FOOTBALL"
+            ? { stats: { some: { minutesPlayed: { gte: minMinutes } } } }
+            : {
+                statistics: {
+                  some: {
+                    season: CURRENT_SEASON,
+                    minutesPlayed: { gte: minMinutes },
+                  },
                 },
-              },
-            }
+              }
           : {}),
       },
       include: playerListInclude,

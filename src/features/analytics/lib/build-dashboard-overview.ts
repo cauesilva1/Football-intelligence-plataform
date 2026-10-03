@@ -21,6 +21,7 @@ import {
   capValueScore,
 } from "@/lib/scoring";
 import { BASKETBALL_POSITIONS, type Sport } from "@/lib/sport";
+import { playerDisplayName } from "@/lib/utils";
 import { AMERICAN_FOOTBALL_POSITIONS } from "@/lib/positions";
 import { soccerPositionGroup } from "@/features/scouting/lib/position-scorecard";
 import type { Competition, DashboardInsight, DashboardOverview, Player, Team } from "@/types";
@@ -204,7 +205,7 @@ function buildInsights(
     insights.push({
       id: "top-scorer",
       type: "alert",
-      title: `Standout: ${topScorer.knownAs}`,
+      title: `Standout: ${playerDisplayName(topScorer)}`,
       description: `${scoringLabel} · ${topScorer.teamShortName ?? "—"}`,
       href: `/players/${topScorer.id}`,
     });

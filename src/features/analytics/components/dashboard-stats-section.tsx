@@ -5,12 +5,13 @@ import { MetricCard } from "@/components/data/metric-card";
 import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
 import { appConfig } from "@/lib/config";
 import { getServerSport } from "@/lib/sport-server";
-import { SCORE_DEFINITIONS } from "@/lib/score-definitions";
+import { dashboardSampleFloorLabel, scoreDefinitionsFor } from "@/lib/score-definitions";
 
 export async function DashboardStatsSection() {
   const [overview, sport] = await Promise.all([queryDashboardOverview(), getServerSport()]);
   const isBasketball = sport === "BASKETBALL";
   const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
+  const SCORE_DEFINITIONS = scoreDefinitionsFor(sport);
 
   return (
     <div className="grid items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-6">
@@ -45,7 +46,7 @@ export async function DashboardStatsSection() {
         value={String(overview.topProspectsCount)}
         icon={Sparkles}
         accent="primary"
-        trend="U23 · rating ≥ 6.25 · ≥450'"
+        trend={dashboardSampleFloorLabel(sport)}
       />
       <MetricCard
         label="Average Age"

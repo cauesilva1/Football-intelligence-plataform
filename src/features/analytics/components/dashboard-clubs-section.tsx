@@ -20,7 +20,7 @@ export async function DashboardClubsSection() {
     nbaTeams = await queryTeams(nbaCompetitionId);
     nbaTeams = [...nbaTeams].sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {
-    console.warn("[dashboard] Franquias NBA indisponíveis:", error);
+    console.warn("[dashboard] NBA franchises unavailable:", error);
     return null;
   }
 
@@ -29,7 +29,7 @@ export async function DashboardClubsSection() {
   return (
     <DataPanel
       title="NBA Franchises"
-      description={`${nbaTeams.length} times cadastrados · elencos ativos`}
+      description={`${nbaTeams.length} franchises on file · active rosters`}
       density="dense"
     >
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">

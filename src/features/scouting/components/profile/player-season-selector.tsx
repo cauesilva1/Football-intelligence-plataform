@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { formatSeasonLabel } from "@/lib/format/season-label";
 import { cn } from "@/lib/utils";
 
 export function PlayerSeasonSelector({
@@ -28,7 +29,7 @@ export function PlayerSeasonSelector({
             "h-7 px-3 text-xs"
           )}
         >
-          {season}
+          {formatSeasonLabel(season)}
         </Link>
       ))}
     </div>

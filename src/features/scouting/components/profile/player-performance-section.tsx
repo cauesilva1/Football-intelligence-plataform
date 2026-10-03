@@ -26,6 +26,7 @@ import {
   SOCCER_RATE_MIN_MINUTES,
 } from "@/lib/scoring";
 import { getTeamTheme, chartSafeTeamColor } from "@/lib/team-theme";
+import { formatSeasonLabel } from "@/lib/format/season-label";
 import { ratingColor } from "@/lib/utils";
 import { getSportConfig } from "@/lib/sport-registry";
 import type { Player } from "@/types";
@@ -424,7 +425,7 @@ function BasketballPerformanceSection({
 
         <DataPanel
           title="Performance Profile"
-          description={`Per-game profile — season ${player.selectedSeason}.`}
+          description={`Per-game profile — season ${formatSeasonLabel(player.selectedSeason)}.`}
           density="dense"
           className="border"
           style={{ borderColor: `${ink}33` }}
@@ -438,7 +439,7 @@ function BasketballPerformanceSection({
 
       <DataPanel
         title="Detailed Metrics"
-        description={`Season averages for ${player.selectedSeason}.`}
+        description={`Season averages for ${formatSeasonLabel(player.selectedSeason)}.`}
         density="dense"
         className="border"
         style={{ borderColor: `${ink}33` }}
@@ -631,7 +632,7 @@ export function PlayerPerformanceSection({ player }: { player: Player }) {
           selectedSeason={player.selectedSeason}
         />
         <p className="text-xs text-muted-foreground">
-          Showing campaign <span className="font-medium text-foreground">{player.selectedSeason}</span>
+          Showing campaign <span className="font-medium text-foreground">{formatSeasonLabel(player.selectedSeason)}</span>
         </p>
       </div>
 

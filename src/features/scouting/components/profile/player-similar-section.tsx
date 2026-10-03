@@ -22,7 +22,7 @@ export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
         </p>
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
-          {similar.map(({ player, score, why }) => (
+          {similar.map(({ player, score, comparable, why }) => (
             <Link
               key={player.id}
               href={`/players/${player.id}`}
@@ -37,7 +37,7 @@ export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
                   </div>
                   <p className="mt-1 truncate text-2xs text-muted-foreground">
                     {formatClubLabel(player.teamName, player.teamShortName)} · {player.age} years old
-                    {player.sport === "BASKETBALL"
+                    {player.sport === "BASKETBALL" || player.sport === "AMERICAN_FOOTBALL"
                       ? player.capHit
                         ? ` · ${formatCapHit(player.capHit)}`
                         : ""
@@ -46,7 +46,12 @@ export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="text-2xs uppercase tracking-wider text-muted-foreground">Match</p>
-                  <p className="font-mono text-sm font-semibold text-primary">{Math.round(score)}%</p>
+                  <p
+                    className="font-mono text-sm font-semibold text-primary"
+                    title={comparable ? undefined : "No games recorded — no match percentage"}
+                  >
+                    {comparable ? `${Math.round(score)}%` : "—"}
+                  </p>
                   <p className={`font-mono text-2xs ${ratingColor(player.currentSeasonStats.rating)}`}>
                     {player.currentSeasonStats.rating.toFixed(1)}
                   </p>

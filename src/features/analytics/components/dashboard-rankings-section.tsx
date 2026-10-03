@@ -7,7 +7,7 @@ import { formatClubLabel } from "@/lib/soccer/club-label";
 import { ratingColor, formatMarketValue, formatCapHit, playerDisplayName } from "@/lib/utils";
 import { getServerSport } from "@/lib/sport-server";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
-import { SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
+import { BB_RATE_MIN_GAMES, BB_RATE_MIN_MINUTES, SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
 import { per90 } from "@/lib/metrics/per90";
 import {
   pickBasketballDisplayStats,
@@ -17,7 +17,9 @@ import {
   statRebounds,
 } from "@/lib/metrics/basketball-display";
 import type { Player } from "@/types";
-import { SCORE_DEFINITIONS } from "@/lib/score-definitions";
+import { scoreDefinitionsFor } from "@/lib/score-definitions";
+
+const BB_LEADER_FLOOR = { minGames: BB_RATE_MIN_GAMES, minMinutes: BB_RATE_MIN_MINUTES };
 
 function displayGoalsPer90(player: Player): number {
   const stats = player.currentSeasonStats;
@@ -44,7 +46,7 @@ function BasketballLeaderList({
 
   if (!players.length) {
     return (
-      <EmptyList message="No season data in the database. Run the NBA sync or open franchises." />
+      <EmptyList message="Season leaders are unavailable for this sample: recent roster updates carry no current-season box scores yet." />
     );
   }
 
@@ -216,11 +218,15 @@ export async function DashboardRankingsSection() {
   const sport = await getServerSport();
   const isBasketball = sport === "BASKETBALL";
   const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
+  const SCORE_DEFINITIONS = scoreDefinitionsFor(sport);
   const overview = await queryDashboardOverview();
 
   if (isBasketball) {
     await ensureRuntimeDataSource();
-    const sample = await getPlayerRepository().findSample("BASKETBALL", { take: 350 });
+    const sample = await getPlayerRepository().findSample("BASKETBALL", {
+      take: 800,
+      minMinutes: BB_RATE_MIN_MINUTES,
+    });
 
     return (
       <div className="space-y-4">
@@ -262,13 +268,13 @@ export async function DashboardRankingsSection() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <DataPanel title="Points Leaders" description="PTS average per game." density="dense">
             <BasketballLeaderList
-              players={sortBasketballLeaders(sample, "points")}
+              players={sortBasketballLeaders(sample, "points", 5, BB_LEADER_FLOOR)}
               metric="points"
             />
           </DataPanel>
           <DataPanel title="Rebounds Leaders" description="REB average per game." density="dense">
             <BasketballLeaderList
-              players={sortBasketballLeaders(sample, "rebounds")}
+              players={sortBasketballLeaders(sample, "rebounds", 5, BB_LEADER_FLOOR)}
               metric="rebounds"
             />
           </DataPanel>
@@ -278,7 +284,7 @@ export async function DashboardRankingsSection() {
             density="dense"
           >
             <BasketballLeaderList
-              players={sortBasketballLeaders(sample, "assists")}
+              players={sortBasketballLeaders(sample, "assists", 5, BB_LEADER_FLOOR)}
               metric="assists"
             />
           </DataPanel>

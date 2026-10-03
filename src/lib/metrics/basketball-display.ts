@@ -34,7 +34,8 @@ export function statAssists(stat: PlayerStatistic): number {
 export function sortBasketballLeaders(
   players: Player[],
   metric: "points" | "rebounds" | "assists",
-  limit = 5
+  limit = 5,
+  floor?: { minGames: number; minMinutes: number }
 ): Player[] {
   const getter =
     metric === "points"
@@ -44,7 +45,15 @@ export function sortBasketballLeaders(
         : (player: Player) => statAssists(pickBasketballDisplayStats(player));
 
   return [...players]
-    .filter((player) => getter(player) > 0)
+    .filter((player) => {
+      if (floor) {
+        const stats = pickBasketballDisplayStats(player);
+        if (stats.appearances < floor.minGames || stats.minutesPlayed < floor.minMinutes) {
+          return false;
+        }
+      }
+      return getter(player) > 0;
+    })
     .sort((a, b) => getter(b) - getter(a))
     .slice(0, limit);
 }

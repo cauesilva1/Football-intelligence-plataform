@@ -99,7 +99,9 @@ export function buildAmericanFootballIntelligenceProfile(
   const comparablesLimit = options.comparablesLimit ?? 4;
   const pool = options.comparablesPool ?? [];
   const similar =
-    pool.length > 0 ? findSimilarPlayers(player, pool, comparablesLimit) : [];
+    pool.length > 0
+      ? findSimilarPlayers(player, pool, comparablesLimit).filter((entry) => entry.comparable)
+      : [];
 
   const season = player.selectedSeason ?? player.currentSeasonStats.season;
   const percentileScores = options.percentileTable
