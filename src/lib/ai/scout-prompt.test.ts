@@ -4,6 +4,7 @@ import {
   alignNarrativeWithServerRating,
   buildScoutUserPrompt,
   resolveOpenRouterModel,
+  scoutFallbackAttribution,
   type ScoutPercentilePrompt,
 } from "@/lib/ai/scout-report-generator";
 import type { Player, PlayerStatistic } from "@/types";
@@ -104,6 +105,15 @@ describe("buildScoutUserPrompt", () => {
     assert.match(prompt, /Unavailable \(cohort 3, minimum 8\)/);
     assert.match(prompt, /Do not invent them/);
     assert.match(prompt, /omit xG and xA/);
+  });
+});
+
+describe("scoutFallbackAttribution", () => {
+  it("names the failure instead of a mock model", () => {
+    const label = scoutFallbackAttribution("OpenRouter HTTP 404");
+    assert.match(label, /heuristic fallback/);
+    assert.match(label, /OpenRouter HTTP 404/);
+    assert.doesNotMatch(label, /mock-ai/);
   });
 });
 

@@ -282,6 +282,12 @@ export interface DashboardOverview {
   ratingTrend: { season: string; avgRating: number }[];
   ratingChange: number;
   insights: DashboardInsight[];
+  /** Top 5 from the overview sample. Avoids a second full roster read on the dashboard. */
+  basketballLeaders?: {
+    points: Player[];
+    rebounds: Player[];
+    assists: Player[];
+  };
 }
 
 export type PlayerLite = Pick<

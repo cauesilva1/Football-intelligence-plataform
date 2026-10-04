@@ -5,7 +5,8 @@ import {
   similarPositionGroup,
 } from "@/features/scouting/lib/position-scorecard";
 import { loadLeaguePercentileContext } from "@/features/scouting/queries/league-percentiles";
-import { getPlayerRepository } from "@/features/scouting/repository";
+import { queryPlayerById } from "@/features/scouting/queries/players";
+import { positionPoolKey, queryPositionPool } from "@/features/scouting/queries/player-pool";
 import { deriveDataDepthSnapshot } from "@/lib/intelligence/data-depth";
 import { getIntelligenceEngine, supportsIntelligence } from "@/lib/intelligence/registry";
 import type { IntelligenceProfile } from "@/lib/intelligence/types";
@@ -23,8 +24,7 @@ function poolPositions(sport: Sport, position: string): string[] {
 export const queryPlayerIntelligenceProfile = cache(
   async (playerId: string): Promise<IntelligenceProfile | null> => {
     await ensureRuntimeDataSource();
-    const repo = getPlayerRepository();
-    const player = await repo.findById(playerId);
+    const player = await queryPlayerById(playerId);
     if (!player) return null;
 
     const sport = (player.sport ?? "SOCCER") as Sport;
@@ -35,11 +35,9 @@ export const queryPlayerIntelligenceProfile = cache(
     const engine = getIntelligenceEngine(sport);
     if (!engine) return null;
 
+    const positions = poolPositions(sport, player.position);
     const [pool, percentileTable] = await Promise.all([
-      repo.findSample(sport, {
-        positions: poolPositions(sport, player.position),
-        take: INTELLIGENCE_POOL_TAKE,
-      }),
+      queryPositionPool(sport, positionPoolKey(positions), INTELLIGENCE_POOL_TAKE),
       loadLeaguePercentileContext(player),
     ]);
 

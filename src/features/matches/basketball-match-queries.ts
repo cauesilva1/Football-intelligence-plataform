@@ -69,7 +69,9 @@ export async function resolveBasketballMatchDetail(
       competitionLabel: competitionLabel(parsed.competition),
       homeTeamName: detail.homeTeam,
       awayTeamName: detail.awayTeam,
-      season: resolveBasketballBoxscoreSeason(espnSlug),
+      season: detail.kickOff
+        ? resolveBasketballBoxscoreSeason(espnSlug, new Date(detail.kickOff))
+        : resolveBasketballBoxscoreSeason(espnSlug),
     }).catch((error) => {
       console.warn("[basketball-match] lazy persist failed:", error);
     });

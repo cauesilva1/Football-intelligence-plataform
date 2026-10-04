@@ -3,7 +3,11 @@ import { computeXGPer90 } from "@/features/scouting/lib/filter-players";
 import { hasReliableSoccerSample, per90 } from "@/lib/metrics/per90";
 import { hasReliableBasketballSample } from "@/lib/scoring/basketball-rating";
 import { hasReliableFootballSample } from "@/lib/scoring/football-rating";
-import { pickBasketballDisplayStats, statPoints } from "@/lib/metrics/basketball-display";
+import {
+  pickBasketballDisplayStats,
+  sortBasketballLeaders,
+  statPoints,
+} from "@/lib/metrics/basketball-display";
 import {
   AF_RATE_MIN_GAMES,
   AF_RATE_MIN_MINUTES,
@@ -348,6 +352,24 @@ export function buildDashboardOverview(
       : currentSeasonRating;
   const ratingChange = Number((currentSeasonRating - previousSeasonRating).toFixed(2));
 
+  const basketballLeaders =
+    sport === "BASKETBALL"
+      ? {
+          points: sortBasketballLeaders(players, "points", 5, {
+            minGames: BB_RATE_MIN_GAMES,
+            minMinutes: BB_RATE_MIN_MINUTES,
+          }),
+          rebounds: sortBasketballLeaders(players, "rebounds", 5, {
+            minGames: BB_RATE_MIN_GAMES,
+            minMinutes: BB_RATE_MIN_MINUTES,
+          }),
+          assists: sortBasketballLeaders(players, "assists", 5, {
+            minGames: BB_RATE_MIN_GAMES,
+            minMinutes: BB_RATE_MIN_MINUTES,
+          }),
+        }
+      : undefined;
+
   const base = {
     totalPlayers,
     totalTeams: teams.length,
@@ -367,6 +389,7 @@ export function buildDashboardOverview(
     goalsByPosition,
     ratingTrend,
     ratingChange,
+    basketballLeaders,
   };
 
   return {

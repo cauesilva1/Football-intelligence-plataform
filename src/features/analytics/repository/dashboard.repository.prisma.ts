@@ -3,7 +3,6 @@ import {
   prismaPlayerRepository,
   playerListInclude,
 } from "@/features/scouting/repository/player.repository.prisma";
-import { prismaTeamRepository } from "@/features/scouting/repository/team.repository.prisma";
 import { buildDashboardOverview } from "@/features/analytics/lib/build-dashboard-overview";
 import { competitionBelongsToSport, type Sport } from "@/lib/sport";
 import { CURRENT_SEASON } from "@/lib/seasons";
@@ -87,10 +86,18 @@ export const prismaDashboardRepository: DashboardRepository = {
   async getOverview(sport: Sport = "SOCCER") {
     const prisma = getPrisma();
 
-    const [totalPlayers, teams, competitions, playerIds] = await Promise.all([
+    const competitionRows = await prisma.competition.findMany({
+      select: { id: true, name: true },
+    });
+    const scopedCompetitionRows = competitionRows.filter((competition) =>
+      competitionBelongsToSport(competition.name, sport)
+    );
+    const scopedCompetitionIds = scopedCompetitionRows.map((competition) => competition.id);
+    const [totalPlayers, totalTeams, playerIds] = await Promise.all([
       prisma.player.count({ where: { sport } }),
-      prismaTeamRepository.findAll(),
-      prismaTeamRepository.getCompetitions(),
+      scopedCompetitionIds.length
+        ? prisma.team.count({ where: { competitionId: { in: scopedCompetitionIds } } })
+        : Promise.resolve(0),
       samplePlayerIds(prisma, sport),
     ]);
 
@@ -106,21 +113,13 @@ export const prismaDashboardRepository: DashboardRepository = {
       prismaPlayerRepository.mapFromRecord(record)
     );
 
-    const scopedTeams = teams.filter((team) =>
-      competitionBelongsToSport(team.competition?.name ?? "", sport)
-    );
-
-    const scopedCompetitions = competitions.filter((competition) =>
-      competitionBelongsToSport(competition.name, sport)
-    );
-
-    const overview = buildDashboardOverview(players, scopedTeams, scopedCompetitions, sport);
+    const overview = buildDashboardOverview(players, [], [], sport);
 
     return {
       ...overview,
       totalPlayers,
-      totalTeams: scopedTeams.length,
-      totalCompetitions: scopedCompetitions.length,
+      totalTeams,
+      totalCompetitions: scopedCompetitionRows.length,
     };
   },
 };

@@ -23,6 +23,30 @@ export function resolveNbaBoxscoreSeason(now = new Date()): number {
   return basketballSeasonKey(seasonStartYear(now, 6));
 }
 
+/**
+ * ESPN season.type: 1 preseason, 2 regular season, 3 playoffs.
+ * Preseason must not inflate the campaign totals. When the type is missing,
+ * games before 20 October of the campaign start year are treated as preseason.
+ */
+export function nbaGameCountsTowardSeason(
+  matchDate: Date,
+  seasonType?: number | null
+): boolean {
+  if (seasonType === 1) return false;
+  if (seasonType === 2 || seasonType === 3) return true;
+  const startYear = seasonStartYear(matchDate, 6);
+  const regularSeasonStart = Date.UTC(startYear, 9, 20);
+  return matchDate.getTime() >= regularSeasonStart;
+}
+
+/** Season totals grow only for a new appearance that belongs in the campaign. */
+export function shouldApplyBoxScoreToSeason(
+  appearanceCreated: boolean,
+  countsTowardSeason: boolean
+): boolean {
+  return appearanceCreated && countsTowardSeason;
+}
+
 /** NCAA men's basketball. Rolls over on 1 November, when games actually start. */
 export function resolveNcaaBoxscoreSeason(now = new Date()): number {
   return basketballSeasonKey(seasonStartYear(now, 10));

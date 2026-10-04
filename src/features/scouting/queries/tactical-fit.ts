@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { queryTeamById } from "@/features/scouting/queries/teams";
-import { getPlayerRepository } from "@/features/scouting/repository";
+import { queryPlayerById } from "@/features/scouting/queries/players";
 import { buildAmericanFootballIntelligenceProfile } from "@/lib/intelligence/american-football/build-american-football-intelligence-profile";
 import { computeAmericanFootballTacticalFit } from "@/lib/intelligence/american-football/compute-tactical-fit";
 import { buildAmericanFootballTeamStyleProfile } from "@/lib/intelligence/american-football/team-style-profile";
@@ -17,8 +17,7 @@ import type { Sport } from "@/lib/sport";
 export const queryTacticalFit = cache(
   async (playerId: string, teamId?: string): Promise<TacticalFitResult | null> => {
     await ensureRuntimeDataSource();
-    const repo = getPlayerRepository();
-    const player = await repo.findById(playerId);
+    const player = await queryPlayerById(playerId);
     if (!player) return null;
 
     const sport = (player.sport ?? "SOCCER") as Sport;

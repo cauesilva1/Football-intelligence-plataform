@@ -19,7 +19,7 @@ function getCachedDashboardOverview(sport: Sport): Promise<DashboardOverview> {
   return unstable_cache(
     () => loadDashboardOverview(sport),
     // v8: soccer goals chart is mean g/90 by role, not a raw sum by position
-    ["dashboard-overview-v9", sport],
+    ["dashboard-overview-v10", sport],
     {
       revalidate: DASHBOARD_REVALIDATE_SECONDS,
       tags: ["dashboard", `dashboard-${sport}`],

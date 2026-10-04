@@ -5,7 +5,8 @@ import {
   similarFootballPositionGroup,
   similarPositionGroup,
 } from "@/features/scouting/lib/position-scorecard";
-import { getPlayerRepository } from "@/features/scouting/repository";
+import { queryPlayerById } from "@/features/scouting/queries/players";
+import { positionPoolKey, queryPositionPool } from "@/features/scouting/queries/player-pool";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
 
 /** Cap candidates so similarity never hydrates the full sport roster. */
@@ -13,8 +14,7 @@ const SIMILAR_POOL_TAKE = 400;
 
 export const querySimilarPlayers = cache(async (playerId: string, limit = 4) => {
   await ensureRuntimeDataSource();
-  const repo = getPlayerRepository();
-  const target = await repo.findById(playerId);
+  const target = await queryPlayerById(playerId);
   if (!target) return [];
 
   const sport = target.sport ?? "SOCCER";
@@ -25,9 +25,6 @@ export const querySimilarPlayers = cache(async (playerId: string, limit = 4) => 
         ? similarFootballPositionGroup(target.position)
         : similarPositionGroup(target.position);
 
-  const pool = await repo.findSample(sport, {
-    positions,
-    take: SIMILAR_POOL_TAKE,
-  });
+  const pool = await queryPositionPool(sport, positionPoolKey(positions), SIMILAR_POOL_TAKE);
   return findSimilarPlayers(target, pool, limit);
 });

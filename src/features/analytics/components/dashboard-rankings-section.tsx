@@ -1,25 +1,20 @@
 import Link from "next/link";
 import { queryDashboardOverview } from "@/features/analytics/queries/dashboard";
-import { getPlayerRepository } from "@/features/scouting/repository";
 import { DataPanel } from "@/components/data/data-panel";
 import { Badge } from "@/components/ui/badge";
 import { formatClubLabel } from "@/lib/soccer/club-label";
 import { ratingColor, formatMarketValue, formatCapHit, playerDisplayName } from "@/lib/utils";
 import { getServerSport } from "@/lib/sport-server";
-import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
-import { BB_RATE_MIN_GAMES, BB_RATE_MIN_MINUTES, SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
+import { SOCCER_RATE_SOFT_CAP } from "@/lib/scoring";
 import { per90 } from "@/lib/metrics/per90";
 import {
   pickBasketballDisplayStats,
-  sortBasketballLeaders,
   statAssists,
   statPoints,
   statRebounds,
 } from "@/lib/metrics/basketball-display";
 import type { Player } from "@/types";
 import { scoreDefinitionsFor } from "@/lib/score-definitions";
-
-const BB_LEADER_FLOOR = { minGames: BB_RATE_MIN_GAMES, minMinutes: BB_RATE_MIN_MINUTES };
 
 function displayGoalsPer90(player: Player): number {
   const stats = player.currentSeasonStats;
@@ -222,11 +217,7 @@ export async function DashboardRankingsSection() {
   const overview = await queryDashboardOverview();
 
   if (isBasketball) {
-    await ensureRuntimeDataSource();
-    const sample = await getPlayerRepository().findSample("BASKETBALL", {
-      take: 800,
-      minMinutes: BB_RATE_MIN_MINUTES,
-    });
+    const leaders = overview.basketballLeaders;
 
     return (
       <div className="space-y-4">
@@ -267,26 +258,17 @@ export async function DashboardRankingsSection() {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <DataPanel title="Points Leaders" description="PTS average per game." density="dense">
-            <BasketballLeaderList
-              players={sortBasketballLeaders(sample, "points", 5, BB_LEADER_FLOOR)}
-              metric="points"
-            />
+            <BasketballLeaderList players={leaders?.points ?? []} metric="points" />
           </DataPanel>
           <DataPanel title="Rebounds Leaders" description="REB average per game." density="dense">
-            <BasketballLeaderList
-              players={sortBasketballLeaders(sample, "rebounds", 5, BB_LEADER_FLOOR)}
-              metric="rebounds"
-            />
+            <BasketballLeaderList players={leaders?.rebounds ?? []} metric="rebounds" />
           </DataPanel>
           <DataPanel
             title="Assists Leaders"
             description="AST average per game."
             density="dense"
           >
-            <BasketballLeaderList
-              players={sortBasketballLeaders(sample, "assists", 5, BB_LEADER_FLOOR)}
-              metric="assists"
-            />
+            <BasketballLeaderList players={leaders?.assists ?? []} metric="assists" />
           </DataPanel>
         </div>
       </div>

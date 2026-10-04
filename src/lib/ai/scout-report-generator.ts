@@ -393,7 +393,7 @@ function buildMockSummary(player: Player): string {
   return buildSummary(player);
 }
 
-function buildMockReport(player: Player): ScoutingReport {
+function buildMockReport(player: Player, reason: string): ScoutingReport {
   const playingStyle = derivePlayingStyle(player);
   const rating = computeOverallRating(player);
 
@@ -412,7 +412,7 @@ function buildMockReport(player: Player): ScoutingReport {
       tacticalFit: resolveTacticalFit(player),
       recommendation: buildRecommendation(rating, player.age),
       overallRating: rating,
-      generatedBy: "mock-ai-v2",
+      generatedBy: scoutFallbackAttribution(reason),
       createdAt: new Date().toISOString(),
     },
     player
@@ -459,6 +459,13 @@ export async function resolveSoccerPercentilePrompt(
     })),
   };
 }
+
+/** Shown on the brief when the model is skipped. Never a fake model name. */
+export function scoutFallbackAttribution(reason: string): string {
+  return `heuristic fallback — ${reason}`;
+}
+
+const OPENROUTER_TIMEOUT_MS = 20_000;
 
 export function alignNarrativeWithServerRating(text: string, rating: number): string {
   const canonical = rating.toFixed(1);
@@ -619,57 +626,80 @@ function withServerRating(text: string | undefined, rating: number, fallback: st
   return alignNarrativeWithServerRating(source, rating);
 }
 
+type OpenRouterAttempt =
+  | { ok: true; report: ScoutingReport }
+  | { ok: false; reason: string };
+
 async function generateWithOpenRouter(
   player: Player,
   userPrompt: string
-): Promise<ScoutingReport | null> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) return null;
+): Promise<OpenRouterAttempt> {
+  const apiKey = process.env.OPENROUTER_API_KEY?.trim();
+  if (!apiKey) return { ok: false, reason: "OpenRouter API key is not configured" };
 
   const fallbackFit = resolveTacticalFit(player);
   const systemPrompt = resolveSystemPrompt(player);
   const model = resolveOpenRouterModel();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), OPENROUTER_TIMEOUT_MS);
 
-  const response = await fetch(OPENROUTER_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-      "X-Title": "Football Intelligence Platform",
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: userPrompt,
-        },
-      ],
-      temperature: 0.4,
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(OPENROUTER_URL, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+        "X-Title": "Football Intelligence Platform",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          {
+            role: "user",
+            content: userPrompt,
+          },
+        ],
+        temperature: 0.4,
+        max_tokens: 900,
+        reasoning: { enabled: false },
+      }),
+    });
+  } catch (error) {
+    const aborted = error instanceof Error && error.name === "AbortError";
+    return {
+      ok: false,
+      reason: aborted ? "OpenRouter timed out after 20s" : "OpenRouter request failed",
+    };
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!response.ok) {
-    console.warn("[openrouter] API error:", response.status, await response.text());
-    return null;
+    console.warn("[openrouter] API error:", response.status);
+    return { ok: false, reason: `OpenRouter HTTP ${response.status}` };
   }
 
   const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
+    choices?: Array<{ message?: { content?: string; reasoning?: string } }>;
   };
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) return null;
+  const message = data.choices?.[0]?.message;
+  const content = [message?.content, message?.reasoning].filter(Boolean).join("\n");
+  if (!content.trim()) return { ok: false, reason: "OpenRouter returned an empty brief" };
 
-  const payload = parseLlmPayload(content);
-  if (!payload?.summary || !payload.recommendation) return null;
+  const payload = parseLlmPayload(content.replace(/<think>[\s\S]*?<\/think>/gi, ""));
+  if (!payload?.summary || !payload.recommendation) {
+    return { ok: false, reason: "OpenRouter returned an unreadable brief" };
+  }
 
   const fallbackStyle = derivePlayingStyle(player);
   // Always use unified sport rating — do not trust a parallel LLM score.
   const rating = computeOverallRating(player);
 
-  return withBriefContext(
+  const report = withBriefContext(
     {
       id: `report-${player.id}-${Date.now()}`,
       playerId: player.id,
@@ -706,6 +736,7 @@ async function generateWithOpenRouter(
     },
     player
   );
+  return { ok: true, report };
 }
 
 export async function generateScoutingReport(player: Player): Promise<ScoutingReport> {
@@ -720,12 +751,12 @@ export async function generateScoutingReport(player: Player): Promise<ScoutingRe
   }
 
   try {
-    const llmReport = await generateWithOpenRouter(player, buildScoutUserPrompt(player, percentiles));
-    if (llmReport) return llmReport;
+    const attempt = await generateWithOpenRouter(player, buildScoutUserPrompt(player, percentiles));
+    if (attempt.ok) return attempt.report;
+    console.warn("[openrouter] Using heuristic fallback:", attempt.reason);
+    return buildMockReport(player, attempt.reason);
   } catch (error) {
     console.warn("[openrouter] Failed to generate report:", error);
+    return buildMockReport(player, "OpenRouter request failed");
   }
-
-  await new Promise((resolve) => setTimeout(resolve, 400));
-  return buildMockReport(player);
 }
