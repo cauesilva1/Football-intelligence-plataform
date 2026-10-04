@@ -27,11 +27,26 @@ describe("euroLeagueFixtureDraft", () => {
     assert.equal(draft.awayName, "FC Barcelona");
   });
 
-  it("keeps an unplayed game as a scheduled fixture", () => {
-    const draft = euroLeagueFixtureDraft({ ...played, played: false }, "E2026");
+  it("keeps an unplayed game without a score as scheduled", () => {
+    const draft = euroLeagueFixtureDraft(
+      {
+        ...played,
+        played: false,
+        local: { club: played.local?.club },
+        road: { club: played.road?.club },
+      },
+      "E2026"
+    );
     assert.equal(draft?.status, "scheduled");
     assert.equal(draft?.homeScore, 0);
     assert.equal(draft?.awayScore, 0);
+  });
+
+  it("marks a scored game finished when the played flag is missing", () => {
+    const draft = euroLeagueFixtureDraft({ ...played, played: undefined }, "E2026");
+    assert.equal(draft?.status, "finished");
+    assert.equal(draft?.homeScore, 84);
+    assert.equal(draft?.awayScore, 77);
   });
 
   it("drops a game that has no clubs", () => {
@@ -59,5 +74,51 @@ describe("euroLeagueMatchesToSchedule", () => {
     assert.equal(bundle.past[0]?.competition, "euroleague");
     assert.equal(bundle.scheduled.length, 0);
     assert.equal(resolveSportFromMatchId(bundle.past[0]!.id), "BASKETBALL");
+  });
+
+  it("lists a scored game under results newest-first even if the row is still scheduled", () => {
+    const bundle = euroLeagueMatchesToSchedule([
+      {
+        externalKey: "euroleague:E2026:1",
+        homeName: "Older",
+        awayName: "Side",
+        homeShort: "OLD",
+        awayShort: "SID",
+        homeScore: 80,
+        awayScore: 70,
+        status: "scheduled",
+        matchDate: new Date("2026-09-24T16:00:00Z"),
+      },
+      {
+        externalKey: "euroleague:E2026:2",
+        homeName: "Newer",
+        awayName: "Side",
+        homeShort: "NEW",
+        awayShort: "SID",
+        homeScore: 90,
+        awayScore: 88,
+        status: "scheduled",
+        matchDate: new Date("2026-10-02T18:30:00Z"),
+      },
+      {
+        externalKey: "euroleague:E2026:3",
+        homeName: "Future",
+        awayName: "Side",
+        homeShort: "FUT",
+        awayShort: "SID",
+        homeScore: 0,
+        awayScore: 0,
+        status: "scheduled",
+        matchDate: new Date("2026-10-09T18:00:00Z"),
+      },
+    ]);
+    assert.deepEqual(
+      bundle.past.map((game) => game.id),
+      ["euroleague:E2026:2", "euroleague:E2026:1"]
+    );
+    assert.deepEqual(
+      bundle.scheduled.map((game) => game.id),
+      ["euroleague:E2026:3"]
+    );
   });
 });

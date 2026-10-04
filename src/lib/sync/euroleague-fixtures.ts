@@ -27,19 +27,32 @@ export function euroLeagueFixtureDraft(
   if (!game.gameCode || !homeName || !awayName || !raw) return null;
   const matchDate = new Date(raw);
   if (Number.isNaN(matchDate.getTime())) return null;
-  const played = game.played === true;
+  const homeScore = game.local?.score ?? 0;
+  const awayScore = game.road?.score ?? 0;
+  const status = euroLeagueFixtureStatus(game.played, homeScore, awayScore);
   return {
     externalKey: buildEuroLeagueEventKey(seasonCode, game.gameCode),
     homeName,
     awayName,
     homeCode: game.local?.club?.code,
     awayCode: game.road?.club?.code,
-    homeScore: played ? (game.local?.score ?? 0) : 0,
-    awayScore: played ? (game.road?.score ?? 0) : 0,
+    homeScore: status === "finished" ? homeScore : 0,
+    awayScore: status === "finished" ? awayScore : 0,
     matchDate,
-    status: played ? "finished" : "scheduled",
+    status,
     seasonLabel: seasonCode,
   };
+}
+
+/** A played flag or a final score means the game belongs on Results. */
+export function euroLeagueFixtureStatus(
+  played: boolean | undefined,
+  homeScore: number | null | undefined,
+  awayScore: number | null | undefined
+): "finished" | "scheduled" {
+  if (played === true) return "finished";
+  if ((homeScore ?? 0) > 0 || (awayScore ?? 0) > 0) return "finished";
+  return "scheduled";
 }
 
 export type EuroLeagueScheduleRow = {
@@ -56,17 +69,24 @@ export type EuroLeagueScheduleRow = {
   matchDate: Date;
 };
 
-function scheduleStatus(status: string): NbaScheduleGame["status"] {
-  const normalized = status.toLowerCase();
-  if (normalized === "finished" || normalized === "final") return "final";
+function scheduleStatus(row: EuroLeagueScheduleRow): NbaScheduleGame["status"] {
+  const normalized = row.status.toLowerCase();
   if (normalized === "live") return "live";
+  if (
+    normalized === "finished" ||
+    normalized === "final" ||
+    row.homeScore > 0 ||
+    row.awayScore > 0
+  ) {
+    return "final";
+  }
   return "scheduled";
 }
 
 /** Hub rows from persisted EuroLeague matches. The id is the external key. */
 export function euroLeagueMatchesToSchedule(rows: EuroLeagueScheduleRow[]): NbaScheduleBundle {
   const games: NbaScheduleGame[] = rows.map((row) => {
-    const status = scheduleStatus(row.status);
+    const status = scheduleStatus(row);
     return {
       id: row.externalKey,
       name: `${row.awayName} @ ${row.homeName}`,

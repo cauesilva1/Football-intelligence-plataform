@@ -255,20 +255,42 @@ async function loadEuroLeagueSchedule(): Promise<NbaScheduleBundle> {
   });
   if (!competitionId) return empty;
 
-  const matches = await getPrisma().match.findMany({
-    where: { competitionId, externalKey: { startsWith: "euroleague:" } },
-    orderBy: { matchDate: "desc" },
-    take: 80,
-    select: {
-      externalKey: true,
-      homeScore: true,
-      awayScore: true,
-      status: true,
-      matchDate: true,
-      homeTeam: { select: { name: true, shortName: true, crestUrl: true } },
-      awayTeam: { select: { name: true, shortName: true, crestUrl: true } },
-    },
-  });
+  const select = {
+    externalKey: true,
+    homeScore: true,
+    awayScore: true,
+    status: true,
+    matchDate: true,
+    homeTeam: { select: { name: true, shortName: true, crestUrl: true } },
+    awayTeam: { select: { name: true, shortName: true, crestUrl: true } },
+  } as const;
+  const scoredOrFinished = {
+    competitionId,
+    externalKey: { startsWith: "euroleague:" },
+    OR: [{ status: "finished" }, { homeScore: { gt: 0 } }, { awayScore: { gt: 0 } }],
+  };
+  const [finished, upcoming] = await Promise.all([
+    getPrisma().match.findMany({
+      where: scoredOrFinished,
+      orderBy: { matchDate: "desc" },
+      take: 80,
+      select,
+    }),
+    getPrisma().match.findMany({
+      where: {
+        competitionId,
+        externalKey: { startsWith: "euroleague:" },
+        status: { not: "finished" },
+        homeScore: 0,
+        awayScore: 0,
+        matchDate: { gte: new Date() },
+      },
+      orderBy: { matchDate: "asc" },
+      take: 40,
+      select,
+    }),
+  ]);
+  const matches = [...finished, ...upcoming];
 
   const bundle = euroLeagueMatchesToSchedule(
     matches.flatMap((match) => {
@@ -573,7 +595,7 @@ export async function loadBasketballCompetitionHub(
   const seasonKey = options?.seasonYear != null ? String(options.seasonYear) : "default";
   return unstable_cache(
     () => loadBasketballCompetitionHubUncached(config, options),
-    ["basketball-competition-hub-v2", config.slug, seasonKey],
+    ["basketball-competition-hub-v3", config.slug, seasonKey],
     {
       revalidate: BASKETBALL_HUB_REVALIDATE_SECONDS,
       tags: ["basketball-hub", `basketball-hub-${config.slug}`],

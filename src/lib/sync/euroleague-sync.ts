@@ -141,6 +141,23 @@ export async function upsertEuroLeagueFixtures(
   return { upserted, skipped };
 }
 
+/** Heal rows that already have a final score but were left as scheduled. */
+export async function markScoredEuroLeagueGamesFinished(
+  since = new Date("2026-09-24T00:00:00Z")
+): Promise<number> {
+  if (!canUseDatabase()) return 0;
+  const result = await getPrisma().match.updateMany({
+    where: {
+      externalKey: { startsWith: "euroleague:" },
+      matchDate: { gte: since },
+      status: { not: "finished" },
+      OR: [{ homeScore: { gt: 0 } }, { awayScore: { gt: 0 } }],
+    },
+    data: { status: "finished" },
+  });
+  return result.count;
+}
+
 export async function syncEuroLeagueClubs(competitionId: string): Promise<number> {
   const prisma = getPrisma();
   const clubs = await fetchEuroLeagueClubs();
@@ -612,8 +629,9 @@ export async function syncEuroLeagueRecentBoxscores(options: {
 
   const games = await fetchEuroLeagueGames();
   const fixtures = await upsertEuroLeagueFixtures(games);
+  const marked = await markScoredEuroLeagueGamesFinished();
   console.log(
-    `${LOG} fixtures — upserted ${fixtures.upserted} · skipped ${fixtures.skipped}`
+    `${LOG} fixtures — upserted ${fixtures.upserted} · skipped ${fixtures.skipped} · marked finished ${marked}`
   );
   const played = games.filter((g) => {
     if (!g.played) return false;
