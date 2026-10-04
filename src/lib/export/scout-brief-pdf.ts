@@ -1,6 +1,7 @@
 /**
- * Multi-page scout brief PDF. Helvetica is WinAnsi, so text is folded to Latin-1
- * before it is written. Coordinates stay inside the letter page.
+ * Multi-page scout brief PDF. Helvetica uses WinAnsi, so Latin-1 letters and the
+ * Windows-1252 punctuation (dashes, bullets, quotes) are written as octal bytes.
+ * Coordinates stay inside the letter page.
  */
 
 const PAGE_W = 612;
@@ -9,23 +10,76 @@ const MARGIN_X = 54;
 const TOP = 742;
 const BOTTOM = 56;
 
-function toPdfText(text: string): string {
-  const folded = text
-    .replace(/[•·]/g, "-")
-    .replace(/[—–]/g, "-")
-    .replace(/[“”]/g, '"')
-    .replace(/[‘’]/g, "'")
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "");
-  return folded.replace(/[^\x20-\x7E]/g, "");
+/** Unicode points that WinAnsi does not share with Latin-1. */
+const WINANSI_EXTRA: Record<string, number> = {
+  "\u20ac": 0x80,
+  "\u201a": 0x82,
+  "\u0192": 0x83,
+  "\u201e": 0x84,
+  "\u2026": 0x85,
+  "\u2020": 0x86,
+  "\u2021": 0x87,
+  "\u02c6": 0x88,
+  "\u2030": 0x89,
+  "\u0160": 0x8a,
+  "\u2039": 0x8b,
+  "\u0152": 0x8c,
+  "\u017d": 0x8e,
+  "\u2018": 0x91,
+  "\u2019": 0x92,
+  "\u201c": 0x93,
+  "\u201d": 0x94,
+  "\u2022": 0x95,
+  "\u2013": 0x96,
+  "\u2014": 0x97,
+  "\u02dc": 0x98,
+  "\u2122": 0x99,
+  "\u0161": 0x9a,
+  "\u203a": 0x9b,
+  "\u0153": 0x9c,
+  "\u017e": 0x9e,
+  "\u0178": 0x9f,
+};
+
+function winAnsiByte(char: string): number | null {
+  const code = char.charCodeAt(0);
+  if (code >= 0x20 && code <= 0x7e) return code;
+  if (code >= 0xa0 && code <= 0xff) return code;
+  return WINANSI_EXTRA[char] ?? null;
+}
+
+/** Keep glyphs Helvetica can draw. Unmappable characters fold to ASCII, then drop. */
+function foldForPdf(text: string): string {
+  let out = "";
+  for (const char of text) {
+    if (winAnsiByte(char) != null) {
+      out += char;
+      continue;
+    }
+    const folded = char.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+    for (const piece of folded) {
+      if (winAnsiByte(piece) != null) out += piece;
+    }
+  }
+  return out;
 }
 
 function escapePdf(text: string): string {
-  return toPdfText(text).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+  let out = "";
+  for (const char of foldForPdf(text)) {
+    const byte = winAnsiByte(char);
+    if (byte == null) continue;
+    if (byte === 0x5c) out += "\\\\";
+    else if (byte === 0x28) out += "\\(";
+    else if (byte === 0x29) out += "\\)";
+    else if (byte >= 0x20 && byte <= 0x7e) out += String.fromCharCode(byte);
+    else out += `\\${byte.toString(8).padStart(3, "0")}`;
+  }
+  return out;
 }
 
 function wrapLine(text: string, max: number): string[] {
-  const words = toPdfText(text).split(/\s+/).filter(Boolean);
+  const words = foldForPdf(text).split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let current = "";
   for (const word of words) {

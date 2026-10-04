@@ -467,6 +467,9 @@ export function scoutFallbackAttribution(reason: string): string {
 
 const OPENROUTER_TIMEOUT_MS = 20_000;
 
+/** Free reasoning models ignore `enabled: false` and spend the whole budget thinking. */
+export const OPENROUTER_REASONING = { effort: "none" } as const;
+
 export function alignNarrativeWithServerRating(text: string, rating: number): string {
   const canonical = rating.toFixed(1);
   return text.replace(
@@ -609,6 +612,10 @@ function buildPlayerContext(player: Player): string {
   );
 }
 
+function stripThink(text: string | undefined): string {
+  return (text ?? "").replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+}
+
 function parseLlmPayload(content: string): LlmReportPayload | null {
   try {
     const trimmed = content.trim();
@@ -643,9 +650,8 @@ async function generateWithOpenRouter(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), OPENROUTER_TIMEOUT_MS);
 
-  let response: Response;
   try {
-    response = await fetch(OPENROUTER_URL, {
+    const response = await fetch(OPENROUTER_URL, {
       method: "POST",
       signal: controller.signal,
       headers: {
@@ -665,9 +671,70 @@ async function generateWithOpenRouter(
         ],
         temperature: 0.4,
         max_tokens: 900,
-        reasoning: { enabled: false },
+        reasoning: OPENROUTER_REASONING,
       }),
     });
+
+    if (!response.ok) {
+      console.warn("[openrouter] API error:", response.status);
+      return { ok: false, reason: `OpenRouter HTTP ${response.status}` };
+    }
+
+    const data = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string; reasoning?: string } }>;
+    };
+    const message = data.choices?.[0]?.message;
+    const content = stripThink(message?.content);
+    const reasoning = stripThink(message?.reasoning);
+    if (!content && !reasoning) return { ok: false, reason: "OpenRouter returned an empty brief" };
+
+    const payload = parseLlmPayload(content) ?? parseLlmPayload(reasoning);
+    if (!payload?.summary || !payload.recommendation) {
+      return { ok: false, reason: "OpenRouter returned an unreadable brief" };
+    }
+
+    const fallbackStyle = derivePlayingStyle(player);
+    // Always use unified sport rating — do not trust a parallel LLM score.
+    const rating = computeOverallRating(player);
+
+    const report = withBriefContext(
+      {
+        id: `report-${player.id}-${Date.now()}`,
+        playerId: player.id,
+        summary: withServerRating(payload.summary, rating, ""),
+        strengths: (payload.strengths?.length ? payload.strengths : player.strengths).map((line) =>
+          alignNarrativeWithServerRating(line, rating)
+        ),
+        weaknesses: (payload.weaknesses?.length ? payload.weaknesses : player.weaknesses).map(
+          (line) => alignNarrativeWithServerRating(line, rating)
+        ),
+        playingStyle: {
+          label: payload.playingStyle?.label ?? fallbackStyle.label,
+          description: withServerRating(
+            payload.playingStyle?.description,
+            rating,
+            fallbackStyle.description
+          ),
+          traits: (payload.playingStyle?.traits?.length
+            ? payload.playingStyle.traits
+            : fallbackStyle.traits
+          ).map((line) => alignNarrativeWithServerRating(line, rating)),
+        },
+        tacticalFit: {
+          systems: payload.tacticalFit?.systems?.length
+            ? payload.tacticalFit.systems
+            : fallbackFit.systems,
+          roles: payload.tacticalFit?.roles?.length ? payload.tacticalFit.roles : fallbackFit.roles,
+          narrative: withServerRating(payload.tacticalFit?.narrative, rating, fallbackFit.narrative),
+        },
+        recommendation: withServerRating(payload.recommendation, rating, ""),
+        overallRating: rating,
+        generatedBy: model,
+        createdAt: new Date().toISOString(),
+      },
+      player
+    );
+    return { ok: true, report };
   } catch (error) {
     const aborted = error instanceof Error && error.name === "AbortError";
     return {
@@ -677,66 +744,6 @@ async function generateWithOpenRouter(
   } finally {
     clearTimeout(timer);
   }
-
-  if (!response.ok) {
-    console.warn("[openrouter] API error:", response.status);
-    return { ok: false, reason: `OpenRouter HTTP ${response.status}` };
-  }
-
-  const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string; reasoning?: string } }>;
-  };
-  const message = data.choices?.[0]?.message;
-  const content = [message?.content, message?.reasoning].filter(Boolean).join("\n");
-  if (!content.trim()) return { ok: false, reason: "OpenRouter returned an empty brief" };
-
-  const payload = parseLlmPayload(content.replace(/<think>[\s\S]*?<\/think>/gi, ""));
-  if (!payload?.summary || !payload.recommendation) {
-    return { ok: false, reason: "OpenRouter returned an unreadable brief" };
-  }
-
-  const fallbackStyle = derivePlayingStyle(player);
-  // Always use unified sport rating — do not trust a parallel LLM score.
-  const rating = computeOverallRating(player);
-
-  const report = withBriefContext(
-    {
-      id: `report-${player.id}-${Date.now()}`,
-      playerId: player.id,
-      summary: withServerRating(payload.summary, rating, ""),
-      strengths: (payload.strengths?.length ? payload.strengths : player.strengths).map((line) =>
-        alignNarrativeWithServerRating(line, rating)
-      ),
-      weaknesses: (payload.weaknesses?.length ? payload.weaknesses : player.weaknesses).map((line) =>
-        alignNarrativeWithServerRating(line, rating)
-      ),
-      playingStyle: {
-        label: payload.playingStyle?.label ?? fallbackStyle.label,
-        description: withServerRating(
-          payload.playingStyle?.description,
-          rating,
-          fallbackStyle.description
-        ),
-        traits: (payload.playingStyle?.traits?.length
-          ? payload.playingStyle.traits
-          : fallbackStyle.traits
-        ).map((line) => alignNarrativeWithServerRating(line, rating)),
-      },
-      tacticalFit: {
-        systems: payload.tacticalFit?.systems?.length
-          ? payload.tacticalFit.systems
-          : fallbackFit.systems,
-        roles: payload.tacticalFit?.roles?.length ? payload.tacticalFit.roles : fallbackFit.roles,
-        narrative: withServerRating(payload.tacticalFit?.narrative, rating, fallbackFit.narrative),
-      },
-      recommendation: withServerRating(payload.recommendation, rating, ""),
-      overallRating: rating,
-      generatedBy: model,
-      createdAt: new Date().toISOString(),
-    },
-    player
-  );
-  return { ok: true, report };
 }
 
 export async function generateScoutingReport(player: Player): Promise<ScoutingReport> {

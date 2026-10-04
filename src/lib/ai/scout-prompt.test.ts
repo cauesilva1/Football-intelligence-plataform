@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   alignNarrativeWithServerRating,
   buildScoutUserPrompt,
+  OPENROUTER_REASONING,
   resolveOpenRouterModel,
   scoutFallbackAttribution,
   type ScoutPercentilePrompt,
@@ -114,6 +115,12 @@ describe("scoutFallbackAttribution", () => {
     assert.match(label, /heuristic fallback/);
     assert.match(label, /OpenRouter HTTP 404/);
     assert.doesNotMatch(label, /mock-ai/);
+  });
+});
+
+describe("OPENROUTER_REASONING", () => {
+  it("turns reasoning off so the brief is not spent on a hidden chain of thought", () => {
+    assert.equal(OPENROUTER_REASONING.effort, "none");
   });
 });
 

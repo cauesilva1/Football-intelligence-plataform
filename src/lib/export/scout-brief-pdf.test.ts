@@ -45,23 +45,40 @@ describe("buildScoutBriefPdf", () => {
     }
   });
 
-  it("folds accents and continues onto a second page", async () => {
+  it("keeps accents, dashes, and bullets, and continues onto a second page", async () => {
     const blob = buildScoutBriefPdf({
-      playerName: "José",
+      playerName: "José Müller",
       position: "RW",
-      club: "FC Test",
+      club: "FC São Paulo",
       rating: 8.1,
       minutes: 2100,
-      summary: "Measured output across a full scouting paragraph. ".repeat(120),
-      strengths: ["Carrying"],
-      risks: ["Press resistance"],
-      recommendation: "Sign.",
+      summary:
+        "Press-resistant — carries in the half-space. • First touch is clean. " +
+        "Measured output across a full scouting paragraph. ".repeat(120),
+      strengths: ["1v1 • isolation"],
+      risks: ["Away form — small sample"],
+      recommendation: "Sign — priority.",
       keyRates: ["Goals / 90: 0.70"],
     });
     const text = await blob.text();
     assert.match(text, /\/Count 2/);
-    assert.match(text, /Jose/);
+    assert.match(text, /\/F2 18 Tf/);
+    assert.match(text, /\(SCOUT BRIEF\) Tj/);
+    assert.match(text, /Jos\\351/);
+    assert.match(text, /M\\374ller/);
+    assert.match(text, /S\\343o Paulo/);
+    assert.match(text, /\\227/);
+    assert.match(text, /\\225/);
     assert.doesNotMatch(text, /José/);
     assert.doesNotMatch(text, /Prototype heuristic/);
+    const positions = [...text.matchAll(/1 0 0 1 (\d+) (\d+) Tm/g)].map((match) => ({
+      x: Number(match[1]),
+      y: Number(match[2]),
+    }));
+    assert.ok(positions.length > 0);
+    for (const point of positions) {
+      assert.equal(point.x, 54);
+      assert.ok(point.y >= 36 && point.y <= 750, `text y ${point.y} is outside the page`);
+    }
   });
 });
