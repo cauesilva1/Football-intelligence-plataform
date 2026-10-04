@@ -62,7 +62,7 @@ export const BASKETBALL_COMPETITIONS: BasketballCompetitionConfig[] = [
     badge: "Professional",
     teamsLeagueParam: "euroleague",
     hasStandings: false,
-    hasSchedule: false,
+    hasSchedule: true,
     hasLeaders: true,
   },
 ];

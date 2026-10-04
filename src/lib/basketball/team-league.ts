@@ -11,6 +11,12 @@ export function resolveBasketballLeagueFromCompetition(
   return null;
 }
 
+/** Value stored on Player.league. EuroLeague is a label, not the code. */
+export function basketballStoredLeague(code: BasketballLeagueCode): string {
+  if (code === "EUROLEAGUE") return "EuroLeague";
+  return code;
+}
+
 export function isBasketballTeamCompetition(competitionName?: string | null): boolean {
   return isBasketballCompetition(competitionName ?? "");
 }

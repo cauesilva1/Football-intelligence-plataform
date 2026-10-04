@@ -69,6 +69,9 @@ function TeamLine({
 }
 
 function matchHref(game: NbaScheduleGame): string {
+  if (game.competition === "euroleague") {
+    return `/matches/${encodeURIComponent(game.id)}`;
+  }
   const competition =
     game.competition === "summer"
       ? "nba-summer"
@@ -101,6 +104,11 @@ function GameCard({ game }: { game: NbaScheduleGame }) {
               {localDate}
             </span>
             <div className="flex items-center gap-2">
+              {game.phaseLabel ? (
+                <Badge variant="outline" className="border-border text-2xs text-muted-foreground">
+                  {game.phaseLabel}
+                </Badge>
+              ) : null}
               {isSummer ? <SummerLeagueBadge /> : null}
               {isNcaa ? (
                 <Badge variant="outline" className="border-border text-2xs text-muted-foreground">

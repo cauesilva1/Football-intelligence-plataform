@@ -11,6 +11,8 @@ import {
   type BasketballPlayerBoxScore,
 } from "@/lib/api/espn-basketball-boxscore";
 import { isDbSource } from "@/lib/data-source";
+import { getPrisma } from "@/lib/prisma";
+import { canUseDatabase } from "@/lib/system-cache";
 
 function competitionToEspnSlug(competition: NbaMatchCompetition): BasketballLeagueSlug {
   if (competition === "ncaa") return "mens-college-basketball";
@@ -46,9 +48,88 @@ function toPersistRows(detail: BasketballMatchDetail): BasketballPlayerBoxScore[
   });
 }
 
+async function resolveEuroLeagueMatchDetail(
+  rawId: string
+): Promise<BasketballMatchDetail | null> {
+  const id = decodeURIComponent(rawId);
+  if (!id.startsWith("euroleague:") || !canUseDatabase()) return null;
+  const prisma = getPrisma();
+  const match = await prisma.match.findUnique({
+    where: { externalKey: id },
+    select: {
+      homeScore: true,
+      awayScore: true,
+      status: true,
+      matchDate: true,
+      seasonLabel: true,
+      homeTeam: { select: { name: true, crestUrl: true } },
+      awayTeam: { select: { name: true, crestUrl: true } },
+    },
+  });
+  if (!match) return null;
+
+  const lines = await prisma.playerMatchStat.findMany({
+    where: { externalEventKey: id },
+    select: {
+      teamName: true,
+      minutesPlayed: true,
+      points: true,
+      rebounds: true,
+      assists: true,
+      steals: true,
+      blocks: true,
+      fieldGoalsMade: true,
+      fieldGoalsAttempted: true,
+      player: { select: { id: true, fullName: true, knownAs: true } },
+    },
+    orderBy: { points: "desc" },
+  });
+
+  const finished = (match.status ?? "").toLowerCase() === "finished";
+  return {
+    id,
+    competition: "euroleague",
+    competitionName: "EuroLeague",
+    date: match.matchDate.toISOString().slice(0, 10),
+    kickOff: match.matchDate.toISOString(),
+    homeTeam: match.homeTeam.name,
+    awayTeam: match.awayTeam.name,
+    homeScore: finished ? match.homeScore : null,
+    awayScore: finished ? match.awayScore : null,
+    homeCrestUrl: match.homeTeam.crestUrl ?? undefined,
+    awayCrestUrl: match.awayTeam.crestUrl ?? undefined,
+    status: finished ? "finished" : "scheduled",
+    statusLabel: finished ? "Final" : "Scheduled",
+    stadium: "—",
+    stageName: match.seasonLabel ? `EuroLeague ${match.seasonLabel}` : "EuroLeague",
+    sourceLabel: "EuroLeague",
+    players: lines.map((line) => ({
+      espnAthleteId: line.player.id,
+      fullName: line.player.knownAs || line.player.fullName,
+      teamName: line.teamName ?? "—",
+      minutesPlayed: line.minutesPlayed,
+      points: line.points ?? 0,
+      rebounds: line.rebounds ?? 0,
+      assists: line.assists,
+      steals: line.steals ?? 0,
+      blocks: line.blocks ?? 0,
+      turnovers: 0,
+      fieldGoals:
+        line.fieldGoalsMade != null && line.fieldGoalsAttempted != null
+          ? `${line.fieldGoalsMade}-${line.fieldGoalsAttempted}`
+          : "—",
+      threePointers: "—",
+      freeThrows: "—",
+    })),
+  };
+}
+
 export async function resolveBasketballMatchDetail(
   rawId: string
 ): Promise<BasketballMatchDetail | null> {
+  if (decodeURIComponent(rawId).startsWith("euroleague:")) {
+    return resolveEuroLeagueMatchDetail(rawId);
+  }
   const parsed = parseBasketballMatchId(rawId);
   if (!parsed) return null;
   const detail = await fetchNbaMatchDetail(parsed.competition, parsed.eventId);

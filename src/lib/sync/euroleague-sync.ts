@@ -21,8 +21,10 @@ import {
   fetchEuroLeaguePeople,
   formatEuroLeaguePlayerName,
   mapEuroLeaguePosition,
+  type EuroLeagueGame,
   type EuroLeaguePlayerLine,
 } from "@/lib/api/euroleague";
+import { euroLeagueFixtureDraft } from "@/lib/sync/euroleague-fixtures";
 
 const LOG = "[euroleague-sync]";
 const CACHE_PREFIX = "euroleague:boxscore:";
@@ -77,6 +79,66 @@ export async function ensureEuroLeagueCompetition(): Promise<string | null> {
   }
 
   return competition.id;
+}
+
+export async function upsertEuroLeagueFixtures(
+  games: EuroLeagueGame[],
+  seasonCode = currentEuroLeagueSeasonCode()
+): Promise<{ upserted: number; skipped: number }> {
+  const competitionId = await ensureEuroLeagueCompetition();
+  if (!competitionId) return { upserted: 0, skipped: games.length };
+  const prisma = getPrisma();
+  const teams = await prisma.team.findMany({
+    where: { competitionId },
+    select: { id: true, name: true, apiSportsId: true },
+  });
+  const teamByApiId = new Map(
+    teams.filter((team) => team.apiSportsId != null).map((team) => [team.apiSportsId!, team.id])
+  );
+  const teamByName = new Map(teams.map((team) => [team.name.toLowerCase(), team.id]));
+
+  const resolveTeam = (code?: string, name?: string): string | undefined => {
+    if (code) {
+      const byCode = teamByApiId.get(euroLeagueClubApiId(code));
+      if (byCode) return byCode;
+    }
+    if (name) return teamByName.get(name.toLowerCase());
+    return undefined;
+  };
+
+  let upserted = 0;
+  let skipped = 0;
+  for (const game of games) {
+    const draft = euroLeagueFixtureDraft(game, seasonCode);
+    if (!draft) {
+      skipped += 1;
+      continue;
+    }
+    const homeTeamId = resolveTeam(draft.homeCode, draft.homeName);
+    const awayTeamId = resolveTeam(draft.awayCode, draft.awayName);
+    if (!homeTeamId || !awayTeamId) {
+      skipped += 1;
+      continue;
+    }
+    const data = {
+      competitionId,
+      homeTeamId,
+      awayTeamId,
+      homeScore: draft.homeScore,
+      awayScore: draft.awayScore,
+      matchDate: draft.matchDate,
+      status: draft.status,
+      seasonLabel: draft.seasonLabel,
+      source: "euroleague",
+    };
+    await prisma.match.upsert({
+      where: { externalKey: draft.externalKey },
+      create: { externalKey: draft.externalKey, ...data },
+      update: data,
+    });
+    upserted += 1;
+  }
+  return { upserted, skipped };
 }
 
 export async function syncEuroLeagueClubs(competitionId: string): Promise<number> {
@@ -426,6 +488,11 @@ export async function processEuroLeagueGame(
   let statsUpdated = 0;
   let skipped = 0;
   let failed = 0;
+  const eventKey = buildEuroLeagueEventKey(currentEuroLeagueSeasonCode(), gameCode);
+  const matchRow = await prisma.match.findUnique({
+    where: { externalKey: eventKey },
+    select: { id: true },
+  });
 
   for (const side of sides) {
     for (const raw of side.lines) {
@@ -451,7 +518,8 @@ export async function processEuroLeagueGame(
         if (isDbSource()) {
           await upsertPlayerMatchStat({
             playerId,
-            externalEventKey: buildEuroLeagueEventKey(currentEuroLeagueSeasonCode(), gameCode),
+            externalEventKey: eventKey,
+            matchId: matchRow?.id,
             matchDate: options.matchDate ?? undefined,
             competitionLabel: EUROLEAGUE_LABEL,
             teamName: side.teamName,
@@ -543,6 +611,10 @@ export async function syncEuroLeagueRecentBoxscores(options: {
   cutoff.setHours(0, 0, 0, 0);
 
   const games = await fetchEuroLeagueGames();
+  const fixtures = await upsertEuroLeagueFixtures(games);
+  console.log(
+    `${LOG} fixtures — upserted ${fixtures.upserted} · skipped ${fixtures.skipped}`
+  );
   const played = games.filter((g) => {
     if (!g.played) return false;
     if (options.allPlayed) return true;

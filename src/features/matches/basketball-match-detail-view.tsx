@@ -88,11 +88,21 @@ export function BasketballMatchDetailView({ data }: { data: BasketballMatchDetai
       <MatchSportExit sport="BASKETBALL" />
       <MatchScoreboardSurface sport="BASKETBALL">
         <Link
-          href={data.competition === "ncaa" ? "/tournaments/ncaa" : "/tournaments/nba"}
+          href={
+            data.competition === "euroleague"
+              ? "/tournaments/euroleague"
+              : data.competition === "ncaa"
+                ? "/tournaments/ncaa"
+                : "/tournaments/nba"
+          }
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          {data.competition === "ncaa" ? "NCAA" : "NBA"}
+          {data.competition === "euroleague"
+            ? "EuroLeague"
+            : data.competition === "ncaa"
+              ? "NCAA"
+              : "NBA"}
         </Link>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">

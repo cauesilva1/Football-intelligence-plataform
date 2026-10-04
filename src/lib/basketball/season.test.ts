@@ -3,11 +3,14 @@ import { describe, it } from "node:test";
 import {
   basketballSeasonKey,
   nbaGameCountsTowardSeason,
+  nbaPhaseLabel,
+  readEspnSeasonType,
   resolveEuroLeagueSeason,
   resolveNbaBoxscoreSeason,
   resolveNcaaBoxscoreSeason,
   shouldApplyBoxScoreToSeason,
 } from "@/lib/basketball/season";
+import { basketballStoredLeague } from "@/lib/basketball/team-league";
 
 describe("basketball season resolution", () => {
   it("formats compact season keys across the century boundary", () => {
@@ -47,6 +50,21 @@ describe("basketball season resolution", () => {
     assert.equal(shouldApplyBoxScoreToSeason(true, true), true);
     assert.equal(shouldApplyBoxScoreToSeason(false, true), false);
     assert.equal(shouldApplyBoxScoreToSeason(true, false), false);
+  });
+
+  it("labels the 3 Oct 2026 Heat game as preseason and later games by phase", () => {
+    const heatAtRaptors = new Date("2026-10-03T23:00:00Z");
+    assert.equal(nbaPhaseLabel(heatAtRaptors, 1), "Preseason");
+    assert.equal(nbaPhaseLabel(heatAtRaptors), "Preseason");
+    assert.equal(nbaPhaseLabel(new Date("2026-10-21T00:00:00Z"), 2), "Regular season");
+    assert.equal(nbaPhaseLabel(new Date("2026-04-18T00:00:00Z"), 3), "Playoffs");
+    assert.equal(readEspnSeasonType({ type: 1 }), 1);
+    assert.equal(readEspnSeasonType({ type: { type: 1 } }), 1);
+  });
+
+  it("stores EuroLeague players under the EuroLeague label, not the league code", () => {
+    assert.equal(basketballStoredLeague("EUROLEAGUE"), "EuroLeague");
+    assert.equal(basketballStoredLeague("NBA"), "NBA");
   });
 
   it("derives the EuroLeague API code and persisted key together", () => {

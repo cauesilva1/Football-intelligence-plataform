@@ -39,6 +39,35 @@ export function nbaGameCountsTowardSeason(
   return matchDate.getTime() >= regularSeasonStart;
 }
 
+export type NbaPhaseLabel = "Preseason" | "Regular season" | "Playoffs";
+
+/**
+ * Visible phase for a tip-off. Games before 20 October of the campaign start
+ * year are preseason even when a feed omits season type. ESPN type 1 is
+ * preseason, type 3 is playoffs.
+ */
+export function nbaPhaseLabel(matchDate: Date, seasonType?: number | null): NbaPhaseLabel {
+  const startYear = seasonStartYear(matchDate, 6);
+  const regularSeasonStart = Date.UTC(startYear, 9, 20);
+  if (seasonType === 1 || matchDate.getTime() < regularSeasonStart) return "Preseason";
+  if (seasonType === 3) return "Playoffs";
+  return "Regular season";
+}
+
+/** ESPN sends season.type as a number or as `{ type: 1 }`. */
+export function readEspnSeasonType(
+  season?: { type?: number | { type?: number | string } } | null
+): number | null {
+  const type = season?.type;
+  if (typeof type === "number" && Number.isFinite(type)) return type;
+  if (type && typeof type === "object") {
+    const nested = type.type;
+    if (typeof nested === "number" && Number.isFinite(nested)) return nested;
+    if (typeof nested === "string" && /^\d+$/.test(nested)) return Number(nested);
+  }
+  return null;
+}
+
 /** Season totals grow only for a new appearance that belongs in the campaign. */
 export function shouldApplyBoxScoreToSeason(
   appearanceCreated: boolean,

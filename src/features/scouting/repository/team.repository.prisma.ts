@@ -9,6 +9,7 @@ import {
 import { clubRepository } from "@/features/scouting/repository/club.repository.prisma";
 import { isDbSource } from "@/lib/data-source";
 import {
+  basketballStoredLeague,
   isBasketballTeamCompetition,
   resolveBasketballLeagueFromCompetition,
 } from "@/lib/basketball/team-league";
@@ -94,14 +95,16 @@ export const prismaTeamRepository: TeamRepository = {
 
     const nbaTeamIds: string[] = [];
     const ncaaTeamIds: string[] = [];
+    const euroTeamIds: string[] = [];
 
     for (const team of teams) {
       const league = resolveBasketballLeagueFromCompetition(team.competition?.name);
       if (league === "NBA") nbaTeamIds.push(team.id);
       else if (league === "NCAA") ncaaTeamIds.push(team.id);
+      else if (league === "EUROLEAGUE") euroTeamIds.push(team.id);
     }
 
-    const [nbaCounts, ncaaCounts] = await Promise.all([
+    const [nbaCounts, ncaaCounts, euroCounts] = await Promise.all([
       nbaTeamIds.length
         ? prisma.player.groupBy({
             by: ["teamId"],
@@ -116,10 +119,21 @@ export const prismaTeamRepository: TeamRepository = {
             _count: { _all: true },
           })
         : Promise.resolve([]),
+      euroTeamIds.length
+        ? prisma.player.groupBy({
+            by: ["teamId"],
+            where: {
+              teamId: { in: euroTeamIds },
+              sport: "BASKETBALL",
+              league: basketballStoredLeague("EUROLEAGUE"),
+            },
+            _count: { _all: true },
+          })
+        : Promise.resolve([]),
     ]);
 
     const squadSizeByTeamId = new Map<string, number>();
-    for (const row of [...nbaCounts, ...ncaaCounts]) {
+    for (const row of [...nbaCounts, ...ncaaCounts, ...euroCounts]) {
       if (row.teamId) squadSizeByTeamId.set(row.teamId, row._count._all);
     }
 
@@ -256,7 +270,7 @@ export const prismaTeamRepository: TeamRepository = {
       where: {
         teamId: id,
         ...(isBasketball && expectedLeague
-          ? { sport: "BASKETBALL", league: expectedLeague }
+          ? { sport: "BASKETBALL", league: basketballStoredLeague(expectedLeague) }
           : {}),
         ...(isAmericanFootball && afLeague
           ? { sport: "AMERICAN_FOOTBALL", league: afLeague }

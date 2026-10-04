@@ -124,7 +124,11 @@ export function BasketballCompetitionHub({
           ) : null}
           {competition.hasSchedule ? <TabsTrigger value="matches">Games</TabsTrigger> : null}
           <TabsTrigger value="franchises">
-            {competition.slug === "ncaa" ? "Programs" : "Franchises"}
+            {competition.slug === "ncaa"
+              ? "Programs"
+              : competition.slug === "euroleague"
+                ? "Clubs"
+                : "Franchises"}
           </TabsTrigger>
         </TabsList>
 
@@ -162,11 +166,19 @@ export function BasketballCompetitionHub({
             <BasketballGamesHub
               schedule={data.schedule}
               compact
-              title={competition.slug === "ncaa" ? "Agenda NCAA" : "Agenda NBA"}
+              title={
+                competition.slug === "ncaa"
+                  ? "Agenda NCAA"
+                  : competition.slug === "euroleague"
+                    ? "Agenda EuroLeague"
+                    : "Agenda NBA"
+              }
               subtitle={
                 competition.slug === "ncaa"
                   ? "College games — select one to open the box score."
-                  : "Live, recent results, and upcoming games — select one to open the box score."
+                  : competition.slug === "euroleague"
+                    ? "Results and upcoming games from the official EuroLeague feed."
+                    : "Live, recent results, and upcoming games — select one to open the box score."
               }
             />
           </TabsContent>
@@ -178,7 +190,9 @@ export function BasketballCompetitionHub({
             emptyLabel={
               competition.slug === "ncaa"
                 ? "No NCAA programs in the database yet. Run the NCAA sync or open the directory."
-                : "No NBA franchises in the database yet."
+                : competition.slug === "euroleague"
+                  ? "No EuroLeague clubs in the database yet."
+                  : "No NBA franchises in the database yet."
             }
             directoryHref={`/teams?league=${competition.teamsLeagueParam}`}
           />

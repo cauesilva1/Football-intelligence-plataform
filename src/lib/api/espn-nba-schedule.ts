@@ -1,8 +1,9 @@
+import { nbaPhaseLabel, readEspnSeasonType } from "@/lib/basketball/season";
 import { readSystemCache, writeSystemCache } from "@/lib/system-cache";
 import { isStale } from "@/lib/sync/data-staleness";
 
 export type NbaGameStatus = "live" | "final" | "scheduled";
-export type NbaCompetition = "nba" | "summer" | "ncaa";
+export type NbaCompetition = "nba" | "summer" | "ncaa" | "euroleague";
 
 export interface NbaGameLeader {
   name: string;
@@ -28,6 +29,8 @@ export interface NbaScheduleGame {
   period?: number;
   startTime: string;
   competition: NbaCompetition;
+  /** NBA only: Preseason, Regular season, or Playoffs. */
+  phaseLabel?: string;
   leaders?: {
     home: NbaGameLeader[];
     away: NbaGameLeader[];
@@ -56,6 +59,7 @@ interface EspnScoreboardEvent {
   id: string;
   name?: string;
   date?: string;
+  season?: { type?: number | { type?: number | string } };
   status?: { type?: { name?: string; state?: string; completed?: boolean; shortDetail?: string } };
   competitions?: Array<{
     status?: {
@@ -104,7 +108,11 @@ function mapGameStatus(
   return { status: "scheduled", label: "Scheduled" };
 }
 
-function parseEvent(event: EspnScoreboardEvent, competition: NbaCompetition): NbaScheduleGame | null {
+function parseEvent(
+  event: EspnScoreboardEvent,
+  competition: NbaCompetition,
+  fallbackSeasonType?: number | null
+): NbaScheduleGame | null {
   const competitionBlock = event.competitions?.[0];
   const competitors = competitionBlock?.competitors ?? [];
   const home = competitors.find((team) => team.homeAway === "home");
@@ -113,6 +121,8 @@ function parseEvent(event: EspnScoreboardEvent, competition: NbaCompetition): Nb
 
   const statusMeta = competitionBlock?.status?.type ?? event.status?.type;
   const mapped = mapGameStatus(statusMeta?.state, statusMeta?.name, statusMeta?.completed);
+  const startTime = event.date ?? new Date().toISOString();
+  const seasonType = readEspnSeasonType(event.season) ?? fallbackSeasonType ?? null;
 
   return {
     id: event.id,
@@ -133,8 +143,10 @@ function parseEvent(event: EspnScoreboardEvent, competition: NbaCompetition): Nb
         : mapped.label,
     clock: competitionBlock?.status?.displayClock,
     period: competitionBlock?.status?.period,
-    startTime: event.date ?? new Date().toISOString(),
+    startTime,
     competition,
+    phaseLabel:
+      competition === "nba" ? nbaPhaseLabel(new Date(startTime), seasonType) : undefined,
   };
 }
 
@@ -154,7 +166,7 @@ function formatEspnDate(date: Date): string {
 async function fetchScoreboardEvents(
   espnSlug: string,
   date: Date
-): Promise<EspnScoreboardEvent[]> {
+): Promise<{ events: EspnScoreboardEvent[]; seasonType: number | null }> {
   const url = `${scoreboardUrl(espnSlug)}?dates=${formatEspnDate(date)}`;
   try {
     const response = await fetch(url, {
@@ -165,11 +177,17 @@ async function fetchScoreboardEvents(
       next: { revalidate: 120 },
       signal: AbortSignal.timeout(12_000),
     });
-    if (!response.ok) return [];
-    const payload = (await response.json()) as { events?: EspnScoreboardEvent[] };
-    return payload.events ?? [];
+    if (!response.ok) return { events: [], seasonType: null };
+    const payload = (await response.json()) as {
+      events?: EspnScoreboardEvent[];
+      season?: { type?: number | { type?: number | string } };
+      leagues?: Array<{ season?: { type?: number | { type?: number | string } } }>;
+    };
+    const seasonType =
+      readEspnSeasonType(payload.season) ?? readEspnSeasonType(payload.leagues?.[0]?.season);
+    return { events: payload.events ?? [], seasonType };
   } catch {
-    return [];
+    return { events: [], seasonType: null };
   }
 }
 
@@ -218,9 +236,9 @@ export async function fetchNbaScheduleBundle(now = new Date()): Promise<NbaSched
   const tasks = NBA_LEAGUE_SLUGS.flatMap((league) =>
     dateKeys.map(async (dateKey) => {
       const competition: NbaCompetition = league === "nba-summer" ? "summer" : "nba";
-      const events = await fetchScoreboardEvents(league, dateFromKey(dateKey));
+      const { events, seasonType } = await fetchScoreboardEvents(league, dateFromKey(dateKey));
       return events
-        .map((event) => parseEvent(event, competition))
+        .map((event) => parseEvent(event, competition, seasonType))
         .filter((g): g is NbaScheduleGame => g != null)
         .map((g) => [`${competition}:${g.id}`, g] as const);
     })
@@ -254,7 +272,7 @@ export async function fetchNcaaScheduleBundle(now = new Date()): Promise<NbaSche
   const dateKeys = windowDateKeys(now);
   const chunks = await Promise.all(
     dateKeys.map(async (dateKey) => {
-      const events = await fetchScoreboardEvents(NCAA_ESPN_SLUG, dateFromKey(dateKey));
+      const { events } = await fetchScoreboardEvents(NCAA_ESPN_SLUG, dateFromKey(dateKey));
       return events
         .map((event) => parseEvent(event, "ncaa"))
         .filter((g): g is NbaScheduleGame => g != null)
@@ -272,7 +290,7 @@ export async function fetchNcaaScheduleBundle(now = new Date()): Promise<NbaSche
     const seasonEndYear = now.getMonth() < 9 ? now.getFullYear() : now.getFullYear() + 1;
     // Single showcase day (March 15) — enough for offseason demo without 4 round-trips
     const showcaseKey = formatEspnDate(new Date(Date.UTC(seasonEndYear, 2, 15)));
-    const events = await fetchScoreboardEvents(NCAA_ESPN_SLUG, dateFromKey(showcaseKey));
+    const { events } = await fetchScoreboardEvents(NCAA_ESPN_SLUG, dateFromKey(showcaseKey));
     for (const event of events) {
       const parsed = parseEvent(event, "ncaa");
       if (parsed) eventsByKey.set(`ncaa:${parsed.id}`, parsed);

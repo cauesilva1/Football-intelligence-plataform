@@ -1,3 +1,4 @@
+import { nbaPhaseLabel, readEspnSeasonType } from "@/lib/basketball/season";
 import type { MatchStatus } from "@/lib/tournaments/types";
 
 export type NbaMatchCompetition = "nba" | "nba-summer" | "ncaa";
@@ -19,9 +20,11 @@ export interface BasketballMatchPlayerBoxScore {
   plusMinus?: string;
 }
 
+export type BasketballMatchCompetition = NbaMatchCompetition | "euroleague";
+
 export interface BasketballMatchDetail {
   id: string;
-  competition: NbaMatchCompetition;
+  competition: BasketballMatchCompetition;
   competitionName: string;
   date: string;
   kickOff: string;
@@ -88,6 +91,7 @@ interface EspnSummaryResponse {
     }>;
   };
   header?: {
+    season?: { type?: number | { type?: number | string } };
     competitions?: EspnCompetitionBlock[];
   };
   gameInfo?: {
@@ -101,6 +105,7 @@ interface EspnSummaryResponse {
 interface EspnScoreboardEvent {
   id?: string;
   date?: string;
+  season?: { type?: number | { type?: number | string } };
   competitions?: EspnCompetitionBlock[];
 }
 
@@ -130,10 +135,14 @@ function competitionLabel(competition: NbaMatchCompetition): string {
   return "NBA";
 }
 
-function stageLabel(competition: NbaMatchCompetition): string {
+function stageLabel(
+  competition: NbaMatchCompetition,
+  kickOff: string,
+  seasonType?: number | null
+): string {
   if (competition === "nba-summer") return "Summer League";
   if (competition === "ncaa") return "College Basketball";
-  return "Regular season";
+  return nbaPhaseLabel(new Date(kickOff), seasonType);
 }
 
 function summaryUrl(competition: NbaMatchCompetition): string {
@@ -249,7 +258,8 @@ function buildDetailFromCompetition(
   competition: NbaMatchCompetition,
   eventId: string,
   competitionBlock: EspnCompetitionBlock,
-  venueFallback?: EspnCompetitionBlock["venue"]
+  venueFallback?: EspnCompetitionBlock["venue"],
+  seasonType?: number | null
 ): BasketballMatchDetail | null {
   const competitors = competitionBlock.competitors ?? [];
   const home = competitors.find((c) => c.homeAway === "home");
@@ -289,7 +299,7 @@ function buildDetailFromCompetition(
     statusLabel: mapped.label,
     stadium: venue?.fullName ?? "—",
     stadiumCountry: [city, state, country].filter(Boolean).join(", ") || undefined,
-    stageName: stageLabel(competition),
+    stageName: stageLabel(competition, kickOff, seasonType),
     players: [],
     sourceLabel: "ESPN",
   };
@@ -368,7 +378,8 @@ export async function fetchNbaMatchDetail(
             competition,
             eventId,
             competitionBlock,
-            summary.gameInfo?.venue
+            summary.gameInfo?.venue,
+            readEspnSeasonType(summary.header.season)
           );
           if (detail) {
             const playable =
@@ -398,7 +409,13 @@ export async function fetchNbaMatchDetail(
       competitionBlock.date = scoreboardEvent.date;
     }
 
-    return buildDetailFromCompetition(competition, eventId, competitionBlock);
+    return buildDetailFromCompetition(
+      competition,
+      eventId,
+      competitionBlock,
+      undefined,
+      readEspnSeasonType(scoreboardEvent?.season)
+    );
   } catch (error) {
     console.warn(`[nba-match-detail] failed event=${eventId}:`, error);
     return null;

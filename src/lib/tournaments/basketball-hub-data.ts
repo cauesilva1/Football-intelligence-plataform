@@ -30,6 +30,7 @@ import {
   currentEuroLeagueSeasonYear,
   euroLeagueSeasonLabel,
 } from "@/lib/api/euroleague";
+import { euroLeagueMatchesToSchedule } from "@/lib/sync/euroleague-fixtures";
 import type { NbaLeaderRow } from "@/lib/api/espn-nba-leaders";
 
 const BASKETBALL_HUB_REVALIDATE_SECONDS = 180;
@@ -236,10 +237,69 @@ async function loadEuroLeagueLeadersFromDb(): Promise<NbaCompetitionLeaders> {
   };
 }
 
+async function loadEuroLeagueSchedule(): Promise<NbaScheduleBundle> {
+  const empty: NbaScheduleBundle = {
+    live: [],
+    past: [],
+    scheduled: [],
+    fetchedAt: new Date().toISOString(),
+    notice: "EuroLeague fixtures sync from the official API.",
+  };
+  if (!canUseDatabase()) return empty;
+
+  const competitionId = await resolveCompetitionId({
+    OR: [
+      { espnSlug: EUROLEAGUE_ESPN_SLUG },
+      { name: { equals: EUROLEAGUE_LABEL, mode: "insensitive" } },
+    ],
+  });
+  if (!competitionId) return empty;
+
+  const matches = await getPrisma().match.findMany({
+    where: { competitionId, externalKey: { startsWith: "euroleague:" } },
+    orderBy: { matchDate: "desc" },
+    take: 80,
+    select: {
+      externalKey: true,
+      homeScore: true,
+      awayScore: true,
+      status: true,
+      matchDate: true,
+      homeTeam: { select: { name: true, shortName: true, crestUrl: true } },
+      awayTeam: { select: { name: true, shortName: true, crestUrl: true } },
+    },
+  });
+
+  const bundle = euroLeagueMatchesToSchedule(
+    matches.flatMap((match) => {
+      if (!match.externalKey) return [];
+      return [
+        {
+          externalKey: match.externalKey,
+          homeName: match.homeTeam.name,
+          awayName: match.awayTeam.name,
+          homeShort: match.homeTeam.shortName,
+          awayShort: match.awayTeam.shortName,
+          homeCrest: match.homeTeam.crestUrl ?? undefined,
+          awayCrest: match.awayTeam.crestUrl ?? undefined,
+          homeScore: match.homeScore,
+          awayScore: match.awayScore,
+          status: match.status ?? "scheduled",
+          matchDate: match.matchDate,
+        },
+      ];
+    })
+  );
+  return bundle.past.length + bundle.scheduled.length + bundle.live.length > 0
+    ? bundle
+    : empty;
+}
+
 async function loadEuroLeagueHub(): Promise<BasketballCompetitionHubData> {
-  const [franchises, leaders] = await Promise.all([
+  const [franchises, leaders, schedule] = await Promise.all([
     loadEuroLeagueClubs(),
     loadEuroLeagueLeadersFromDb(),
+    loadEuroLeagueSchedule(),
   ]);
 
   const hasLeaders =
@@ -262,22 +322,20 @@ async function loadEuroLeagueHub(): Promise<BasketballCompetitionHubData> {
     hasLeaders,
   };
 
+  const gameCount = schedule.past.length + schedule.scheduled.length + schedule.live.length;
   return {
     standings: [],
-    schedule: {
-      live: [],
-      past: [],
-      scheduled: [],
-      fetchedAt: new Date().toISOString(),
-      notice: "Schedule UI uses ESPN; EuroLeague match lines sync via official API.",
-    },
+    schedule,
     franchises,
     leaders,
     seasonSlices: [slice],
     selectedSeasonYear: seasonYear,
-    notice: hasLeaders
-      ? `Season ${seasonLabel} · leaders from synced EuroLeague boxscores`
-      : `Season ${seasonLabel} · run npm run data:sync-euroleague to load clubs, rosters, and boxscores`,
+    notice:
+      gameCount > 0
+        ? `Season ${seasonLabel} · ${schedule.past.length} results in the database`
+        : hasLeaders
+          ? `Season ${seasonLabel} · leaders from synced EuroLeague boxscores`
+          : `Season ${seasonLabel} · run npm run data:sync-euroleague to load clubs, rosters, and boxscores`,
   };
 }
 
@@ -515,7 +573,7 @@ export async function loadBasketballCompetitionHub(
   const seasonKey = options?.seasonYear != null ? String(options.seasonYear) : "default";
   return unstable_cache(
     () => loadBasketballCompetitionHubUncached(config, options),
-    ["basketball-competition-hub", config.slug, seasonKey],
+    ["basketball-competition-hub-v2", config.slug, seasonKey],
     {
       revalidate: BASKETBALL_HUB_REVALIDATE_SECONDS,
       tags: ["basketball-hub", `basketball-hub-${config.slug}`],
