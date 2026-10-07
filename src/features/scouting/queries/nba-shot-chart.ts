@@ -20,6 +20,13 @@ export interface NbaShotZoneLine {
   ink: string;
 }
 
+export interface NbaShotMark {
+  x: number;
+  y: number;
+  made: boolean;
+  zone: BasketballShotZone;
+}
+
 export interface NbaShotChartModel {
   playerId: string;
   selectedSeason: string;
@@ -29,6 +36,7 @@ export interface NbaShotChartModel {
   made: number;
   fgPct: number | null;
   zones: NbaShotZoneLine[];
+  shots: NbaShotMark[];
 }
 
 export function parseCampaignSeason(value: string | undefined): number | null {
@@ -84,17 +92,25 @@ export async function queryNbaShotChart(
     made: 0,
     fgPct: null,
     zones: emptyZones(),
+    shots: [],
   };
   if (selected == null) return base;
 
-  const rows = await prisma.$queryRaw<Array<{ zone: string; attempts: number; made: number }>>`
-    SELECT zone,
-           COUNT(*)::int AS attempts,
-           COALESCE(SUM(CASE WHEN made THEN 1 ELSE 0 END), 0)::int AS made
-    FROM basketball_shots
-    WHERE "playerId" = ${playerId} AND season = ${selected}
-    GROUP BY zone
-  `;
+  const [rows, shotRows] = await Promise.all([
+    prisma.$queryRaw<Array<{ zone: string; attempts: number; made: number }>>`
+      SELECT zone,
+             COUNT(*)::int AS attempts,
+             COALESCE(SUM(CASE WHEN made THEN 1 ELSE 0 END), 0)::int AS made
+      FROM basketball_shots
+      WHERE "playerId" = ${playerId} AND season = ${selected}
+      GROUP BY zone
+    `,
+    prisma.$queryRaw<Array<{ x: number; y: number; made: boolean; zone: string }>>`
+      SELECT x, y, made, zone
+      FROM basketball_shots
+      WHERE "playerId" = ${playerId} AND season = ${selected}
+    `,
+  ]);
 
   const byZone = new Map<BasketballShotZone, { attempts: number; made: number }>();
   let attempts = 0;
@@ -128,5 +144,10 @@ export async function queryNbaShotChart(
         ink: paint.ink,
       };
     }),
+    shots: shotRows.flatMap((shot) =>
+      isBasketballShotZone(shot.zone)
+        ? [{ x: Number(shot.x), y: Number(shot.y), made: Boolean(shot.made), zone: shot.zone }]
+        : []
+    ),
   };
 }

@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  CORNER_BREAK_FROM_BASELINE_FT,
+  HALF_COURT_FT,
+  RIM_FROM_BASELINE_FT,
+  courtZonePath,
+  shotFeetFromBaseline,
+} from "@/lib/basketball/court-geometry";
+import {
   CORNER_BREAK_Y_FT,
   classifyBasketballZone,
   fgPctOrNull,
@@ -45,6 +52,17 @@ describe("basketball shot zones", () => {
     assert.equal(fgPctOrNull(1, 5), 20);
     assert.equal(fgPctOrNull(5, 10), 50);
     assert.equal(fgPctOrNull(11, 10), null);
+  });
+
+  it("places stored shots on a regulation half court with the rim 5.25 ft off the baseline", () => {
+    assert.equal(shotFeetFromBaseline(0), RIM_FROM_BASELINE_FT);
+    assert.equal(shotFeetFromBaseline(1), 6.25);
+    assert.ok(CORNER_BREAK_FROM_BASELINE_FT > 14 && CORNER_BREAK_FROM_BASELINE_FT < 15);
+    assert.ok(CORNER_BREAK_FROM_BASELINE_FT < HALF_COURT_FT);
+    const midRange = courtZonePath("mid_range");
+    const paint = courtZonePath("paint");
+    assert.equal(midRange.split("M ").length - 1, 2);
+    assert.equal(paint.split("M ").length - 1, 2);
   });
 
   it("greys out small samples and deepens the fill as efficiency rises", () => {
