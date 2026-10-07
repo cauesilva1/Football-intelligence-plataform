@@ -109,6 +109,7 @@ model Player {
   matchStats        PlayerMatchStat[]
   reports           ScoutingReport[]
   shortlistEntries  WorkspaceShortlistEntry[]
+  shots             BasketballShot[]
   strengths         String[]
   weaknesses        String[]
   createdAt         DateTime          @default(now())
@@ -346,6 +347,36 @@ model RecruitmentBriefRun {
 
   @@index([deviceId, createdAt])
   @@map("recruitment_brief_runs")
+}
+
+/// One field-goal attempt with court coordinates.
+/// The column contract (player, game, x, y, made, zone, shotType, season) stays
+/// loosely typed on purpose: `zone` and `shotType` are strings, not enums, so a
+/// future soccer shot table can copy it with its own zone vocabulary.
+/// Soccer attempts do not belong in this table.
+model BasketballShot {
+  id             String   @id @default(cuid())
+  playerId       String
+  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  /// Provider game id (ESPN event id). NBA games are not always rows in `matches`.
+  gameId         String
+  /// Provider play id, so a rerun of the same game replaces cleanly.
+  externalPlayId String
+  /// Feet in the ESPN NBA court space: x is 0–50 left to right, y is distance from the rim toward half court.
+  x              Float
+  y              Float
+  made           Boolean
+  /// restricted_area | paint | mid_range | corner_3 | above_the_break_3
+  zone           String
+  shotType       String
+  /// Campaign key, same compact int as PlayerSeasonStats (2026-27 → 202627).
+  season         Int
+  createdAt      DateTime @default(now())
+
+  @@unique([gameId, externalPlayId])
+  @@index([playerId, season])
+  @@index([gameId])
+  @@map("basketball_shots")
 }
 
 model SystemCache {

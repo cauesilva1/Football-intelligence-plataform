@@ -8,6 +8,10 @@ import {
   resolveNcaaBoxscoreSeason,
   shouldApplyBoxScoreToSeason,
 } from "@/lib/basketball/season";
+import {
+  ingestNbaShotsFromSummary,
+  ShotCoordinatesUnavailableError,
+} from "@/lib/basketball/nba-shot-sync";
 
 export type BasketballLeagueSlug = "nba" | "nba-summer" | "mens-college-basketball";
 
@@ -631,6 +635,26 @@ export async function processBasketballBoxScore(
     } catch (error) {
       failed += 1;
       console.warn(`[boxscore-nba] FAIL ${boxScore.fullName}:`, error);
+    }
+  }
+
+  if (league === "nba") {
+    try {
+      const shotSeason = resolveNbaBoxscoreSeason(meta.matchDate ?? new Date());
+      const shots = await ingestNbaShotsFromSummary({
+        eventId,
+        summary,
+        season: shotSeason,
+      });
+      console.log(
+        `[boxscore-nba] shots ${eventId} — ${shots.stored} arremessos · sem jogador ${shots.skippedNoPlayer} · coords inválidas ${shots.skippedInvalidCoordinate}`
+      );
+    } catch (error) {
+      if (error instanceof ShotCoordinatesUnavailableError) {
+        console.warn(`[boxscore-nba] ${error.message}`);
+      } else {
+        console.warn(`[boxscore-nba] shot ingest FAIL ${eventId}:`, error);
+      }
     }
   }
 

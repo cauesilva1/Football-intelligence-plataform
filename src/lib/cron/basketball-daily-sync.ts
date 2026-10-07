@@ -20,6 +20,10 @@ import {
   type EuroLeagueRosterSyncResult,
 } from "@/lib/sync/euroleague-sync";
 import { syncNbaRosters, type NbaRosterSyncResult } from "@/lib/sync/nba-roster-sync";
+import {
+  backfillNbaShotCharts,
+  type NbaShotBackfillResult,
+} from "@/lib/basketball/nba-shot-sync";
 
 const LOG_PREFIX = "[BASKETBALL-CRON]";
 
@@ -61,6 +65,8 @@ export interface BasketballCronResult {
   euroleagueOutage?: EuroLeagueOutageReport;
   /** API-Basketball (paid, 100 req/day) usage for this run. */
   apiSportsQuota: ApiQuotaSnapshot;
+  /** Incremental NBA shot-chart catch-up. Omitted when the run is not scanning the NBA. */
+  shotCharts?: NbaShotBackfillResult;
   elapsedMs: number;
   totals: {
     eventsFound: number;
@@ -289,6 +295,29 @@ export async function runBasketballDailySync(
     }
   }
 
+  let shotCharts: NbaShotBackfillResult | undefined;
+  if (leagues.includes("nba")) {
+    if (remainingMs() < MIN_STEP_MS) {
+      console.warn(`${LOG_PREFIX} [shots] adiado — sem orçamento de tempo.`);
+    } else {
+      try {
+        console.log(
+          `${LOG_PREFIX} [shots] mapa de arremessos NBA ${season} — restante ${Math.round(remainingMs() / 1000)}s…`
+        );
+        shotCharts = await backfillNbaShotCharts({
+          season,
+          deadlineMs,
+          log: (message) => console.log(`${LOG_PREFIX} [shots] ${message}`),
+        });
+        console.log(
+          `${LOG_PREFIX} [shots] jogos ${shotCharts.gamesProcessed} · arremessos ${shotCharts.shotsStored} · faltam ${shotCharts.deferred}${shotCharts.stoppedForTime ? " · parou por tempo" : ""}${shotCharts.coordinatesUnavailable ? " · coordenadas indisponíveis" : ""}`
+        );
+      } catch (error) {
+        console.warn(`${LOG_PREFIX} [shots] FAIL:`, error);
+      }
+    }
+  }
+
   const elapsedMs = Date.now() - startedAt;
   const apiSportsQuota = apiBasketballQuota.snapshot();
   console.log(`${LOG_PREFIX} ${formatQuotaLog(apiSportsQuota)}`);
@@ -308,6 +337,7 @@ export async function runBasketballDailySync(
     rosters,
     euroleagueOutage,
     apiSportsQuota,
+    shotCharts,
     elapsedMs,
     totals,
   };

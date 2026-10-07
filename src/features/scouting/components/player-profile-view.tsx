@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoutNotesPanel } from "@/features/scout-notes/components/scout-notes-panel";
@@ -10,6 +11,9 @@ import { PlayerIntelligencePanel } from "@/features/scouting/components/profile/
 import { PlayerTacticalFitPanel } from "@/features/scouting/components/profile/player-tactical-fit-panel";
 import { PlayerCompetitionContext } from "@/features/scouting/components/profile/player-competition-context";
 import { ProfileBackButton } from "@/features/scouting/components/profile/profile-back-button";
+import { NbaShotMapSection } from "@/features/scouting/components/profile/nba-shot-map-section";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { AfProfileSeasonEnricher } from "@/features/scouting/components/profile/af-profile-season-enricher";
 import { resolveFootballHubSeasonYears } from "@/lib/api/espn-football-seasons";
 import { supportsIntelligence } from "@/lib/intelligence/registry";
@@ -46,12 +50,22 @@ function playerNeedsAfSeasonEnrich(player: Player): boolean {
   return !hasCurrentStub || !past || !pastHasSignal;
 }
 
+function profileSectionHref(playerId: string, season: string | undefined, tab: "profile" | "mapa") {
+  const params = new URLSearchParams();
+  if (tab === "mapa") params.set("tab", "mapa");
+  if (season) params.set("season", season);
+  const query = params.toString();
+  return query ? `/players/${playerId}?${query}` : `/players/${playerId}`;
+}
+
 export async function PlayerProfileView({
   playerId,
   season,
+  tab,
 }: {
   playerId: string;
   season?: string;
+  tab?: string;
 }) {
   const player = await queryPlayerById(playerId, season);
   if (!player) notFound();
@@ -59,6 +73,9 @@ export async function PlayerProfileView({
   const sport = (player.sport ?? "SOCCER") as Sport;
   const showIntelligence = supportsIntelligence(sport);
   const showTacticalFit = supportsIntelligence(sport);
+  const showShotMap = player.league?.toUpperCase() === "NBA";
+  const mapTab = showShotMap && tab === "mapa";
+  const seasonKey = season ?? player.selectedSeason;
 
   return (
     <div className="space-y-6">
@@ -68,6 +85,37 @@ export async function PlayerProfileView({
         enabled={playerNeedsAfSeasonEnrich(player)}
       />
       <PlayerProfileHeader player={player} />
+      {showShotMap ? (
+        <nav
+          aria-label="Player profile sections"
+          className="inline-flex gap-1 rounded-xl border border-border bg-surface-muted p-1"
+        >
+          <Link
+            href={profileSectionHref(playerId, seasonKey, "profile")}
+            aria-current={mapTab ? undefined : "page"}
+            className={cn(
+              buttonVariants({ variant: mapTab ? "ghost" : "default", size: "sm" }),
+              "h-8 px-3 text-xs"
+            )}
+          >
+            Profile
+          </Link>
+          <Link
+            href={profileSectionHref(playerId, seasonKey, "mapa")}
+            aria-current={mapTab ? "page" : undefined}
+            className={cn(
+              buttonVariants({ variant: mapTab ? "default" : "ghost", size: "sm" }),
+              "h-8 px-3 text-xs"
+            )}
+          >
+            Mapa
+          </Link>
+        </nav>
+      ) : null}
+      {mapTab ? (
+        <NbaShotMapSection playerId={playerId} season={seasonKey} />
+      ) : (
+        <>
       <PlayerPerformanceSection player={player} />
       {showIntelligence ? (
         <Suspense fallback={<IntelligenceSkeleton />}>
@@ -87,6 +135,8 @@ export async function PlayerProfileView({
           <PlayerSimilarSection playerId={playerId} />
         </Suspense>
       </div>
+        </>
+      )}
     </div>
   );
 }
