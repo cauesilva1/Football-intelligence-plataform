@@ -9,6 +9,7 @@ const TICKER = [
   { href: "/recruitment", label: "Recruitment" },
   { href: "/compare", label: "Compare" },
   { href: "/methodology", label: "Methodology" },
+  { href: "/insights", label: "Insights" },
 ] as const;
 
 const ACCESS_MAIL = "mailto:access@omniscout.app?subject=OmniScout%20access%20request";
@@ -55,6 +56,7 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
             <Link href="/recruitment">Recruitment</Link>
             <Link href="/compare">Compare</Link>
             <Link href="/shortlist">Shortlist</Link>
+            <Link href="/insights">Insights</Link>
           </div>
           <div className="landing-footer-col">
             <p>Trust</p>

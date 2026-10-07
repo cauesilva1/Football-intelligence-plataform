@@ -191,6 +191,8 @@ export function EditorialShell({ children }: { children: React.ReactNode }) {
         <footer className="editorial-footer">
           <div className="editorial-footer-inner editorial-footer-inner-flush">
             <span>
+              <Link href="/insights">Insights</Link>
+              {" · "}
               <Link href="/methodology">Methodology</Link>
               {" · "}
               <Link href="/demo">Product overview</Link>
