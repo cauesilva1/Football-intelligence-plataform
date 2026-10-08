@@ -63,12 +63,16 @@ function readCoordinate(value: unknown): { x: number; y: number } | "missing" | 
   return { x, y };
 }
 
-function shooterId(play: Record<string, unknown>): string | null {
+function participantId(play: Record<string, unknown>, index: number): string | null {
   const participants = play.participants;
-  if (!Array.isArray(participants) || !isRecord(participants[0])) return null;
-  const athlete = participants[0].athlete;
+  if (!Array.isArray(participants) || !isRecord(participants[index])) return null;
+  const athlete = participants[index].athlete;
   if (!isRecord(athlete) || typeof athlete.id !== "string" || !athlete.id.trim()) return null;
   return athlete.id;
+}
+
+function shooterId(play: Record<string, unknown>): string | null {
+  return participantId(play, 0);
 }
 
 function shotTypeText(play: Record<string, unknown>): string {
@@ -144,4 +148,63 @@ export function parseEspnBasketballShots(summary: unknown): EspnShotParseResult 
   }
 
   return { ...empty, shots };
+}
+
+export type DefensivePlayKind = "steal" | "block";
+
+export interface ParsedEspnDefensivePlay {
+  externalPlayId: string;
+  /** participants[1] — verified on event 401898388: the stealer or the blocker. */
+  espnAthleteId: string;
+  x: number;
+  y: number;
+  kind: DefensivePlayKind;
+}
+
+export interface EspnDefensiveParseResult {
+  plays: ParsedEspnDefensivePlay[];
+  skippedInvalidCoordinate: number;
+}
+
+function defensiveKind(text: string): DefensivePlayKind | null {
+  if (/\bblocks\b/i.test(text)) return "block";
+  if (/\bsteals\b/i.test(text)) return "steal";
+  return null;
+}
+
+/**
+ * Steals and blocks from the same summary. The coordinate is the opponent's
+ * attacking frame (their basket at y=0). Sentinel coordinates are dropped.
+ * The defender is participants[1]; a play with no second athlete is skipped.
+ */
+export function parseEspnBasketballDefense(summary: unknown): EspnDefensiveParseResult {
+  const result: EspnDefensiveParseResult = { plays: [], skippedInvalidCoordinate: 0 };
+  if (!espnSummaryHasShotCoordinates(summary)) return result;
+  const plays = readPlays(summary) ?? [];
+  const seen = new Set<string>();
+
+  for (const play of plays) {
+    if (!isRecord(play)) continue;
+    const text = typeof play.text === "string" ? play.text : "";
+    const kind = defensiveKind(text);
+    if (!kind) continue;
+
+    const externalPlayId = typeof play.id === "string" ? play.id : "";
+    const espnAthleteId = participantId(play, 1);
+    const coordinate = readCoordinate(play.coordinate);
+    if (!externalPlayId || !espnAthleteId || coordinate === "missing" || coordinate === "invalid" || seen.has(externalPlayId)) {
+      result.skippedInvalidCoordinate += 1;
+      continue;
+    }
+    seen.add(externalPlayId);
+    result.plays.push({
+      externalPlayId,
+      espnAthleteId,
+      x: coordinate.x,
+      y: coordinate.y,
+      kind,
+    });
+  }
+
+  return result;
 }

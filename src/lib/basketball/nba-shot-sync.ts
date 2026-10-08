@@ -1,5 +1,5 @@
 import { getPrisma } from "@/lib/prisma";
-import { parseEspnBasketballShots } from "@/lib/basketball/espn-shot-parse";
+import { parseEspnBasketballDefense, parseEspnBasketballShots } from "@/lib/basketball/espn-shot-parse";
 import {
   NBA_SHOT_CHART_MAX_GAMES_PER_RUN,
   NBA_SHOT_CHART_MIN_GAME_MS,
@@ -7,7 +7,7 @@ import {
 } from "@/lib/basketball/shot-backfill-plan";
 
 const SUMMARY_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary";
-const SHOT_CACHE_PREFIX = "espn:basketball:nba:shots:";
+const SHOT_CACHE_PREFIX = "espn:basketball:nba:court:v2:";
 
 export class ShotCoordinatesUnavailableError extends Error {
   readonly eventId: string;
@@ -27,6 +27,7 @@ export interface IngestShotsResult {
   skippedNoPlayer: number;
   skippedInvalidCoordinate: number;
   skippedFreeThrow: number;
+  defensiveStored: number;
 }
 
 export interface NbaShotBackfillResult {
@@ -66,13 +67,17 @@ export async function ingestNbaShotsFromSummary(input: {
   season: number;
 }): Promise<IngestShotsResult> {
   const parsed = parseEspnBasketballShots(input.summary);
+  const defense = parseEspnBasketballDefense(input.summary);
   if (!parsed.coordinatesAvailable) {
     throw new ShotCoordinatesUnavailableError(input.eventId);
   }
 
   const prisma = getPrisma();
-  const athleteIds = [...new Set(parsed.shots.map((shot) => Number.parseInt(shot.espnAthleteId, 10)))]
-    .filter((id) => Number.isFinite(id));
+  const athleteIds = [
+    ...new Set(
+      [...parsed.shots, ...defense.plays].map((event) => Number.parseInt(event.espnAthleteId, 10))
+    ),
+  ].filter((id) => Number.isFinite(id));
   const players = athleteIds.length
     ? await prisma.player.findMany({
         where: { sport: "BASKETBALL", apiSportsId: { in: athleteIds } },
@@ -97,6 +102,15 @@ export async function ingestNbaShotsFromSummary(input: {
     shotType: string;
     season: number;
   }> = [];
+  const defensiveRows: Array<{
+    playerId: string;
+    gameId: string;
+    externalPlayId: string;
+    x: number;
+    y: number;
+    kind: string;
+    season: number;
+  }> = [];
   let skippedNoPlayer = 0;
   for (const shot of parsed.shots) {
     const playerId = playerByEspnId.get(Number.parseInt(shot.espnAthleteId, 10));
@@ -116,11 +130,31 @@ export async function ingestNbaShotsFromSummary(input: {
       season: input.season,
     });
   }
+  for (const play of defense.plays) {
+    const playerId = playerByEspnId.get(Number.parseInt(play.espnAthleteId, 10));
+    if (!playerId) {
+      skippedNoPlayer += 1;
+      continue;
+    }
+    defensiveRows.push({
+      playerId,
+      gameId: input.eventId,
+      externalPlayId: play.externalPlayId,
+      x: play.x,
+      y: play.y,
+      kind: play.kind,
+      season: input.season,
+    });
+  }
 
   await prisma.$transaction(async (tx) => {
     await tx.basketballShot.deleteMany({ where: { gameId: input.eventId } });
+    await tx.basketballDefensivePlay.deleteMany({ where: { gameId: input.eventId } });
     if (rows.length) {
       await tx.basketballShot.createMany({ data: rows });
+    }
+    if (defensiveRows.length) {
+      await tx.basketballDefensivePlay.createMany({ data: defensiveRows });
     }
     await tx.systemCache.upsert({
       where: { key: `${SHOT_CACHE_PREFIX}${input.eventId}` },
@@ -130,6 +164,7 @@ export async function ingestNbaShotsFromSummary(input: {
           eventId: input.eventId,
           season: input.season,
           stored: rows.length,
+          defensiveStored: defensiveRows.length,
           skippedNoPlayer,
           processedAt: new Date().toISOString(),
         },
@@ -139,6 +174,7 @@ export async function ingestNbaShotsFromSummary(input: {
           eventId: input.eventId,
           season: input.season,
           stored: rows.length,
+          defensiveStored: defensiveRows.length,
           skippedNoPlayer,
           processedAt: new Date().toISOString(),
         },
@@ -150,8 +186,9 @@ export async function ingestNbaShotsFromSummary(input: {
     eventId: input.eventId,
     stored: rows.length,
     skippedNoPlayer,
-    skippedInvalidCoordinate: parsed.skippedInvalidCoordinate,
+    skippedInvalidCoordinate: parsed.skippedInvalidCoordinate + defense.skippedInvalidCoordinate,
     skippedFreeThrow: parsed.skippedFreeThrow,
+    defensiveStored: defensiveRows.length,
   };
 }
 
@@ -245,7 +282,7 @@ export async function backfillNbaShotCharts(options: {
       result.skippedNoPlayer += ingested.skippedNoPlayer;
       result.skippedInvalidCoordinate += ingested.skippedInvalidCoordinate;
       log(
-        `evento ${eventId} — ${ingested.stored} arremessos · sem jogador ${ingested.skippedNoPlayer} · coords inválidas ${ingested.skippedInvalidCoordinate} · ${result.gamesProcessed}/${plan.batch.length}`
+        `evento ${eventId} — ${ingested.stored} arremessos · ${ingested.defensiveStored} roubos/tocos · sem jogador ${ingested.skippedNoPlayer} · coords inválidas ${ingested.skippedInvalidCoordinate} · ${result.gamesProcessed}/${plan.batch.length}`
       );
     } catch (error) {
       if (error instanceof ShotCoordinatesUnavailableError) {

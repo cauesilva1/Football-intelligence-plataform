@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import {
+  CENTER,
   COURT_LINES,
   COURT_VIEW,
   RIM,
+  RIM_FAR,
   courtZonePath,
+  defensiveMarkerPoint,
   shotMarkerPoint,
 } from "@/lib/basketball/court-geometry";
 import type { NbaShotChartModel, NbaShotZoneLine } from "@/features/scouting/queries/nba-shot-chart";
@@ -41,7 +44,7 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
           data-testid="nba-shot-chart"
           viewBox={COURT_VIEW.viewBox}
           role="group"
-          aria-label="NBA half court, basket at the bottom"
+          aria-label="NBA full court, offensive basket at the bottom"
           className="h-auto w-full"
         >
           <rect
@@ -49,8 +52,9 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
             y={COURT_VIEW.viewBox.split(" ")[1]}
             width={COURT_VIEW.viewBox.split(" ")[2]}
             height={COURT_VIEW.viewBox.split(" ")[3]}
-            fill="#10131a"
+            fill="#0c0e12"
           />
+          <rect x="0" y="0" width={COURT_VIEW.width} height={COURT_VIEW.height} fill="#141820" />
           {DRAW_ORDER.map((zoneId) => byZone.get(zoneId))
             .filter((zone): zone is NbaShotZoneLine => zone != null)
             .map((zone) => {
@@ -85,33 +89,46 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
                 />
               );
             })}
-          <g fill="none" stroke={LINE} strokeWidth={1.6} strokeLinejoin="round" style={{ pointerEvents: "none" }}>
+          <g fill="none" stroke={LINE} strokeWidth={1.5} strokeLinejoin="round" style={{ pointerEvents: "none" }}>
             <path d={COURT_LINES.boundary} />
+            <path d={COURT_LINES.halfCourt} />
             <path d={COURT_LINES.paint} />
+            <path d={COURT_LINES.paintFar} />
             <path d={COURT_LINES.freeThrowTop} />
+            <path d={COURT_LINES.freeThrowFar} />
             <path d={COURT_LINES.restricted} />
+            <path d={COURT_LINES.restrictedFar} />
             <path d={COURT_LINES.three} />
-            <path d={COURT_LINES.centerCircle} />
-            <path d={COURT_LINES.backboard} strokeWidth={2.4} />
-            <path d={COURT_LINES.connector} strokeWidth={1.4} />
+            <path d={COURT_LINES.threeFar} />
+            <path d={COURT_LINES.backboard} strokeWidth={2.2} />
+            <path d={COURT_LINES.backboardFar} strokeWidth={2.2} />
+            <path d={COURT_LINES.connector} strokeWidth={1.3} />
+            <path d={COURT_LINES.connectorFar} strokeWidth={1.3} />
+            <circle cx={CENTER.cx} cy={CENTER.cy} r={CENTER.r} />
           </g>
-          <path
-            d={COURT_LINES.freeThrowBottom}
-            fill="none"
-            stroke={LINE_SOFT}
-            strokeWidth={1.4}
-            strokeDasharray="4 3.5"
+          <g fill="none" stroke={LINE_SOFT} strokeWidth={1.3} strokeDasharray="4 3.5" style={{ pointerEvents: "none" }}>
+            <path d={COURT_LINES.freeThrowBottom} />
+            <path d={COURT_LINES.freeThrowFarDashed} />
+          </g>
+          <g fill="none" stroke="#fb923c" strokeWidth={1.8} style={{ pointerEvents: "none" }}>
+            <circle cx={RIM.cx} cy={RIM.cy} r={RIM.r} />
+            <circle cx={RIM_FAR.cx} cy={RIM_FAR.cy} r={RIM_FAR.r} />
+          </g>
+          <g
+            fill="#a39b8c"
+            fontFamily="ui-sans-serif, system-ui, sans-serif"
+            fontSize="11"
+            fontWeight="600"
+            letterSpacing="1.6"
             style={{ pointerEvents: "none" }}
-          />
-          <circle
-            cx={RIM.cx}
-            cy={RIM.cy}
-            r={RIM.r}
-            fill="none"
-            stroke="#fb923c"
-            strokeWidth={2}
-            style={{ pointerEvents: "none" }}
-          />
+          >
+            <text x={COURT_VIEW.width / 2} y={-4} textAnchor="middle">
+              DEFENSE
+            </text>
+            <text x={COURT_VIEW.width / 2} y={COURT_VIEW.height + 12} textAnchor="middle">
+              OFFENSE
+            </text>
+          </g>
           <g style={{ pointerEvents: "none" }}>
             {model.shots.map((shot, index) => {
               const point = shotMarkerPoint(shot.x, shot.y);
@@ -133,8 +150,22 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
               );
             })}
           </g>
+          <g style={{ pointerEvents: "none" }}>
+            {model.defense.map((play, index) => {
+              const point = defensiveMarkerPoint(play.x, play.y);
+              return (
+                <g key={`${play.kind}-${play.x}-${play.y}-${index}`} transform={`translate(${point.x} ${point.y})`}>
+                  {play.kind === "steal" ? (
+                    <circle data-marker="steal" r={3.4} fill="#38bdf8" stroke="#082f49" strokeWidth={0.8} />
+                  ) : (
+                    <path data-marker="block" d="M 0 -4.1 L 3.6 0 L 0 4.1 L -3.6 0 Z" fill="#7dd3fc" stroke="#082f49" strokeWidth={0.7} />
+                  )}
+                </g>
+              );
+            })}
+          </g>
         </svg>
-        <div className="mt-3 flex flex-wrap items-center gap-4 px-1 text-2xs uppercase tracking-wider text-[#c8c2b4]">
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-2xs uppercase tracking-wider text-[#c8c2b4]">
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#34d399]" />
             Make
@@ -143,7 +174,15 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
             <span className="font-mono text-[11px] leading-none text-[#fb7185]">✕</span>
             Miss
           </span>
-          <span className="text-[#8b8678]">Zone color follows FG%. Under 5 attempts stay grey.</span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#38bdf8]" />
+            Steals {model.steals}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rotate-45 bg-[#7dd3fc]" />
+            Blocks {model.blocks}
+          </span>
+          <span className="text-[#8b8678]">Zone color follows FG%. Under 5 attempts stay grey. Defense is markers only.</span>
         </div>
       </div>
 

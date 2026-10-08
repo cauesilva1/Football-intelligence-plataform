@@ -2,10 +2,17 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   CORNER_BREAK_FROM_BASELINE_FT,
+  FULL_COURT_FT,
   HALF_COURT_FT,
   RIM_FROM_BASELINE_FT,
+  courtX,
+  courtY,
   courtZonePath,
+  defensiveFeetFromOffensiveBaseline,
+  defensiveMarkerPoint,
+  mirrorDefensiveX,
   shotFeetFromBaseline,
+  shotMarkerPoint,
 } from "@/lib/basketball/court-geometry";
 import {
   CORNER_BREAK_Y_FT,
@@ -63,6 +70,33 @@ describe("basketball shot zones", () => {
     const paint = courtZonePath("paint");
     assert.equal(midRange.split("M ").length - 1, 2);
     assert.equal(paint.split("M ").length - 1, 2);
+  });
+
+  it("mirrors a defensive coordinate onto the far basket", () => {
+    assert.equal(FULL_COURT_FT, 94);
+    assert.equal(courtY(0), 940);
+    assert.equal(courtY(HALF_COURT_FT), 470);
+    assert.deepEqual(shotMarkerPoint(25, 0), { x: 250, y: 887.5 });
+    assert.deepEqual(defensiveMarkerPoint(25, 0), { x: 250, y: 52.5 });
+    assert.deepEqual(defensiveMarkerPoint(8, 3), { x: 420, y: 82.5 });
+    assert.equal(
+      defensiveMarkerPoint(25, 0).y + shotMarkerPoint(25, 0).y,
+      FULL_COURT_FT * 10
+    );
+  });
+
+  it("mirrors defensive coordinates onto the far basket", () => {
+    assert.equal(mirrorDefensiveX(25), 25);
+    assert.equal(mirrorDefensiveX(10), 40);
+    assert.equal(defensiveFeetFromOffensiveBaseline(0), FULL_COURT_FT - RIM_FROM_BASELINE_FT);
+    const offense = shotMarkerPoint(25, 0);
+    const defense = defensiveMarkerPoint(25, 0);
+    assert.equal(offense.y, courtY(shotFeetFromBaseline(0)));
+    assert.equal(defense.x, offense.x);
+    assert.ok(defense.y < offense.y);
+    assert.equal(defensiveMarkerPoint(10, 1).x, courtX(40));
+    assert.ok(defensiveFeetFromOffensiveBaseline(41.75) < HALF_COURT_FT + 0.01);
+    assert.ok(defensiveFeetFromOffensiveBaseline(41.75) > HALF_COURT_FT - 0.01);
   });
 
   it("greys out small samples and deepens the fill as efficiency rises", () => {

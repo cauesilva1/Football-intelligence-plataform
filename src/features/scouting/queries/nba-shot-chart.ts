@@ -27,6 +27,12 @@ export interface NbaShotMark {
   zone: BasketballShotZone;
 }
 
+export interface NbaDefensiveMark {
+  x: number;
+  y: number;
+  kind: "steal" | "block";
+}
+
 export interface NbaShotChartModel {
   playerId: string;
   selectedSeason: string;
@@ -37,6 +43,9 @@ export interface NbaShotChartModel {
   fgPct: number | null;
   zones: NbaShotZoneLine[];
   shots: NbaShotMark[];
+  defense: NbaDefensiveMark[];
+  steals: number;
+  blocks: number;
 }
 
 export function parseCampaignSeason(value: string | undefined): number | null {
@@ -69,8 +78,11 @@ export async function queryNbaShotChart(
   const prisma = getPrisma();
   const seasonRows = await prisma.$queryRaw<Array<{ season: number }>>`
     SELECT DISTINCT season
-    FROM basketball_shots
-    WHERE "playerId" = ${playerId}
+    FROM (
+      SELECT season FROM basketball_shots WHERE "playerId" = ${playerId}
+      UNION
+      SELECT season FROM basketball_defensive_plays WHERE "playerId" = ${playerId}
+    ) seasons
     ORDER BY season DESC
   `;
   const seasons = seasonRows.map((row) => ({
@@ -93,10 +105,13 @@ export async function queryNbaShotChart(
     fgPct: null,
     zones: emptyZones(),
     shots: [],
+    defense: [],
+    steals: 0,
+    blocks: 0,
   };
   if (selected == null) return base;
 
-  const [rows, shotRows] = await Promise.all([
+  const [rows, shotRows, defenseRows] = await Promise.all([
     prisma.$queryRaw<Array<{ zone: string; attempts: number; made: number }>>`
       SELECT zone,
              COUNT(*)::int AS attempts,
@@ -108,6 +123,11 @@ export async function queryNbaShotChart(
     prisma.$queryRaw<Array<{ x: number; y: number; made: boolean; zone: string }>>`
       SELECT x, y, made, zone
       FROM basketball_shots
+      WHERE "playerId" = ${playerId} AND season = ${selected}
+    `,
+    prisma.$queryRaw<Array<{ x: number; y: number; kind: string }>>`
+      SELECT x, y, kind
+      FROM basketball_defensive_plays
       WHERE "playerId" = ${playerId} AND season = ${selected}
     `,
   ]);
@@ -149,5 +169,12 @@ export async function queryNbaShotChart(
         ? [{ x: Number(shot.x), y: Number(shot.y), made: Boolean(shot.made), zone: shot.zone }]
         : []
     ),
+    defense: defenseRows.flatMap((play) =>
+      play.kind === "steal" || play.kind === "block"
+        ? [{ x: Number(play.x), y: Number(play.y), kind: play.kind }]
+        : []
+    ),
+    steals: defenseRows.filter((play) => play.kind === "steal").length,
+    blocks: defenseRows.filter((play) => play.kind === "block").length,
   };
 }

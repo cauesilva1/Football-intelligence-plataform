@@ -23,7 +23,7 @@ export async function NbaShotMapSection({
   return (
     <DataPanel
       title="Shot chart"
-      description="Court zones from ESPN play-by-play. Color intensity follows FG%. Zones under 5 attempts stay grey and show no percentage."
+      description="Full court from ESPN play-by-play. Offense is zoned by FG%; under 5 attempts stay grey. Steals and blocks sit on the defensive half."
       action={
         seasons.length ? (
           <div className="flex flex-wrap items-center gap-2">

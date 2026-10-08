@@ -110,6 +110,7 @@ model Player {
   reports           ScoutingReport[]
   shortlistEntries  WorkspaceShortlistEntry[]
   shots             BasketballShot[]
+  defensivePlays    BasketballDefensivePlay[]
   strengths         String[]
   weaknesses        String[]
   createdAt         DateTime          @default(now())
@@ -377,6 +378,26 @@ model BasketballShot {
   @@index([playerId, season])
   @@index([gameId])
   @@map("basketball_shots")
+}
+
+/// Steal or block. Coordinates stay in the opponent's attacking frame (rim at y=0).
+model BasketballDefensivePlay {
+  id             String   @id @default(cuid())
+  playerId       String
+  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  gameId         String
+  externalPlayId String
+  x              Float
+  y              Float
+  /// steal | block
+  kind           String
+  season         Int
+  createdAt      DateTime @default(now())
+
+  @@unique([gameId, externalPlayId])
+  @@index([playerId, season])
+  @@index([gameId])
+  @@map("basketball_defensive_plays")
 }
 
 model SystemCache {

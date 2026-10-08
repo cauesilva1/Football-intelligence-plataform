@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   espnNbaEventId,
   espnSummaryHasShotCoordinates,
+  parseEspnBasketballDefense,
   parseEspnBasketballShots,
 } from "@/lib/basketball/espn-shot-parse";
 
@@ -59,8 +60,33 @@ const SUMMARY = {
       pointsAttempted: 2,
       coordinate: { x: 24, y: 1 },
       type: { text: "Layup Shot" },
-      text: "blocks a 1-foot layup",
-      participants: [{ athlete: { id: "4593016" } }],
+      text: "Onyeka Okongwu blocks Quinten Post 's 1-foot layup",
+      participants: [{ athlete: { id: "4593016" } }, { athlete: { id: "4431680" } }],
+    },
+    {
+      id: "steal-ok",
+      shootingPlay: false,
+      pointsAttempted: 0,
+      coordinate: { x: 36, y: 23 },
+      type: { text: "Bad Pass\nTurnover" },
+      text: "Ty Jerome bad pass turnover (Nickeil Alexander-Walker steals)",
+      participants: [{ athlete: { id: "4065733" } }, { athlete: { id: "4278039" } }],
+    },
+    {
+      id: "steal-sentinel",
+      shootingPlay: false,
+      pointsAttempted: 0,
+      coordinate: { x: -214748340, y: -214748365 },
+      text: "lost ball turnover (someone steals)",
+      participants: [{ athlete: { id: "1" } }, { athlete: { id: "2" } }],
+    },
+    {
+      id: "steal-no-defender",
+      shootingPlay: false,
+      pointsAttempted: 0,
+      coordinate: { x: 20, y: 10 },
+      text: "bad pass (ghost steals)",
+      participants: [{ athlete: { id: "9" } }],
     },
   ],
 };
@@ -149,6 +175,47 @@ describe("ESPN shot coordinate parsing", () => {
     assert.equal(parsed.shots.length, 0);
     assert.equal(espnSummaryHasShotCoordinates({ plays: [] }), false);
     assert.equal(espnSummaryHasShotCoordinates({}), false);
+  });
+
+  it("reads the defender on steals and blocks and drops sentinel coordinates", () => {
+    const parsed = parseEspnBasketballDefense({
+      plays: [
+        {
+          id: "steal-ok",
+          shootingPlay: false,
+          coordinate: { x: 36, y: 23 },
+          text: "Ty Jerome bad pass turnover (Nickeil Alexander-Walker steals)",
+          participants: [{ athlete: { id: "4065733" } }, { athlete: { id: "4278039" } }],
+        },
+        {
+          id: "block-ok",
+          shootingPlay: true,
+          pointsAttempted: 2,
+          coordinate: { x: 24, y: 1 },
+          text: "Onyeka Okongwu blocks Quinten Post 's 1-foot layup",
+          participants: [{ athlete: { id: "4593016" } }, { athlete: { id: "4431680" } }],
+        },
+        {
+          id: "steal-sentinel",
+          shootingPlay: false,
+          coordinate: { x: -214748340, y: -214748365 },
+          text: "lost ball turnover (someone steals)",
+          participants: [{ athlete: { id: "1" } }, { athlete: { id: "2" } }],
+        },
+        {
+          id: "block-no-defender",
+          shootingPlay: true,
+          coordinate: { x: 25, y: 2 },
+          text: "blocks a layup",
+          participants: [{ athlete: { id: "9" } }],
+        },
+      ],
+    });
+    assert.equal(parsed.skippedInvalidCoordinate, 2);
+    assert.deepEqual(parsed.plays, [
+      { externalPlayId: "steal-ok", espnAthleteId: "4278039", x: 36, y: 23, kind: "steal" },
+      { externalPlayId: "block-ok", espnAthleteId: "4431680", x: 24, y: 1, kind: "block" },
+    ]);
   });
 
   it("reads only NBA event ids out of appearance keys", () => {

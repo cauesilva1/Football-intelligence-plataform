@@ -30,6 +30,8 @@ ALTER TABLE IF EXISTS public.scouting_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.workspace_shortlist_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.recruitment_brief_runs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.system_cache ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.basketball_shots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.basketball_defensive_plays ENABLE ROW LEVEL SECURITY;
 
 -- Explicit deny policies for API roles (defense in depth; default-deny already
 -- applies when RLS is on and no grant policy exists).
@@ -50,7 +52,9 @@ BEGIN
     'scouting_reports',
     'workspace_shortlist_entries',
     'recruitment_brief_runs',
-    'system_cache'
+    'system_cache',
+    'basketball_shots',
+    'basketball_defensive_plays'
   ]
   LOOP
     IF to_regclass('public.' || t) IS NULL THEN

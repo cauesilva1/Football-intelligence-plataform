@@ -25,6 +25,7 @@ const TABLES = [
   "recruitment_brief_runs",
   "system_cache",
   "basketball_shots",
+  "basketball_defensive_plays",
 ] as const;
 
 function loadDotEnv(): void {
