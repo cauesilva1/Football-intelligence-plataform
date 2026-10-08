@@ -36,16 +36,21 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
   const [active, setActive] = useState<BasketballShotZone | null>(null);
   const activeZone = model.zones.find((zone) => zone.zone === active) ?? null;
   const byZone = new Map(model.zones.map((zone) => [zone.zone, zone]));
+  const [, , viewW, viewH] = COURT_VIEW.viewBox.split(" ").map(Number);
 
   return (
-    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_17.5rem]">
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#10131a] p-3 shadow-panel sm:p-4">
+    <div className="grid min-w-0 items-start gap-4 overflow-x-hidden lg:grid-cols-[minmax(0,1fr)_minmax(17rem,20rem)] lg:gap-5">
+      <div className="flex min-w-0 justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#10131a] p-3 shadow-panel sm:p-4">
         <svg
           data-testid="nba-shot-chart"
           viewBox={COURT_VIEW.viewBox}
           role="group"
           aria-label="NBA full court, offensive basket at the bottom"
-          className="h-auto w-full"
+          className="h-auto max-w-full"
+          style={{
+            aspectRatio: `${viewW} / ${viewH}`,
+            width: `min(100%, calc(70vh * ${viewW} / ${viewH}))`,
+          }}
         >
           <rect
             x={COURT_VIEW.viewBox.split(" ")[0]}
@@ -165,7 +170,10 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
             })}
           </g>
         </svg>
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-2xs uppercase tracking-wider text-[#c8c2b4]">
+      </div>
+
+      <div className="min-w-0 space-y-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border bg-[#10131a] px-4 py-3 text-2xs uppercase tracking-wider text-[#c8c2b4]">
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#34d399]" />
             Make
@@ -184,9 +192,6 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
           </span>
           <span className="text-[#8b8678]">Zone color follows FG%. Under 5 attempts stay grey. Defense is markers only.</span>
         </div>
-      </div>
-
-      <div className="space-y-3">
         <div className="rounded-2xl border bg-[#10131a] px-4 py-3 text-[#f4f1ea]">
           <p className="text-2xs font-medium uppercase tracking-wider text-[#a39b8c]">Overall FG%</p>
           <p className="mt-1 font-display text-3xl font-bold tabular-nums">
