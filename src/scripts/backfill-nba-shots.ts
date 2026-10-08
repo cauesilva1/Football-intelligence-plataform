@@ -2,12 +2,12 @@
  * Incremental NBA shot-chart backfill for games already stored.
  *
  *   npm run data:backfill-nba-shots
- *   npm run data:backfill-nba-shots -- --limit=10 --budget-ms=120000 --season=202627
+ *   npm run data:backfill-nba-shots -- --limit=10 --budget-ms=120000 --season=202526
  */
 import fs from "fs";
 import path from "path";
-import { backfillNbaShotCharts } from "@/lib/basketball/nba-shot-sync";
-import { resolveNbaBoxscoreSeason } from "@/lib/basketball/season";
+import { backfillNbaShotChartSeasons } from "@/lib/basketball/nba-shot-sync";
+import { nbaShotChartSeasons } from "@/lib/basketball/season";
 import { getPrisma } from "@/lib/prisma";
 
 function loadDotEnv(): void {
@@ -41,16 +41,16 @@ function readFlag(name: string): number | null {
 loadDotEnv();
 
 async function main() {
-  const season = readFlag("season") ?? resolveNbaBoxscoreSeason();
+  const season = readFlag("season");
   const limit = readFlag("limit") ?? undefined;
   const budgetMs = readFlag("budget-ms") ?? 120_000;
-  const result = await backfillNbaShotCharts({
-    season,
+  const results = await backfillNbaShotChartSeasons({
+    seasons: season != null ? [season] : nbaShotChartSeasons(),
     deadlineMs: Date.now() + budgetMs,
     ...(limit != null ? { maxGames: limit } : {}),
     log: (message) => console.log(`[nba-shots] ${message}`),
   });
-  console.log(`[nba-shots] ${JSON.stringify(result)}`);
+  console.log(`[nba-shots] ${JSON.stringify(results)}`);
 }
 
 main()

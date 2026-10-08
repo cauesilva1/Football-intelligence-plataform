@@ -24,6 +24,16 @@ export function resolveNbaBoxscoreSeason(now = new Date()): number {
 }
 
 /**
+ * Shot-chart campaigns the ESPN play-by-play walk must cover.
+ * 2024/25 and 2025/26 stay in the queue; the current campaign is appended
+ * when the July rollover moves past them.
+ */
+export function nbaShotChartSeasons(now = new Date()): number[] {
+  const seasons = [basketballSeasonKey(2024), basketballSeasonKey(2025), resolveNbaBoxscoreSeason(now)];
+  return [...new Set(seasons)];
+}
+
+/**
  * ESPN season.type: 1 preseason, 2 regular season, 3 playoffs.
  * Preseason must not inflate the campaign totals. When the type is missing,
  * games before 20 October of the campaign start year are treated as preseason.

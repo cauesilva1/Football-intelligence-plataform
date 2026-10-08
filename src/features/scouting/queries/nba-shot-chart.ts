@@ -90,10 +90,7 @@ export async function queryNbaShotChart(
     label: formatSeasonLabel(String(row.season)),
   }));
   const requested = parseCampaignSeason(seasonParam);
-  const selected =
-    (requested != null && seasons.some((season) => season.key === String(requested))
-      ? requested
-      : seasonRows[0]?.season) ?? requested;
+  const selected = requested ?? seasonRows[0]?.season ?? null;
 
   const base: NbaShotChartModel = {
     playerId,

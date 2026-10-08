@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   basketballSeasonKey,
   nbaGameCountsTowardSeason,
+  nbaShotChartSeasons,
   nbaPhaseLabel,
   readEspnSeasonType,
   resolveEuroLeagueSeason,
@@ -16,6 +17,12 @@ describe("basketball season resolution", () => {
   it("formats compact season keys across the century boundary", () => {
     assert.equal(basketballSeasonKey(2026), 202627);
     assert.equal(basketballSeasonKey(2099), 209900);
+  });
+
+  it("keeps 2024/25 and 2025/26 on the shot-chart walk plus the current campaign", () => {
+    assert.deepEqual(nbaShotChartSeasons(new Date("2026-10-07T12:00:00Z")), [202425, 202526, 202627]);
+    assert.deepEqual(nbaShotChartSeasons(new Date("2026-06-30T12:00:00Z")), [202425, 202526]);
+    assert.deepEqual(nbaShotChartSeasons(new Date("2027-07-02T12:00:00Z")), [202425, 202526, 202728]);
   });
 
   it("rolls the NBA campaign over on 1 July", () => {

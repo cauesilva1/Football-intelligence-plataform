@@ -1,3 +1,4 @@
+import { nbaShotChartSeasons } from "@/lib/basketball/season";
 import { getPrisma } from "@/lib/prisma";
 import { parseEspnBasketballDefense, parseEspnBasketballShots } from "@/lib/basketball/espn-shot-parse";
 import {
@@ -223,7 +224,7 @@ async function listPendingNbaEventIds(season: number): Promise<string[]> {
 }
 
 /**
- * Walk 2026-27 (or whichever campaign `season` is) games already in the DB.
+ * Walk one campaign's games already in the DB.
  * Stops at the per-run cap and at the caller's deadline. Completed games are
  * skipped via systemCache, so the next run resumes where this one stopped.
  */
@@ -298,4 +299,40 @@ export async function backfillNbaShotCharts(options: {
 
   result.deferred = pending.length - result.gamesProcessed;
   return result;
+}
+
+/**
+ * Same enumerator as `backfillNbaShotCharts`, across 2024/25, 2025/26, and the
+ * current campaign. One shared game cap so a cron run cannot walk every season.
+ */
+export async function backfillNbaShotChartSeasons(options: {
+  deadlineMs: number;
+  seasons?: number[];
+  maxGames?: number;
+  minGameMs?: number;
+  log?: (message: string) => void;
+}): Promise<NbaShotBackfillResult[]> {
+  const seasons = options.seasons?.length ? options.seasons : nbaShotChartSeasons();
+  const maxGames = options.maxGames ?? NBA_SHOT_CHART_MAX_GAMES_PER_RUN;
+  const minGameMs = options.minGameMs ?? NBA_SHOT_CHART_MIN_GAME_MS;
+  let remainingGames = maxGames;
+  const results: NbaShotBackfillResult[] = [];
+
+  for (const season of seasons) {
+    if (remainingGames <= 0) break;
+    if (Date.now() + minGameMs > options.deadlineMs) break;
+
+    const result = await backfillNbaShotCharts({
+      season,
+      deadlineMs: options.deadlineMs,
+      maxGames: remainingGames,
+      minGameMs,
+      log: options.log,
+    });
+    results.push(result);
+    remainingGames -= result.gamesProcessed;
+    if (result.stoppedForTime || result.coordinatesUnavailable) break;
+  }
+
+  return results;
 }

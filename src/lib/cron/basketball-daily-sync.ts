@@ -4,7 +4,7 @@ import {
   type SyncBasketballBoxScoresResult,
   type BasketballLeagueSlug,
 } from "@/lib/api/espn-basketball-boxscore";
-import { resolveNbaBoxscoreSeason } from "@/lib/basketball/season";
+import { nbaShotChartSeasons, resolveNbaBoxscoreSeason } from "@/lib/basketball/season";
 import { formatQuotaLog, type ApiQuotaSnapshot } from "@/lib/api-quota";
 import {
   checkEuroLeagueOutage,
@@ -21,7 +21,7 @@ import {
 } from "@/lib/sync/euroleague-sync";
 import { syncNbaRosters, type NbaRosterSyncResult } from "@/lib/sync/nba-roster-sync";
 import {
-  backfillNbaShotCharts,
+  backfillNbaShotChartSeasons,
   type NbaShotBackfillResult,
 } from "@/lib/basketball/nba-shot-sync";
 
@@ -66,7 +66,7 @@ export interface BasketballCronResult {
   /** API-Basketball (paid, 100 req/day) usage for this run. */
   apiSportsQuota: ApiQuotaSnapshot;
   /** Incremental NBA shot-chart catch-up. Omitted when the run is not scanning the NBA. */
-  shotCharts?: NbaShotBackfillResult;
+  shotCharts?: NbaShotBackfillResult[];
   elapsedMs: number;
   totals: {
     eventsFound: number;
@@ -295,23 +295,24 @@ export async function runBasketballDailySync(
     }
   }
 
-  let shotCharts: NbaShotBackfillResult | undefined;
+  let shotCharts: NbaShotBackfillResult[] | undefined;
   if (leagues.includes("nba")) {
     if (remainingMs() < MIN_STEP_MS) {
       console.warn(`${LOG_PREFIX} [shots] adiado — sem orçamento de tempo.`);
     } else {
       try {
         console.log(
-          `${LOG_PREFIX} [shots] mapa de arremessos NBA ${season} — restante ${Math.round(remainingMs() / 1000)}s…`
+          `${LOG_PREFIX} [shots] mapa de arremessos NBA ${nbaShotChartSeasons(now).join(",")} — restante ${Math.round(remainingMs() / 1000)}s…`
         );
-        shotCharts = await backfillNbaShotCharts({
-          season,
+        shotCharts = await backfillNbaShotChartSeasons({
           deadlineMs,
           log: (message) => console.log(`${LOG_PREFIX} [shots] ${message}`),
         });
-        console.log(
-          `${LOG_PREFIX} [shots] jogos ${shotCharts.gamesProcessed} · arremessos ${shotCharts.shotsStored} · faltam ${shotCharts.deferred}${shotCharts.stoppedForTime ? " · parou por tempo" : ""}${shotCharts.coordinatesUnavailable ? " · coordenadas indisponíveis" : ""}`
-        );
+        for (const chart of shotCharts) {
+          console.log(
+            `${LOG_PREFIX} [shots] ${chart.season} jogos ${chart.gamesProcessed} · arremessos ${chart.shotsStored} · faltam ${chart.deferred}${chart.stoppedForTime ? " · parou por tempo" : ""}${chart.coordinatesUnavailable ? " · coordenadas indisponíveis" : ""}`
+          );
+        }
       } catch (error) {
         console.warn(`${LOG_PREFIX} [shots] FAIL:`, error);
       }
