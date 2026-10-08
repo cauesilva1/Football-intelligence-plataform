@@ -12,7 +12,6 @@ import {
   Trophy,
   Bookmark,
   BarChart3,
-  Newspaper,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -57,7 +56,6 @@ export const NAV_GROUPS: NavGroup[] = [
         americanFootballLabel: "Franchises",
         icon: ShieldHalf,
       },
-      { href: "/insights", label: "Insights", icon: Newspaper },
     ],
   },
   {

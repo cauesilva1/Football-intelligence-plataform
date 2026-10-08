@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { InsightsShell } from "@/features/insights/components/insights-shell";
 import { EmptyState } from "@/components/common/empty-state";
 import { EditionCard } from "@/features/insights/components/edition-card";
 import { NewsletterSignup } from "@/features/insights/components/newsletter-signup";
@@ -16,7 +16,7 @@ export default function InsightsPage() {
   const editions = loadInsights();
 
   return (
-    <DashboardShell subtitle="Insights">
+    <InsightsShell>
       <header className="editorial-pagehead">
         <div>
           <p className="desk-kicker">Newsletter</p>
@@ -45,6 +45,6 @@ export default function InsightsPage() {
       )}
 
       <NewsletterSignup />
-    </DashboardShell>
+    </InsightsShell>
   );
 }

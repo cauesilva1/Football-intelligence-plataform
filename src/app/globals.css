@@ -72,6 +72,12 @@
     --sport-glow-soft: 214 30% 95%;
   }
 
+  html[data-sport="NEUTRAL"] {
+    --sport: 353 100% 42%;
+    --sport-glow: 353 100% 42%;
+    --sport-glow-soft: 210 10% 96%;
+  }
+
   html {
     color-scheme: light;
   }

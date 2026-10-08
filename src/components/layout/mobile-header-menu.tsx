@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, Newspaper, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSport } from "@/context/sport-context";
 import { NAV_GROUPS, navLabel } from "./mobile-nav";
@@ -35,6 +35,20 @@ export function MobileHeaderMenu() {
             onClick={() => setOpen(false)}
           />
           <nav className="absolute right-0 top-full z-[60] mt-2 max-h-[70vh] w-[min(18rem,calc(100vw-1.5rem))] space-y-4 overflow-y-auto rounded-xl border border-border bg-background p-3 shadow-panel">
+            <Link
+              href="/insights"
+              onClick={() => setOpen(false)}
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                pathname === "/insights" || pathname?.startsWith("/insights/")
+                  ? "bg-primary/12 text-primary"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              )}
+            >
+              <Newspaper className="h-4 w-4 shrink-0 opacity-70" />
+              Insights
+            </Link>
+
             <div className="space-y-2">
               <p className="px-1 text-2xs font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
                 Sport

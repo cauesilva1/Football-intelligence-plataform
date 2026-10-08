@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ChevronsLeft, ChevronsRight, BookOpen } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, BookOpen, Newspaper } from "lucide-react";
 import { APP_NAME } from "@/lib/config";
 import { useSport } from "@/context/sport-context";
 import { sportTheme } from "@/lib/sport-theme";
@@ -117,6 +117,24 @@ export function EditorialShell({ children }: { children: React.ReactNode }) {
             )}
             <span className="sr-only">{collapsed ? "Expand sidebar" : "Collapse sidebar"}</span>
           </button>
+        </div>
+
+        <div className="px-2 pb-1">
+          <Link
+            href="/insights"
+            data-label="Insights"
+            title={collapsed ? "Insights" : undefined}
+            aria-label="Insights"
+            aria-current={pathname?.startsWith("/insights") ? "page" : undefined}
+            className={cn(
+              "editorial-side-link",
+              pathname?.startsWith("/insights") && "is-active",
+              collapsed && "is-collapsed"
+            )}
+          >
+            <Newspaper className="editorial-side-icon" aria-hidden />
+            <span className="editorial-side-label">Insights</span>
+          </Link>
         </div>
 
         <div className="editorial-sidebar-sports">

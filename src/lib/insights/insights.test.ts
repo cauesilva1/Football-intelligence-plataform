@@ -11,6 +11,7 @@ import {
   parseInsightDocument,
   resolveNewsletterUrl,
 } from "@/lib/insights/catalog";
+import { isInsightsPath } from "@/lib/sport-theme";
 
 const COMING_SOON = `---
 title: Coming soon
@@ -115,6 +116,15 @@ describe("resolveNewsletterUrl", () => {
     assert.equal(resolveNewsletterUrl(undefined), null);
     assert.equal(resolveNewsletterUrl("javascript:alert(1)"), null);
     assert.equal(resolveNewsletterUrl("http://omniscout.substack.com"), null);
+  });
+});
+
+describe("insights routes", () => {
+  it("treats the archive and its articles as one section", () => {
+    assert.equal(isInsightsPath("/insights"), true);
+    assert.equal(isInsightsPath("/insights/coming-soon"), true);
+    assert.equal(isInsightsPath("/players"), false);
+    assert.equal(isInsightsPath("/insights-archive"), false);
   });
 });
 

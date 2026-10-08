@@ -40,3 +40,15 @@ export function applySportToDocument(sport: Sport): void {
   root.setAttribute("data-sport", sport);
   root.classList.add("sport-theme-ready");
 }
+
+/** Insights stays on the product ink, independent of the sport cookie. */
+export function applyNeutralDocumentTheme(): void {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  root.setAttribute("data-sport", "NEUTRAL");
+  root.classList.add("sport-theme-ready");
+}
+
+export function isInsightsPath(path: string | null | undefined): boolean {
+  return path === "/insights" || Boolean(path?.startsWith("/insights/"));
+}

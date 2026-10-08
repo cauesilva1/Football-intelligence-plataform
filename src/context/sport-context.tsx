@@ -12,7 +12,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { parseSport, SPORT_COOKIE, type Sport } from "@/lib/sport";
-import { applySportToDocument } from "@/lib/sport-theme";
+import { applyNeutralDocumentTheme, applySportToDocument, isInsightsPath } from "@/lib/sport-theme";
 import { sportSwitchTarget } from "@/lib/sport-switch";
 import { resolveSportFromMatchId } from "@/features/matches/resolve-match-sport";
 
@@ -59,7 +59,8 @@ export function SportProvider({ children }: { children: ReactNode }) {
     const matchSport = matchSportFromPath(window.location.pathname);
     const initial = matchSport ?? fromCookie;
     setCurrentSportState(initial);
-    applySportToDocument(initial);
+    if (isInsightsPath(window.location.pathname)) applyNeutralDocumentTheme();
+    else applySportToDocument(initial);
     if (matchSport && matchSport !== fromCookie) {
       persistSportCookie(matchSport);
     }
@@ -84,8 +85,12 @@ export function SportProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
+    if (isInsightsPath(pathname)) {
+      applyNeutralDocumentTheme();
+      return;
+    }
     applySportToDocument(currentSport);
-  }, [currentSport, hydrated]);
+  }, [currentSport, hydrated, pathname]);
 
   const adoptSport = useCallback((sport: Sport) => {
     persistSportCookie(sport);

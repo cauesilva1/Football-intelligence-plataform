@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { InsightsShell } from "@/features/insights/components/insights-shell";
 import { InsightBody } from "@/features/insights/components/insight-body";
 import { NewsletterSignup } from "@/features/insights/components/newsletter-signup";
 import { APP_NAME } from "@/lib/config";
@@ -31,7 +31,7 @@ export default async function InsightArticlePage({ params }: { params: Promise<{
   if (!edition) notFound();
 
   return (
-    <DashboardShell subtitle="Insights">
+    <InsightsShell>
       <article className="mx-auto flex w-full max-w-2xl flex-col gap-8">
         <header className="editorial-pagehead">
           <div>
@@ -49,6 +49,6 @@ export default async function InsightArticlePage({ params }: { params: Promise<{
         <InsightBody blocks={edition.blocks} />
         <NewsletterSignup />
       </article>
-    </DashboardShell>
+    </InsightsShell>
   );
 }
