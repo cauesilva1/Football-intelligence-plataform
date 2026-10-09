@@ -12,7 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { PlayerAvatar } from "@/components/players/player-avatar";
 import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
-import { getPositionGlossaryDescription, normalizeBasketballPosition } from "@/lib/positions";
+import {
+  formatBasketballPositionLabel,
+  getPositionGlossaryDescription,
+  normalizeBasketballPosition,
+} from "@/lib/positions";
 import { ShortlistButton } from "@/features/shortlist/components/shortlist-button";
 import { derivePlayerStatus } from "@/features/scouting/lib/player-status";
 import { NationalTeamCrest } from "@/features/tournaments/components/national-team-crest";
@@ -52,8 +56,9 @@ export function PlayerProfileHeader({
 
   const heightLabel = formatPhysicalMetric(player.height, "cm");
   const weightLabel = formatPhysicalMetric(player.weight, "kg");
-  const displayPosition =
-    isBasketball ? normalizeBasketballPosition(player.position) : player.position;
+  const displayPosition = isBasketball
+    ? formatBasketballPositionLabel(player.position)
+    : player.position;
   const displaySecondary =
     player.secondaryPosition && isBasketball
       ? normalizeBasketballPosition(player.secondaryPosition)

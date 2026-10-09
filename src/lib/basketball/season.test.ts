@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { campaignSeasonNumber, pickSeasonTeam } from "@/lib/basketball/season-team";
 import {
   basketballSeasonKey,
   nbaGameCountsTowardSeason,
@@ -17,6 +18,19 @@ describe("basketball season resolution", () => {
   it("formats compact season keys across the century boundary", () => {
     assert.equal(basketballSeasonKey(2026), 202627);
     assert.equal(basketballSeasonKey(2099), 209900);
+  });
+
+  it("picks the franchise with the most games in the selected season", () => {
+    assert.equal(campaignSeasonNumber("202425"), 202425);
+    assert.equal(campaignSeasonNumber("2024/25"), 202425);
+    assert.equal(
+      pickSeasonTeam([
+        { teamName: "Denver Nuggets", games: 2, minutes: 40 },
+        { teamName: "Brooklyn Nets", games: 22, minutes: 600 },
+      ]),
+      "Brooklyn Nets"
+    );
+    assert.equal(pickSeasonTeam([{ teamName: "  ", games: 4, minutes: 10 }]), null);
   });
 
   it("keeps 2024/25 and 2025/26 on the shot-chart walk plus the current campaign", () => {

@@ -6,6 +6,7 @@ import {
   parseEspnBasketballDefense,
   parseEspnBasketballShots,
 } from "@/lib/basketball/espn-shot-parse";
+import { canonicalNbaShotGameId, dedupeShotPlays } from "@/lib/basketball/nba-shot-sync";
 
 /** Trimmed from the live summary of event 401898388 (MEM @ ATL, 2026-10-05). */
 const SUMMARY = {
@@ -216,6 +217,19 @@ describe("ESPN shot coordinate parsing", () => {
       { externalPlayId: "steal-ok", espnAthleteId: "4278039", x: 36, y: 23, kind: "steal" },
       { externalPlayId: "block-ok", espnAthleteId: "4431680", x: 24, y: 1, kind: "block" },
     ]);
+  });
+
+  it("treats a prefixed event id as the same game and drops a repeated play", () => {
+    assert.equal(canonicalNbaShotGameId("espn:nba:401704627"), "401704627");
+    assert.equal(canonicalNbaShotGameId("401704627"), "401704627");
+    assert.deepEqual(
+      dedupeShotPlays([
+        { externalPlayId: "a", made: true },
+        { externalPlayId: "a", made: false },
+        { externalPlayId: "", made: true },
+      ]),
+      [{ externalPlayId: "a", made: true }]
+    );
   });
 
   it("reads only NBA event ids out of appearance keys", () => {

@@ -33,6 +33,9 @@ test("isActiveRosterAthlete accepts active or status-less athletes only", () => 
 
 test("mapNbaPosition and buildPlayerSlug normalize ESPN values", () => {
   assert.equal(mapNbaPosition("Point Guard"), "PG");
+  assert.equal(mapNbaPosition("Shooting Guard"), "SG");
+  assert.equal(mapNbaPosition("Guard"), "G");
+  assert.equal(mapNbaPosition("G"), "G");
   assert.equal(mapNbaPosition("Center"), "C");
   assert.equal(mapNbaPosition("Forward"), "SF");
   assert.equal(buildPlayerSlug("Nikola Jokić"), "nikola-jokic");

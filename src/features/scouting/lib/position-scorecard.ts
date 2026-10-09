@@ -168,7 +168,7 @@ export function similarPositionGroup(position: string): string[] {
 export type BasketballPositionGroup = "GUARD" | "WING" | "BIG";
 
 export function basketballPositionGroup(position: string): BasketballPositionGroup {
-  if (["PG", "SG"].includes(position)) return "GUARD";
+  if (["PG", "SG", "G"].includes(position)) return "GUARD";
   if (position === "SF") return "WING";
   return "BIG";
 }
@@ -269,7 +269,7 @@ export function buildBasketballPositionScorecard(
 
 export function similarBasketballPositionGroup(position: string): string[] {
   const group = basketballPositionGroup(position);
-  if (group === "GUARD") return ["PG", "SG"];
+  if (group === "GUARD") return ["PG", "SG", "G"];
   if (group === "WING") return ["SF", "SG", "PF"];
   return ["PF", "C"];
 }

@@ -1,6 +1,10 @@
 import { nbaShotChartSeasons } from "@/lib/basketball/season";
 import { getPrisma } from "@/lib/prisma";
-import { parseEspnBasketballDefense, parseEspnBasketballShots } from "@/lib/basketball/espn-shot-parse";
+import {
+  espnNbaEventId,
+  parseEspnBasketballDefense,
+  parseEspnBasketballShots,
+} from "@/lib/basketball/espn-shot-parse";
 import {
   NBA_SHOT_CHART_MAX_GAMES_PER_RUN,
   NBA_SHOT_CHART_MIN_GAME_MS,
@@ -62,6 +66,24 @@ async function fetchNbaSummary(eventId: string): Promise<unknown> {
  * Persist field goals from an already-fetched ESPN summary.
  * Throws ShotCoordinatesUnavailableError when the payload has no coordinate field.
  */
+/** Bare ESPN event id, so `401704627` and `espn:nba:401704627` are one game. */
+export function canonicalNbaShotGameId(eventId: string): string {
+  const trimmed = eventId.trim();
+  const fromKey = espnNbaEventId(trimmed.startsWith("espn:nba:") ? trimmed : `espn:nba:${trimmed}`);
+  return fromKey ?? trimmed;
+}
+
+export function dedupeShotPlays<T extends { externalPlayId: string }>(rows: T[]): T[] {
+  const seen = new Set<string>();
+  const unique: T[] = [];
+  for (const row of rows) {
+    if (!row.externalPlayId || seen.has(row.externalPlayId)) continue;
+    seen.add(row.externalPlayId);
+    unique.push(row);
+  }
+  return unique;
+}
+
 export async function ingestNbaShotsFromSummary(input: {
   eventId: string;
   summary: unknown;
@@ -92,6 +114,8 @@ export async function ingestNbaShotsFromSummary(input: {
     }
   }
 
+  const gameId = canonicalNbaShotGameId(input.eventId);
+  const gameIds = [...new Set([gameId, input.eventId.trim()].filter(Boolean))];
   const rows: Array<{
     playerId: string;
     gameId: string;
@@ -121,7 +145,7 @@ export async function ingestNbaShotsFromSummary(input: {
     }
     rows.push({
       playerId,
-      gameId: input.eventId,
+      gameId,
       externalPlayId: shot.externalPlayId,
       x: shot.x,
       y: shot.y,
@@ -139,7 +163,7 @@ export async function ingestNbaShotsFromSummary(input: {
     }
     defensiveRows.push({
       playerId,
-      gameId: input.eventId,
+      gameId,
       externalPlayId: play.externalPlayId,
       x: play.x,
       y: play.y,
@@ -148,24 +172,27 @@ export async function ingestNbaShotsFromSummary(input: {
     });
   }
 
+  const shotRows = dedupeShotPlays(rows);
+  const defenseRows = dedupeShotPlays(defensiveRows);
+
   await prisma.$transaction(async (tx) => {
-    await tx.basketballShot.deleteMany({ where: { gameId: input.eventId } });
-    await tx.basketballDefensivePlay.deleteMany({ where: { gameId: input.eventId } });
-    if (rows.length) {
-      await tx.basketballShot.createMany({ data: rows });
+    await tx.basketballShot.deleteMany({ where: { gameId: { in: gameIds } } });
+    await tx.basketballDefensivePlay.deleteMany({ where: { gameId: { in: gameIds } } });
+    if (shotRows.length) {
+      await tx.basketballShot.createMany({ data: shotRows, skipDuplicates: true });
     }
-    if (defensiveRows.length) {
-      await tx.basketballDefensivePlay.createMany({ data: defensiveRows });
+    if (defenseRows.length) {
+      await tx.basketballDefensivePlay.createMany({ data: defenseRows, skipDuplicates: true });
     }
     await tx.systemCache.upsert({
-      where: { key: `${SHOT_CACHE_PREFIX}${input.eventId}` },
+      where: { key: `${SHOT_CACHE_PREFIX}${gameId}` },
       create: {
-        key: `${SHOT_CACHE_PREFIX}${input.eventId}`,
+        key: `${SHOT_CACHE_PREFIX}${gameId}`,
         json: {
           eventId: input.eventId,
           season: input.season,
-          stored: rows.length,
-          defensiveStored: defensiveRows.length,
+          stored: shotRows.length,
+          defensiveStored: defenseRows.length,
           skippedNoPlayer,
           processedAt: new Date().toISOString(),
         },
@@ -174,8 +201,8 @@ export async function ingestNbaShotsFromSummary(input: {
         json: {
           eventId: input.eventId,
           season: input.season,
-          stored: rows.length,
-          defensiveStored: defensiveRows.length,
+          stored: shotRows.length,
+          defensiveStored: defenseRows.length,
           skippedNoPlayer,
           processedAt: new Date().toISOString(),
         },
@@ -185,11 +212,11 @@ export async function ingestNbaShotsFromSummary(input: {
 
   return {
     eventId: input.eventId,
-    stored: rows.length,
+    stored: shotRows.length,
     skippedNoPlayer,
     skippedInvalidCoordinate: parsed.skippedInvalidCoordinate + defense.skippedInvalidCoordinate,
     skippedFreeThrow: parsed.skippedFreeThrow,
-    defensiveStored: defensiveRows.length,
+    defensiveStored: defenseRows.length,
   };
 }
 

@@ -101,13 +101,14 @@ export function mapNbaPosition(raw?: string): string {
   const value = (raw ?? "").trim().toLowerCase();
   if (!value) return "Ala";
 
-  if (value.includes("point guard") || value === "pg" || value === "guard") return "PG";
+  if (value.includes("point guard") || value === "pg") return "PG";
   if (value.includes("shooting guard") || value === "sg") return "SG";
   if (value.includes("small forward") || value === "sf") return "SF";
   if (value.includes("power forward") || value === "pf") return "PF";
   if (value.includes("center") || value === "c" || value === "centro") return "C";
   if (value.includes("forward")) return "SF";
-  if (value.includes("guard")) return "PG";
+  // ESPN rosters label most wings and creators only as Guard (G), not Point Guard.
+  if (value === "guard" || value === "g" || value.includes("guard")) return "G";
 
   return "SF";
 }

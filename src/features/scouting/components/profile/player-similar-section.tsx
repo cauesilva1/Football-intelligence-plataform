@@ -3,6 +3,7 @@ import { Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataPanel } from "@/components/data/data-panel";
 import { querySimilarPlayers } from "@/features/scouting/queries/similar-players";
+import { formatBasketballPositionLabel } from "@/lib/positions";
 import { formatClubLabel } from "@/lib/soccer/club-label";
 import { formatCapHit, formatMarketValue, playerDisplayName, ratingColor } from "@/lib/utils";
 
@@ -33,7 +34,11 @@ export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
                   <div className="flex items-center gap-2">
                     <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <p className="truncate text-sm font-medium text-foreground">{playerDisplayName(player)}</p>
-                    <Badge variant="neutral">{player.position}</Badge>
+                    <Badge variant="neutral">
+                      {player.sport === "BASKETBALL"
+                        ? formatBasketballPositionLabel(player.position)
+                        : player.position}
+                    </Badge>
                   </div>
                   <p className="mt-1 truncate text-2xs text-muted-foreground">
                     {formatClubLabel(player.teamName, player.teamShortName)} · {player.age} years old

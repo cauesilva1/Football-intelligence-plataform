@@ -17,6 +17,11 @@ import {
   hasBasketballStatFilters,
 } from "@/features/scouting/lib/basketball-filters";
 import { BASKETBALL_SCOUTING_SEASONS } from "@/features/scouting/lib/basketball-constants";
+import {
+  campaignSeasonNumber,
+  pickSeasonTeam,
+  type SeasonTeamAppearance,
+} from "@/lib/basketball/season-team";
 import { resolvePlayerPhotoUrl } from "@/lib/player-media";
 import { localizeScoutLabels } from "@/lib/scout-labels";
 import { reliableSoccerRating } from "@/lib/scoring/soccer-rankings";
@@ -834,6 +839,42 @@ function buildStatOrderBy(filters: PlayerFilters): Prisma.PlayerStatisticOrderBy
   }
 }
 
+async function applyBasketballSeasonTeam(player: Player): Promise<Player> {
+  const season = campaignSeasonNumber(player.selectedSeason);
+  if (season == null) return player;
+
+  const rows = await getPrisma().$queryRaw<SeasonTeamAppearance[]>`
+    SELECT "teamName",
+           COUNT(*)::int AS games,
+           COALESCE(SUM("minutesPlayed"), 0)::int AS minutes
+    FROM "player_match_stats"
+    WHERE "playerId" = ${player.id}
+      AND season = ${season}
+      AND "teamName" IS NOT NULL
+    GROUP BY "teamName"
+  `;
+  const teamName = pickSeasonTeam(rows);
+  if (!teamName) return player;
+
+  const teams = await getPrisma().team.findMany({
+    where: { name: { equals: teamName, mode: "insensitive" } },
+    select: {
+      id: true,
+      name: true,
+      shortName: true,
+      competition: { select: { name: true } },
+    },
+  });
+  const matched = teams.find((team) => team.competition?.name === "NBA") ?? teams[0];
+  return {
+    ...player,
+    teamId: matched?.id ?? player.teamId,
+    teamName: matched?.name ?? teamName,
+    teamShortName: matched?.shortName,
+    competitionName: matched?.competition?.name ?? player.competitionName,
+  };
+}
+
 export const prismaPlayerRepository: PlayerRepository & {
   mapFromRecord(record: PrismaPlayerRow, options?: { season?: string }): Player;
 } = {
@@ -958,7 +999,9 @@ export const prismaPlayerRepository: PlayerRepository & {
       // AF ESPN enrich is client-triggered (sessionStorage) via AfProfileSeasonEnricher.
     }
 
-    return mapPlayer(record, options);
+    const player = mapPlayer(record, options);
+    if (player.sport !== "BASKETBALL") return player;
+    return applyBasketballSeasonTeam(player);
   },
 
   mapFromRecord(record: PrismaPlayerRow, options?: { season?: string }): Player {

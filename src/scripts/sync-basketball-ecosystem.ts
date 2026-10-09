@@ -6,6 +6,7 @@
 import fs from "fs";
 import path from "path";
 import { PrismaClient } from "@prisma/client";
+import { mapNbaPosition } from "@/lib/sync/nba-roster-sync";
 
 const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/basketball";
 const NBA_TEAMS_URL = `${ESPN_BASE}/nba/teams`;
@@ -156,20 +157,6 @@ function buildPlayerSlug(name: string): string {
   return slug || "jogador";
 }
 
-function mapBasketballPosition(raw?: string): string {
-  const value = (raw ?? "").trim().toLowerCase();
-  if (!value) return "SF";
-
-  if (value.includes("point guard") || value === "pg" || value === "guard") return "PG";
-  if (value.includes("shooting guard") || value === "sg") return "SG";
-  if (value.includes("small forward") || value === "sf") return "SF";
-  if (value.includes("power forward") || value === "pf") return "PF";
-  if (value.includes("center") || value === "c" || value === "centro") return "C";
-  if (value.includes("forward")) return "SF";
-  if (value.includes("guard")) return "PG";
-
-  return "SF";
-}
 
 function parsePosition(athlete: EspnAthlete): string {
   const candidates = [
@@ -179,7 +166,7 @@ function parsePosition(athlete: EspnAthlete): string {
   ].filter(Boolean) as string[];
 
   for (const candidate of candidates) {
-    return mapBasketballPosition(candidate);
+    return mapNbaPosition(candidate);
   }
 
   return "Ala";

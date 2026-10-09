@@ -1,7 +1,7 @@
 import type { Sport } from "@/lib/sport";
 import { POSITION_GLOSSARY } from "@/components/common/glossary-copy";
 
-export const BASKETBALL_POSITIONS = ["PG", "SG", "SF", "PF", "C"] as const;
+export const BASKETBALL_POSITIONS = ["PG", "SG", "G", "SF", "PF", "C"] as const;
 
 export const AMERICAN_FOOTBALL_POSITIONS = [
   "QB",
@@ -20,6 +20,7 @@ export const AMERICAN_FOOTBALL_POSITIONS = [
 export const BASKETBALL_POSITION_GLOSSARY: Record<string, string> = {
   PG: "Point Guard",
   SG: "Shooting Guard",
+  G: "Guard",
   SF: "Small Forward",
   PF: "Power Forward",
   C: "Center",
@@ -53,6 +54,13 @@ export function normalizeBasketballPosition(position?: string | null): string {
   const trimmed = position.trim();
   if ((BASKETBALL_POSITIONS as readonly string[]).includes(trimmed)) return trimmed;
   return LEGACY_BASKETBALL_POSITION_MAP[trimmed] ?? trimmed;
+}
+
+/** Badge text. Generic ESPN "Guard" stays Guard, not Point Guard. */
+export function formatBasketballPositionLabel(position?: string | null): string {
+  const normalized = normalizeBasketballPosition(position);
+  if (normalized === "G") return "Guard";
+  return normalized;
 }
 
 export function getPositionGlossaryDescription(position: string, sport: Sport = "SOCCER"): string {
