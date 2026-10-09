@@ -5,8 +5,6 @@ excerpt: 'Every scouting report says "can score at three levels." The shot chart
 slug: where-does-a-19-year-old-guard-actually-shoot-from
 ---
 
-Every scouting report says "can score at three levels." The shot chart says where it actually happens.
-
 Darius Acuff Jr., 19, Sacramento Kings. One preseason game tracked — his debut against the Lakers — 17 field goal attempts mapped. Small sample, stated up front: a single preseason game, soft defenses, 17 shots is a snapshot, not a profile. But snapshots are where profiles start.
 
 The map: 7 of his 17 attempts came from mid range, and he made 4 of them (57.1%). Every other zone sits under 5 attempts — restricted area 4, paint 2, corner three 1, above the break 3 — so the chart stays grey there. No conclusions drawn from noise.
