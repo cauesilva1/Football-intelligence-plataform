@@ -73,7 +73,8 @@ function emptyZones(): NbaShotZoneLine[] {
 
 export async function queryNbaShotChart(
   playerId: string,
-  seasonParam: string | undefined
+  seasonParam: string | undefined,
+  options?: { gameId?: string }
 ): Promise<NbaShotChartModel> {
   const prisma = getPrisma();
   const seasonRows = await prisma.$queryRaw<Array<{ season: number }>>`
@@ -108,6 +109,8 @@ export async function queryNbaShotChart(
   };
   if (selected == null) return base;
 
+  const gameId = options?.gameId ?? "";
+
   const [rows, shotRows, defenseRows] = await Promise.all([
     prisma.$queryRaw<Array<{ zone: string; attempts: number; made: number }>>`
       SELECT zone,
@@ -115,17 +118,20 @@ export async function queryNbaShotChart(
              COALESCE(SUM(CASE WHEN made THEN 1 ELSE 0 END), 0)::int AS made
       FROM basketball_shots
       WHERE "playerId" = ${playerId} AND season = ${selected}
+        AND (${gameId} = '' OR "gameId" = ${gameId})
       GROUP BY zone
     `,
     prisma.$queryRaw<Array<{ x: number; y: number; made: boolean; zone: string }>>`
       SELECT x, y, made, zone
       FROM basketball_shots
       WHERE "playerId" = ${playerId} AND season = ${selected}
+        AND (${gameId} = '' OR "gameId" = ${gameId})
     `,
     prisma.$queryRaw<Array<{ x: number; y: number; kind: string }>>`
       SELECT x, y, kind
       FROM basketball_defensive_plays
       WHERE "playerId" = ${playerId} AND season = ${selected}
+        AND (${gameId} = '' OR "gameId" = ${gameId})
     `,
   ]);
 

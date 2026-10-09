@@ -17,7 +17,8 @@ export type InsightBlock =
   | { type: "paragraph"; text: string }
   | { type: "list"; items: string[] }
   | { type: "image"; alt: string; src: string }
-  | { type: "chart"; title: string; caption: string | null; points: InsightChartPoint[] };
+  | { type: "chart"; title: string; caption: string | null; points: InsightChartPoint[] }
+  | { type: "shotChart"; playerId: string; season: string; gameId: string };
 
 export type InsightEdition = {
   title: string;
@@ -174,8 +175,8 @@ function parseBlocks(body: string, filename: string): InsightBlock[] {
     if (trimmed.startsWith("```")) {
       flushParagraph();
       const kind = trimmed.slice(3).trim();
-      if (kind !== "chart") {
-        throw new InsightContentError(`${filename}: only chart fences are supported`);
+      if (kind !== "chart" && kind !== "shot-chart") {
+        throw new InsightContentError(`${filename}: only chart and shot-chart fences are supported`);
       }
       const jsonLines: string[] = [];
       index += 1;
@@ -184,9 +185,10 @@ function parseBlocks(body: string, filename: string): InsightBlock[] {
         index += 1;
       }
       if (index >= lines.length) {
-        throw new InsightContentError(`${filename}: chart fence is not closed`);
+        throw new InsightContentError(`${filename}: ${kind} fence is not closed`);
       }
-      blocks.push(parseChart(jsonLines.join("\n"), filename));
+      const json = jsonLines.join("\n");
+      blocks.push(kind === "shot-chart" ? parseShotChart(json, filename) : parseChart(json, filename));
       index += 1;
       continue;
     }
@@ -238,6 +240,34 @@ function parseBlocks(body: string, filename: string): InsightBlock[] {
 
   flushParagraph();
   return blocks;
+}
+
+function parseShotChart(raw: string, filename: string): InsightBlock {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new InsightContentError(`${filename}: shot-chart fence must be JSON`);
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new InsightContentError(`${filename}: shot-chart must be a JSON object`);
+  }
+  const record = parsed as Record<string, unknown>;
+  if (typeof record.playerId !== "string" || !/^[0-9a-f-]{36}$/i.test(record.playerId)) {
+    throw new InsightContentError(`${filename}: shot-chart playerId must be a player id`);
+  }
+  if (typeof record.season !== "string" || !/^\d{6}$/.test(record.season)) {
+    throw new InsightContentError(`${filename}: shot-chart season must be a six-digit campaign`);
+  }
+  if (typeof record.gameId !== "string" || !/^\d+$/.test(record.gameId)) {
+    throw new InsightContentError(`${filename}: shot-chart gameId must be an ESPN event id`);
+  }
+  return {
+    type: "shotChart",
+    playerId: record.playerId,
+    season: record.season,
+    gameId: record.gameId,
+  };
 }
 
 function parseChart(raw: string, filename: string): InsightBlock {

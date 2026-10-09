@@ -129,15 +129,24 @@ describe("insights routes", () => {
 });
 
 describe("seeded insights", () => {
-  it("publishes a single coming-soon edition", () => {
+  it("publishes the first edition and drops the coming-soon placeholder", () => {
     const editions = loadInsights();
     assert.equal(editions.length, 1);
-    assert.equal(editions[0]?.slug, "coming-soon");
-    assert.equal(editions[0]?.title, "Coming soon");
-    assert.equal(editions[0]?.date, "2026-10-06");
-    assert.equal(
-      editions[0]?.excerpt,
-      "A biweekly sports-analytics letter. Each edition asks one question and answers it with the data and one chart."
-    );
+    const edition = editions[0];
+    assert.equal(edition?.slug, "where-does-a-19-year-old-guard-actually-shoot-from");
+    assert.equal(edition?.title, "Where does a 19-year-old guard actually shoot from?");
+    assert.equal(edition?.date, "2026-10-07");
+    assert.equal(editions.some((item) => item.slug === "coming-soon"), false);
+    const chart = edition?.blocks.find((block) => block.type === "shotChart");
+    assert.ok(chart && chart.type === "shotChart");
+    assert.equal(chart.gameId, "401898716");
+    assert.equal(chart.season, "202627");
+    const copy = edition?.blocks
+      .filter((block) => block.type === "paragraph")
+      .map((block) => (block.type === "paragraph" ? block.text : ""))
+      .join("\n");
+    assert.match(copy ?? "", /One preseason game tracked/);
+    assert.match(copy ?? "", /Originally published on Substack/);
+    assert.doesNotMatch(copy ?? "", /eight games/i);
   });
 });

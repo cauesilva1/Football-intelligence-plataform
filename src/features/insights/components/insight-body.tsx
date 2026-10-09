@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
+import { NbaShotChart } from "@/features/scouting/components/profile/nba-shot-chart";
+import { queryNbaShotChart } from "@/features/scouting/queries/nba-shot-chart";
 import { InsightBarChart } from "@/features/insights/components/insight-bar-chart";
 import type { InsightBlock } from "@/lib/insights/catalog";
 
-export function InsightBody({ blocks }: { blocks: InsightBlock[] }) {
+export async function InsightBody({ blocks }: { blocks: InsightBlock[] }) {
   return (
     <div className="space-y-5 text-[1.02rem] leading-relaxed text-foreground">
       {blocks.map((block, index) => (
@@ -12,7 +14,7 @@ export function InsightBody({ blocks }: { blocks: InsightBlock[] }) {
   );
 }
 
-function InsightBlockView({ block }: { block: InsightBlock }) {
+async function InsightBlockView({ block }: { block: InsightBlock }) {
   if (block.type === "heading") {
     const className =
       block.level === 2
@@ -49,6 +51,12 @@ function InsightBlockView({ block }: { block: InsightBlock }) {
         {block.alt ? <figcaption className="text-xs text-muted-foreground">{block.alt}</figcaption> : null}
       </figure>
     );
+  }
+
+  if (block.type === "shotChart") {
+    const model = await queryNbaShotChart(block.playerId, block.season, { gameId: block.gameId });
+    if (model.attempts === 0) return null;
+    return <NbaShotChart model={model} />;
   }
 
   if (block.type === "chart") {
