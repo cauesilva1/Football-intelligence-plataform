@@ -22,6 +22,7 @@ import { derivePlayerStatus } from "@/features/scouting/lib/player-status";
 import { NationalTeamCrest } from "@/features/tournaments/components/national-team-crest";
 import { SummerLeagueBadge } from "@/components/ui/summer-league-badge";
 import { getTeamTheme } from "@/lib/team-theme";
+import { soccerProfileLeagueLabel } from "@/lib/soccer/profile-league";
 import { deriveDataDepthSnapshot } from "@/lib/intelligence/data-depth";
 import { cn, formatCapHit, formatMarketValue, formatPhysicalMetric, formatPreferredFoot } from "@/lib/utils";
 import type { Player } from "@/types";
@@ -134,6 +135,9 @@ export function PlayerProfileHeader({
                   {player.teamShortName &&
                   !["NAN", "NA", "NULL", "UNDEFINED"].includes(player.teamShortName.trim().toUpperCase())
                     ? ` (${player.teamShortName})`
+                    : ""}
+                  {sport === "SOCCER" && player.competitionName
+                    ? ` · ${soccerProfileLeagueLabel(player.competitionName)}`
                     : ""}
                 </span>
               </span>

@@ -1,10 +1,10 @@
 import { getPrisma } from "@/lib/prisma";
-import { namesLikelyMatch } from "@/lib/sync/data-staleness";
 import {
   parseSoccerShotPlay,
   isSoccerShotEventType,
   type ParsedSoccerShot,
 } from "@/lib/soccer/espn-shot-parse";
+import { matchShooterId, type ShotRosterPlayer } from "@/lib/soccer/shot-name-match";
 import { parseSoccerEventKey, soccerShotGameId, soccerShotLeagueOrder } from "@/lib/soccer/shot-league-order";
 import {
   NBA_SHOT_CHART_MIN_GAME_MS,
@@ -34,21 +34,6 @@ interface PlaysPage {
     $ref?: string;
     type?: { type?: string };
   }>;
-}
-
-function matchShooterId(
-  name: string,
-  roster: Array<{ playerId: string; fullName: string; knownAs: string }>
-): string | null {
-  const hits = roster.filter(
-    (player) => namesLikelyMatch(player.fullName, name) || namesLikelyMatch(player.knownAs, name)
-  );
-  if (hits.length === 1) return hits[0].playerId;
-  const exact = hits.filter((player) => {
-    const shot = name.toLowerCase();
-    return player.fullName.toLowerCase() === shot || player.knownAs.toLowerCase() === shot;
-  });
-  return exact.length === 1 ? exact[0].playerId : null;
 }
 
 async function fetchJson(url: string): Promise<unknown> {
@@ -81,6 +66,57 @@ export async function fetchSoccerShotPlays(slug: string, eventId: string): Promi
     page += 1;
   }
   return shots;
+}
+
+/** Boxscore lines plus both clubs' squads. A name that matches nobody stays unmatched. */
+async function rosterForEvent(externalEventKey: string): Promise<ShotRosterPlayer[]> {
+  const prisma = getPrisma();
+  const appearances = await prisma.playerMatchStat.findMany({
+    where: { externalEventKey },
+    select: {
+      teamName: true,
+      opponentName: true,
+      playerId: true,
+      player: { select: { fullName: true, knownAs: true } },
+    },
+  });
+  const clubNames = [
+    ...new Set(
+      appearances
+        .flatMap((row) => [row.teamName, row.opponentName])
+        .map((name) => name?.trim())
+        .filter((name): name is string => Boolean(name))
+    ),
+  ];
+  const squad =
+    clubNames.length === 0
+      ? []
+      : await prisma.player.findMany({
+          where: {
+            sport: "SOCCER",
+            OR: clubNames.map((name) => ({
+              team: { name: { equals: name, mode: "insensitive" } },
+            })),
+          },
+          select: { id: true, fullName: true, knownAs: true },
+        });
+  const byId = new Map<string, ShotRosterPlayer>();
+  for (const row of appearances) {
+    byId.set(row.playerId, {
+      playerId: row.playerId,
+      fullName: row.player.fullName,
+      knownAs: row.player.knownAs,
+    });
+  }
+  for (const player of squad) {
+    if (byId.has(player.id)) continue;
+    byId.set(player.id, {
+      playerId: player.id,
+      fullName: player.fullName,
+      knownAs: player.knownAs,
+    });
+  }
+  return [...byId.values()];
 }
 
 async function listPending(slug: string): Promise<Array<{ key: string; season: number }>> {
@@ -132,15 +168,7 @@ export async function ingestSoccerShotEvent(externalEventKey: string, season: nu
   }
 
   const prisma = getPrisma();
-  const appearances = await prisma.playerMatchStat.findMany({
-    where: { externalEventKey },
-    select: { playerId: true, player: { select: { fullName: true, knownAs: true } } },
-  });
-  const roster = appearances.map((row) => ({
-    playerId: row.playerId,
-    fullName: row.player.fullName,
-    knownAs: row.player.knownAs,
-  }));
+  const roster = await rosterForEvent(externalEventKey);
 
   const gameId = soccerShotGameId(parsedKey.slug, parsedKey.eventId);
   const rows: Array<{

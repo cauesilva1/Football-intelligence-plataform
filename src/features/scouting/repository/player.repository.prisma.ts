@@ -281,7 +281,10 @@ function mapPlayer(record: PrismaPlayerRow, options?: { season?: string }): Play
     }),
     apiSportsId: record.apiSportsId ?? undefined,
     sport,
-    league: record.league,
+    league:
+      sport === "SOCCER" && record.team?.competition?.name
+        ? record.team.competition.name
+        : record.league,
     teamId: record.teamId ?? "",
     teamName: record.team?.name,
     teamShortName: record.team?.shortName,
@@ -433,7 +436,10 @@ function mapPlayerRoster(record: PrismaPlayerRosterRow, season?: string): Player
     }),
     apiSportsId: record.apiSportsId ?? undefined,
     sport: (record.sport as Player["sport"]) ?? "SOCCER",
-    league: record.league,
+    league:
+      (record.sport ?? "SOCCER") === "SOCCER" && record.team?.competition?.name
+        ? record.team.competition.name
+        : record.league,
     teamId: record.teamId ?? "",
     teamName: record.team?.name,
     teamShortName: record.team?.shortName,
