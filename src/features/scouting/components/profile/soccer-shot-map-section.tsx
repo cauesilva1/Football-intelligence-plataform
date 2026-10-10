@@ -27,6 +27,14 @@ export async function SoccerShotMapSection({
       action={
         seasons.length ? (
           <div className="flex flex-wrap items-center gap-2">
+            {model.attempts > 0 ? (
+              <Link
+                href={`/compare/maps?playerA=${playerId}&season=${encodeURIComponent(model.selectedSeason)}`}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-7 px-3 text-xs")}
+              >
+                Compare
+              </Link>
+            ) : null}
             <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">Season</span>
             {seasons.map((item) => (
               <Link

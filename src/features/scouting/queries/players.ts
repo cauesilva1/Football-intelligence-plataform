@@ -42,9 +42,10 @@ export async function searchPlayersLite(options?: {
   search?: string;
   take?: number;
   ensureIds?: string[];
+  sport?: "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL";
 }) {
   await ensureRuntimeDataSource();
-  const sport = await getServerSport();
+  const sport = options?.sport ?? (await getServerSport());
   return withSupabaseErrorLog("searchPlayersLite", () =>
     getPlayerRepository().findLite(sport, {
       take: options?.take ?? 30,

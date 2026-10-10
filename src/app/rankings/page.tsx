@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { RankingsHub } from "@/features/rankings/components/rankings-hub";
@@ -26,6 +27,14 @@ export default async function RankingsPage() {
                 : "Soccer reference lists — U23, finishers, creators, hidden gems. Other sports follow the same playbook."
           }
         />
+        {sport === "SOCCER" ? (
+          <p className="text-sm text-muted-foreground">
+            <Link href="/compare/maps" className="font-medium text-primary hover:underline">
+              Compare effectiveness maps
+            </Link>{" "}
+            for two players who already have tracked shots.
+          </p>
+        ) : null}
         <RankingsHub sport={ui.rankingPresetSport} />
       </div>
     </DashboardShell>

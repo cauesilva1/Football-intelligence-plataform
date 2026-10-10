@@ -30,10 +30,13 @@ function zoneSummary(zone: SoccerShotZoneLine): string {
 export function SoccerShotChart({
   model,
   coverage,
+  pitchOnly = false,
 }: {
   model: SoccerShotChartModel;
   /** Sentence under the total. The player map names the full-season profile. */
   coverage: string;
+  /** Pitch only, for a side-by-side compare. The parent owns the totals. */
+  pitchOnly?: boolean;
 }) {
   const stripeId = useId().replace(/:/g, "");
   const [active, setActive] = useState<SoccerShotZone | null>(null);
@@ -41,7 +44,13 @@ export function SoccerShotChart({
   const byZone = new Map(model.zones.map((zone) => [zone.zone, zone]));
 
   return (
-    <div className="grid min-w-0 items-start gap-4 overflow-x-hidden lg:grid-cols-[minmax(0,1fr)_minmax(17rem,20rem)] lg:gap-5">
+    <div
+      className={
+        pitchOnly
+          ? "min-w-0"
+          : "grid min-w-0 items-start gap-4 overflow-x-hidden lg:grid-cols-[minmax(0,1fr)_minmax(17rem,20rem)] lg:gap-5"
+      }
+    >
       <div className="flex min-w-0 justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#10131a] p-3 shadow-panel sm:p-4">
         <svg
           data-testid="soccer-shot-chart"
@@ -146,7 +155,7 @@ export function SoccerShotChart({
         </svg>
       </div>
 
-      <div className="min-w-0 space-y-3">
+      {pitchOnly ? null : <div className="min-w-0 space-y-3">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border bg-[#10131a] px-4 py-3 text-2xs uppercase tracking-wider text-[#c8c2b4]">
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#34d399]" />
@@ -209,7 +218,7 @@ export function SoccerShotChart({
             </li>
           ))}
         </ul>
-      </div>
+      </div>}
     </div>
   );
 }

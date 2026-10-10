@@ -46,11 +46,13 @@ export async function searchPlayersLiteAction(input: {
   search?: string;
   take?: number;
   ensureIds?: string[];
+  sport?: "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL";
 }): Promise<PlayerLite[]> {
   const take = Math.min(Math.max(input.take ?? 30, 1), 50);
   return searchPlayersLite({
     search: input.search?.slice(0, 80),
     take,
     ensureIds: (input.ensureIds ?? []).slice(0, 10),
+    sport: input.sport,
   });
 }

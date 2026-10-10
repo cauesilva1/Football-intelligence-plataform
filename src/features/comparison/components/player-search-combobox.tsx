@@ -28,6 +28,7 @@ export function PlayerSearchCombobox({
   excludeId,
   onChange,
   disabled,
+  sport,
 }: {
   label: string;
   /** Seed options (usually the currently selected player). */
@@ -36,6 +37,7 @@ export function PlayerSearchCombobox({
   excludeId?: string;
   onChange: (playerId: string, player?: PlayerLite) => void;
   disabled?: boolean;
+  sport?: "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL";
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -61,6 +63,7 @@ export function PlayerSearchCombobox({
           search: query,
           take: 30,
           ensureIds: [value, excludeId].filter(Boolean) as string[],
+          sport,
         });
         if (!cancelled) {
           setResults(rows.filter((player) => player.id !== excludeId));
@@ -76,7 +79,7 @@ export function PlayerSearchCombobox({
       cancelled = true;
       window.clearTimeout(handle);
     };
-  }, [open, query, value, excludeId, initialPlayers]);
+  }, [open, query, value, excludeId, initialPlayers, sport]);
 
   const selected = useMemo(
     () =>
