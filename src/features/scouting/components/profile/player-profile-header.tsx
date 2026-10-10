@@ -197,7 +197,7 @@ export function PlayerProfileHeader({
           <div className="flex flex-wrap gap-2">
             <ShortlistButton playerId={player.id} tone="onDark" />
             <Link
-              href={`/compare?playerA=${player.id}`}
+              href={`/compare?playerA=${player.id}${player.selectedSeason ? `&season=${encodeURIComponent(player.selectedSeason)}` : ""}`}
               className={cn(
                 buttonVariants({ variant: "outline", size: "sm" }),
                 "border-white/45 bg-white/10 text-white hover:bg-white/20 hover:text-white"

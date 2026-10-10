@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { canonicalSoccerPosition } from "@/etl/data-dictionary";
 import { getPrisma } from "@/lib/prisma";
 import { CURRENT_SEASON } from "@/lib/data/generators";
@@ -376,8 +376,8 @@ function slimListStats(stats: PlayerStatistic, sport: Player["sport"]): PlayerSt
 }
 
 /** Lightweight row for in-memory filter/sort (still has real metrics). */
-function mapPlayerListForSort(record: PrismaPlayerListRow): Player {
-  const player = mapPlayer(record);
+function mapPlayerListForSort(record: PrismaPlayerListRow, season?: string): Player {
+  const player = mapPlayer(record, season ? { season } : undefined);
   return {
     ...player,
     strengths: [],
@@ -407,11 +407,11 @@ function finalizeListPlayer(player: Player): Player {
   };
 }
 
-function mapPlayerList(record: PrismaPlayerListRow): Player {
-  return finalizeListPlayer(mapPlayerListForSort(record));
+function mapPlayerList(record: PrismaPlayerListRow, season?: string): Player {
+  return finalizeListPlayer(mapPlayerListForSort(record, season));
 }
 
-function mapPlayerRoster(record: PrismaPlayerRosterRow): Player {
+function mapPlayerRoster(record: PrismaPlayerRosterRow, season?: string): Player {
   const dob = record.dateOfBirth.toISOString();
   const currentSeasonStats = emptySeasonStats(record.id, record.teamId ?? undefined);
   return {
@@ -439,9 +439,11 @@ function mapPlayerRoster(record: PrismaPlayerRosterRow): Player {
     competitionName: record.team?.competition?.name,
     strengths: [],
     weaknesses: [],
-    currentSeasonStats,
-    availableSeasons: [currentSeasonStats.season],
-    selectedSeason: currentSeasonStats.season,
+    currentSeasonStats: season
+      ? { ...currentSeasonStats, season }
+      : currentSeasonStats,
+    availableSeasons: [season ?? currentSeasonStats.season],
+    selectedSeason: season ?? currentSeasonStats.season,
     history: [currentSeasonStats],
   };
 }
@@ -594,10 +596,32 @@ function buildBasketballSeasonStatsWhere(filters: PlayerFilters): Prisma.PlayerS
   return where;
 }
 
+/** NBA rows with no games and an all-zero line are roster noise, not scouting profiles. */
+const NBA_WITH_PRODUCTION: Prisma.PlayerWhereInput = {
+  OR: [
+    { league: { not: "NBA" } },
+    { matchStats: { some: {} } },
+    {
+      stats: {
+        some: {
+          OR: [
+            { matchesPlayed: { gt: 0 } },
+            { points: { gt: 0 } },
+            { rebounds: { gt: 0 } },
+            { assists: { gt: 0 } },
+          ],
+        },
+      },
+    },
+  ],
+};
+
 function buildBasketballPlayerWhere(filters: PlayerFilters): Prisma.PlayerWhereInput {
   const isRosterBrowse = filters.route === "players";
   const effective = isRosterBrowse ? filters : applyArchetypeFilters(filters);
   const where = buildPlayerWhere({ ...effective, sport: "BASKETBALL" });
+  const existingAnd = where.AND ? (Array.isArray(where.AND) ? where.AND : [where.AND]) : [];
+  where.AND = [...existingAnd, NBA_WITH_PRODUCTION];
 
   if (!isRosterBrowse && effective.archetype === "rim-protector") {
     where.position = { in: ["PF", "C", "Ala-Pivô", "Pivô"] };
@@ -701,7 +725,9 @@ async function findManySoccerStatsCappedThenPage(
     take: MAPPED_FILTER_CAP,
   });
 
-  let items = statistics.map((row) => mapPlayerListForSort(row.player));
+  let items = statistics.map((row) =>
+    mapPlayerListForSort(row.player, filters.sport === "BASKETBALL" ? filters.season : undefined)
+  );
 
   if (typeof filters.minRating === "number") {
     items = items.filter((player) => player.currentSeasonStats.rating >= filters.minRating!);
@@ -758,9 +784,15 @@ async function findManyPaginatedOnPlayer(
   const safePage = Math.min(Math.max(1, page), totalPages);
 
   return {
-    items: rosterOnly
-      ? (records as PrismaPlayerRosterRow[]).map(mapPlayerRoster)
-      : (records as PrismaPlayerListRow[]).map(mapPlayerList),
+    items: await applyBasketballSeasonTeams(
+      rosterOnly
+        ? (records as PrismaPlayerRosterRow[]).map((record) =>
+            mapPlayerRoster(record, filters.sport === "BASKETBALL" ? filters.season : undefined)
+          )
+        : (records as PrismaPlayerListRow[]).map((record) =>
+            mapPlayerList(record, filters.sport === "BASKETBALL" ? filters.season : undefined)
+          )
+    ),
     total,
     page: safePage,
     pageSize,
@@ -787,7 +819,11 @@ async function findManyCappedThenPage(
     orderBy: [{ marketValue: "desc" }, { fullName: "asc" }],
     take: MAPPED_FILTER_CAP,
   });
-  let items = records.map(mapPlayerListForSort);
+  let items = await applyBasketballSeasonTeams(
+    records.map((record) =>
+      mapPlayerListForSort(record, filters.sport === "BASKETBALL" ? filters.season : undefined)
+    )
+  );
 
   if (typeof filters.minRating === "number") {
     items = items.filter((player) => player.currentSeasonStats.rating >= filters.minRating!);
@@ -839,25 +875,50 @@ function buildStatOrderBy(filters: PlayerFilters): Prisma.PlayerStatisticOrderBy
   }
 }
 
-async function applyBasketballSeasonTeam(player: Player): Promise<Player> {
-  const season = campaignSeasonNumber(player.selectedSeason);
-  if (season == null) return player;
+async function applyBasketballSeasonTeams(players: Player[]): Promise<Player[]> {
+  const active = players.flatMap((player) => {
+    if (player.sport !== "BASKETBALL") return [];
+    const season = campaignSeasonNumber(player.selectedSeason);
+    return season == null ? [] : [{ player, season }];
+  });
+  if (!active.length) return players;
 
-  const rows = await getPrisma().$queryRaw<SeasonTeamAppearance[]>`
-    SELECT "teamName",
+  const ids = [...new Set(active.map((row) => row.player.id))];
+  const seasons = [...new Set(active.map((row) => row.season))];
+  const rows = await getPrisma().$queryRaw<
+    Array<{ playerId: string; season: number; teamName: string | null; games: number; minutes: number }>
+  >(Prisma.sql`
+    SELECT "playerId", season, "teamName",
            COUNT(*)::int AS games,
            COALESCE(SUM("minutesPlayed"), 0)::int AS minutes
     FROM "player_match_stats"
-    WHERE "playerId" = ${player.id}
-      AND season = ${season}
+    WHERE "playerId" IN (${Prisma.join(ids)})
+      AND season IN (${Prisma.join(seasons)})
       AND "teamName" IS NOT NULL
-    GROUP BY "teamName"
-  `;
-  const teamName = pickSeasonTeam(rows);
-  if (!teamName) return player;
+    GROUP BY "playerId", season, "teamName"
+  `);
+
+  const grouped = new Map<string, SeasonTeamAppearance[]>();
+  for (const row of rows) {
+    const key = `${row.playerId}:${row.season}`;
+    const list = grouped.get(key) ?? [];
+    list.push({
+      teamName: row.teamName,
+      games: Number(row.games),
+      minutes: Number(row.minutes),
+    });
+    grouped.set(key, list);
+  }
+
+  const chosen = new Map<string, string>();
+  for (const row of active) {
+    const teamName = pickSeasonTeam(grouped.get(`${row.player.id}:${row.season}`) ?? []);
+    if (teamName) chosen.set(`${row.player.id}:${row.season}`, teamName);
+  }
+  if (!chosen.size) return players;
 
   const teams = await getPrisma().team.findMany({
-    where: { name: { equals: teamName, mode: "insensitive" } },
+    where: { competition: { name: "NBA" } },
     select: {
       id: true,
       name: true,
@@ -865,14 +926,21 @@ async function applyBasketballSeasonTeam(player: Player): Promise<Player> {
       competition: { select: { name: true } },
     },
   });
-  const matched = teams.find((team) => team.competition?.name === "NBA") ?? teams[0];
-  return {
-    ...player,
-    teamId: matched?.id ?? player.teamId,
-    teamName: matched?.name ?? teamName,
-    teamShortName: matched?.shortName,
-    competitionName: matched?.competition?.name ?? player.competitionName,
-  };
+
+  return players.map((player) => {
+    const season = player.sport === "BASKETBALL" ? campaignSeasonNumber(player.selectedSeason) : null;
+    if (season == null) return player;
+    const teamName = chosen.get(`${player.id}:${season}`);
+    if (!teamName) return player;
+    const matched = teams.find((team) => team.name.toLowerCase() === teamName.toLowerCase());
+    return {
+      ...player,
+      teamId: matched?.id ?? player.teamId,
+      teamName: matched?.name ?? teamName,
+      teamShortName: matched ? matched.shortName : undefined,
+      competitionName: matched?.competition?.name ?? player.competitionName,
+    };
+  });
 }
 
 export const prismaPlayerRepository: PlayerRepository & {
@@ -1001,7 +1069,8 @@ export const prismaPlayerRepository: PlayerRepository & {
 
     const player = mapPlayer(record, options);
     if (player.sport !== "BASKETBALL") return player;
-    return applyBasketballSeasonTeam(player);
+    const [withSeasonTeam] = await applyBasketballSeasonTeams([player]);
+    return withSeasonTeam ?? player;
   },
 
   mapFromRecord(record: PrismaPlayerRow, options?: { season?: string }): Player {
@@ -1026,8 +1095,9 @@ export const prismaPlayerRepository: PlayerRepository & {
       team: { select: { shortName: true, name: true } },
     } as const;
 
-    const where = {
+    const where: Prisma.PlayerWhereInput = {
       sport: sport ?? "SOCCER",
+      ...(sport === "BASKETBALL" ? { AND: [NBA_WITH_PRODUCTION] } : {}),
       ...(search
         ? {
             OR: [
@@ -1089,8 +1159,11 @@ export const prismaPlayerRepository: PlayerRepository & {
     });
   },
 
-  async findForComparison(idA, idB) {
-    const [a, b] = await Promise.all([this.findById(idA), this.findById(idB)]);
+  async findForComparison(idA, idB, options) {
+    const [a, b] = await Promise.all([
+      this.findById(idA, options),
+      this.findById(idB, options),
+    ]);
     if (!a || !b) return null;
     const sportA = a.sport ?? a.currentSeasonStats.sport ?? "SOCCER";
     const sportB = b.sport ?? b.currentSeasonStats.sport ?? "SOCCER";

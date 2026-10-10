@@ -1,3 +1,5 @@
+import { canonicalBasketballSeasonKey } from "@/lib/basketball/season-team";
+
 type SearchParams = Record<string, string | string[] | undefined>;
 
 function param(value: string | string[] | undefined): string | undefined {
@@ -9,12 +11,14 @@ export function parseCompareParams(searchParams: SearchParams) {
   return {
     playerA: param(searchParams.playerA) ?? param(searchParams.a) ?? "",
     playerB: param(searchParams.playerB) ?? param(searchParams.b) ?? "",
+    season: canonicalBasketballSeasonKey(param(searchParams.season)),
   };
 }
 
-export function compareToSearchParams(playerA: string, playerB: string): URLSearchParams {
+export function compareToSearchParams(playerA: string, playerB: string, season?: string): URLSearchParams {
   const params = new URLSearchParams();
   if (playerA) params.set("playerA", playerA);
   if (playerB) params.set("playerB", playerB);
+  if (season) params.set("season", season);
   return params;
 }

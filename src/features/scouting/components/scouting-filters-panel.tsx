@@ -12,7 +12,6 @@ import { buildFilterUrl } from "@/features/scouting/lib/build-filter-url";
 import { parsePlayerFilters, hasActiveFilters } from "@/features/scouting/lib/parse-filters";
 import { getFilterDefaults, type ScoutingRoute } from "@/features/scouting/lib/filter-defaults";
 import {
-  BASKETBALL_POSITIONS,
   MIN_ASSISTS_OPTIONS,
   MIN_POINTS_OPTIONS,
   MIN_REBOUNDS_OPTIONS,
@@ -37,7 +36,8 @@ import {
   MIN_XG_PER90_OPTIONS,
   POSITIONS,
 } from "@/features/scouting/lib/constants";
-import { AMERICAN_FOOTBALL_POSITIONS } from "@/lib/positions";
+import { AMERICAN_FOOTBALL_POSITIONS, BASKETBALL_FILTER_POSITIONS } from "@/lib/positions";
+import { formatSeasonLabel } from "@/lib/format/season-label";
 import { useSport } from "@/context/sport-context";
 import { formatCapHit } from "@/lib/utils";
 import type { PlayerFilters } from "@/types";
@@ -548,7 +548,7 @@ export function ScoutingFiltersPanel({
   ) : null;
 
   const positionOptions = isBasketball
-    ? BASKETBALL_POSITIONS
+    ? BASKETBALL_FILTER_POSITIONS
     : isAmericanFootball
       ? AMERICAN_FOOTBALL_POSITIONS
       : POSITIONS;
@@ -614,6 +614,21 @@ export function ScoutingFiltersPanel({
             />
           </div>
         </FilterField>
+        {isBasketball ? (
+          <FilterField label="Season">
+            <Select
+              value={filters.season ?? ""}
+              onChange={(e) => pushFilters({ season: e.target.value || undefined, page: 1 })}
+            >
+              <option value="">Latest with production</option>
+              {["202627", "202526", "202425"].map((season) => (
+                <option key={season} value={season}>
+                  {formatSeasonLabel(season)}
+                </option>
+              ))}
+            </Select>
+          </FilterField>
+        ) : null}
         <FilterField label="Position">
           <Select
             value={filters.position ?? ""}

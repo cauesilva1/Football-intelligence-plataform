@@ -1,3 +1,4 @@
+import { canonicalBasketballSeasonKey } from "@/lib/basketball/season-team";
 import type { PlayerFilters } from "@/types";
 import type { Sport } from "@/lib/sport";
 import { getFilterDefaults, type ScoutingRoute } from "./filter-defaults";
@@ -81,6 +82,7 @@ export function parsePlayerFilters(
     minYardsPerGame: num(param(searchParams.minYardsPerGame)),
     minTouchdownsPerGame: num(param(searchParams.minTouchdownsPerGame)),
     minSacksPerGame: num(param(searchParams.minSacksPerGame)),
+    season: canonicalBasketballSeasonKey(param(searchParams.season)),
     route,
     sortBy: sortByParam && SORT_KEYS.includes(sortByParam) ? sortByParam : defaults.sortBy,
     sortDir: sortDir === "asc" || sortDir === "desc" ? sortDir : defaults.sortDir,
@@ -111,6 +113,7 @@ export function filtersToSearchParams(
   if (filters.position) params.set("position", filters.position);
   if (filters.league) params.set("league", filters.league);
   if (filters.teamId) params.set("teamId", filters.teamId);
+  if (filters.season) params.set("season", filters.season);
   if (typeof filters.minAge === "number") params.set("minAge", String(filters.minAge));
   if (typeof filters.maxAge === "number") params.set("maxAge", String(filters.maxAge));
   if (typeof filters.minRating === "number") params.set("minRating", String(filters.minRating));

@@ -3,6 +3,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { RankingView } from "@/features/rankings/components/ranking-view";
 import { allRankingSlugs, getRankingPreset } from "@/features/rankings/lib/presets";
 import { ScoutingTableSkeleton } from "@/features/scouting/components/scouting-table-skeleton";
+import { canonicalBasketballSeasonKey } from "@/lib/basketball/season-team";
 import { getServerSport } from "@/lib/sport-server";
 import { notFound } from "next/navigation";
 
@@ -33,7 +34,9 @@ export default async function RankingDetailPage({
 
   const pageRaw = query.page;
   const page = Number(Array.isArray(pageRaw) ? pageRaw[0] : pageRaw) || 1;
-  const filters = { ...preset.filters, sport, page };
+  const seasonRaw = query.season;
+  const season = canonicalBasketballSeasonKey(Array.isArray(seasonRaw) ? seasonRaw[0] : seasonRaw);
+  const filters = { ...preset.filters, sport, page, ...(season ? { season } : {}) };
   const suspenseKey = JSON.stringify(filters);
 
   return (

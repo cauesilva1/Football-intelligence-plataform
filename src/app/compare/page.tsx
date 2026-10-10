@@ -19,7 +19,7 @@ export default async function ComparePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const { playerA, playerB } = parseCompareParams(params);
+  const { playerA, playerB, season } = parseCompareParams(params);
   const bothSelected = Boolean(playerA && playerB);
   const selectedIds = [playerA, playerB].filter(Boolean);
 
@@ -42,7 +42,7 @@ export default async function ComparePage({
           </p>
         </div>
 
-        <CompareSelectorForm players={playersLite} playerA={playerA} playerB={playerB} />
+        <CompareSelectorForm players={playersLite} playerA={playerA} playerB={playerB} season={season} />
 
         {!bothSelected && (
           <EmptyState
@@ -53,8 +53,8 @@ export default async function ComparePage({
         )}
 
         {bothSelected && (
-          <Suspense key={`${playerA}-${playerB}`} fallback={<ComparisonResultSkeleton />}>
-            <ComparisonResult playerA={playerA} playerB={playerB} />
+          <Suspense key={`${playerA}-${playerB}-${season ?? ""}`} fallback={<ComparisonResultSkeleton />}>
+            <ComparisonResult playerA={playerA} playerB={playerB} season={season} />
           </Suspense>
         )}
       </div>

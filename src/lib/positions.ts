@@ -3,6 +3,9 @@ import { POSITION_GLOSSARY } from "@/components/common/glossary-copy";
 
 export const BASKETBALL_POSITIONS = ["PG", "SG", "G", "SF", "PF", "C"] as const;
 
+/** Desk and rankings filters. Generic ESPN "G" stays out of this list and displays as Guard. */
+export const BASKETBALL_FILTER_POSITIONS = ["PG", "SG", "SF", "PF", "C"] as const;
+
 export const AMERICAN_FOOTBALL_POSITIONS = [
   "QB",
   "RB",

@@ -7,6 +7,7 @@ import { queryPlayers } from "@/features/scouting/queries/players";
 import type { RankingPreset } from "@/features/rankings/lib/presets";
 import { buttonVariants } from "@/components/ui/button";
 import type { PlayerFilters } from "@/types";
+import { formatSeasonLabel } from "@/lib/format/season-label";
 import type { Sport } from "@/lib/sport";
 
 export async function RankingView({
@@ -37,6 +38,24 @@ export async function RankingView({
           </Link>
         }
       />
+
+      {sport === "BASKETBALL" ? (
+        <nav className="flex flex-wrap gap-2" aria-label="Season">
+          {["202627", "202526", "202425"].map((season) => (
+            <Link
+              key={season}
+              href={`${preset.href}?season=${season}`}
+              className={buttonVariants({
+                variant: filters.season === season ? "default" : "outline",
+                size: "xs",
+              })}
+              aria-current={filters.season === season ? "page" : undefined}
+            >
+              {formatSeasonLabel(season)}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
 
       {showPrototypeNote ? (
         <p className="rounded-lg border border-border/70 bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">

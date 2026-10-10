@@ -22,8 +22,16 @@ function resolveSport(aSport?: Sport, statsSport?: Sport): Sport {
   return aSport ?? statsSport ?? "SOCCER";
 }
 
-export async function ComparisonResult({ playerA, playerB }: { playerA: string; playerB: string }) {
-  const pair = await queryPlayersForComparison(playerA, playerB);
+export async function ComparisonResult({
+  playerA,
+  playerB,
+  season,
+}: {
+  playerA: string;
+  playerB: string;
+  season?: string;
+}) {
+  const pair = await queryPlayersForComparison(playerA, playerB, season);
   if (!pair) notFound();
 
   const [a, b] = pair;

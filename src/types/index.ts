@@ -217,6 +217,8 @@ export interface PlayerFilters {
   minYardsPerGame?: number;
   minTouchdownsPerGame?: number;
   minSacksPerGame?: number;
+  /** Basketball campaign key, "202425" or "2024/25". */
+  season?: string;
   /** Origem da listagem — players = elenco; scouting = inteligência de mercado. */
   route?: "players" | "scouting";
   sortBy?:

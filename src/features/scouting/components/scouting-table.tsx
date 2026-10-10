@@ -3,7 +3,7 @@ import { Eye } from "lucide-react";
 import { PlayerAvatar } from "@/components/players/player-avatar";
 import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
 import { METRIC_GLOSSARY, POSITION_GLOSSARY } from "@/components/common/glossary-copy";
-import { getPositionGlossaryDescription } from "@/lib/positions";
+import { formatBasketballPositionLabel, getPositionGlossaryDescription } from "@/lib/positions";
 import {
   Table,
   TableHeader,
@@ -234,7 +234,7 @@ function BasketballScoutingTable({
               <TableCell className="text-muted-foreground">{formatClubLabel(player.teamName, player.teamShortName)}</TableCell>
               <TableCell>
                 <GlossaryTooltip
-                  label={<Badge variant="neutral">{player.position}</Badge>}
+                  label={<Badge variant="neutral">{formatBasketballPositionLabel(player.position)}</Badge>}
                   description={getPositionGlossaryDescription(player.position, "BASKETBALL")}
                 />
               </TableCell>

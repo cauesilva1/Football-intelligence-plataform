@@ -11,21 +11,23 @@ export function CompareSelectorForm({
   players,
   playerA,
   playerB,
+  season,
 }: {
   players: PlayerLite[];
   playerA: string;
   playerB: string;
+  season?: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const pushSelection = useCallback(
     (a: string, b: string) => {
-      const params = compareToSearchParams(a, b);
+      const params = compareToSearchParams(a, b, season);
       const qs = params.toString();
       startTransition(() => router.push(qs ? `/compare?${qs}` : "/compare", { scroll: false }));
     },
-    [router]
+    [router, season]
   );
 
   return (

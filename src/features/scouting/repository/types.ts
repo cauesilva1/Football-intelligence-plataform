@@ -17,7 +17,11 @@ export interface PlayerRepository {
     sport?: Sport,
     options?: { take?: number; ensureIds?: string[]; search?: string }
   ): Promise<PlayerLite[]>;
-  findForComparison(idA: string, idB: string): Promise<[Player, Player] | null>;
+  findForComparison(
+    idA: string,
+    idB: string,
+    options?: { season?: string }
+  ): Promise<[Player, Player] | null>;
   /** Bounded sample for dashboards / similarity — never full-table hydrate. */
   findSample(
     sport?: Sport,

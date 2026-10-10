@@ -376,7 +376,7 @@ function pickBestSeasonWithSignal(
 ): string | undefined {
   if (preferredSeason) {
     const preferred = history.find((row) => row.season === preferredSeason);
-    if (preferred && hasSignal(preferred)) return preferredSeason;
+    if (preferred) return preferredSeason;
   }
 
   const withSignal = [...history]

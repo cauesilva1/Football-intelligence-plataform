@@ -20,6 +20,12 @@ export function pickSeasonTeam(appearances: SeasonTeamAppearance[]): string | nu
   return ranked[0].teamName;
 }
 
+/** "2024/25" and "202425" both become the campaign key stored on season rows. */
+export function canonicalBasketballSeasonKey(label: string | undefined): string | undefined {
+  const season = campaignSeasonNumber(label);
+  return season == null ? undefined : String(season);
+}
+
 export function campaignSeasonNumber(label: string | undefined): number | null {
   if (!label?.trim()) return null;
   const compact = label.trim().replace("/", "");

@@ -5,6 +5,7 @@ import {
   isActiveRosterAthlete,
   mapNbaPosition,
   orderTeamsByStaleness,
+  specificPositionsFromDepthChart,
 } from "./nba-roster-sync";
 
 test("orderTeamsByStaleness puts never-synced teams first, then oldest", () => {
@@ -25,6 +26,25 @@ test("orderTeamsByStaleness does not mutate the input", () => {
   assert.deepEqual(teams.map((t) => t.key), ["b", "a"]);
 });
 
+test("depth chart assigns the five positions and leaves unlisted players alone", () => {
+  const positions = specificPositionsFromDepthChart({
+    depthchart: [
+      {
+        positions: {
+          pg: { athletes: [{ id: "1" }, { id: "2" }] },
+          pf: { athletes: [{ id: "3" }] },
+          sf: { athletes: [{ id: "3" }] },
+        },
+      },
+    ],
+  });
+  assert.equal(positions.get("1"), "PG");
+  assert.equal(positions.get("2"), "PG");
+  assert.equal(positions.get("3"), "PF");
+  assert.equal(mapNbaPosition("Guard"), "G");
+  assert.equal(positions.has("9"), false);
+});
+
 test("isActiveRosterAthlete accepts active or status-less athletes only", () => {
   assert.equal(isActiveRosterAthlete({ id: "1", status: { type: "active" } }), true);
   assert.equal(isActiveRosterAthlete({ id: "2" }), true);
@@ -38,5 +58,7 @@ test("mapNbaPosition and buildPlayerSlug normalize ESPN values", () => {
   assert.equal(mapNbaPosition("G"), "G");
   assert.equal(mapNbaPosition("Center"), "C");
   assert.equal(mapNbaPosition("Forward"), "SF");
+  assert.equal(mapNbaPosition("Power Forward"), "PF");
+  assert.equal(mapNbaPosition("Small Forward"), "SF");
   assert.equal(buildPlayerSlug("Nikola Jokić"), "nikola-jokic");
 });

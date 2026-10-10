@@ -10,6 +10,16 @@ import { getPrisma } from "@/lib/prisma";
 const NBA_TEAMS_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams";
 const NBA_ROSTER_URL = (teamId: string) =>
   `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${teamId}/roster`;
+const NBA_DEPTH_CHART_URL = (teamId: string) =>
+  `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${teamId}/depthcharts`;
+
+const DEPTH_CHART_SLOTS: Record<string, string> = {
+  pg: "PG",
+  sg: "SG",
+  sf: "SF",
+  pf: "PF",
+  c: "C",
+};
 
 const SPORT = "BASKETBALL";
 const LEAGUE = "NBA";
@@ -97,6 +107,34 @@ export function buildPlayerSlug(name: string): string {
   return slug || "jogador";
 }
 
+interface EspnDepthChartResponse {
+  depthchart?: Array<{
+    positions?: Record<string, { athletes?: Array<{ id?: string }> }>;
+  }>;
+}
+
+/**
+ * ESPN depth charts name the five positions. The shallowest listing wins.
+ * A generic roster label (Guard / Forward) is left untouched when the player is absent.
+ */
+export function specificPositionsFromDepthChart(payload: EspnDepthChartResponse): Map<string, string> {
+  const best = new Map<string, { position: string; index: number }>();
+  for (const chart of payload.depthchart ?? []) {
+    for (const [slot, block] of Object.entries(chart.positions ?? {})) {
+      const position = DEPTH_CHART_SLOTS[slot.toLowerCase()];
+      if (!position) continue;
+      (block?.athletes ?? []).forEach((athlete, index) => {
+        if (!athlete?.id) return;
+        const current = best.get(athlete.id);
+        if (!current || index < current.index) {
+          best.set(athlete.id, { position, index });
+        }
+      });
+    }
+  }
+  return new Map([...best].map(([id, row]) => [id, row.position]));
+}
+
 export function mapNbaPosition(raw?: string): string {
   const value = (raw ?? "").trim().toLowerCase();
   if (!value) return "Ala";
@@ -164,6 +202,41 @@ export function orderTeamsByStaleness<T extends { key: string }>(
     const lb = lastSyncByKey.get(b.key) ?? 0;
     return la - lb;
   });
+}
+
+async function applyDepthChartPositions(
+  prisma: PrismaClient,
+  positions: Map<string, string>
+): Promise<number> {
+  let updated = 0;
+  for (const [athleteId, position] of positions) {
+    const apiSportsId = Number.parseInt(athleteId, 10);
+    if (!Number.isFinite(apiSportsId)) continue;
+    const result = await prisma.player.updateMany({
+      where: { sport: SPORT, league: LEAGUE, apiSportsId, NOT: { position } },
+      data: { position },
+    });
+    updated += result.count;
+  }
+  return updated;
+}
+
+/** Refresh PG/SG/SF/PF/C from every franchise depth chart without rewriting roster teams. */
+export async function syncNbaDepthChartPositions(
+  prisma: PrismaClient = getPrisma(),
+  log: (message: string) => void = (message) => console.log(`[NBA-SYNC] ${message}`)
+): Promise<number> {
+  const teams = await fetchNbaTeams();
+  let updated = 0;
+  for (const team of teams) {
+    const payload = await fetchJson<EspnDepthChartResponse>(NBA_DEPTH_CHART_URL(team.id));
+    const count = await applyDepthChartPositions(prisma, specificPositionsFromDepthChart(payload));
+    updated += count;
+    log(`${team.displayName}: ${count} posições do depth chart`);
+    await sleep(200);
+  }
+  log(`Depth chart — ${updated} jogadores com posição específica`);
+  return updated;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -429,6 +502,9 @@ export async function syncNbaRosters(
           console.warn(`[NBA-SYNC] FAIL jogador ${label}:`, error);
         }
       }
+
+      const depthChart = await fetchJson<EspnDepthChartResponse>(NBA_DEPTH_CHART_URL(team.id));
+      await applyDepthChartPositions(prisma, specificPositionsFromDepthChart(depthChart));
 
       result.franchisesSynced += 1;
       result.players += teamCount;

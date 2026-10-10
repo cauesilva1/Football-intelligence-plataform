@@ -71,7 +71,7 @@ export const mockPlayerRepository: PlayerRepository = {
     );
   },
 
-  async findForComparison(idA, idB) {
+  async findForComparison(idA, idB, _options) {
     const a = getPlayerById(idA);
     const b = getPlayerById(idB);
     if (!a || !b) return null;
