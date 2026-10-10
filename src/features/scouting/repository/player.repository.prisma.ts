@@ -19,6 +19,7 @@ import {
 import { BASKETBALL_SCOUTING_SEASONS } from "@/features/scouting/lib/basketball-constants";
 import {
   campaignSeasonNumber,
+  canonicalBasketballSeasonKey,
   pickSeasonTeam,
   type SeasonTeamAppearance,
 } from "@/lib/basketball/season-team";
@@ -875,7 +876,17 @@ function buildStatOrderBy(filters: PlayerFilters): Prisma.PlayerStatisticOrderBy
   }
 }
 
-async function applyBasketballSeasonTeams(players: Player[]): Promise<Player[]> {
+async function applyBasketballSeasonTeams<
+  T extends {
+    id: string;
+    sport?: string;
+    selectedSeason: string;
+    teamId: string;
+    teamName?: string;
+    teamShortName?: string;
+    competitionName?: string;
+  },
+>(players: T[]): Promise<T[]> {
   const active = players.flatMap((player) => {
     if (player.sport !== "BASKETBALL") return [];
     const season = campaignSeasonNumber(player.selectedSeason);
@@ -1079,7 +1090,7 @@ export const prismaPlayerRepository: PlayerRepository & {
 
   async findLite(
     sport: PlayerFilters["sport"] = "SOCCER",
-    options?: { take?: number; ensureIds?: string[]; search?: string }
+    options?: { take?: number; ensureIds?: string[]; search?: string; season?: string }
   ) {
     const take = Math.min(Math.max(options?.take ?? 30, 1), 100);
     const ensureIds = [...new Set((options?.ensureIds ?? []).filter(Boolean))];
@@ -1135,7 +1146,7 @@ export const prismaPlayerRepository: PlayerRepository & {
       }))
     );
 
-    return unique.map((r) => {
+    const lite = unique.map((r) => {
       const ageMs = Date.now() - new Date(r.dateOfBirth).getTime();
       const age = Math.max(15, Math.min(50, Math.floor(ageMs / (365.25 * 24 * 60 * 60 * 1000))));
       const identity =
@@ -1157,6 +1168,15 @@ export const prismaPlayerRepository: PlayerRepository & {
         teamName: r.team?.name,
       };
     });
+
+    const seasonKey =
+      sport === "BASKETBALL" ? canonicalBasketballSeasonKey(options?.season) : undefined;
+    if (!seasonKey) return lite;
+
+    const stamped = await applyBasketballSeasonTeams(
+      lite.map((player) => ({ ...player, selectedSeason: seasonKey }))
+    );
+    return stamped.map(({ selectedSeason: _selectedSeason, ...player }) => player);
   },
 
   async findForComparison(idA, idB, options) {

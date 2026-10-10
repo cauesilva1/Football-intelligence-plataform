@@ -15,7 +15,7 @@ export interface PlayerRepository {
   findById(id: string, options?: { season?: string }): Promise<Player | null>;
   findLite(
     sport?: Sport,
-    options?: { take?: number; ensureIds?: string[]; search?: string }
+    options?: { take?: number; ensureIds?: string[]; search?: string; season?: string }
   ): Promise<PlayerLite[]>;
   findForComparison(
     idA: string,

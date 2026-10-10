@@ -41,7 +41,7 @@ export const mockPlayerRepository: PlayerRepository = {
 
   async findLite(
     sport: Sport = "SOCCER",
-    options?: { take?: number; ensureIds?: string[]; search?: string }
+    options?: { take?: number; ensureIds?: string[]; search?: string; season?: string }
   ) {
     const take = Math.min(Math.max(options?.take ?? 30, 1), 100);
     const ensureIds = new Set((options?.ensureIds ?? []).filter(Boolean));

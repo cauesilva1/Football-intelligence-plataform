@@ -25,7 +25,7 @@ export default async function ComparePage({
 
   // Only hydrate selected players on the server — search is remote autocomplete.
   const playersLite = selectedIds.length
-    ? await queryAllPlayersLite({ take: 1, ensureIds: selectedIds })
+    ? await queryAllPlayersLite({ take: 1, ensureIds: selectedIds, season })
     : [];
 
   return (

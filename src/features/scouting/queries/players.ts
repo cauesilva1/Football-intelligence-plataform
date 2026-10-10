@@ -28,7 +28,7 @@ export const queryPlayerById = cache(async (id: string, season?: string) => {
 });
 
 export const queryAllPlayersLite = cache(
-  async (options?: { take?: number; ensureIds?: string[]; search?: string }) => {
+  async (options?: { take?: number; ensureIds?: string[]; search?: string; season?: string }) => {
     await ensureRuntimeDataSource();
     const sport = await getServerSport();
     return withSupabaseErrorLog("queryAllPlayersLite", () =>
