@@ -360,11 +360,11 @@ model BasketballShot {
   id             String   @id @default(cuid())
   playerId       String
   player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  /// Provider game id (ESPN event id). NBA games are not always rows in `matches`.
+  /// Provider game id. NBA games are not always rows in `matches`.
   gameId         String
   /// Provider play id, so a rerun of the same game replaces cleanly.
   externalPlayId String
-  /// Feet in the ESPN NBA court space: x is 0–50 left to right, y is distance from the rim toward half court.
+  /// Canonical NBA half court: x is 0–50 left to right, y is distance from the rim toward half court.
   x              Float
   y              Float
   made           Boolean
@@ -381,14 +381,14 @@ model BasketballShot {
   @@map("basketball_shots")
 }
 
-/// One soccer shot on the 0–100 ESPN pitch. Not an estimated xG.
+/// One soccer shot on the canonical 0–100 pitch. Not an estimated xG.
 /// `converted` is a goal or a shot on target from the event type.
 /// Soccer attempts do not belong in `basketball_shots`.
 model SoccerShot {
   id             String   @id @default(cuid())
   playerId       String
   player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  /// `{espnSlug}:{eventId}`, so `usa.1:761844` joins `espn:usa.1:761844` match lines.
+  /// `{leagueSlug}:{eventId}`, so `usa.1:761844` joins `{provider}:usa.1:761844` match lines.
   gameId         String
   externalPlayId String
   /// Attack-normalized percent. x runs toward the goal at 100; y is the width.
@@ -400,6 +400,8 @@ model SoccerShot {
   shotType       String
   /// Season year stored on the match line (MLS 2026 → 2026).
   season         Int
+  /// Shot-level xG from a provider that supplies it. Left null until that provider is wired.
+  realXg         Float?
   createdAt      DateTime @default(now())
 
   @@unique([gameId, externalPlayId])

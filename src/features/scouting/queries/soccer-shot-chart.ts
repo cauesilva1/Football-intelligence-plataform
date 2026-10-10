@@ -180,7 +180,7 @@ export async function querySoccerTeamShotChart(
     FROM soccer_shots s
     JOIN player_match_stats p
       ON p."playerId" = s."playerId"
-     AND p."externalEventKey" = 'espn:' || s."gameId"
+     AND p."externalEventKey" LIKE '%:' || s."gameId"
     JOIN teams t ON t.id = ${teamId} AND lower(t.name) = lower(p."teamName")
     ORDER BY s.season DESC
   `;
@@ -201,7 +201,7 @@ export async function querySoccerTeamShotChart(
       FROM soccer_shots s
       JOIN player_match_stats p
         ON p."playerId" = s."playerId"
-       AND p."externalEventKey" = 'espn:' || s."gameId"
+       AND p."externalEventKey" LIKE '%:' || s."gameId"
       JOIN teams t ON t.id = ${teamId} AND lower(t.name) = lower(p."teamName")
       WHERE s.season = ${selected}
       GROUP BY s.zone
@@ -211,7 +211,7 @@ export async function querySoccerTeamShotChart(
       FROM soccer_shots s
       JOIN player_match_stats p
         ON p."playerId" = s."playerId"
-       AND p."externalEventKey" = 'espn:' || s."gameId"
+       AND p."externalEventKey" LIKE '%:' || s."gameId"
       JOIN teams t ON t.id = ${teamId} AND lower(t.name) = lower(p."teamName")
       WHERE s.season = ${selected}
     `,
@@ -220,7 +220,7 @@ export async function querySoccerTeamShotChart(
       FROM soccer_shots s
       JOIN player_match_stats p
         ON p."playerId" = s."playerId"
-       AND p."externalEventKey" = 'espn:' || s."gameId"
+       AND p."externalEventKey" LIKE '%:' || s."gameId"
       JOIN teams t ON t.id = ${teamId} AND lower(t.name) = lower(p."teamName")
       WHERE s.season = ${selected} AND s."gameId" <> ''
     `,

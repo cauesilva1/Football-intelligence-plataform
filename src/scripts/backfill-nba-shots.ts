@@ -6,7 +6,7 @@
  */
 import fs from "fs";
 import path from "path";
-import { backfillNbaShotChartSeasons } from "@/lib/basketball/nba-shot-sync";
+import { providerFor } from "@/lib/providers/registry";
 import { nbaShotChartSeasons } from "@/lib/basketball/season";
 import { getPrisma } from "@/lib/prisma";
 
@@ -44,7 +44,11 @@ async function main() {
   const season = readFlag("season");
   const limit = readFlag("limit") ?? undefined;
   const budgetMs = readFlag("budget-ms") ?? 120_000;
-  const results = await backfillNbaShotChartSeasons({
+  const provider = providerFor("basketball", "nba");
+  if (!provider.backfillBasketballShots) {
+    throw new Error(`Provider ${provider.id} does not ingest basketball shots`);
+  }
+  const results = await provider.backfillBasketballShots({
     seasons: season != null ? [season] : nbaShotChartSeasons(),
     deadlineMs: Date.now() + budgetMs,
     ...(limit != null ? { maxGames: limit } : {}),

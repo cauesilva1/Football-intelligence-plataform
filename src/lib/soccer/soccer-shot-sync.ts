@@ -1,19 +1,14 @@
 import { getPrisma } from "@/lib/prisma";
-import {
-  parseSoccerShotPlay,
-  isSoccerShotEventType,
-  type ParsedSoccerShot,
-} from "@/lib/soccer/espn-shot-parse";
 import { matchShooterId, type ShotRosterPlayer } from "@/lib/soccer/shot-name-match";
-import { parseSoccerEventKey, soccerShotGameId, soccerShotLeagueOrder } from "@/lib/soccer/shot-league-order";
+import { soccerShotGameId, soccerShotLeagueOrder } from "@/lib/soccer/shot-league-order";
 import {
   NBA_SHOT_CHART_MIN_GAME_MS,
   selectShotBackfillBatch,
 } from "@/lib/basketball/shot-backfill-plan";
+import { providerFor } from "@/lib/providers/registry";
+import type { DataProvider, PendingShotGame } from "@/lib/providers/types";
 
 export const SOCCER_SHOT_MAX_GAMES_PER_RUN = 10;
-const SHOT_CACHE_PREFIX = "espn:soccer:shot:v1:";
-const PLAYS_PAGE = 100;
 
 export interface SoccerShotBackfillResult {
   slug: string;
@@ -25,47 +20,6 @@ export interface SoccerShotBackfillResult {
   failed: number;
   deferred: number;
   stoppedForTime: boolean;
-}
-
-interface PlaysPage {
-  count?: number;
-  pageCount?: number;
-  items?: Array<{
-    $ref?: string;
-    type?: { type?: string };
-  }>;
-}
-
-async function fetchJson(url: string): Promise<unknown> {
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "football-intelligence-platform/1.0 (soccer-shot-chart)",
-      Accept: "application/json",
-    },
-    signal: AbortSignal.timeout(20_000),
-  });
-  if (!response.ok) {
-    throw new Error(`ESPN plays HTTP ${response.status}`);
-  }
-  return response.json();
-}
-
-/** Page the play list and download only finalizations. */
-export async function fetchSoccerShotPlays(slug: string, eventId: string): Promise<unknown[]> {
-  const shots: unknown[] = [];
-  let page = 1;
-  let pageCount = 1;
-  while (page <= pageCount && page <= 40) {
-    const url = `https://sports.core.api.espn.com/v2/sports/soccer/leagues/${encodeURIComponent(slug)}/events/${eventId}/competitions/${eventId}/plays?limit=${PLAYS_PAGE}&page=${page}`;
-    const payload = (await fetchJson(url)) as PlaysPage;
-    pageCount = payload.pageCount ?? 1;
-    for (const item of payload.items ?? []) {
-      if (!isSoccerShotEventType(item.type?.type) || !item.$ref) continue;
-      shots.push(await fetchJson(item.$ref));
-    }
-    page += 1;
-  }
-  return shots;
 }
 
 /** Boxscore lines plus both clubs' squads. A name that matches nobody stays unmatched. */
@@ -119,58 +73,19 @@ async function rosterForEvent(externalEventKey: string): Promise<ShotRosterPlaye
   return [...byId.values()];
 }
 
-async function listPending(slug: string): Promise<Array<{ key: string; season: number }>> {
-  const prisma = getPrisma();
-  const prefix = `espn:${slug}:`;
-  const [games, cached] = await Promise.all([
-    prisma.$queryRaw<Array<{ key: string; season: number | null }>>`
-      SELECT "externalEventKey" AS key, MIN(season)::int AS season
-      FROM player_match_stats
-      WHERE "externalEventKey" LIKE ${prefix + "%"}
-      GROUP BY "externalEventKey"
-      ORDER BY MIN("matchDate") ASC NULLS LAST
-    `,
-    prisma.systemCache.findMany({
-      where: { key: { startsWith: SHOT_CACHE_PREFIX } },
-      select: { key: true },
-    }),
-  ]);
-  const done = new Set(cached.map((row) => row.key.slice(SHOT_CACHE_PREFIX.length)));
-  return games.flatMap((game) => {
-    if (done.has(game.key) || !parseSoccerEventKey(game.key)) return [];
-    return [{ key: game.key, season: game.season ?? 0 }];
-  });
-}
-
-export async function ingestSoccerShotEvent(externalEventKey: string, season: number): Promise<{
+export async function ingestSoccerShotEvent(
+  provider: DataProvider,
+  game: PendingShotGame
+): Promise<{
   stored: number;
   skippedNoPlayer: number;
   skippedInvalidCoordinate: number;
 }> {
-  const parsedKey = parseSoccerEventKey(externalEventKey);
-  if (!parsedKey) throw new Error(`Not a soccer ESPN key: ${externalEventKey}`);
-
-  const plays = await fetchSoccerShotPlays(parsedKey.slug, parsedKey.eventId);
-  const parsed: ParsedSoccerShot[] = [];
-  let skippedInvalidCoordinate = 0;
-  let skippedNoPlayer = 0;
-  for (const play of plays) {
-    const shot = parseSoccerShotPlay(play as Parameters<typeof parseSoccerShotPlay>[0]);
-    if (shot === "invalid") {
-      skippedInvalidCoordinate += 1;
-      continue;
-    }
-    if (shot === "no-player" || shot === "not-a-shot") {
-      if (shot === "no-player") skippedNoPlayer += 1;
-      continue;
-    }
-    parsed.push(shot);
-  }
-
+  const page = await provider.fetchShotEvents(game);
   const prisma = getPrisma();
-  const roster = await rosterForEvent(externalEventKey);
+  const roster = await rosterForEvent(game.key);
 
-  const gameId = soccerShotGameId(parsedKey.slug, parsedKey.eventId);
+  const gameId = soccerShotGameId(game.leagueKey, game.eventId);
   const rows: Array<{
     playerId: string;
     gameId: string;
@@ -183,7 +98,8 @@ export async function ingestSoccerShotEvent(externalEventKey: string, season: nu
     season: number;
   }> = [];
   const seen = new Set<string>();
-  for (const shot of parsed) {
+  let skippedNoPlayer = page.skippedNoPlayer;
+  for (const shot of page.shots) {
     const playerId = shot.shooterName ? matchShooterId(shot.shooterName, roster) : null;
     if (!playerId) {
       skippedNoPlayer += 1;
@@ -200,13 +116,17 @@ export async function ingestSoccerShotEvent(externalEventKey: string, season: nu
       converted: shot.converted,
       zone: shot.zone,
       shotType: shot.shotType,
-      season,
+      season: game.season,
     });
   }
 
-  const storedSeason = season > 0 ? season : new Date().getUTCFullYear();
-  if (rows.length === 0 && parsed.length > 0) {
-    return { stored: 0, skippedNoPlayer, skippedInvalidCoordinate };
+  const storedSeason = game.season > 0 ? game.season : new Date().getUTCFullYear();
+  if (rows.length === 0 && page.shots.length > 0) {
+    return {
+      stored: 0,
+      skippedNoPlayer,
+      skippedInvalidCoordinate: page.skippedInvalidCoordinate,
+    };
   }
   await prisma.$transaction(async (tx) => {
     await tx.soccerShot.deleteMany({ where: { gameId } });
@@ -217,37 +137,41 @@ export async function ingestSoccerShotEvent(externalEventKey: string, season: nu
       });
     }
     await tx.systemCache.upsert({
-      where: { key: `${SHOT_CACHE_PREFIX}${externalEventKey}` },
+      where: { key: provider.shotCacheKey(game.key) },
       create: {
-        key: `${SHOT_CACHE_PREFIX}${externalEventKey}`,
+        key: provider.shotCacheKey(game.key),
         json: {
-          eventKey: externalEventKey,
+          eventKey: game.key,
           season: storedSeason,
           stored: rows.length,
           skippedNoPlayer,
-          skippedInvalidCoordinate,
+          skippedInvalidCoordinate: page.skippedInvalidCoordinate,
           processedAt: new Date().toISOString(),
         },
       },
       update: {
         json: {
-          eventKey: externalEventKey,
+          eventKey: game.key,
           season: storedSeason,
           stored: rows.length,
           skippedNoPlayer,
-          skippedInvalidCoordinate,
+          skippedInvalidCoordinate: page.skippedInvalidCoordinate,
           processedAt: new Date().toISOString(),
         },
       },
     });
   });
 
-  return { stored: rows.length, skippedNoPlayer, skippedInvalidCoordinate };
+  return {
+    stored: rows.length,
+    skippedNoPlayer,
+    skippedInvalidCoordinate: page.skippedInvalidCoordinate,
+  };
 }
 
 /**
  * Walk games already stored, MLS first. One shared cap of 10 games.
- * Completed games are skipped via systemCache.
+ * The league's configured provider supplies the queue and the shot events.
  */
 export async function backfillSoccerShotCharts(options: {
   deadlineMs: number;
@@ -265,7 +189,8 @@ export async function backfillSoccerShotCharts(options: {
     if (remainingGames <= 0) break;
     if (Date.now() + minGameMs > options.deadlineMs) break;
 
-    const pending = await listPending(slug);
+    const provider = providerFor("soccer", slug);
+    const pending = await provider.listPendingShotGames(slug);
     const plan = selectShotBackfillBatch(pending, {
       maxGames: remainingGames,
       remainingMs: options.deadlineMs - Date.now(),
@@ -301,7 +226,7 @@ export async function backfillSoccerShotCharts(options: {
         break;
       }
       try {
-        const ingested = await ingestSoccerShotEvent(game.key, game.season);
+        const ingested = await ingestSoccerShotEvent(provider, game);
         result.gamesProcessed += 1;
         result.shotsStored += ingested.stored;
         result.skippedNoPlayer += ingested.skippedNoPlayer;

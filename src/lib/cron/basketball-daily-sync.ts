@@ -20,10 +20,8 @@ import {
   type EuroLeagueRosterSyncResult,
 } from "@/lib/sync/euroleague-sync";
 import { syncNbaRosters, type NbaRosterSyncResult } from "@/lib/sync/nba-roster-sync";
-import {
-  backfillNbaShotChartSeasons,
-  type NbaShotBackfillResult,
-} from "@/lib/basketball/nba-shot-sync";
+import { providerFor } from "@/lib/providers/registry";
+import type { BasketballShotBackfillSummary } from "@/lib/providers/types";
 
 const LOG_PREFIX = "[BASKETBALL-CRON]";
 
@@ -66,7 +64,7 @@ export interface BasketballCronResult {
   /** API-Basketball (paid, 100 req/day) usage for this run. */
   apiSportsQuota: ApiQuotaSnapshot;
   /** Incremental NBA shot-chart catch-up. Omitted when the run is not scanning the NBA. */
-  shotCharts?: NbaShotBackfillResult[];
+  shotCharts?: BasketballShotBackfillSummary[];
   elapsedMs: number;
   totals: {
     eventsFound: number;
@@ -295,7 +293,7 @@ export async function runBasketballDailySync(
     }
   }
 
-  let shotCharts: NbaShotBackfillResult[] | undefined;
+  let shotCharts: BasketballShotBackfillSummary[] | undefined;
   if (leagues.includes("nba")) {
     if (remainingMs() < MIN_STEP_MS) {
       console.warn(`${LOG_PREFIX} [shots] adiado — sem orçamento de tempo.`);
@@ -304,7 +302,11 @@ export async function runBasketballDailySync(
         console.log(
           `${LOG_PREFIX} [shots] mapa de arremessos NBA ${nbaShotChartSeasons(now).join(",")} — restante ${Math.round(remainingMs() / 1000)}s…`
         );
-        shotCharts = await backfillNbaShotChartSeasons({
+        const provider = providerFor("basketball", "nba");
+        if (!provider.backfillBasketballShots) {
+          throw new Error(`Provider ${provider.id} does not ingest basketball shots`);
+        }
+        shotCharts = await provider.backfillBasketballShots({
           deadlineMs,
           log: (message) => console.log(`${LOG_PREFIX} [shots] ${message}`),
         });
