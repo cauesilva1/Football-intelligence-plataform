@@ -1,7 +1,7 @@
 # Relatório de AppSec — OmniScout (football-intelligence-plataform)
 
 **Repo:** github.com/cauesilva1/Football-intelligence-plataform
-**Live:** https://football-intelligence-plataform.vercel.app
+**Live:** https://omni-scout.vercel.app
 **Stack:** Next.js 15 (App Router) + TypeScript + Prisma + PostgreSQL (Supabase) — **sem sistema de contas de usuário** (produto de leitura pública, "No public signup")
 **Escopo analisado:** `src/middleware.ts`, `src/app/api/cron/*`, `src/app/api/players/[id]/route.ts`, `src/lib/cron/authorize-request.ts`, `src/lib/workspace/*` (device-cookie, device-id, shortlist-store), `src/lib/actions/*` (reports, workspace, players-by-ids, teams, players), `src/features/scouting/actions/enrich-af-player-seasons.ts`, `src/lib/ai/scout-report-generator.ts`, `src/lib/action-guard.ts`, `src/lib/rate-limit.ts`, `prisma/sql/enable-rls-lockdown.sql`, `src/scripts/secure-rls.ts`, `.env.example`.
 **Data:** 2026-08-02

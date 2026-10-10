@@ -8,7 +8,7 @@
 
 **OmniScout** — Sports Intelligence / scouting multi-desporto (futebol, basquete, AF). Diferencial: profundidade honesta de dados.
 
-**Demo:** https://football-intelligence-plataform.vercel.app/
+**Demo:** https://omni-scout.vercel.app/
 
 ---
 
