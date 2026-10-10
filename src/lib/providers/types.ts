@@ -65,6 +65,17 @@ export interface BasketballShotBackfillSummary {
   coordinatesUnavailable: boolean;
 }
 
+/** One season total for one player. Ingestion matches the name; the provider does not. */
+export interface CanonicalSeasonMetric {
+  playerName: string;
+  teamName: string | null;
+  /** Season start year. MLS 2026 stays 2026. A European 2026/27 season is 2026. */
+  season: number;
+  leagueKey: string;
+  metric: string;
+  value: number;
+}
+
 export interface DataProvider {
   readonly id: string;
   listGames(leagueKey: string, on: Date): Promise<CanonicalGame[]>;
@@ -78,4 +89,6 @@ export interface DataProvider {
   backfillBasketballShots?(
     options: BasketballShotBackfillOptions
   ): Promise<BasketballShotBackfillSummary[]>;
+  /** Season totals such as progressive passes. Shot adapters omit it. */
+  fetchSeasonMetrics?(leagueKey: string): Promise<CanonicalSeasonMetric[]>;
 }

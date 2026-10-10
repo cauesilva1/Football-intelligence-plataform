@@ -12,6 +12,7 @@ import { PlayerTacticalFitPanel } from "@/features/scouting/components/profile/p
 import { PlayerCompetitionContext } from "@/features/scouting/components/profile/player-competition-context";
 import { ProfileBackButton } from "@/features/scouting/components/profile/profile-back-button";
 import { NbaShotMapSection } from "@/features/scouting/components/profile/nba-shot-map-section";
+import { ScoutMetricsSection } from "@/features/scouting/components/profile/scout-metrics-section";
 import { SoccerShotMapSection } from "@/features/scouting/components/profile/soccer-shot-map-section";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -51,9 +52,13 @@ function playerNeedsAfSeasonEnrich(player: Player): boolean {
   return !hasCurrentStub || !past || !pastHasSignal;
 }
 
-function profileSectionHref(playerId: string, season: string | undefined, tab: "profile" | "mapa") {
+function profileSectionHref(
+  playerId: string,
+  season: string | undefined,
+  tab: "profile" | "mapa" | "scout"
+) {
   const params = new URLSearchParams();
-  if (tab === "mapa") params.set("tab", "mapa");
+  if (tab !== "profile") params.set("tab", tab);
   if (season) params.set("season", season);
   const query = params.toString();
   return query ? `/players/${playerId}?${query}` : `/players/${playerId}`;
@@ -78,6 +83,7 @@ export async function PlayerProfileView({
   const showSoccerMap = sport === "SOCCER";
   const showShotMap = showNbaMap || showSoccerMap;
   const mapTab = showShotMap && tab === "mapa";
+  const scoutTab = showSoccerMap && tab === "scout";
   const seasonKey = season ?? player.selectedSeason;
 
   return (
@@ -95,9 +101,9 @@ export async function PlayerProfileView({
         >
           <Link
             href={profileSectionHref(playerId, seasonKey, "profile")}
-            aria-current={mapTab ? undefined : "page"}
+            aria-current={!mapTab && !scoutTab ? "page" : undefined}
             className={cn(
-              buttonVariants({ variant: mapTab ? "ghost" : "default", size: "sm" }),
+              buttonVariants({ variant: !mapTab && !scoutTab ? "default" : "ghost", size: "sm" }),
               "h-8 px-3 text-xs"
             )}
           >
@@ -113,9 +119,27 @@ export async function PlayerProfileView({
           >
             Mapa
           </Link>
+          {showSoccerMap ? (
+            <Link
+              href={profileSectionHref(playerId, seasonKey, "scout")}
+              aria-current={scoutTab ? "page" : undefined}
+              className={cn(
+                buttonVariants({ variant: scoutTab ? "default" : "ghost", size: "sm" }),
+                "h-8 px-3 text-xs"
+              )}
+            >
+              Scout
+            </Link>
+          ) : null}
         </nav>
       ) : null}
-      {mapTab ? (
+      {scoutTab ? (
+        <ScoutMetricsSection
+          playerId={playerId}
+          competitionName={player.competitionName ?? player.league}
+          season={seasonKey}
+        />
+      ) : mapTab ? (
         showSoccerMap ? (
           <SoccerShotMapSection playerId={playerId} season={seasonKey} />
         ) : (

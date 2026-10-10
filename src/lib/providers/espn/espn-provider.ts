@@ -161,4 +161,8 @@ export const espnProvider: DataProvider = {
   ): Promise<BasketballShotBackfillSummary[]> {
     return backfillNbaShotChartSeasons(options);
   },
+
+  async fetchSeasonMetrics(): Promise<[]> {
+    return [];
+  },
 };

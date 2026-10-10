@@ -112,6 +112,7 @@ model Player {
   shots             BasketballShot[]
   defensivePlays    BasketballDefensivePlay[]
   soccerShots       SoccerShot[]
+  scoutMetrics      ScoutMetric[]
   strengths         String[]
   weaknesses        String[]
   createdAt         DateTime          @default(now())
@@ -409,6 +410,27 @@ model SoccerShot {
   @@index([gameId])
   @@index([season])
   @@map("soccer_shots")
+}
+
+/// One sourced season total. No row is written unless a provider supplied the number.
+model ScoutMetric {
+  id        String   @id @default(cuid())
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  /// Season start year (MLS 2026, European 2026/27 → 2026).
+  season    Int
+  /// progressive_passes, progressive_carries, sca, gca, xa, pressures, passes_final_third, passes_penalty_area
+  metric    String
+  value     Float
+  /// Provider id that supplied the value (`fbref`).
+  provider  String
+  /// League the percentile cohort is ranked against (`usa.1`, `eng.1`, …).
+  leagueKey String
+  createdAt DateTime @default(now())
+
+  @@unique([playerId, season, metric, provider])
+  @@index([leagueKey, season, metric, provider])
+  @@map("scout_metrics")
 }
 
 /// Steal or block. Coordinates stay in the opponent's attacking frame (rim at y=0).

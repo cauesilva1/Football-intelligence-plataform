@@ -6,6 +6,8 @@ import {
   providerEnvName,
   providerFor,
   resolveProviderId,
+  SCOUT_METRICS_PROVIDER_ENV,
+  scoutMetricsProvider,
 } from "@/lib/providers/registry";
 
 describe("provider registry", () => {
@@ -38,6 +40,21 @@ describe("provider registry", () => {
     } finally {
       if (previous == null) delete process.env[key];
       else process.env[key] = previous;
+    }
+  });
+});
+
+describe("scout metrics provider", () => {
+  it("uses FBref unless the scout env var names another registered adapter", () => {
+    const previous = process.env[SCOUT_METRICS_PROVIDER_ENV];
+    try {
+      delete process.env[SCOUT_METRICS_PROVIDER_ENV];
+      assert.equal(scoutMetricsProvider().id, "fbref");
+      process.env[SCOUT_METRICS_PROVIDER_ENV] = "espn";
+      assert.equal(scoutMetricsProvider().id, "espn");
+    } finally {
+      if (previous == null) delete process.env[SCOUT_METRICS_PROVIDER_ENV];
+      else process.env[SCOUT_METRICS_PROVIDER_ENV] = previous;
     }
   });
 });

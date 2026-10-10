@@ -19,6 +19,7 @@ Unset env vars resolve to `espn`. An unknown id throws. It does not fall through
 | Libertadores | `SOCCER_LIBERTADORES_PROVIDER` |
 | Sudamericana | `SOCCER_SUDAMERICANA_PROVIDER` |
 | NBA | `BASKETBALL_NBA_PROVIDER` |
+| Scout season totals (Big 5 + MLS) | `SOCCER_SCOUT_METRICS_PROVIDER` (default `fbref`; does not replace the shot adapter) |
 
 ## What the app stores
 
@@ -28,10 +29,17 @@ Unset env vars resolve to `espn`. An unknown id throws. It does not fall through
 | Shots with coordinates | `CanonicalShotEvent` | Attack-normalized 0–100 pitch (`x` toward the goal). Basketball uses the half-court on `BasketballShot` |
 | Rosters | `CanonicalRosterPlayer` | Name plus optional external id. Matching to our players stays in ingestion |
 | Real xG | `SoccerShot.realXg` | Nullable. Empty until a provider that supplies shot-level xG is wired. Estimated xG (`goals × 0.85 + shots on target × 0.1`) is a separate statistic and is not copied here |
+| Season scout totals | `ScoutMetric` | One row per player, season, metric, and provider. Blank source cells are not stored as zero |
 
 `SoccerShot` and `BasketballShot` do not require provider-specific columns. `gameId` is `{leagueSlug}:{eventId}`. Match lines today are `{providerId}:{leagueSlug}:{eventId}`.
 
 ## Candidates
+
+### FBref — scout season totals
+
+`FBrefProvider` reads Big 5 and MLS season pages (passing, possession, goal and shot creation, defense) and stores only cells that contain a number: progressive passes, progressive carries, SCA, GCA, xA (`xg_assist`), pressures, passes into the final third, and passes into the penalty area. The provider id is `fbref`, one row in `scout_metrics`. Requests wait 4 seconds and a successful page is cached for 7 days.
+
+On 10 October 2026 the live pages included those column headers, and the stat cells for the StatsBomb measures were empty in the HTML. Empty cells are not written. The profile then shows the empty state instead of a zero. A later fetch that includes numbers will fill the table through `npm run data:sync-fbref-scout`.
 
 ### ESPN — current, verified
 

@@ -6,6 +6,7 @@ import {
   FIFA_WORLD_CUP_SLUG,
 } from "@/lib/seasons";
 import { espnProvider } from "@/lib/providers/espn/espn-provider";
+import { fbrefProvider } from "@/lib/providers/fbref/fbref-provider";
 import type { DataProvider } from "@/lib/providers/types";
 
 /** Used only when the league env var is unset. A typo does not fall through to this. */
@@ -13,7 +14,11 @@ export const DEFAULT_PROVIDER_ID = "espn";
 
 const ADAPTERS: Record<string, DataProvider> = {
   espn: espnProvider,
+  fbref: fbrefProvider,
 };
+
+/** Season scout totals. Unset stays on FBref and does not replace the shot adapter. */
+export const SCOUT_METRICS_PROVIDER_ENV = "SOCCER_SCOUT_METRICS_PROVIDER";
 
 /**
  * One env var per league. Ingestion reads the value; it never names an adapter.
@@ -51,5 +56,11 @@ export function resolveProviderId(raw: string | undefined): string {
 export function providerFor(sport: "soccer" | "basketball", leagueKey: string): DataProvider {
   const envName = providerEnvName(sport, leagueKey);
   const id = resolveProviderId(process.env[envName]);
+  return ADAPTERS[id];
+}
+
+export function scoutMetricsProvider(): DataProvider {
+  const raw = process.env[SCOUT_METRICS_PROVIDER_ENV];
+  const id = raw == null || raw.trim() === "" ? "fbref" : resolveProviderId(raw);
   return ADAPTERS[id];
 }
