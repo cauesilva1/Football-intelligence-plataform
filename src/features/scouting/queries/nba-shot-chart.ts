@@ -41,6 +41,8 @@ export interface NbaShotChartModel {
   attempts: number;
   made: number;
   fgPct: number | null;
+  /** Distinct ESPN games with mapped shots. Coverage is partial versus the season line. */
+  trackedGames: number;
   zones: NbaShotZoneLine[];
   shots: NbaShotMark[];
   defense: NbaDefensiveMark[];
@@ -101,6 +103,7 @@ export async function queryNbaShotChart(
     attempts: 0,
     made: 0,
     fgPct: null,
+    trackedGames: 0,
     zones: emptyZones(),
     shots: [],
     defense: [],
@@ -111,7 +114,7 @@ export async function queryNbaShotChart(
 
   const gameId = options?.gameId ?? "";
 
-  const [rows, shotRows, defenseRows] = await Promise.all([
+  const [rows, shotRows, defenseRows, gameRows] = await Promise.all([
     prisma.$queryRaw<Array<{ zone: string; attempts: number; made: number }>>`
       SELECT zone,
              COUNT(*)::int AS attempts,
@@ -133,6 +136,13 @@ export async function queryNbaShotChart(
       WHERE "playerId" = ${playerId} AND season = ${selected}
         AND (${gameId} = '' OR "gameId" = ${gameId})
     `,
+    prisma.$queryRaw<Array<{ games: number }>>`
+      SELECT COUNT(DISTINCT "gameId")::int AS games
+      FROM basketball_shots
+      WHERE "playerId" = ${playerId} AND season = ${selected}
+        AND (${gameId} = '' OR "gameId" = ${gameId})
+        AND "gameId" <> ''
+    `,
   ]);
 
   const byZone = new Map<BasketballShotZone, { attempts: number; made: number }>();
@@ -153,6 +163,7 @@ export async function queryNbaShotChart(
     attempts,
     made,
     fgPct: fgPctOrNull(made, attempts),
+    trackedGames: Number(gameRows[0]?.games ?? 0),
     zones: BASKETBALL_SHOT_ZONES.map((zone) => {
       const line = byZone.get(zone) ?? { attempts: 0, made: 0 };
       const fgPct = fgPctOrNull(line.made, line.attempts);

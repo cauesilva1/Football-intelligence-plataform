@@ -201,6 +201,9 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
             {model.made}/{model.attempts} field goals
             {model.fgPct == null && model.attempts > 0 ? " · percentage hidden under 5 attempts" : ""}
           </p>
+          <p className="mt-2 text-xs normal-case tracking-normal text-[#a39b8c]">
+            Shot chart reflects {model.trackedGames} tracked {model.trackedGames === 1 ? "game" : "games"}; profile totals cover the full season.
+          </p>
         </div>
 
         <div aria-live="polite" className="rounded-2xl border bg-surface-elevated px-4 py-3">

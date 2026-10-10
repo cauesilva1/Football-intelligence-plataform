@@ -70,7 +70,7 @@ export async function RankingView({
 
       {result.items.length === 0 ? (
         <EmptyState
-          title="No players in this ranking."
+          title="No players found in the player directory."
           description="Explore the full database or adjust the scouting criteria."
           action={{ label: "View players", href: "/players" }}
         />
