@@ -6,6 +6,7 @@ import { TeamSquadTable } from "@/features/scouting/components/team-squad-table"
 import { BrasileiraoSeasonNotice } from "@/features/scouting/components/brasileirao-season-notice";
 import { TeamBackLink } from "@/features/scouting/components/team-back-link";
 import { queryTeamById } from "@/features/scouting/queries/teams";
+import { TeamShotMapSection } from "@/features/scouting/components/team-shot-map-section";
 import { isBrazilianLeague } from "@/lib/seasons";
 import {
   isBasketballTeamCompetition,
@@ -73,7 +74,13 @@ function buildStatCards(
   ];
 }
 
-export async function TeamDetailView({ teamId }: { teamId: string }) {
+export async function TeamDetailView({
+  teamId,
+  season,
+}: {
+  teamId: string;
+  season?: string;
+}) {
   const team = await queryTeamById(teamId);
   if (!team) notFound();
 
@@ -173,6 +180,10 @@ export async function TeamDetailView({ teamId }: { teamId: string }) {
           </Card>
         ))}
       </div>
+
+      {!isBasketball && !isAmericanFootball ? (
+        <TeamShotMapSection teamId={teamId} season={season} />
+      ) : null}
 
       <Card>
         <CardHeader className="border-b border-border/60 pb-4">

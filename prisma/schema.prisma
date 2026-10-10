@@ -111,6 +111,7 @@ model Player {
   shortlistEntries  WorkspaceShortlistEntry[]
   shots             BasketballShot[]
   defensivePlays    BasketballDefensivePlay[]
+  soccerShots       SoccerShot[]
   strengths         String[]
   weaknesses        String[]
   createdAt         DateTime          @default(now())
@@ -378,6 +379,34 @@ model BasketballShot {
   @@index([playerId, season])
   @@index([gameId])
   @@map("basketball_shots")
+}
+
+/// One soccer shot on the 0–100 ESPN pitch. Not an estimated xG.
+/// `converted` is a goal or a shot on target from the event type.
+/// Soccer attempts do not belong in `basketball_shots`.
+model SoccerShot {
+  id             String   @id @default(cuid())
+  playerId       String
+  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  /// `{espnSlug}:{eventId}`, so `usa.1:761844` joins `espn:usa.1:761844` match lines.
+  gameId         String
+  externalPlayId String
+  /// Attack-normalized percent. x runs toward the goal at 100; y is the width.
+  x              Float
+  y              Float
+  converted      Boolean
+  /// six_yard | penalty_area | arch | left_side | right_side | outside_box
+  zone           String
+  shotType       String
+  /// Season year stored on the match line (MLS 2026 → 2026).
+  season         Int
+  createdAt      DateTime @default(now())
+
+  @@unique([gameId, externalPlayId])
+  @@index([playerId, season])
+  @@index([gameId])
+  @@index([season])
+  @@map("soccer_shots")
 }
 
 /// Steal or block. Coordinates stay in the opponent's attacking frame (rim at y=0).

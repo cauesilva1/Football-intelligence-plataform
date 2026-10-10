@@ -11,6 +11,7 @@ import { startFootballQuotaRun } from "@/lib/api-sports";
 import { formatQuotaLog } from "@/lib/api-quota";
 import { endCronRun, errorMessage, logCron, startCronRun } from "@/lib/cron/cron-log";
 import { SOCCER_CRON_STAGE_BUDGET, deadlineFrom } from "@/lib/cron/soccer-stage-plan";
+import { backfillSoccerShotCharts } from "@/lib/soccer/soccer-shot-sync";
 
 export const dynamic = "force-dynamic";
 /** Cover all configured leagues × last few days of finals + light defense enrich. */
@@ -73,6 +74,30 @@ export async function GET(request: Request) {
       defense = await enrichPlayerMatchDefense({ since: sinceIso, quota });
     }
 
+    const shotDeadlineMs = startedAt + maxDuration * 1000 - 20_000;
+    let shotCharts: Awaited<ReturnType<typeof backfillSoccerShotCharts>> | undefined;
+    if (Date.now() + 20_000 < shotDeadlineMs) {
+      try {
+        shotCharts = await backfillSoccerShotCharts({
+          deadlineMs: shotDeadlineMs,
+          log: (message) => console.log(`[api/cron/soccer] [shots] ${message}`),
+        });
+        for (const chart of shotCharts) {
+          logCron("shots_league", {
+            league: chart.slug,
+            games: chart.gamesProcessed,
+            shots: chart.shotsStored,
+            pending: chart.deferred,
+            failed: chart.failed,
+          });
+        }
+      } catch (error) {
+        logCron("shots_error", { error: errorMessage(error) }, "warn");
+      }
+    } else {
+      logCron("shots_deferred", { reason: "no time left" });
+    }
+
     const apiSportsQuota = quota.snapshot();
     console.log(`[api/cron/soccer] ${formatQuotaLog(apiSportsQuota)}`);
     logCron("run_done", { elapsedMs: Date.now() - startedAt });
@@ -86,6 +111,7 @@ export async function GET(request: Request) {
       ...result,
       teams,
       defense,
+      shotCharts,
     });
   } catch (error) {
     console.error("[api/cron/soccer]", error);

@@ -12,6 +12,7 @@ import { PlayerTacticalFitPanel } from "@/features/scouting/components/profile/p
 import { PlayerCompetitionContext } from "@/features/scouting/components/profile/player-competition-context";
 import { ProfileBackButton } from "@/features/scouting/components/profile/profile-back-button";
 import { NbaShotMapSection } from "@/features/scouting/components/profile/nba-shot-map-section";
+import { SoccerShotMapSection } from "@/features/scouting/components/profile/soccer-shot-map-section";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AfProfileSeasonEnricher } from "@/features/scouting/components/profile/af-profile-season-enricher";
@@ -73,7 +74,9 @@ export async function PlayerProfileView({
   const sport = (player.sport ?? "SOCCER") as Sport;
   const showIntelligence = supportsIntelligence(sport);
   const showTacticalFit = supportsIntelligence(sport);
-  const showShotMap = player.league?.toUpperCase() === "NBA";
+  const showNbaMap = player.league?.toUpperCase() === "NBA";
+  const showSoccerMap = sport === "SOCCER";
+  const showShotMap = showNbaMap || showSoccerMap;
   const mapTab = showShotMap && tab === "mapa";
   const seasonKey = season ?? player.selectedSeason;
 
@@ -113,7 +116,11 @@ export async function PlayerProfileView({
         </nav>
       ) : null}
       {mapTab ? (
-        <NbaShotMapSection playerId={playerId} season={seasonKey} />
+        showSoccerMap ? (
+          <SoccerShotMapSection playerId={playerId} season={seasonKey} />
+        ) : (
+          <NbaShotMapSection playerId={playerId} season={seasonKey} />
+        )
       ) : (
         <>
       <PlayerPerformanceSection player={player} />
