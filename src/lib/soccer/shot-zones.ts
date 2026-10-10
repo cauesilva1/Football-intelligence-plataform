@@ -103,8 +103,9 @@ export function conversionPctOrNull(converted: number, attempts: number): number
   return Math.round((converted / attempts) * 1000) / 10;
 }
 
-const GREY_FILL = "#d4d4d8";
+const GREY_FILL = "#8b8678";
 
+/** Display wash only. Under 5 attempts stays grey; the percentage rule is unchanged. */
 export function zoneConversionFill(
   pct: number | null,
   attempts: number
@@ -113,10 +114,10 @@ export function zoneConversionFill(
     return { fill: GREY_FILL, ink: "#334155" };
   }
   const t = Math.min(1, Math.max(0, (pct - 20) / 50));
-  const lightness = 84 - t * 48;
-  const saturation = 32 + t * 48;
+  const lightness = 46 - t * 14;
+  const saturation = 18 + t * 16;
   return {
     fill: `hsl(152 ${saturation}% ${lightness}%)`,
-    ink: lightness < 58 ? "#f8fafc" : "#0f172a",
+    ink: "#f4f1ea",
   };
 }

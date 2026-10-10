@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { pitchMarker, pitchMarkerVisible, PITCH_HEIGHT, PITCH_WIDTH } from "@/lib/soccer/pitch-geometry";
 import type { SoccerShotChartModel, SoccerShotZoneLine } from "@/features/scouting/queries/soccer-shot-chart";
 import type { SoccerShotZone } from "@/lib/soccer/shot-zones";
@@ -15,6 +15,10 @@ const DRAW_ORDER: SoccerShotZone[] = [
 ];
 
 const LINE = "rgba(244, 241, 234, 0.82)";
+const LINE_SOFT = "rgba(244, 241, 234, 0.45)";
+const PAD_X = 16;
+const PAD_TOP = 28;
+const PAD_BOTTOM = 16;
 
 function zoneSummary(zone: SoccerShotZoneLine): string {
   if (zone.conversionPct == null) {
@@ -31,6 +35,7 @@ export function SoccerShotChart({
   /** Sentence under the total. The player map names the full-season profile. */
   coverage: string;
 }) {
+  const stripeId = useId().replace(/:/g, "");
   const [active, setActive] = useState<SoccerShotZone | null>(null);
   const activeZone = model.zones.find((zone) => zone.zone === active) ?? null;
   const byZone = new Map(model.zones.map((zone) => [zone.zone, zone]));
@@ -40,67 +45,101 @@ export function SoccerShotChart({
       <div className="flex min-w-0 justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#10131a] p-3 shadow-panel sm:p-4">
         <svg
           data-testid="soccer-shot-chart"
-          viewBox={`0 0 ${PITCH_WIDTH} ${PITCH_HEIGHT}`}
+          viewBox={`${-PAD_X} ${-PAD_TOP} ${PITCH_WIDTH + PAD_X * 2} ${PITCH_HEIGHT + PAD_TOP + PAD_BOTTOM}`}
           role="group"
           aria-label="Attacking half. Goal at the top."
           className="h-auto max-w-full"
           style={{
-            aspectRatio: `${PITCH_WIDTH} / ${PITCH_HEIGHT}`,
-            width: `min(100%, calc(70vh * ${PITCH_WIDTH} / ${PITCH_HEIGHT}))`,
+            aspectRatio: `${PITCH_WIDTH + PAD_X * 2} / ${PITCH_HEIGHT + PAD_TOP + PAD_BOTTOM}`,
+            width: `min(100%, calc(70vh * ${PITCH_WIDTH + PAD_X * 2} / ${PITCH_HEIGHT + PAD_TOP + PAD_BOTTOM}))`,
           }}
         >
-          <rect width={PITCH_WIDTH} height={PITCH_HEIGHT} fill="#0c0e12" />
+          <defs>
+            <pattern id={stripeId} width={PITCH_WIDTH} height="36" patternUnits="userSpaceOnUse">
+              <rect width={PITCH_WIDTH} height="18" fill="#141820" />
+              <rect y="18" width={PITCH_WIDTH} height="18" fill="#171c26" />
+            </pattern>
+          </defs>
+          <rect x={-PAD_X} y={-PAD_TOP} width={PITCH_WIDTH + PAD_X * 2} height={PITCH_HEIGHT + PAD_TOP + PAD_BOTTOM} fill="#0c0e12" />
+          <rect width={PITCH_WIDTH} height={PITCH_HEIGHT} fill={`url(#${stripeId})`} />
           {DRAW_ORDER.map((zone) => {
             const line = byZone.get(zone);
             if (!line) return null;
+            const selected = active === zone;
+            const quiet = line.conversionPct == null;
             return (
               <path
                 key={zone}
                 d={zonePath(zone)}
                 fill={line.fill}
-                stroke="transparent"
-                opacity={0.92}
+                fillRule="evenodd"
+                fillOpacity={selected ? 0.62 : quiet ? 0.22 : 0.4}
+                stroke={selected ? "#f8fafc" : "transparent"}
+                strokeWidth={selected ? 2.25 : 0}
+                className="cursor-pointer outline-none"
                 role="button"
                 tabIndex={0}
                 aria-label={zoneSummary(line)}
+                aria-pressed={selected}
                 onMouseEnter={() => setActive(zone)}
+                onMouseLeave={() => setActive((current) => (current === zone ? null : current))}
                 onFocus={() => setActive(zone)}
+                onBlur={() => setActive((current) => (current === zone ? null : current))}
                 onClick={() => setActive(zone)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setActive(zone);
+                  }
+                }}
               />
             );
           })}
-          <g fill="none" stroke={LINE} strokeWidth={2} pointerEvents="none">
+          <g fill="none" stroke={LINE} strokeWidth={1.5} strokeLinejoin="round" pointerEvents="none">
             <rect x={0} y={0} width={PITCH_WIDTH} height={PITCH_HEIGHT} />
-            <rect x={138.4} y={0} width={403.2} height={165} />
-            <rect x={248.4} y={0} width={183.2} height={55} />
+            <rect x={138.4} y={0} width={403.2} height={165} rx={2} />
+            <rect x={248.4} y={0} width={183.2} height={55} rx={1.5} />
             <path d="M 266.8 165 A 91.5 91.5 0 0 1 413.2 165" />
             <line x1={0} y1={PITCH_HEIGHT} x2={PITCH_WIDTH} y2={PITCH_HEIGHT} />
           </g>
+          <g fill="none" stroke={LINE_SOFT} strokeWidth={1.3} pointerEvents="none">
+            <circle cx={340} cy={110} r={2.4} fill={LINE_SOFT} />
+          </g>
+          <g fill="none" stroke="#fb923c" strokeWidth={1.8} strokeLinejoin="round" pointerEvents="none">
+            <path d="M 303.4 -2 V -16 H 376.6 V -2" />
+          </g>
+          <text
+            x={PITCH_WIDTH / 2}
+            y={-20}
+            textAnchor="middle"
+            fill="#a39b8c"
+            fontFamily="ui-sans-serif, system-ui, sans-serif"
+            fontSize="11"
+            fontWeight="600"
+            letterSpacing="1.6"
+            pointerEvents="none"
+          >
+            GOAL
+          </text>
           <g pointerEvents="none">
             {model.shots.map((shot, index) => {
               if (!pitchMarkerVisible(shot.x)) return null;
               const point = pitchMarker(shot.x, shot.y);
-              if (shot.converted) {
-                return (
-                  <circle
-                    key={`${shot.x}-${shot.y}-${index}`}
-                    cx={point.x}
-                    cy={point.y}
-                    r={5}
-                    fill="#34d399"
-                    stroke="#052e16"
-                    strokeWidth={1}
-                  />
-                );
-              }
+              const dim = active != null && shot.zone !== active;
               return (
-                <path
-                  key={`${shot.x}-${shot.y}-${index}`}
-                  d={`M ${point.x - 4} ${point.y - 4} L ${point.x + 4} ${point.y + 4} M ${point.x + 4} ${point.y - 4} L ${point.x - 4} ${point.y + 4}`}
-                  stroke="#fb7185"
-                  strokeWidth={1.7}
-                  strokeLinecap="round"
-                />
+                <g key={`${shot.x}-${shot.y}-${index}`} opacity={dim ? 0.28 : 1} transform={`translate(${point.x} ${point.y})`}>
+                  {shot.converted ? (
+                    <circle r={4} fill="#34d399" stroke="#042f24" strokeWidth={0.8} />
+                  ) : (
+                    <path
+                      d="M -3.4 -3.4 L 3.4 3.4 M -3.4 3.4 L 3.4 -3.4"
+                      fill="none"
+                      stroke="#fb7185"
+                      strokeWidth={1.7}
+                      strokeLinecap="round"
+                    />
+                  )}
+                </g>
               );
             })}
           </g>
@@ -176,6 +215,9 @@ export function SoccerShotChart({
 }
 
 function zonePath(zone: SoccerShotZone): string {
+  const h = PITCH_HEIGHT;
+  const w = PITCH_WIDTH;
+  const corner = 18;
   switch (zone) {
     case "six_yard":
       return "M 248.4 0 H 431.6 V 55 H 248.4 Z";
@@ -184,11 +226,11 @@ function zonePath(zone: SoccerShotZone): string {
     case "arch":
       return "M 266.8 165 A 91.5 91.5 0 0 1 413.2 165 Z";
     case "left_side":
-      return `M 0 0 H 138.4 V ${PITCH_HEIGHT} H 0 Z`;
+      return `M ${corner} 0 H 138.4 V ${h} H ${corner} Q 0 ${h} 0 ${h - corner} V ${corner} Q 0 0 ${corner} 0 Z`;
     case "right_side":
-      return `M 541.6 0 H ${PITCH_WIDTH} V ${PITCH_HEIGHT} H 541.6 Z`;
+      return `M ${w - corner} 0 H 541.6 V ${h} H ${w - corner} Q ${w} ${h} ${w} ${h - corner} V ${corner} Q ${w} 0 ${w - corner} 0 Z`;
     case "outside_box":
-      return `M 138.4 165 H 541.6 V ${PITCH_HEIGHT} H 138.4 Z`;
+      return `M 138.4 165 H 266.8 A 91.5 91.5 0 0 1 413.2 165 H 541.6 V ${h - corner} Q 541.6 ${h} ${541.6 - corner} ${h} H ${138.4 + corner} Q 138.4 ${h} 138.4 ${h - corner} Z`;
     default:
       return "";
   }
