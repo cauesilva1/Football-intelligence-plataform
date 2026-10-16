@@ -41,10 +41,69 @@ interface EspnScoreboardEvent {
   }>;
 }
 
+interface EspnScoreboardPayload {
+  events?: EspnScoreboardEvent[];
+  week?: { number?: number };
+  season?: { year?: number; type?: number | { type?: number } };
+}
+
+/** Regular season runs ~18 weeks; cap so a bad week number cannot fan out forever. */
+const MAX_SEASON_WEEK = 23;
+
 const SCHEDULE_TTL_MS = 2 * 60 * 1000;
 
 function scoreboardUrl(espnSlug: string): string {
   return `https://site.api.espn.com/apis/site/v2/sports/football/${espnSlug}/scoreboard`;
+}
+
+function readSeasonYear(season: EspnScoreboardPayload["season"]): number {
+  return typeof season?.year === "number" ? season.year : new Date().getFullYear();
+}
+
+function readSeasonType(season: EspnScoreboardPayload["season"]): number {
+  if (typeof season?.type === "number") return season.type;
+  if (season?.type && typeof season.type === "object" && typeof season.type.type === "number") {
+    return season.type.type;
+  }
+  return 2;
+}
+
+/** Prior regular-season weeks. The bare scoreboard is only the current week. */
+function priorSeasonWeeks(currentWeek: number): number[] {
+  const week = Math.min(MAX_SEASON_WEEK, Math.max(1, Math.floor(currentWeek)));
+  return Array.from({ length: week - 1 }, (_, index) => index + 1);
+}
+
+function footballWeekScoreboardUrl(
+  espnSlug: string,
+  seasonYear: number,
+  week: number,
+  seasonType: number
+): string {
+  const params = new URLSearchParams({
+    week: String(week),
+    seasontype: String(seasonType),
+    season: String(seasonYear),
+  });
+  return `${scoreboardUrl(espnSlug)}?${params.toString()}`;
+}
+
+async function fetchScoreboardPayload(url: string): Promise<EspnScoreboardPayload | null> {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "football-intelligence-platform/1.0 (football-schedule)",
+        Accept: "application/json",
+      },
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as EspnScoreboardPayload;
+  } catch (error) {
+    console.warn("[football-schedule] fetch failed:", error);
+    return null;
+  }
 }
 
 function parseScore(value?: string): number {
@@ -114,27 +173,41 @@ async function fetchScoreboardBundle(
   }
 
   try {
-    const response = await fetch(scoreboardUrl(espnSlug), {
-      headers: {
-        "User-Agent": "football-intelligence-platform/1.0 (football-schedule)",
-        Accept: "application/json",
-      },
-      next: { revalidate: 60 },
-      signal: AbortSignal.timeout(20_000),
-    });
-    if (!response.ok) {
-      return emptyBundle();
+    const head = await fetchScoreboardPayload(scoreboardUrl(espnSlug));
+    if (!head) return emptyBundle();
+
+    const seasonYear = readSeasonYear(head.season);
+    const seasonType = readSeasonType(head.season);
+    const priorPayloads = await Promise.all(
+      priorSeasonWeeks(head.week?.number ?? 1).map((week) =>
+        fetchScoreboardPayload(
+          footballWeekScoreboardUrl(espnSlug, seasonYear, week, seasonType)
+        )
+      )
+    );
+
+    const eventsById = new Map<string, EspnScoreboardEvent>();
+    for (const payload of priorPayloads) {
+      for (const event of payload?.events ?? []) {
+        if (event?.id) eventsById.set(event.id, event);
+      }
+    }
+    for (const event of head.events ?? []) {
+      if (event?.id) eventsById.set(event.id, event);
     }
 
-    const data = (await response.json()) as { events?: EspnScoreboardEvent[] };
-    const games = (data.events ?? [])
+    const games = [...eventsById.values()]
       .map((event) => mapEvent(event, competition))
       .filter((g): g is FootballScheduleGame => g != null);
 
     const bundle: FootballScheduleBundle & { cachedAt: string } = {
       live: games.filter((g) => g.status === "live"),
-      past: games.filter((g) => g.status === "final"),
-      scheduled: games.filter((g) => g.status === "scheduled"),
+      past: games
+        .filter((g) => g.status === "final")
+        .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()),
+      scheduled: games
+        .filter((g) => g.status === "scheduled")
+        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()),
       fetchedAt: new Date().toISOString(),
       cachedAt: new Date().toISOString(),
     };
@@ -157,11 +230,11 @@ function emptyBundle(): FootballScheduleBundle {
 }
 
 export async function fetchNflScheduleBundle(): Promise<FootballScheduleBundle> {
-  return fetchScoreboardBundle("nfl", "nfl", "espn:schedule:nfl:v1");
+  return fetchScoreboardBundle("nfl", "nfl", "espn:schedule:nfl:v2");
 }
 
 export async function fetchCfbScheduleBundle(): Promise<FootballScheduleBundle> {
-  return fetchScoreboardBundle("college-football", "cfb", "espn:schedule:cfb:v1");
+  return fetchScoreboardBundle("college-football", "cfb", "espn:schedule:cfb:v2");
 }
 
 export { formatNbaGameDate as formatFootballGameDate } from "@/lib/api/espn-nba-schedule";
