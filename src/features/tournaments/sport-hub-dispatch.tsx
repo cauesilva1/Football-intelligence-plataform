@@ -22,7 +22,7 @@ import {
 import { loadCompetitionHubData } from "@/lib/tournaments/competition-hub-data";
 import { loadBasketballCompetitionHub } from "@/lib/tournaments/basketball-hub-data";
 import { loadAmericanFootballCompetitionHub } from "@/lib/tournaments/american-football-hub-data";
-import { getHockeyCompetition, isHockeyCompetitionSlug } from "@/lib/tournaments/hockey-competitions";
+import { getHockeyCompetition, HOCKEY_COMPETITIONS, isHockeyCompetitionSlug } from "@/lib/tournaments/hockey-competitions";
 import { loadNhlHub } from "@/lib/hockey/hub";
 import { fetchStatsBombMatches } from "@/lib/statsbomb/fetch-matches";
 import { TOURNAMENTS } from "@/lib/statsbomb/constants";
@@ -76,9 +76,17 @@ export function renderTournamentsIndex(sport: Sport): ReactNode {
   if (hubKind === "american-football") return <AmericanFootballTournamentsIndex />;
   if (hubKind === "hockey") {
     return (
-      <Link href="/tournaments/nhl" className="text-sm font-medium text-foreground underline-offset-4 hover:underline">
-        NHL — standings, results, and upcoming games
-      </Link>
+      <div className="flex flex-col gap-3">
+        {HOCKEY_COMPETITIONS.map((competition) => (
+          <Link
+            key={competition.slug}
+            href={`/tournaments/${competition.slug}`}
+            className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
+          >
+            {competition.shortName} — standings, results, and upcoming games
+          </Link>
+        ))}
+      </div>
     );
   }
   return <SoccerTournamentsIndex />;
