@@ -1,9 +1,16 @@
 "use client";
 
-import { useId, useState } from "react";
-import { pitchMarker, pitchMarkerVisible, PITCH_HEIGHT, PITCH_WIDTH } from "@/lib/soccer/pitch-geometry";
+import { useState } from "react";
+import { pitchMarkerVisible, PITCH_HEIGHT, PITCH_WIDTH } from "@/lib/soccer/pitch-geometry";
 import type { SoccerShotChartModel, SoccerShotZoneLine } from "@/features/scouting/queries/soccer-shot-chart";
 import type { SoccerShotZone } from "@/lib/soccer/shot-zones";
+import {
+  SOCCER_PITCH_IMAGE,
+  soccerImagePoint,
+  soccerPitchFeetTransform,
+  soccerPitchImageTransform,
+  soccerPitchViewBox,
+} from "@/lib/soccer/pitch-image";
 
 const DRAW_ORDER: SoccerShotZone[] = [
   "outside_box",
@@ -13,12 +20,6 @@ const DRAW_ORDER: SoccerShotZone[] = [
   "penalty_area",
   "six_yard",
 ];
-
-const LINE = "rgba(244, 241, 234, 0.82)";
-const LINE_SOFT = "rgba(244, 241, 234, 0.45)";
-const PAD_X = 16;
-const PAD_TOP = 28;
-const PAD_BOTTOM = 16;
 
 function zoneSummary(zone: SoccerShotZoneLine): string {
   if (zone.conversionPct == null) {
@@ -38,8 +39,9 @@ export function SoccerShotChart({
   /** Pitch only, for a side-by-side compare. The parent owns the totals. */
   pitchOnly?: boolean;
 }) {
-  const stripeId = useId().replace(/:/g, "");
   const [active, setActive] = useState<SoccerShotZone | null>(null);
+  const viewBox = soccerPitchViewBox();
+  const [, , viewW, viewH] = viewBox.split(" ").map(Number);
   const activeZone = model.zones.find((zone) => zone.zone === active) ?? null;
   const byZone = new Map(model.zones.map((zone) => [zone.zone, zone]));
 
@@ -54,23 +56,24 @@ export function SoccerShotChart({
       <div className="flex min-w-0 justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#10131a] p-3 shadow-panel sm:p-4">
         <svg
           data-testid="soccer-shot-chart"
-          viewBox={`${-PAD_X} ${-PAD_TOP} ${PITCH_WIDTH + PAD_X * 2} ${PITCH_HEIGHT + PAD_TOP + PAD_BOTTOM}`}
+          viewBox={viewBox}
+          preserveAspectRatio="xMidYMid meet"
           role="group"
           aria-label="Attacking half. Goal at the top."
           className="h-auto max-w-full"
           style={{
-            aspectRatio: `${PITCH_WIDTH + PAD_X * 2} / ${PITCH_HEIGHT + PAD_TOP + PAD_BOTTOM}`,
-            width: `min(100%, calc(70vh * ${PITCH_WIDTH + PAD_X * 2} / ${PITCH_HEIGHT + PAD_TOP + PAD_BOTTOM}))`,
+            aspectRatio: `${viewW} / ${viewH}`,
+            width: `min(100%, calc(70vh * ${viewW} / ${viewH}))`,
           }}
         >
-          <defs>
-            <pattern id={stripeId} width={PITCH_WIDTH} height="36" patternUnits="userSpaceOnUse">
-              <rect width={PITCH_WIDTH} height="18" fill="#141820" />
-              <rect y="18" width={PITCH_WIDTH} height="18" fill="#171c26" />
-            </pattern>
-          </defs>
-          <rect x={-PAD_X} y={-PAD_TOP} width={PITCH_WIDTH + PAD_X * 2} height={PITCH_HEIGHT + PAD_TOP + PAD_BOTTOM} fill="#0c0e12" />
-          <rect width={PITCH_WIDTH} height={PITCH_HEIGHT} fill={`url(#${stripeId})`} />
+          <g transform={soccerPitchImageTransform()}>
+            <image
+              href="/maps/soccer-pitch.png"
+              width={SOCCER_PITCH_IMAGE.width}
+              height={SOCCER_PITCH_IMAGE.height}
+            />
+          </g>
+          <g transform={soccerPitchFeetTransform()}>
           {DRAW_ORDER.map((zone) => {
             const line = byZone.get(zone);
             if (!line) return null;
@@ -104,26 +107,14 @@ export function SoccerShotChart({
               />
             );
           })}
-          <g fill="none" stroke={LINE} strokeWidth={1.5} strokeLinejoin="round" pointerEvents="none">
-            <rect x={0} y={0} width={PITCH_WIDTH} height={PITCH_HEIGHT} />
-            <rect x={138.4} y={0} width={403.2} height={165} rx={2} />
-            <rect x={248.4} y={0} width={183.2} height={55} rx={1.5} />
-            <path d="M 266.8 165 A 91.5 91.5 0 0 1 413.2 165" />
-            <line x1={0} y1={PITCH_HEIGHT} x2={PITCH_WIDTH} y2={PITCH_HEIGHT} />
-          </g>
-          <g fill="none" stroke={LINE_SOFT} strokeWidth={1.3} pointerEvents="none">
-            <circle cx={340} cy={110} r={2.4} fill={LINE_SOFT} />
-          </g>
-          <g fill="none" stroke="#fb923c" strokeWidth={1.8} strokeLinejoin="round" pointerEvents="none">
-            <path d="M 303.4 -2 V -16 H 376.6 V -2" />
           </g>
           <text
-            x={PITCH_WIDTH / 2}
-            y={-20}
+            x={SOCCER_PITCH_IMAGE.height / 2}
+            y={22}
             textAnchor="middle"
             fill="#a39b8c"
             fontFamily="ui-sans-serif, system-ui, sans-serif"
-            fontSize="11"
+            fontSize="13"
             fontWeight="600"
             letterSpacing="1.6"
             pointerEvents="none"
@@ -133,7 +124,7 @@ export function SoccerShotChart({
           <g pointerEvents="none">
             {model.shots.map((shot, index) => {
               if (!pitchMarkerVisible(shot.x)) return null;
-              const point = pitchMarker(shot.x, shot.y);
+              const point = soccerImagePoint(shot.x, shot.y);
               const dim = active != null && shot.zone !== active;
               return (
                 <g key={`${shot.x}-${shot.y}-${index}`} opacity={dim ? 0.28 : 1} transform={`translate(${point.x} ${point.y})`}>
