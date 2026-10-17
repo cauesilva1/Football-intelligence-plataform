@@ -46,6 +46,8 @@ export interface NhlStandingRow {
   losses: number;
   otLosses: number;
   points: number;
+  regulationWins: number;
+  regulationPlusOtWins: number;
   goalsFor: number;
   goalsAgainst: number;
   logoUrl?: string;
@@ -206,6 +208,8 @@ export function parseNhlStandings(payload: unknown): NhlStandingRow[] {
         losses: num(record.losses),
         otLosses: num(record.otLosses),
         points: num(record.points),
+        regulationWins: num(record.regulationWins),
+        regulationPlusOtWins: num(record.regulationPlusOtWins),
         goalsFor: num(record.goalFor),
         goalsAgainst: num(record.goalAgainst),
         ...(logoUrl ? { logoUrl } : {}),

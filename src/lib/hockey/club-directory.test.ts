@@ -15,6 +15,8 @@ const knights: NhlStandingRow = {
   losses: 2,
   otLosses: 0,
   points: 14,
+  regulationWins: 5,
+  regulationPlusOtWins: 6,
   goalsFor: 36,
   goalsAgainst: 22,
   logoUrl: "https://assets.nhle.com/logos/nhl/svg/VGK_light.svg",

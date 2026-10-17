@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { NhlScheduleGame, NhlStandingRow } from "@/lib/api/nhl";
+import { groupNhlStandings } from "@/lib/hockey/standings";
 import type { HockeyCompetitionConfig } from "@/lib/tournaments/hockey-competitions";
 
 function GameCard({ game }: { game: NhlScheduleGame }) {
@@ -53,16 +54,25 @@ function GameCard({ game }: { game: NhlScheduleGame }) {
   );
 }
 
-function StandingsTable({ rows }: { rows: NhlStandingRow[] }) {
-  if (!rows.length) {
-    return <p className="text-sm text-muted-foreground">Standings are not available yet.</p>;
-  }
+const STAT_COLUMNS = ["GP", "W", "L", "OT", "PTS", "GF", "GA"] as const;
+
+function StandingsTable({
+  rows,
+  showDivision = false,
+  spotLabel,
+}: {
+  rows: Array<NhlStandingRow & { playoff?: boolean }>;
+  showDivision?: boolean;
+  spotLabel?: (row: NhlStandingRow & { playoff?: boolean }, index: number) => string | null;
+}) {
   return (
     <div className="overflow-x-auto rounded-2xl border">
       <table className="w-full min-w-[640px] text-sm">
         <thead className="bg-surface-muted text-left text-2xs uppercase tracking-wider text-muted-foreground">
           <tr>
-            {["Club", "Div", "GP", "W", "L", "OT", "PTS", "GF", "GA"].map((label) => (
+            <th className="px-3 py-2 font-medium">Club</th>
+            {showDivision ? <th className="px-3 py-2 font-medium">Div</th> : null}
+            {STAT_COLUMNS.map((label) => (
               <th key={label} className="px-3 py-2 font-medium">
                 {label}
               </th>
@@ -70,13 +80,17 @@ function StandingsTable({ rows }: { rows: NhlStandingRow[] }) {
           </tr>
         </thead>
         <tbody>
-          {rows
-            .slice()
-            .sort((a, b) => b.points - a.points)
-            .map((row) => (
+          {rows.map((row, index) => {
+            const label = spotLabel?.(row, index) ?? (row.playoff ? "Playoff" : null);
+            return (
               <tr key={row.abbrev} className="border-t">
-                <td className="px-3 py-2 font-medium">{row.name}</td>
-                <td className="px-3 py-2 text-muted-foreground">{row.division}</td>
+                <td className="px-3 py-2 font-medium">
+                  <span className="inline-flex items-center gap-2">
+                    {row.name}
+                    {label ? <Badge variant="secondary">{label}</Badge> : null}
+                  </span>
+                </td>
+                {showDivision ? <td className="px-3 py-2 text-muted-foreground">{row.division}</td> : null}
                 <td className="px-3 py-2 tabular-nums">{row.gamesPlayed}</td>
                 <td className="px-3 py-2 tabular-nums">{row.wins}</td>
                 <td className="px-3 py-2 tabular-nums">{row.losses}</td>
@@ -85,9 +99,43 @@ function StandingsTable({ rows }: { rows: NhlStandingRow[] }) {
                 <td className="px-3 py-2 tabular-nums">{row.goalsFor}</td>
                 <td className="px-3 py-2 tabular-nums">{row.goalsAgainst}</td>
               </tr>
-            ))}
+            );
+          })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function DivisionStandings({ rows }: { rows: NhlStandingRow[] }) {
+  if (!rows.length) {
+    return <p className="text-sm text-muted-foreground">Standings are not available yet.</p>;
+  }
+  const board = groupNhlStandings(rows);
+  return (
+    <div className="space-y-8">
+      {board.divisions.map((group) => (
+        <section key={group.division} className="space-y-2">
+          <div>
+            <h2 className="font-display text-lg font-bold">{group.division}</h2>
+            <p className="text-xs text-muted-foreground">{group.conference}</p>
+          </div>
+          <StandingsTable rows={group.teams} />
+        </section>
+      ))}
+      <section className="space-y-4">
+        <h2 className="font-display text-lg font-bold">Wild card</h2>
+        {board.wildCards.map((race) => (
+          <div key={race.conference} className="space-y-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{race.conference}</h3>
+            <StandingsTable
+              rows={race.teams}
+              showDivision
+              spotLabel={(_row, index) => `Wild card ${index + 1}`}
+            />
+          </div>
+        ))}
+      </section>
     </div>
   );
 }
@@ -114,7 +162,7 @@ export function HockeyCompetitionHub({
         <p className="max-w-2xl text-sm text-muted-foreground">{competition.description}</p>
       </header>
       {error ? <p className="text-sm text-rose-500">{error}</p> : null}
-      <StandingsTable rows={standings} />
+      <DivisionStandings rows={standings} />
       <Tabs defaultValue="upcoming">
         <TabsList>
           <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
