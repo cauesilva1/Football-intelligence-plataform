@@ -48,6 +48,7 @@ export interface NhlStandingRow {
   points: number;
   goalsFor: number;
   goalsAgainst: number;
+  logoUrl?: string;
 }
 
 export interface NhlSkaterLine {
@@ -193,6 +194,7 @@ export function parseNhlStandings(payload: unknown): NhlStandingRow[] {
     const abbrev = nhlText(record.teamAbbrev as NhlLocalized);
     const name = nhlText(record.teamName as NhlLocalized);
     if (!abbrev || !name) return [];
+    const logoUrl = nhlText(record.teamLogo as NhlLocalized);
     return [
       {
         abbrev,
@@ -206,6 +208,7 @@ export function parseNhlStandings(payload: unknown): NhlStandingRow[] {
         points: num(record.points),
         goalsFor: num(record.goalFor),
         goalsAgainst: num(record.goalAgainst),
+        ...(logoUrl ? { logoUrl } : {}),
       },
     ];
   });

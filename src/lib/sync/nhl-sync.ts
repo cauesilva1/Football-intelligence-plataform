@@ -9,7 +9,7 @@ import {
   type NhlRosterPlayer,
   type NhlSkaterLine,
 } from "@/lib/api/nhl";
-import { refreshHockeyHeadshots } from "@/lib/hockey/espn-headshots";
+import { isForeignHockeyPhoto, refreshHockeyHeadshots } from "@/lib/hockey/espn-headshots";
 import { compactHockeySeason, hockeyRating, nhlApiSeasonId } from "@/lib/hockey/season";
 import { getPrisma } from "@/lib/prisma";
 
@@ -118,6 +118,10 @@ async function upsertPlayer(
     points: stats.points,
     savePercentage: stats.savePercentage,
   });
+  const existing = await prisma.player.findFirst({
+    where: { sport: SPORT, apiSportsId: line.playerId },
+  });
+  const incomingPhoto = line.headshot ?? roster?.headshot ?? null;
   const data = {
     fullName,
     knownAs: line.lastName || fullName,
@@ -127,7 +131,10 @@ async function upsertPlayer(
     height: roster?.heightCm || 180,
     weight: roster?.weightKg || 80,
     preferredFoot: preferredFoot(roster?.shoots ?? "R"),
-    photoUrl: line.headshot ?? roster?.headshot,
+    photoUrl:
+      existing?.photoUrl && !isForeignHockeyPhoto(existing.photoUrl)
+        ? existing.photoUrl
+        : incomingPhoto,
     marketValue: 0,
     transfermarktId: null,
     apiSportsId: line.playerId,
@@ -137,9 +144,6 @@ async function upsertPlayer(
     dataSyncedAt: new Date(),
     dataSyncedSeason: String(season),
   };
-  const existing = await prisma.player.findFirst({
-    where: { sport: SPORT, apiSportsId: line.playerId },
-  });
   const player = existing
     ? await prisma.player.update({ where: { id: existing.id }, data })
     : await prisma.player.create({ data });
@@ -259,10 +263,15 @@ export async function runNhlSync(options: NhlSyncOptions = {}): Promise<NhlSyncR
     const existing = await prisma.team.findFirst({
       where: { competitionId: competition.id, shortName: row.abbrev },
     });
+    const logo = row.logoUrl;
     const team = existing
       ? await prisma.team.update({
           where: { id: existing.id },
-          data: { name: row.name, country: row.conference || "USA" },
+          data: {
+            name: row.name,
+            country: row.conference || "USA",
+            ...(logo ? { crestUrl: logo } : {}),
+          },
         })
       : await prisma.team.create({
           data: {
@@ -270,6 +279,7 @@ export async function runNhlSync(options: NhlSyncOptions = {}): Promise<NhlSyncR
             shortName: row.abbrev,
             country: row.conference || "USA",
             competitionId: competition.id,
+            ...(logo ? { crestUrl: logo } : {}),
           },
         });
     teamIds.set(row.abbrev, team.id);

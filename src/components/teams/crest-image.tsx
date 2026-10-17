@@ -24,6 +24,27 @@ export function CrestImage({
 }) {
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = Boolean(src) && !imageFailed;
+  const useNativeImage = Boolean(src && (src.includes(".svg") || src.includes("assets.nhle.com")));
+
+  if (showImage && src && useNativeImage) {
+    return (
+      // NHL crests are SVG. next/image rejects them, which used to leave the letter fallback.
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={alt}
+        width={80}
+        height={80}
+        referrerPolicy="no-referrer"
+        className={cn(
+          "shrink-0 rounded-xl bg-card object-contain p-1 ring-1 ring-white/10",
+          sizeClass,
+          imageClassName
+        )}
+        onError={() => setImageFailed(true)}
+      />
+    );
+  }
 
   if (showImage && src) {
     return (

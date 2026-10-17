@@ -12,6 +12,7 @@ export function TeamCrest({
   apiSportsId,
   size = "lg",
   className,
+  storedOnly = false,
 }: {
   name: string;
   crestUrl?: string | null;
@@ -19,9 +20,13 @@ export function TeamCrest({
   apiSportsId?: number | null;
   size?: "md" | "lg";
   className?: string;
+  /** Hockey must not fall through to soccer crest maps. */
+  storedOnly?: boolean;
 }) {
   const theme = getTeamTheme(competitionName, name);
-  const resolvedUrl = resolveClubCrestUrlSync(name, crestUrl, apiSportsId);
+  const resolvedUrl = storedOnly
+    ? crestUrl?.trim() || null
+    : resolveClubCrestUrlSync(name, crestUrl, apiSportsId);
   const initial = name.trim().charAt(0).toUpperCase() || "?";
   const sizeClass = size === "lg" ? "h-20 w-20 text-2xl" : "h-12 w-12 text-lg";
 

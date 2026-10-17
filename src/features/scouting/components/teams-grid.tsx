@@ -9,9 +9,10 @@ import type { Sport } from "@/lib/sport";
 
 const PAGE_SIZE = 48;
 
-function buildPageHref(leagueKey: string | undefined, page: number) {
+function buildPageHref(leagueKey: string | undefined, page: number, sport: Sport) {
   const params = new URLSearchParams();
   if (leagueKey && leagueKey !== "all") params.set("league", leagueKey);
+  if (sport === "HOCKEY") params.set("desk", "hockey");
   if (page > 1) params.set("page", String(page));
   const qs = params.toString();
   return qs ? `/teams?${qs}` : "/teams";
@@ -40,8 +41,10 @@ export async function TeamsGrid({
 
   const isBasketball = sport === "BASKETBALL";
   const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
+  const isHockey = sport === "HOCKEY";
   const isFranchiseSport = isBasketball || isAmericanFootball;
   const entityPlural = isFranchiseSport ? "franchises / programs" : "clubs";
+  const hockeySeason = teams.find((team) => team.hockey)?.hockey?.seasonLabel;
 
   return (
     <div className="space-y-6">
@@ -54,18 +57,23 @@ export async function TeamsGrid({
               page {currentPage} of {totalPages}
             </>
           ) : null}
-          {!isFranchiseSport && (
+          {isHockey && hockeySeason ? (
+            <>
+              {" · "}
+              {hockeySeason}
+            </>
+          ) : !isFranchiseSport ? (
             <>
               {" · "}
               {`Season data (${teams[0]?.stats?.season ?? teams[0]?.statsBomb?.seasonLabel ?? CURRENT_SEASON})`}
             </>
-          )}
+          ) : null}
         </p>
         {totalPages > 1 ? (
           <div className="flex items-center gap-2">
             {currentPage > 1 ? (
               <Link
-                href={buildPageHref(leagueKey, currentPage - 1)}
+                href={buildPageHref(leagueKey, currentPage - 1, sport)}
                 prefetch={false}
                 className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground"
               >
@@ -75,7 +83,7 @@ export async function TeamsGrid({
             ) : null}
             {currentPage < totalPages ? (
               <Link
-                href={buildPageHref(leagueKey, currentPage + 1)}
+                href={buildPageHref(leagueKey, currentPage + 1, sport)}
                 prefetch={false}
                 className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground"
               >
@@ -109,9 +117,10 @@ export async function TeamsGrid({
                   <div className="mb-3 flex items-center justify-between">
                     <TeamCrest
                       name={team.name}
-                      crestUrl={team.crestUrl}
+                      crestUrl={isHockey ? team.hockey?.crestUrl : team.crestUrl}
                       competitionName={team.competition?.name}
-                      apiSportsId={team.apiSportsId}
+                      apiSportsId={isHockey ? undefined : team.apiSportsId}
+                      storedOnly={isHockey}
                       size="md"
                     />
                     <Badge variant="secondary">{team.competition?.name ?? team.shortName}</Badge>
@@ -119,11 +128,25 @@ export async function TeamsGrid({
                   <p className="font-display text-base font-bold text-foreground">{team.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {team.country}
-                    {!isFranchiseSport && team.stadium ? ` · ${team.stadium}` : ""}
-                    {!isFranchiseSport && seasonLabel ? ` · ${seasonLabel}` : ""}
+                    {!isFranchiseSport && !isHockey && team.stadium ? ` · ${team.stadium}` : ""}
+                    {!isFranchiseSport && !isHockey && seasonLabel ? ` · ${seasonLabel}` : ""}
+                    {isHockey && team.hockey?.seasonLabel ? ` · ${team.hockey.seasonLabel}` : ""}
                   </p>
 
-                  {isFranchiseSport ? (
+                  {isHockey ? (
+                    team.hockey?.stats ? (
+                      <div className="mt-4 grid grid-cols-4 gap-2 text-center sm:grid-cols-7">
+                        {team.hockey.stats.map((stat) => (
+                          <div key={stat.label}>
+                            <p className="font-display text-sm font-bold text-foreground">{stat.value}</p>
+                            <p className="text-2xs uppercase text-muted-foreground">{stat.label}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-4 text-xs text-muted-foreground">Standings unavailable</p>
+                    )
+                  ) : isFranchiseSport ? (
                     <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                       <div>
                         <p className="font-display text-sm font-bold text-primary">
@@ -173,9 +196,10 @@ export async function TeamsGrid({
 
                   <div className="mt-3 flex items-center justify-between text-2xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
-                      <Users className="h-3 w-3" /> {team.squadSize ?? 0} players
+                      <Users className="h-3 w-3" />{" "}
+                      {isHockey ? team.hockey?.rosterLabel ?? "Roster not loaded" : `${team.squadSize ?? 0} players`}
                     </span>
-                    {!isFranchiseSport && seasonLabel ? (
+                    {!isFranchiseSport && !isHockey && seasonLabel ? (
                       <span className="text-primary/80">{seasonLabel}</span>
                     ) : null}
                   </div>

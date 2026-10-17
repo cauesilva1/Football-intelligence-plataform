@@ -219,6 +219,7 @@ export const prismaTeamRepository: TeamRepository = {
 
     const isBasketball = isBasketballTeamCompetition(team.competition?.name);
     const isAmericanFootball = isAmericanFootballTeamCompetition(team.competition?.name);
+    const isHockey = /nhl|hockey/i.test(team.competition?.name ?? "");
     const expectedLeague = resolveBasketballLeagueFromCompetition(team.competition?.name);
     const afLeague = resolveAmericanFootballLeagueFromCompetition(team.competition?.name);
 
@@ -242,7 +243,7 @@ export const prismaTeamRepository: TeamRepository = {
           console.warn("[team-repo] AF roster sync skipped:", id, error);
         });
       }
-    } else if (isDbSource() && !isBasketball) {
+    } else if (isDbSource() && !isBasketball && !isHockey) {
       const squadCount = await getPrisma().player.count({ where: { teamId: id } });
       // Thin squads need sync before render; otherwise refresh in background.
       if (squadCount < 8) {
@@ -275,6 +276,7 @@ export const prismaTeamRepository: TeamRepository = {
         ...(isAmericanFootball && afLeague
           ? { sport: "AMERICAN_FOOTBALL", league: afLeague }
           : {}),
+        ...(isHockey ? { sport: "HOCKEY" as const } : {}),
       },
       include: playerListInclude,
       orderBy: [{ knownAs: "asc" }],

@@ -91,16 +91,18 @@ export async function TeamDetailView({
   const isBrasileirao = isBrazilianLeague(team.competition?.name);
   const isBasketball = isBasketballTeamCompetition(team.competition?.name);
   const isAmericanFootball = isAmericanFootballTeamCompetition(team.competition?.name);
+  const isHockey = Boolean(team.hockey) || /nhl|hockey/i.test(team.competition?.name ?? "");
   const basketballLeague = resolveBasketballLeagueFromCompetition(team.competition?.name);
   const squad = team.squad ?? [];
-  const statCards = buildStatCards(
-    isBasketball,
-    isAmericanFootball,
-    team.stats,
-    sb,
-    theme,
-    squad.length
-  );
+  const statCards = isHockey
+    ? team.hockey?.stats?.length
+      ? team.hockey.stats.map((stat) => ({
+          label: stat.label,
+          value: stat.value,
+          accent: stat.label === "PTS" ? theme.primaryColor : theme.secondaryColor,
+        }))
+      : [{ label: "Standings", value: "Unavailable", accent: "#94a3b8" }]
+    : buildStatCards(isBasketball, isAmericanFootball, team.stats, sb, theme, squad.length);
 
   const pageSport: Sport = isAmericanFootball
     ? "AMERICAN_FOOTBALL"
@@ -124,9 +126,10 @@ export async function TeamDetailView({
         <div className="flex flex-col gap-6 p-4 sm:flex-row sm:items-center md:p-6">
           <TeamCrest
             name={team.name}
-            crestUrl={team.crestUrl}
+            crestUrl={isHockey ? team.hockey?.crestUrl : team.crestUrl}
             competitionName={team.competition?.name}
-            apiSportsId={team.apiSportsId}
+            apiSportsId={isHockey ? undefined : team.apiSportsId}
+            storedOnly={isHockey}
             size="lg"
           />
           <div className="min-w-0 flex-1 space-y-2">
@@ -151,7 +154,12 @@ export async function TeamDetailView({
                 </span>
               ) : null}
             </div>
-            {isBasketball || isAmericanFootball ? (
+            {isHockey ? (
+              <p className="text-xs text-white/50">
+                {team.hockey?.rosterLabel ?? "Roster not loaded"}
+                {team.hockey?.seasonLabel ? ` · ${team.hockey.seasonLabel}` : ""}
+              </p>
+            ) : isBasketball || isAmericanFootball ? (
               <p className="text-xs text-white/50">
                 {squad.length} players on the roster
                 {sb
@@ -192,15 +200,16 @@ export async function TeamDetailView({
         ))}
       </div>
 
-      {!isBasketball && !isAmericanFootball ? (
+      {!isBasketball && !isAmericanFootball && !isHockey ? (
         <TeamShotMapSection teamId={teamId} season={season} />
       ) : null}
 
       <Card>
         <CardHeader className="border-b border-border/60 pb-4">
           <CardTitle className="font-display text-lg">
-            {isBasketball || isAmericanFootball ? "Roster" : "Squad"} · {squad.length}{" "}
-            {isBasketball || isAmericanFootball ? "players" : "players"}
+            {isHockey
+              ? team.hockey?.rosterLabel ?? "Roster not loaded"
+              : `${isBasketball || isAmericanFootball ? "Roster" : "Squad"} · ${squad.length} players`}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
@@ -212,7 +221,9 @@ export async function TeamDetailView({
                   ? "Roster is still empty — ESPN on-demand sync runs when this page opens."
                   : isBasketball
                     ? "No players are linked to this franchise at the moment."
-                    : "Roster is still empty — reload the page to sync through ESPN."}
+                    : isHockey
+                      ? "Roster not loaded"
+                      : "Roster is still empty — reload the page to sync through ESPN."}
             </p>
           ) : (
             <TeamSquadTable
@@ -224,7 +235,9 @@ export async function TeamDetailView({
                   ? "BASKETBALL"
                   : isAmericanFootball
                     ? "AMERICAN_FOOTBALL"
-                    : "SOCCER"
+                    : isHockey
+                      ? "HOCKEY"
+                      : "SOCCER"
               }
             />
           )}

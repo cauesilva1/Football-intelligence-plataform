@@ -311,6 +311,16 @@
     animation: motion-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
+  /* Fill-mode both holds opacity 0 if the enter animation never finishes. Mobile
+     tournaments were rendering as a blank canvas while the NHL hub was loading. */
+  @media (max-width: 767px) {
+    .editorial-canvas.motion-enter {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+
   .motion-row {
     transition:
       background-color 180ms ease,

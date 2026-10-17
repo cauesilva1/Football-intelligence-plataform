@@ -64,11 +64,13 @@ describe("NHL API parsing", () => {
           points: 14,
           goalFor: 36,
           goalAgainst: 22,
+          teamLogo: "https://assets.nhle.com/logos/nhl/svg/VGK_light.svg",
         },
       ],
     });
     assert.equal(rows[0]?.abbrev, "VGK");
     assert.equal(rows[0]?.points, 14);
+    assert.equal(rows[0]?.logoUrl, "https://assets.nhle.com/logos/nhl/svg/VGK_light.svg");
   });
 
   it("keeps shot coordinates that exist and drops missing or sentinel positions", () => {

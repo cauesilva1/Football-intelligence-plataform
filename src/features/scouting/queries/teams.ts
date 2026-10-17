@@ -9,6 +9,8 @@ import {
 } from "@/features/scouting/lib/team-league-filters";
 import { attachTeamLiveStats } from "@/lib/team-live-stats";
 import { attachBasketballTeamLiveStats } from "@/lib/basketball/team-live-stats";
+import { fetchNhlStandings } from "@/lib/api/nhl";
+import { hockeyClubDirectoryModel, type HockeyClubDirectoryModel } from "@/lib/hockey/club-directory";
 import { resolveClubCrestUrlSync } from "@/lib/crests/club-crests";
 import { getServerSport } from "@/lib/sport-server";
 import { competitionBelongsToSport, getSportConfig } from "@/lib/sport-registry";
@@ -21,6 +23,7 @@ export type TeamWithStatsBomb = Team & {
   statsBomb?: AggregatedTeamStats;
   squadSize?: number;
   squad?: Player[];
+  hockey?: HockeyClubDirectoryModel;
 };
 
 async function withSupabaseErrorLog<T>(context: string, fn: () => Promise<T>): Promise<T> {
@@ -159,7 +162,33 @@ export const queryTeamsDirectory = cache(
       };
     }
 
-    if (sport === "HOCKEY" || sport === "AMERICAN_FOOTBALL") {
+    if (sport === "HOCKEY") {
+      let standings: Awaited<ReturnType<typeof fetchNhlStandings>> = [];
+      try {
+        standings = await fetchNhlStandings();
+      } catch (error) {
+        console.warn("[teams] NHL standings skipped:", error);
+      }
+      return {
+        total,
+        page,
+        pageSize,
+        items: teams.map((team) => {
+          const hockey = hockeyClubDirectoryModel({
+            shortName: team.shortName,
+            squadSize: team.squadSize ?? 0,
+            standings,
+          });
+          return {
+            ...team,
+            crestUrl: hockey.crestUrl,
+            hockey,
+          };
+        }) as TeamWithStatsBomb[],
+      };
+    }
+
+    if (sport === "AMERICAN_FOOTBALL") {
       return {
         total,
         page,
@@ -208,6 +237,25 @@ export const queryTeamById = cache(async (id: string) => {
         ? [team]
         : await attachTeamLiveStats([team]);
   if (!enriched) return null;
+
+  if (sport === "HOCKEY") {
+    let standings: Awaited<ReturnType<typeof fetchNhlStandings>> = [];
+    try {
+      standings = await fetchNhlStandings();
+    } catch (error) {
+      console.warn("[teams] NHL standings skipped:", error);
+    }
+    const hockey = hockeyClubDirectoryModel({
+      shortName: enriched.shortName,
+      squadSize: enriched.squad?.length ?? 0,
+      standings,
+    });
+    return {
+      ...enriched,
+      crestUrl: hockey.crestUrl,
+      hockey,
+    } as TeamWithStatsBomb;
+  }
 
   return {
     ...enriched,
