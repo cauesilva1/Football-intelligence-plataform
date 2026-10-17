@@ -3,7 +3,11 @@ import { Eye } from "lucide-react";
 import { PlayerAvatar } from "@/components/players/player-avatar";
 import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
 import { METRIC_GLOSSARY, POSITION_GLOSSARY } from "@/components/common/glossary-copy";
-import { formatBasketballPositionLabel, getPositionGlossaryDescription } from "@/lib/positions";
+import {
+  formatBasketballPositionLabel,
+  formatHockeyPositionLabel,
+  getPositionGlossaryDescription,
+} from "@/lib/positions";
 import {
   Table,
   TableHeader,
@@ -704,7 +708,7 @@ function HockeyScoutingTable({ players }: { players: Player[] }) {
                 </Link>
               </TableCell>
               <TableCell>{formatClubLabel(player.teamName, player.teamShortName)}</TableCell>
-              <TableCell>{player.position}</TableCell>
+              <TableCell>{formatHockeyPositionLabel(player.position)}</TableCell>
               <TableCell className="tabular-nums">{stats.appearances}</TableCell>
               <TableCell className="tabular-nums">{goalie ? "—" : stats.goals}</TableCell>
               <TableCell className="tabular-nums">{goalie ? "—" : stats.assists}</TableCell>

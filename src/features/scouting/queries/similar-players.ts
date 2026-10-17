@@ -3,6 +3,7 @@ import { findSimilarPlayers } from "@/features/scouting/lib/similarity";
 import {
   similarBasketballPositionGroup,
   similarFootballPositionGroup,
+  similarHockeyPositionGroup,
   similarPositionGroup,
 } from "@/features/scouting/lib/position-scorecard";
 import { queryPlayerById } from "@/features/scouting/queries/players";
@@ -23,7 +24,9 @@ export const querySimilarPlayers = cache(async (playerId: string, limit = 4) => 
       ? similarBasketballPositionGroup(target.position)
       : sport === "AMERICAN_FOOTBALL"
         ? similarFootballPositionGroup(target.position)
-        : similarPositionGroup(target.position);
+        : sport === "HOCKEY"
+          ? similarHockeyPositionGroup(target.position)
+          : similarPositionGroup(target.position);
 
   const pool = await queryPositionPool(sport, positionPoolKey(positions), SIMILAR_POOL_TAKE);
   return findSimilarPlayers(target, pool, limit);

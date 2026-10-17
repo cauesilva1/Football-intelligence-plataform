@@ -1,3 +1,5 @@
+import { formatHockeyPositionLabel } from "@/lib/positions";
+
 export interface TeamTheme {
   primaryColor: string;
   secondaryColor: string;
@@ -212,7 +214,10 @@ export function getTeamTheme(
   return DEFAULT_THEME;
 }
 
-export function getPositionAbbreviation(position: string): string {
+export function getPositionAbbreviation(position: string, sport?: string): string {
+  if (sport === "HOCKEY") {
+    return formatHockeyPositionLabel(position);
+  }
   const map: Record<string, string> = {
     GK: "GK",
     CB: "DF",

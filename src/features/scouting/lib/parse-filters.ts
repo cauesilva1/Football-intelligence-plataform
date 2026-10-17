@@ -57,7 +57,8 @@ export function parsePlayerFilters(
     sport:
       sportParam === "BASKETBALL" ||
       sportParam === "SOCCER" ||
-      sportParam === "AMERICAN_FOOTBALL"
+      sportParam === "AMERICAN_FOOTBALL" ||
+      sportParam === "HOCKEY"
         ? sportParam
         : defaultSport,
     search: param(searchParams.search) ?? "",
@@ -70,6 +71,7 @@ export function parsePlayerFilters(
     minMinutes: num(param(searchParams.minMinutes)),
     minGoalsPer90: num(param(searchParams.minGoalsPer90)),
     minXGPer90: num(param(searchParams.minXGPer90)),
+    minGoals: num(param(searchParams.minGoals)),
     maxMarketValue: num(param(searchParams.maxMarketValue)),
     maxCapHit: num(param(searchParams.maxCapHit)),
     minPoints: num(param(searchParams.minPoints)),
@@ -119,6 +121,7 @@ export function filtersToSearchParams(
   if (typeof filters.minRating === "number") params.set("minRating", String(filters.minRating));
   if (typeof filters.minMinutes === "number") params.set("minMinutes", String(filters.minMinutes));
   if (typeof filters.minGoalsPer90 === "number") params.set("minGoalsPer90", String(filters.minGoalsPer90));
+  if (typeof filters.minGoals === "number") params.set("minGoals", String(filters.minGoals));
   if (typeof filters.minXGPer90 === "number") params.set("minXGPer90", String(filters.minXGPer90));
   if (typeof filters.minPoints === "number") params.set("minPoints", String(filters.minPoints));
   if (typeof filters.minRebounds === "number") params.set("minRebounds", String(filters.minRebounds));
@@ -166,6 +169,7 @@ export function hasActiveFilters(filters: PlayerFilters): boolean {
       typeof filters.minMinutes === "number" ||
       typeof filters.minGoalsPer90 === "number" ||
       typeof filters.minXGPer90 === "number" ||
+      typeof filters.minGoals === "number" ||
       typeof filters.minPoints === "number" ||
       typeof filters.minRebounds === "number" ||
       typeof filters.minAssists === "number" ||

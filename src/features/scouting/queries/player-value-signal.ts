@@ -2,6 +2,7 @@ import { cache } from "react";
 import {
   similarBasketballPositionGroup,
   similarFootballPositionGroup,
+  similarHockeyPositionGroup,
   similarPositionGroup,
 } from "@/features/scouting/lib/position-scorecard";
 import { getPlayerRepository } from "@/features/scouting/repository";
@@ -14,6 +15,7 @@ const VALUE_COHORT_TAKE = 120;
 function poolPositions(sport: Sport, position: string): string[] {
   if (sport === "BASKETBALL") return similarBasketballPositionGroup(position);
   if (sport === "AMERICAN_FOOTBALL") return similarFootballPositionGroup(position);
+  if (sport === "HOCKEY") return similarHockeyPositionGroup(position);
   return similarPositionGroup(position);
 }
 

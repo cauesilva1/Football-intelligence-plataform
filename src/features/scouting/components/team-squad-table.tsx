@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
-import { getPositionGlossaryDescription } from "@/lib/positions";
+import { formatHockeyPositionLabel, getPositionGlossaryDescription } from "@/lib/positions";
 import { formatCapHit, hasRatingSample, playerDisplayName, ratingColor } from "@/lib/utils";
 import type { Player } from "@/types";
 import type { Sport } from "@/lib/sport";
@@ -96,6 +96,7 @@ export function TeamSquadTable({
                       name={playerDisplayName(player)}
                       fullName={player.fullName}
                       position={player.position}
+                      sport={sport}
                       competitionName={competitionName}
                       teamName={teamName}
                       photoPolicy="initials"
@@ -106,7 +107,11 @@ export function TeamSquadTable({
                 </TableCell>
                 <TableCell>
                   <GlossaryTooltip
-                    label={<Badge variant="neutral">{player.position}</Badge>}
+                    label={
+                      <Badge variant="neutral">
+                        {sport === "HOCKEY" ? formatHockeyPositionLabel(player.position) : player.position}
+                      </Badge>
+                    }
                     description={getPositionGlossaryDescription(player.position, sport)}
                   />
                 </TableCell>

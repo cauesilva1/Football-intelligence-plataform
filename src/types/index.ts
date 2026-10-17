@@ -210,6 +210,8 @@ export interface PlayerFilters {
   minMinutes?: number;
   minGoalsPer90?: number;
   minXGPer90?: number;
+  /** Hockey — season goal total. */
+  minGoals?: number;
   maxMarketValue?: number;
   /** Basquete — teto de cap hit anual (USD). */
   maxCapHit?: number;

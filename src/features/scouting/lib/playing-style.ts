@@ -173,3 +173,24 @@ export function derivePlayingStyle(player: Player): PlayingStyle {
   if (sport === "AMERICAN_FOOTBALL") return deriveFootballPlayingStyle(player);
   return deriveSoccerPlayingStyle(player);
 }
+
+/**
+ * Profile block. Hockey has no skater or goalie style model yet, so the
+ * soccer Finisher / Finishing / Creation block stays off those pages.
+ */
+export function playingStyleForProfile(player: Player): PlayingStyle | null {
+  if ((player.sport ?? "SOCCER") === "HOCKEY") return null;
+  return derivePlayingStyle(player);
+}
+
+/** Brief copy. Hockey does not inherit the soccer Finisher block. */
+export function playingStyleForReport(player: Player): PlayingStyle {
+  if ((player.sport ?? "SOCCER") === "HOCKEY") {
+    return {
+      label: player.position === "G" ? "Goaltender" : "Skater",
+      description: "Season counting line from the NHL feed.",
+      traits: [],
+    };
+  }
+  return derivePlayingStyle(player);
+}

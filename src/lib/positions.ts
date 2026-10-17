@@ -8,6 +8,24 @@ export const BASKETBALL_FILTER_POSITIONS = ["PG", "SG", "SF", "PF", "C"] as cons
 
 export const HOCKEY_POSITIONS = ["C", "LW", "RW", "D", "G"] as const;
 
+const HOCKEY_POSITION_SET = new Set<string>(HOCKEY_POSITIONS);
+
+/** NHL codes only. Soccer abbreviations (CDM, ST, FW) never pass through. */
+export function formatHockeyPositionLabel(position?: string | null): string {
+  const key = position?.trim().toUpperCase() ?? "";
+  if (key === "L") return "LW";
+  if (key === "R") return "RW";
+  if (HOCKEY_POSITION_SET.has(key)) return key;
+  return "—";
+}
+
+/** Stick side stored on preferredFoot. Empty when the feed did not say. */
+export function formatHockeyShootsLabel(preferredFoot?: string | null): string | null {
+  if (preferredFoot === "LEFT") return "Shoots L";
+  if (preferredFoot === "RIGHT") return "Shoots R";
+  return null;
+}
+
 export const AMERICAN_FOOTBALL_POSITIONS = [
   "QB",
   "RB",

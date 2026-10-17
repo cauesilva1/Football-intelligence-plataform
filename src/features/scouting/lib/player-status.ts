@@ -63,6 +63,42 @@ export function derivePlayerStatus(
     };
   }
 
+  if (sport === "HOCKEY") {
+    if (appearances > 0 && appearances < 5) {
+      return {
+        label: "Small Sample",
+        description: "Under 5 games this season — rating is provisional",
+        variant: "amber",
+      };
+    }
+    if (appearances >= 40) {
+      return {
+        label: "Starter",
+        description: "Regular games this season",
+        variant: "default",
+      };
+    }
+    if (appearances >= 15) {
+      return {
+        label: "Rotation",
+        description: "Regular lineup involvement",
+        variant: "azure",
+      };
+    }
+    if (rating >= 7.2 && appearances >= 5) {
+      return {
+        label: "Prospect",
+        description: "Strong rating on a reliable game sample",
+        variant: "amber",
+      };
+    }
+    return {
+      label: "Squad Player",
+      description: "Limited games this season",
+      variant: "neutral",
+    };
+  }
+
   if (sport === "AMERICAN_FOOTBALL") {
     if (
       appearances > 0 &&

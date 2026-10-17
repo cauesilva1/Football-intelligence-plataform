@@ -14,6 +14,8 @@ import { PlayerAvatar } from "@/components/players/player-avatar";
 import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
 import {
   formatBasketballPositionLabel,
+  formatHockeyPositionLabel,
+  formatHockeyShootsLabel,
   getPositionGlossaryDescription,
   normalizeBasketballPosition,
 } from "@/lib/positions";
@@ -46,12 +48,16 @@ export function PlayerProfileHeader({
   const sport = player.sport ?? "SOCCER";
   const isBasketball = sport === "BASKETBALL";
   const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
+  const isHockey = sport === "HOCKEY";
   const usesCapHit = isBasketball || isAmericanFootball;
   const positionSport = isBasketball
     ? "BASKETBALL"
     : isAmericanFootball
       ? "AMERICAN_FOOTBALL"
-      : "SOCCER";
+      : isHockey
+        ? "HOCKEY"
+        : "SOCCER";
+  const shootsLabel = isHockey ? formatHockeyShootsLabel(player.preferredFoot) : null;
   const status = derivePlayerStatus(stats, sport);
   const dataDepth = deriveDataDepthSnapshot(player);
   const theme = getTeamTheme(player.competitionName, player.teamName);
@@ -69,7 +75,9 @@ export function PlayerProfileHeader({
   const weightLabel = formatPhysicalMetric(player.weight, "kg");
   const displayPosition = isBasketball
     ? formatBasketballPositionLabel(player.position)
-    : player.position;
+    : isHockey
+      ? formatHockeyPositionLabel(player.position)
+      : player.position;
   const displaySecondary =
     player.secondaryPosition && isBasketball
       ? normalizeBasketballPosition(player.secondaryPosition)
@@ -100,6 +108,7 @@ export function PlayerProfileHeader({
             teamName={player.teamName}
             photoUrl={player.photoUrl}
             apiSportsPlayerId={player.apiSportsId}
+            sport={sport}
             size="lg"
             className="ring-2 ring-white/20"
           />
@@ -166,11 +175,16 @@ export function PlayerProfileHeader({
                   <Weight className="h-3.5 w-3.5" /> {weightLabel}
                 </span>
               )}
-              {!isBasketball && (
+              {isHockey && shootsLabel ? (
+                <span className="inline-flex items-center gap-1">
+                  <Footprints className="h-3.5 w-3.5" /> {shootsLabel}
+                </span>
+              ) : null}
+              {!isBasketball && !isHockey ? (
                 <span className="inline-flex items-center gap-1">
                   <Footprints className="h-3.5 w-3.5" /> {formatPreferredFoot(player.preferredFoot)}
                 </span>
-              )}
+              ) : null}
             </div>
             <div className="text-2xs text-white/60">{status.description}</div>
           </div>

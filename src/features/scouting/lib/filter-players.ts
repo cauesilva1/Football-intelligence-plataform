@@ -63,6 +63,9 @@ export function filterAndSortPlayers(
     minMinutes,
     minGoalsPer90,
     minXGPer90,
+    minGoals,
+    minAssists,
+    minPoints,
     maxMarketValue,
     maxCapHit,
     minYardsPerGame,
@@ -98,10 +101,23 @@ export function filterAndSortPlayers(
       result = result.filter((p) => p.currentSeasonStats.minutesPlayed >= minMinutes);
     }
   }
-  if (typeof minGoalsPer90 === "number") {
+  if (filters.sport !== "HOCKEY" && typeof minGoalsPer90 === "number") {
     result = result.filter((p) => p.currentSeasonStats.per90.goals >= minGoalsPer90);
   }
-  if (typeof minXGPer90 === "number") {
+  if (filters.sport === "HOCKEY") {
+    if (typeof minGoals === "number") {
+      result = result.filter((p) => p.currentSeasonStats.goals >= minGoals);
+    }
+    if (typeof minAssists === "number") {
+      result = result.filter((p) => p.currentSeasonStats.assists >= minAssists);
+    }
+    if (typeof minPoints === "number") {
+      result = result.filter(
+        (p) => (p.currentSeasonStats.points ?? p.currentSeasonStats.goals + p.currentSeasonStats.assists) >= minPoints
+      );
+    }
+  }
+  if (filters.sport !== "HOCKEY" && typeof minXGPer90 === "number") {
     result = result.filter(
       (p) =>
         computeXGPer90(p.currentSeasonStats.minutesPlayed, p.currentSeasonStats.xG) >= minXGPer90

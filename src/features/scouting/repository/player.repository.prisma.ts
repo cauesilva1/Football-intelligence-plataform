@@ -728,7 +728,11 @@ function needsMappedPlayerFilter(filters: PlayerFilters): boolean {
     typeof filters.maxCapHit === "number" ||
     typeof filters.minYardsPerGame === "number" ||
     typeof filters.minTouchdownsPerGame === "number" ||
-    typeof filters.minSacksPerGame === "number"
+    typeof filters.minSacksPerGame === "number" ||
+    (filters.sport === "HOCKEY" &&
+      (typeof filters.minGoals === "number" ||
+        typeof filters.minAssists === "number" ||
+        typeof filters.minPoints === "number"))
   );
 }
 

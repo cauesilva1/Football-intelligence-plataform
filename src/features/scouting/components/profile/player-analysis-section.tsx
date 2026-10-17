@@ -1,7 +1,7 @@
 import { ShieldCheck, TrendingDown, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataPanel } from "@/components/data/data-panel";
-import { derivePlayingStyle } from "@/features/scouting/lib/playing-style";
+import { playingStyleForProfile } from "@/features/scouting/lib/playing-style";
 import {
   deriveBasketballStrengthsWeaknesses,
   deriveFootballStrengthsWeaknesses,
@@ -11,7 +11,7 @@ import { localizeScoutLabels } from "@/lib/scout-labels";
 import type { Player } from "@/types";
 
 export function PlayerAnalysisSection({ player }: { player: Player }) {
-  const style = derivePlayingStyle(player);
+  const style = playingStyleForProfile(player);
   const sport = player.sport ?? "SOCCER";
   const derived =
     sport === "SOCCER"
@@ -72,27 +72,29 @@ export function PlayerAnalysisSection({ player }: { player: Player }) {
         </DataPanel>
       ) : null}
 
-      <DataPanel
-        title="Playing Style"
-        description="Tactical profile inferred from metrics."
-        density="dense"
-        className="lg:col-span-1"
-      >
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-accent-warning" />
-            <p className="font-display text-sm font-semibold text-foreground">{style.label}</p>
+      {style ? (
+        <DataPanel
+          title="Playing Style"
+          description="Tactical profile inferred from metrics."
+          density="dense"
+          className="lg:col-span-1"
+        >
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-accent-warning" />
+              <p className="font-display text-sm font-semibold text-foreground">{style.label}</p>
+            </div>
+            <p className="text-xs leading-relaxed text-muted-foreground">{style.description}</p>
+            <div className="flex flex-wrap gap-1.5">
+              {style.traits.map((trait) => (
+                <Badge key={trait} variant="secondary">
+                  {trait}
+                </Badge>
+              ))}
+            </div>
           </div>
-          <p className="text-xs leading-relaxed text-muted-foreground">{style.description}</p>
-          <div className="flex flex-wrap gap-1.5">
-            {style.traits.map((trait) => (
-              <Badge key={trait} variant="secondary">
-                {trait}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      </DataPanel>
+        </DataPanel>
+      ) : null}
     </div>
   );
 }

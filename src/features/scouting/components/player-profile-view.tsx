@@ -23,10 +23,6 @@ import type { Sport } from "@/lib/sport";
 import type { Player } from "@/types";
 import { notFound } from "next/navigation";
 
-function SimilarSkeleton() {
-  return <Skeleton className="h-48 w-full rounded-xl" />;
-}
-
 function IntelligenceSkeleton() {
   return <Skeleton className="h-64 w-full rounded-xl" />;
 }
@@ -164,9 +160,7 @@ export async function PlayerProfileView({
       <PlayerAnalysisSection player={player} />
       <div className="grid items-start gap-6 xl:grid-cols-2">
         <ScoutNotesPanel playerId={playerId} sport={sport} />
-        <Suspense fallback={<SimilarSkeleton />}>
-          <PlayerSimilarSection playerId={playerId} />
-        </Suspense>
+        <PlayerSimilarSection playerId={playerId} />
       </div>
         </>
       )}

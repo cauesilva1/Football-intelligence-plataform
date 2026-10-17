@@ -2,6 +2,7 @@ import { cache } from "react";
 import {
   similarBasketballPositionGroup,
   similarFootballPositionGroup,
+  similarHockeyPositionGroup,
   similarPositionGroup,
 } from "@/features/scouting/lib/position-scorecard";
 import { loadLeaguePercentileContext } from "@/features/scouting/queries/league-percentiles";
@@ -18,6 +19,7 @@ const INTELLIGENCE_POOL_TAKE = 400;
 function poolPositions(sport: Sport, position: string): string[] {
   if (sport === "BASKETBALL") return similarBasketballPositionGroup(position);
   if (sport === "AMERICAN_FOOTBALL") return similarFootballPositionGroup(position);
+  if (sport === "HOCKEY") return similarHockeyPositionGroup(position);
   return similarPositionGroup(position);
 }
 

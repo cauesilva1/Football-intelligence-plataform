@@ -33,6 +33,8 @@ import {
   MIN_AGE_OPTIONS,
   MIN_RATING_OPTIONS,
   MIN_MINUTES_OPTIONS,
+  HOCKEY_COUNT_OPTIONS,
+  HOCKEY_FILTER_LABELS,
   MIN_GOALS_PER90_OPTIONS,
   MIN_XG_PER90_OPTIONS,
   POSITIONS,
@@ -525,6 +527,83 @@ export function ScoutingFiltersPanel({
     </>
   );
 
+  const hockeyAdvancedFields = (
+    <>
+      <FilterField label="Min Age">
+        <Select
+          value={String(filters.minAge ?? "")}
+          onChange={(e) => pushFilters({ minAge: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
+        >
+          <option value="">No limit</option>
+          {MIN_AGE_OPTIONS.map((a) => (
+            <option key={a} value={a}>{a}+ years</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label="Max Age">
+        <Select
+          value={String(filters.maxAge ?? "")}
+          onChange={(e) => pushFilters({ maxAge: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
+        >
+          <option value="">No limit</option>
+          {MAX_AGE_OPTIONS.map((a) => (
+            <option key={a} value={a}>Max Age: {a}</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label="Min Rating">
+        <Select
+          value={String(filters.minRating ?? "")}
+          onChange={(e) => pushFilters({ minRating: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
+        >
+          <option value="">No limit</option>
+          {MIN_RATING_OPTIONS.map((r) => (
+            <option key={r} value={r}>{r.toFixed(1)}+</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label={HOCKEY_FILTER_LABELS.goals}>
+        <Select
+          value={String(filters.minGoals ?? "")}
+          onChange={(e) =>
+            pushFilters({ minGoals: e.target.value ? Number(e.target.value) : undefined, page: 1 })
+          }
+        >
+          <option value="">No limit</option>
+          {HOCKEY_COUNT_OPTIONS.map((v) => (
+            <option key={v} value={v}>{v}+ goals</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label={HOCKEY_FILTER_LABELS.assists}>
+        <Select
+          value={String(filters.minAssists ?? "")}
+          onChange={(e) =>
+            pushFilters({ minAssists: e.target.value ? Number(e.target.value) : undefined, page: 1 })
+          }
+        >
+          <option value="">No limit</option>
+          {HOCKEY_COUNT_OPTIONS.map((v) => (
+            <option key={v} value={v}>{v}+ assists</option>
+          ))}
+        </Select>
+      </FilterField>
+      <FilterField label={HOCKEY_FILTER_LABELS.points}>
+        <Select
+          value={String(filters.minPoints ?? "")}
+          onChange={(e) =>
+            pushFilters({ minPoints: e.target.value ? Number(e.target.value) : undefined, page: 1 })
+          }
+        >
+          <option value="">No limit</option>
+          {HOCKEY_COUNT_OPTIONS.map((v) => (
+            <option key={v} value={v}>{v}+ points</option>
+          ))}
+        </Select>
+      </FilterField>
+    </>
+  );
+
   const isScoutingRoute = route === "scouting";
   const showBasketballScoutingTools = isBasketball && isScoutingRoute;
 
@@ -540,6 +619,13 @@ export function ScoutingFiltersPanel({
       <>
         {americanFootballAdvancedFields}
         {clearButton(hasActiveFootballFilters(filters))}
+      </>
+    ) : null
+  ) : isHockey ? (
+    isScoutingRoute ? (
+      <>
+        {hockeyAdvancedFields}
+        {clearButton(hasActiveFilters(filters))}
       </>
     ) : null
   ) : isScoutingRoute ? (

@@ -15,4 +15,10 @@ export const MIN_AGE_OPTIONS = [18, 21, 23, 25] as const;
 export const MIN_RATING_OPTIONS = [6, 6.5, 7, 7.5, 8] as const;
 export const MIN_MINUTES_OPTIONS = [0, 450, 900, 1200, 1800] as const;
 export const MIN_GOALS_PER90_OPTIONS = [0, 0.1, 0.25, 0.5] as const;
+export const HOCKEY_COUNT_OPTIONS = [1, 5, 10, 20] as const;
+export const HOCKEY_FILTER_LABELS = {
+  goals: "Min goals",
+  assists: "Min assists",
+  points: "Min points",
+} as const;
 export const MIN_XG_PER90_OPTIONS = [0, 0.1, 0.2, 0.35] as const;

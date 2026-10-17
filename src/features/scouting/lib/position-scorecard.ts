@@ -1,3 +1,4 @@
+import { formatHockeyPositionLabel } from "@/lib/positions";
 import type { PlayerStatistic } from "@/types";
 import { formatExpectedGoalsRate, formatExpectedGoalsTotal } from "@/lib/metrics/expected-goals";
 import { hasReliableSoccerSample, per90 } from "@/lib/metrics/per90";
@@ -154,6 +155,15 @@ export function buildPositionScorecard(
       },
     ],
   };
+}
+
+/** Forwards share a group. Defense and goalies stay with their own code. */
+export function similarHockeyPositionGroup(position: string): string[] {
+  const label = formatHockeyPositionLabel(position);
+  if (label === "G") return ["G"];
+  if (label === "D") return ["D"];
+  if (label === "—") return [];
+  return ["C", "LW", "RW"];
 }
 
 /** Positions that share a similarity weight group (not exact position only). */

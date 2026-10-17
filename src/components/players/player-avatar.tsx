@@ -27,6 +27,7 @@ export function PlayerAvatar({
   apiSportsPlayerId,
   photoPolicy = "auto",
   size = "md",
+  sport,
   className,
 }: {
   name: string;
@@ -38,6 +39,7 @@ export function PlayerAvatar({
   apiSportsPlayerId?: number | string | null;
   photoPolicy?: PlayerAvatarPhotoPolicy;
   size?: "sm" | "md" | "lg";
+  sport?: string;
   className?: string;
 }) {
   const theme = getTeamTheme(competitionName, teamName);
@@ -61,7 +63,7 @@ export function PlayerAvatar({
   }
 
   const initials = getPlayerInitials(name, fullName);
-  const positionTag = getPositionAbbreviation(position);
+  const positionTag = getPositionAbbreviation(position, sport);
 
   const sizeClass =
     size === "lg" ? "h-20 w-20 text-xl" : size === "sm" ? "h-8 w-8 text-2xs" : "h-10 w-10 text-xs";

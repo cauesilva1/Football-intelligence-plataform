@@ -56,8 +56,14 @@ function neutralPath(path: string | null): boolean {
  * Chrome follows the URL (desk query, league slug, match id) or the record
  * on screen. The cookie only fills directories that do not name a sport.
  */
-export function SportProvider({ children }: { children: ReactNode }) {
-  const [currentSport, setCurrentSportState] = useState<Sport>("SOCCER");
+export function SportProvider({
+  children,
+  initialSport = "SOCCER",
+}: {
+  children: ReactNode;
+  initialSport?: Sport;
+}) {
+  const [currentSport, setCurrentSportState] = useState<Sport>(initialSport);
   const [hydrated, setHydrated] = useState(false);
 
   const paint = useCallback((sport: Sport) => {

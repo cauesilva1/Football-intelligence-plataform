@@ -1,4 +1,4 @@
-import { derivePlayingStyle } from "@/features/scouting/lib/playing-style";
+import { derivePlayingStyle, playingStyleForReport } from "@/features/scouting/lib/playing-style";
 import { loadLeaguePercentileContext } from "@/features/scouting/queries/league-percentiles";
 import { withBriefContext } from "@/lib/export/scout-brief-context";
 import { toBriefIntelligenceSnapshot } from "@/lib/export/scout-brief-intelligence";
@@ -412,7 +412,7 @@ function buildMockSummary(player: Player): string {
 }
 
 function buildMockReport(player: Player, reason: string): ScoutingReport {
-  const playingStyle = derivePlayingStyle(player);
+  const playingStyle = playingStyleForReport(player);
   const rating = computeOverallRating(player);
 
   return withBriefContext(
@@ -711,7 +711,7 @@ async function generateWithOpenRouter(
       return { ok: false, reason: "OpenRouter returned an unreadable brief" };
     }
 
-    const fallbackStyle = derivePlayingStyle(player);
+    const fallbackStyle = playingStyleForReport(player);
     // Always use unified sport rating — do not trust a parallel LLM score.
     const rating = computeOverallRating(player);
 

@@ -17,6 +17,7 @@ import {
 import {
   similarBasketballPositionGroup,
   similarFootballPositionGroup,
+  similarHockeyPositionGroup,
   similarPositionGroup,
 } from "@/features/scouting/lib/position-scorecard";
 import type { Player } from "@/types";
@@ -32,6 +33,24 @@ export interface SimilarPlayerResult {
 function hasPlayedGames(player: Player): boolean {
   const stats = player.currentSeasonStats;
   return stats.appearances > 0 || stats.minutesPlayed > 0;
+}
+
+const HOCKEY_SIMILARITY_WEIGHTS: WeightMap = {
+  points: 0.4,
+  goals: 0.2,
+  assists: 0.2,
+  saves: 0.2,
+};
+
+function hockeySimilarityFeatureVector(player: Player): Record<string, number> {
+  const stats = player.currentSeasonStats;
+  const games = Math.max(stats.appearances, 1);
+  return {
+    points: ((stats.points ?? stats.goals + stats.assists) / games) * 20,
+    goals: (stats.goals / games) * 40,
+    assists: (stats.assists / games) * 40,
+    saves: (stats.savePercentage ?? 0) * 100,
+  };
 }
 
 type WeightMap = Record<string, number>;
@@ -66,25 +85,32 @@ export function findSimilarPlayers(
   const sport = target.sport ?? "SOCCER";
   const isBasketball = sport === "BASKETBALL";
   const isFootball = sport === "AMERICAN_FOOTBALL";
+  const isHockey = sport === "HOCKEY";
 
-  const weights = isBasketball
-    ? basketballSimilarityWeightsForPosition(target.position)
-    : isFootball
-      ? americanFootballSimilarityWeightsForPosition(target.position)
-      : soccerSimilarityWeightsForPosition(target.position);
+  const weights = isHockey
+    ? HOCKEY_SIMILARITY_WEIGHTS
+    : isBasketball
+      ? basketballSimilarityWeightsForPosition(target.position)
+      : isFootball
+        ? americanFootballSimilarityWeightsForPosition(target.position)
+        : soccerSimilarityWeightsForPosition(target.position);
 
-  const featureFn = isBasketball
-    ? basketballSimilarityFeatureVector
-    : isFootball
-      ? americanFootballSimilarityFeatureVector
-      : soccerSimilarityFeatureVector;
+  const featureFn = isHockey
+    ? hockeySimilarityFeatureVector
+    : isBasketball
+      ? basketballSimilarityFeatureVector
+      : isFootball
+        ? americanFootballSimilarityFeatureVector
+        : soccerSimilarityFeatureVector;
 
   const targetVector = featureFn(target);
-  const groupPositions = isBasketball
-    ? similarBasketballPositionGroup(target.position)
-    : isFootball
-      ? similarFootballPositionGroup(target.position)
-      : similarPositionGroup(target.position);
+  const groupPositions = isHockey
+    ? similarHockeyPositionGroup(target.position)
+    : isBasketball
+      ? similarBasketballPositionGroup(target.position)
+      : isFootball
+        ? similarFootballPositionGroup(target.position)
+        : similarPositionGroup(target.position);
   const group = new Set(groupPositions);
 
   const targetPlayed = hasPlayedGames(target);
