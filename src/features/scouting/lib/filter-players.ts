@@ -177,6 +177,15 @@ export function filterAndSortPlayers(
         diff =
           (sa.points ?? sa.perGame?.points ?? 0) - (sb.points ?? sb.perGame?.points ?? 0);
         break;
+      case "appearances":
+        diff = sa.appearances - sb.appearances;
+        break;
+      case "plusMinus":
+        diff = (sa.plusMinus ?? 0) - (sb.plusMinus ?? 0);
+        break;
+      case "savePercentage":
+        diff = (sa.savePercentage ?? 0) - (sb.savePercentage ?? 0);
+        break;
       case "rebounds":
         diff =
           (sa.rebounds ?? sa.perGame?.rebounds ?? 0) - (sb.rebounds ?? sb.perGame?.rebounds ?? 0);

@@ -127,6 +127,8 @@ async function upsertPlayer(
     weight: roster?.weightKg || 80,
     preferredFoot: preferredFoot(roster?.shoots ?? "R"),
     photoUrl: line.headshot ?? roster?.headshot,
+    marketValue: 0,
+    transfermarktId: null,
     apiSportsId: line.playerId,
     sport: SPORT,
     league: LEAGUE,

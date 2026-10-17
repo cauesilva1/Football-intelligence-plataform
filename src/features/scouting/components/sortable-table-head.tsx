@@ -45,6 +45,7 @@ export function SortableTableHead({
     <button
       type="button"
       onClick={handleSort}
+      data-sort={sortKey}
       className={cn(
         "inline-flex items-center gap-1 transition-colors hover:text-foreground",
         active ? "text-foreground" : "text-muted-foreground",

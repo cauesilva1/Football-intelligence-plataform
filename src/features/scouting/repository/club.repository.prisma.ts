@@ -401,9 +401,15 @@ export async function persistSquadFromEspn(
   return saved;
 }
 
+/** Soccer market feeds. Hockey, basketball, and American football keep their own identity. */
+export function acceptsTransfermarktProfile(sport: string | null | undefined): boolean {
+  return sport === "SOCCER";
+}
+
 /** Ensure player has fresh Transfermarkt + FBref data; falls back to DB cache on API failure. */
 export async function ensurePlayerPersisted(player: DbPlayer): Promise<void> {
   if (!canUseDatabase()) return;
+  if (!acceptsTransfermarktProfile(player.sport)) return;
 
   const currentSeasonLabel =
     player.statistics?.find((s) => s.season === CURRENT_SEASON)?.season ??

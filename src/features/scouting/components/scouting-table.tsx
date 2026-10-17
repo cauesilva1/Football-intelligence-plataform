@@ -19,6 +19,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { SortableTableHead } from "@/features/scouting/components/sortable-table-head";
+import { buildFilterUrl } from "@/features/scouting/lib/build-filter-url";
+import { getFilterDefaults } from "@/features/scouting/lib/filter-defaults";
 import { ShortlistButton } from "@/features/shortlist/components/shortlist-button";
 import { type ScoutingRoute } from "@/features/scouting/lib/filter-defaults";
 import { formatExpectedGoalsRate } from "@/lib/metrics/expected-goals";
@@ -685,21 +687,63 @@ function AmericanFootballScoutingTable({
   );
 }
 
-function HockeyScoutingTable({ players }: { players: Player[] }) {
+function hockeyNumber(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return "—";
+  return String(value);
+}
+
+function HockeyScoutingTable({
+  players,
+  filters,
+  basePath,
+  route,
+}: {
+  players: Player[];
+  filters: PlayerFilters;
+  basePath: string;
+  route: ScoutingRoute;
+}) {
+  const head = (label: string, sortKey: NonNullable<PlayerFilters["sortBy"]>) => {
+    const nextDir = filters.sortBy === sortKey && filters.sortDir === "desc" ? "asc" : "desc";
+    const href = buildFilterUrl(
+      basePath,
+      { ...filters, sortBy: sortKey, sortDir: nextDir, page: 1 },
+      getFilterDefaults(route)
+    );
+    return (
+      <TableHead key={sortKey}>
+        <Link href={href} data-sort={sortKey} className="inline-flex items-center gap-1 hover:text-foreground">
+          {label}
+        </Link>
+      </TableHead>
+    );
+  };
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          {["Player", "Club", "Pos", "GP", "G", "A", "PTS", "+/−", "SV%"].map((label) => (
-            <TableHead key={label}>{label}</TableHead>
-          ))}
+          {head("Player", "name")}
+          {head("Club", "club")}
+          {head("Pos", "position")}
+          {head("GP", "appearances")}
+          {head("G", "goals")}
+          {head("A", "assists")}
+          {head("PTS", "points")}
+          {head("+/−", "plusMinus")}
+          {head("SV%", "savePercentage")}
         </TableRow>
       </TableHeader>
       <TableBody>
         {players.map((player) => {
           const stats = player.currentSeasonStats;
-          const goalie = player.position === "G";
-          const savePct = stats.savePercentage ?? 0;
+          const goalie =
+            player.position === "G" || (stats.saves ?? 0) > 0 || (stats.savePercentage ?? 0) > 0;
+          const position =
+            formatHockeyPositionLabel(player.position) === "—" && goalie
+              ? "G"
+              : formatHockeyPositionLabel(player.position);
+          const savePct = stats.savePercentage;
           return (
             <TableRow key={player.id}>
               <TableCell>
@@ -708,14 +752,16 @@ function HockeyScoutingTable({ players }: { players: Player[] }) {
                 </Link>
               </TableCell>
               <TableCell>{formatClubLabel(player.teamName, player.teamShortName)}</TableCell>
-              <TableCell>{formatHockeyPositionLabel(player.position)}</TableCell>
+              <TableCell>{position}</TableCell>
               <TableCell className="tabular-nums">{stats.appearances}</TableCell>
               <TableCell className="tabular-nums">{goalie ? "—" : stats.goals}</TableCell>
               <TableCell className="tabular-nums">{goalie ? "—" : stats.assists}</TableCell>
-              <TableCell className="tabular-nums">{goalie ? "—" : stats.points ?? stats.goals + stats.assists}</TableCell>
-              <TableCell className="tabular-nums">{goalie ? "—" : stats.plusMinus ?? "—"}</TableCell>
               <TableCell className="tabular-nums">
-                {goalie && savePct > 0 ? savePct.toFixed(3) : "—"}
+                {goalie ? "—" : stats.points ?? stats.goals + stats.assists}
+              </TableCell>
+              <TableCell className="tabular-nums">{hockeyNumber(stats.plusMinus)}</TableCell>
+              <TableCell className="tabular-nums">
+                {savePct != null && savePct > 0 ? savePct.toFixed(3) : "—"}
               </TableCell>
             </TableRow>
           );
@@ -744,7 +790,9 @@ export function ScoutingTable({
   }
 
   if (filters.sport === "HOCKEY") {
-    return <HockeyScoutingTable players={players} />;
+    return (
+      <HockeyScoutingTable players={players} filters={filters} basePath={basePath} route={route} />
+    );
   }
 
   if (filters.sport === "AMERICAN_FOOTBALL") {

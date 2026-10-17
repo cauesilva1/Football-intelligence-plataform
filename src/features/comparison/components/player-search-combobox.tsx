@@ -13,12 +13,15 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { searchPlayersLiteAction } from "@/lib/actions/players";
+import { formatHockeyPositionLabel } from "@/lib/positions";
 import { cn } from "@/lib/utils";
 import type { PlayerLite } from "@/types";
 
 function formatPlayerLabel(player: PlayerLite): string {
   const club = player.teamName ?? player.teamShortName ?? "No club";
-  return `${player.knownAs || player.fullName} - ${player.position} | ${club}`;
+  const position =
+    player.sport === "HOCKEY" ? formatHockeyPositionLabel(player.position) : player.position;
+  return `${player.knownAs || player.fullName} - ${position} | ${club}`;
 }
 
 export function PlayerSearchCombobox({

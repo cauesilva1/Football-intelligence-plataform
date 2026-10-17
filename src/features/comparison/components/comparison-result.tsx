@@ -38,6 +38,7 @@ export async function ComparisonResult({
   const sport = resolveSport(a.sport, a.currentSeasonStats.sport);
   const isBasketball = sport === "BASKETBALL";
   const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
+  const isHockey = sport === "HOCKEY";
   const ui = getSportConfig(sport).ui;
   const categories = comparisonCategoriesFor(sport);
   const radarMetrics = [...ui.radarMetrics];
@@ -69,7 +70,9 @@ export async function ComparisonResult({
         <DataPanel
           title="Category Comparison"
           description={
-            isBasketball
+            isHockey
+              ? "Scoring, playmaking, shooting, defense, discipline, and goaltending (0–100 index)."
+              : isBasketball
               ? "Scoring, rebounding, playmaking, defense, shooting, and efficiency (0–100 index)."
               : isAmericanFootball
                 ? "Passing, rushing, receiving, defense, tackles, and sacks (0–100 index)."
@@ -89,7 +92,9 @@ export async function ComparisonResult({
         <DataPanel
           title="Radar Profile"
           description={
-            isBasketball
+            isHockey
+              ? "Season production for skaters and goalies."
+              : isBasketball
               ? "Normalized multidimensional view per game."
               : isAmericanFootball
                 ? "Multidimensional view of season production."

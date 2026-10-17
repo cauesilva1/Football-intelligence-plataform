@@ -15,6 +15,7 @@ import { hasReliableBasketballSample } from "@/lib/scoring/basketball-rating";
 import { hasReliableFootballSample } from "@/lib/scoring/football-rating";
 import { AF_RATE_MIN_GAMES, SOCCER_RATE_MIN_MINUTES } from "@/lib/scoring";
 import { getTeamTheme } from "@/lib/team-theme";
+import { formatHockeyPositionLabel } from "@/lib/positions";
 import { formatClubLabel } from "@/lib/soccer/club-label";
 import { cn, formatCapHit, formatMarketValue, formatNationalityLabel, ratingColor } from "@/lib/utils";
 import type { Player } from "@/types";
@@ -189,6 +190,42 @@ function FootballStatStrip({ player }: { player: Player }) {
   );
 }
 
+function formatToi(seconds?: number): string {
+  if (!seconds || seconds <= 0) return "—";
+  const whole = Math.floor(seconds);
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
+}
+
+function HockeyStatStrip({ player }: { player: Player }) {
+  const s = player.currentSeasonStats;
+  const goalie = player.position === "G" || (s.saves ?? 0) > 0 || (s.savePercentage ?? 0) > 0;
+  const cells = goalie
+    ? [
+        ["Saves", String(s.saves ?? 0)],
+        ["SV%", (s.savePercentage ?? 0) > 0 ? (s.savePercentage ?? 0).toFixed(3) : "—"],
+        ["GAA", s.appearances > 0 ? ((s.goalsAgainst ?? 0) / s.appearances).toFixed(2) : "—"],
+      ]
+    : [
+        ["Goals", String(s.goals)],
+        ["Assists", String(s.assists)],
+        ["Points", String(s.points ?? s.goals + s.assists)],
+        ["+/−", s.plusMinus == null ? "—" : String(s.plusMinus)],
+        ["PIM", String(s.penaltyMinutes ?? 0)],
+        ["TOI", formatToi(s.timeOnIceSeconds)],
+      ];
+
+  return (
+    <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/15 pt-3 text-center">
+      {cells.map(([label, value]) => (
+        <div key={label}>
+          <p className="font-mono text-sm font-semibold tabular-nums text-white">{value}</p>
+          <p className="text-2xs text-white/60">{label}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function ComparisonPlayerCards({ players }: { players: [Player, Player] }) {
   return (
     <div className="relative grid gap-3 md:grid-cols-2">
@@ -197,11 +234,14 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
         const isBasketball = p.sport === "BASKETBALL" || s.sport === "BASKETBALL";
         const isFootball =
           p.sport === "AMERICAN_FOOTBALL" || s.sport === "AMERICAN_FOOTBALL";
+        const isHockey = p.sport === "HOCKEY" || s.sport === "HOCKEY";
         const theme = getTeamTheme(p.competitionName, p.teamName);
-        const valueLabel =
-          isBasketball || isFootball
+        const valueLabel = isHockey
+          ? "Undisclosed"
+          : isBasketball || isFootball
             ? formatCapHit(p.capHit ?? 0)
             : formatMarketValue(p.marketValue);
+        const positionLabel = isHockey ? formatHockeyPositionLabel(p.position) : p.position;
 
         return (
           <div
@@ -228,7 +268,8 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
                 <PlayerAvatar
                   name={p.knownAs}
                   fullName={p.fullName}
-                  position={p.position}
+                  position={positionLabel}
+                  sport={p.sport}
                   competitionName={p.competitionName}
                   teamName={p.teamName}
                   photoUrl={p.photoUrl}
@@ -241,7 +282,7 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
                     {p.fullName}
                   </p>
                   <p className="text-xs text-white/75">
-                    {p.position} · {formatNationalityLabel(p.nationality)} · {p.age} yrs
+                    {positionLabel} · {formatNationalityLabel(p.nationality)} · {p.age} yrs
                   </p>
                   <p className="truncate text-2xs text-white/60">
                     {formatClubLabel(p.teamName, p.teamShortName)}
@@ -257,7 +298,9 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
                 <p className="text-2xs text-white/60">{valueLabel}</p>
               </div>
             </div>
-            {isBasketball ? (
+            {isHockey ? (
+              <HockeyStatStrip player={p} />
+            ) : isBasketball ? (
               <BasketballStatStrip player={p} />
             ) : isFootball ? (
               <FootballStatStrip player={p} />

@@ -3,6 +3,8 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { EmptyState } from "@/components/common/empty-state";
 import { queryAllPlayersLite } from "@/features/scouting/queries/players";
 import { parseCompareParams } from "@/features/comparison/lib/parse-compare-params";
+import { deskParamForSport } from "@/lib/sport-from-route";
+import { getServerSport } from "@/lib/sport-server";
 import { CompareSelectorForm } from "@/features/comparison/components/compare-selector-form";
 import { ComparisonResult } from "@/features/comparison/components/comparison-result";
 import { ComparisonResultSkeleton } from "@/features/comparison/components/comparison-result-skeleton";
@@ -20,6 +22,10 @@ export default async function ComparePage({
 }) {
   const params = await searchParams;
   const { playerA, playerB, season } = parseCompareParams(params);
+  const desk =
+    typeof params.desk === "string" && params.desk.trim()
+      ? params.desk
+      : deskParamForSport(await getServerSport());
   const bothSelected = Boolean(playerA && playerB);
   const selectedIds = [playerA, playerB].filter(Boolean);
 
@@ -42,7 +48,13 @@ export default async function ComparePage({
           </p>
         </div>
 
-        <CompareSelectorForm players={playersLite} playerA={playerA} playerB={playerB} season={season} />
+        <CompareSelectorForm
+          players={playersLite}
+          playerA={playerA}
+          playerB={playerB}
+          season={season}
+          desk={desk}
+        />
 
         {!bothSelected && (
           <EmptyState

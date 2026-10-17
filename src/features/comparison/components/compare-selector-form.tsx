@@ -4,6 +4,7 @@ import { useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { PlayerSearchCombobox } from "@/features/comparison/components/player-search-combobox";
 import { compareToSearchParams } from "@/features/comparison/lib/parse-compare-params";
+import { sportFromDeskParam } from "@/lib/sport-from-route";
 import { cn } from "@/lib/utils";
 import type { PlayerLite } from "@/types";
 
@@ -12,22 +13,25 @@ export function CompareSelectorForm({
   playerA,
   playerB,
   season,
+  desk,
 }: {
   players: PlayerLite[];
   playerA: string;
   playerB: string;
   season?: string;
+  desk?: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const sport = sportFromDeskParam(desk) ?? undefined;
 
   const pushSelection = useCallback(
     (a: string, b: string) => {
-      const params = compareToSearchParams(a, b, season);
+      const params = compareToSearchParams(a, b, season, desk);
       const qs = params.toString();
       startTransition(() => router.push(qs ? `/compare?${qs}` : "/compare", { scroll: false }));
     },
-    [router, season]
+    [router, season, desk]
   );
 
   return (
@@ -45,6 +49,7 @@ export function CompareSelectorForm({
           excludeId={playerB}
           onChange={(id) => pushSelection(id, playerB)}
           disabled={isPending}
+          sport={sport}
         />
         <div
           className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface-muted/50 font-mono text-2xs font-semibold uppercase tracking-wider text-muted-foreground md:flex"
@@ -59,6 +64,7 @@ export function CompareSelectorForm({
           excludeId={playerA}
           onChange={(id) => pushSelection(playerA, id)}
           disabled={isPending}
+          sport={sport}
         />
       </div>
     </div>

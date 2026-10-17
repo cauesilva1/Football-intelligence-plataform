@@ -35,21 +35,40 @@ function hasPlayedGames(player: Player): boolean {
   return stats.appearances > 0 || stats.minutesPlayed > 0;
 }
 
-const HOCKEY_SIMILARITY_WEIGHTS: WeightMap = {
-  points: 0.4,
-  goals: 0.2,
-  assists: 0.2,
-  saves: 0.2,
+const HOCKEY_SKATER_WEIGHTS: WeightMap = {
+  points: 0.5,
+  goals: 0.25,
+  assists: 0.25,
 };
+
+const HOCKEY_GOALIE_WEIGHTS: WeightMap = {
+  savePercentage: 0.7,
+  gaa: 0.3,
+};
+
+function hockeyGoalie(player: Player): boolean {
+  const stats = player.currentSeasonStats;
+  return player.position === "G" || (stats.savePercentage ?? 0) > 0 || (stats.saves ?? 0) > 0;
+}
+
+function hockeySimilarityWeights(player: Player): WeightMap {
+  return hockeyGoalie(player) ? HOCKEY_GOALIE_WEIGHTS : HOCKEY_SKATER_WEIGHTS;
+}
 
 function hockeySimilarityFeatureVector(player: Player): Record<string, number> {
   const stats = player.currentSeasonStats;
   const games = Math.max(stats.appearances, 1);
+  if (hockeyGoalie(player)) {
+    const gaa = (stats.goalsAgainst ?? 0) / games;
+    return {
+      savePercentage: (stats.savePercentage ?? 0) * 100,
+      gaa: Math.max(0, 100 - gaa * 25),
+    };
+  }
   return {
     points: ((stats.points ?? stats.goals + stats.assists) / games) * 20,
     goals: (stats.goals / games) * 40,
     assists: (stats.assists / games) * 40,
-    saves: (stats.savePercentage ?? 0) * 100,
   };
 }
 
@@ -88,7 +107,7 @@ export function findSimilarPlayers(
   const isHockey = sport === "HOCKEY";
 
   const weights = isHockey
-    ? HOCKEY_SIMILARITY_WEIGHTS
+    ? hockeySimilarityWeights(target)
     : isBasketball
       ? basketballSimilarityWeightsForPosition(target.position)
       : isFootball

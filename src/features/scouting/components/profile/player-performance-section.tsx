@@ -665,10 +665,18 @@ export function PlayerPerformanceSection({ player }: { player: Player }) {
           selectedSeason={player.currentSeasonStats.season || player.selectedSeason}
         />
         <p className="text-xs text-muted-foreground">
-          Showing campaign{" "}
-          <span className="font-medium text-foreground">
-            {formatSeasonLabel(player.currentSeasonStats.season || player.selectedSeason)}
-          </span>
+          {sport === "HOCKEY" ? (
+            <span className="font-medium text-foreground">
+              {formatSeasonLabel(player.currentSeasonStats.season || player.selectedSeason, "HOCKEY")}
+            </span>
+          ) : (
+            <>
+              Showing campaign{" "}
+              <span className="font-medium text-foreground">
+                {formatSeasonLabel(player.currentSeasonStats.season || player.selectedSeason)}
+              </span>
+            </>
+          )}
         </p>
       </div>
 

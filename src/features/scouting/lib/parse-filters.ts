@@ -38,6 +38,9 @@ const SORT_KEYS: NonNullable<PlayerFilters["sortBy"]>[] = [
   "name",
   "position",
   "club",
+  "appearances",
+  "plusMinus",
+  "savePercentage",
 ];
 
 const ARCHETYPE_KEYS: NonNullable<PlayerFilters["archetype"]>[] = ["three-and-d", "rim-protector"];

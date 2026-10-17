@@ -300,7 +300,7 @@ function mapPlayer(record: PrismaPlayerRow, options?: { season?: string }): Play
 }
 
 /** List/table rows — drop profile-only fields that inflate RSC payloads. */
-function slimListStats(stats: PlayerStatistic, sport: Player["sport"]): PlayerStatistic {
+export function slimListStats(stats: PlayerStatistic, sport: Player["sport"]): PlayerStatistic {
   const base = emptySeasonStats(stats.playerId, stats.teamId);
   const shared = {
     id: stats.id,
@@ -332,6 +332,25 @@ function slimListStats(stats: PlayerStatistic, sport: Player["sport"]): PlayerSt
         steals: stats.perGame?.steals ?? stats.steals ?? 0,
         blocks: stats.perGame?.blocks ?? stats.blocks ?? 0,
       },
+    };
+  }
+
+  if (sport === "HOCKEY") {
+    return {
+      ...base,
+      ...shared,
+      appearances: stats.appearances,
+      minutesPlayed: stats.minutesPlayed,
+      goals: stats.goals,
+      assists: stats.assists,
+      points: stats.points,
+      plusMinus: stats.plusMinus,
+      penaltyMinutes: stats.penaltyMinutes,
+      timeOnIceSeconds: stats.timeOnIceSeconds,
+      saves: stats.saves,
+      shotsAgainst: stats.shotsAgainst,
+      savePercentage: stats.savePercentage,
+      goalsAgainst: stats.goalsAgainst,
     };
   }
 
@@ -716,7 +735,10 @@ function needsMappedPlayerSort(filters: PlayerFilters): boolean {
     sortBy === "totalYards" ||
     sortBy === "touchdowns" ||
     sortBy === "sacks" ||
-    sortBy === "yardsPerGame"
+    sortBy === "yardsPerGame" ||
+    sortBy === "appearances" ||
+    sortBy === "plusMinus" ||
+    sortBy === "savePercentage"
   );
 }
 

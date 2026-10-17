@@ -146,6 +146,40 @@ function buildAmericanFootballInsights(a: Player, b: Player): string[] {
   return insights;
 }
 
+function buildHockeyInsights(a: Player, b: Player): string[] {
+  const sa = a.currentSeasonStats;
+  const sb = b.currentSeasonStats;
+  const insights: string[] = [];
+  const goalieA = a.position === "G" || (sa.savePercentage ?? 0) > 0;
+  const goalieB = b.position === "G" || (sb.savePercentage ?? 0) > 0;
+
+  if (goalieA && goalieB) {
+    const svA = sa.savePercentage ?? 0;
+    const svB = sb.savePercentage ?? 0;
+    if (svA !== svB) {
+      const better = svA > svB ? a : b;
+      insights.push(`${better.knownAs} has the higher save percentage (${Math.max(svA, svB).toFixed(3)}).`);
+    }
+    return insights;
+  }
+
+  const pointsA = sa.points ?? sa.goals + sa.assists;
+  const pointsB = sb.points ?? sb.goals + sb.assists;
+  if (pointsA !== pointsB) {
+    const better = pointsA > pointsB ? a : b;
+    insights.push(`${better.knownAs} has more points (${Math.max(pointsA, pointsB)}).`);
+  }
+  if (sa.goals !== sb.goals) {
+    const better = sa.goals > sb.goals ? a : b;
+    insights.push(`${better.knownAs} has more goals (${Math.max(sa.goals, sb.goals)}).`);
+  }
+  if (sa.assists !== sb.assists) {
+    const better = sa.assists > sb.assists ? a : b;
+    insights.push(`${better.knownAs} has more assists (${Math.max(sa.assists, sb.assists)}).`);
+  }
+  return insights;
+}
+
 function resolveCompareSport(a: Player, b: Player): "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL" | "HOCKEY" {
   const sport = a.sport ?? a.currentSeasonStats.sport ?? "SOCCER";
   if (sport === "BASKETBALL" || sport === "AMERICAN_FOOTBALL" || sport === "HOCKEY") return sport;
@@ -158,6 +192,7 @@ export function buildComparisonReport(a: Player, b: Player): ComparisonReport {
   const sport = resolveCompareSport(a, b);
   const isBasketball = sport === "BASKETBALL";
   const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
+  const isHockey = sport === "HOCKEY";
   const categories = comparisonCategoriesFor(sport);
   const profileA = toComparisonProfile(sa);
   const profileB = toComparisonProfile(sb);
@@ -181,11 +216,13 @@ export function buildComparisonReport(a: Player, b: Player): ComparisonReport {
   }
 
   const insights = [
-    ...(isBasketball
-      ? buildBasketballInsights(a, b)
-      : isAmericanFootball
-        ? buildAmericanFootballInsights(a, b)
-        : buildSoccerInsights(a, b)),
+    ...(isHockey
+      ? buildHockeyInsights(a, b)
+      : isBasketball
+        ? buildBasketballInsights(a, b)
+        : isAmericanFootball
+          ? buildAmericanFootballInsights(a, b)
+          : buildSoccerInsights(a, b)),
   ];
 
   if (Math.abs(a.age - b.age) >= 3) {

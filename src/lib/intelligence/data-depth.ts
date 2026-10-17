@@ -83,6 +83,18 @@ function hasStatSignal(stats: PlayerStatistic, sport: Sport): boolean {
 /** Honest depth snapshot for badges / limitations — does not invent trajectory. */
 export function deriveDataDepthSnapshot(player: Player): DataDepthSnapshot {
   const sport = (player.sport ?? "SOCCER") as Sport;
+  if (sport === "HOCKEY") {
+    return {
+      historySeasons: new Set((player.history ?? []).map((row) => row.season)).size,
+      productiveSeasons: 0,
+      hasCurrentSignal: false,
+      trajectoryEligible: false,
+      gapKind: "none",
+      label: "",
+      description: "",
+      variant: "neutral",
+    };
+  }
   const history = player.history ?? [];
   const historySeasons = new Set(history.map((row) => row.season)).size;
   const productiveSeasons = countProductiveSeasons(history, sport);

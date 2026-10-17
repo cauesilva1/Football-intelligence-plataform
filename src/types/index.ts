@@ -252,7 +252,10 @@ export interface PlayerFilters {
     | "valueScore"
     | "name"
     | "position"
-    | "club";
+    | "club"
+    | "appearances"
+    | "plusMinus"
+    | "savePercentage";
   sortDir?: "asc" | "desc";
   page?: number;
   pageSize?: number;

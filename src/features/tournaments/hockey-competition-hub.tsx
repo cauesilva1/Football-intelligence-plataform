@@ -16,7 +16,7 @@ function GameCard({ game }: { game: NhlScheduleGame }) {
     : "Time TBD";
 
   return (
-    <Card>
+    <Card className="cursor-default">
       <CardContent className="space-y-3 p-4">
         <div className="flex items-center justify-between gap-2 text-2xs uppercase tracking-wider text-muted-foreground">
           <span>{when}</span>

@@ -15,8 +15,14 @@ export function parseCompareParams(searchParams: SearchParams) {
   };
 }
 
-export function compareToSearchParams(playerA: string, playerB: string, season?: string): URLSearchParams {
+export function compareToSearchParams(
+  playerA: string,
+  playerB: string,
+  season?: string,
+  desk?: string
+): URLSearchParams {
   const params = new URLSearchParams();
+  if (desk) params.set("desk", desk);
   if (playerA) params.set("playerA", playerA);
   if (playerB) params.set("playerB", playerB);
   if (season) params.set("season", season);

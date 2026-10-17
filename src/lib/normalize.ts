@@ -58,6 +58,19 @@ export function toRadarProfile(stat: PlayerStatistic): Record<string, number> {
     };
   }
 
+  if (stat.sport === "HOCKEY") {
+    const games = Math.max(stat.appearances, 1);
+    const points = stat.points ?? stat.goals + stat.assists;
+    return {
+      Scoring: clamp((stat.goals / games / 0.6) * 100),
+      Playmaking: clamp((stat.assists / games / 0.8) * 100),
+      Shooting: clamp((points / games / 1.2) * 100),
+      Defense: clamp((((stat.plusMinus ?? 0) + 20) / 40) * 100),
+      Discipline: clamp(100 - ((stat.penaltyMinutes ?? 0) / games / 1.5) * 100),
+      Goaltending: clamp((stat.savePercentage ?? 0) * 100),
+    };
+  }
+
   if (stat.sport === "AMERICAN_FOOTBALL") {
     const games = Math.max(stat.appearances, 1);
     return {
