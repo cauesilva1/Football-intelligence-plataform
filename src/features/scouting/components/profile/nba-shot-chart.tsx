@@ -2,18 +2,18 @@
 
 import { useState } from "react";
 import {
-  CENTER,
-  COURT_LINES,
-  COURT_VIEW,
-  DEFENSE_HALF_VIEW,
-  OFFENSE_HALF_VIEW,
-  RIM,
-  RIM_FAR,
   courtZonePath,
   defensiveMarkerPoint,
   shotMarkerPoint,
   type NbaCourtView,
 } from "@/lib/basketball/court-geometry";
+import {
+  BASKETBALL_COURT_IMAGE,
+  basketballCourtFeetTransform,
+  basketballCourtImageTransform,
+  basketballCourtViewBox,
+  basketballSvgToImage,
+} from "@/lib/basketball/court-image";
 import type { NbaShotChartModel, NbaShotZoneLine } from "@/features/scouting/queries/nba-shot-chart";
 import { isPlausibleCourtCoordinate, type BasketballShotZone } from "@/lib/basketball/shot-zones";
 
@@ -24,9 +24,6 @@ const DRAW_ORDER: BasketballShotZone[] = [
   "paint",
   "restricted_area",
 ];
-
-const LINE = "rgba(244, 241, 234, 0.82)";
-const LINE_SOFT = "rgba(244, 241, 234, 0.45)";
 
 function zoneSummary(zone: NbaShotZoneLine): string {
   if (zone.fgPct == null) {
@@ -46,8 +43,8 @@ export function NbaShotChart({
   const [active, setActive] = useState<BasketballShotZone | null>(null);
   const activeZone = model.zones.find((zone) => zone.zone === active) ?? null;
   const byZone = new Map(model.zones.map((zone) => [zone.zone, zone]));
-  const frame = view === "offense" ? OFFENSE_HALF_VIEW : view === "defense" ? DEFENSE_HALF_VIEW : COURT_VIEW;
-  const [, , viewW, viewH] = frame.viewBox.split(" ").map(Number);
+  const viewBox = basketballCourtViewBox(view);
+  const [, , viewW, viewH] = viewBox.split(" ").map(Number);
   const showZones = view !== "defense";
   const showShots = view !== "defense";
   const showDefense = view !== "offense";
@@ -68,7 +65,8 @@ export function NbaShotChart({
         <svg
           data-testid="nba-shot-chart"
           data-court-view={view}
-          viewBox={frame.viewBox}
+          viewBox={viewBox}
+          preserveAspectRatio="xMidYMid meet"
           role="group"
           aria-label={ariaLabel}
           className="h-auto max-w-full"
@@ -84,14 +82,14 @@ export function NbaShotChart({
                 }
           }
         >
-          <rect
-            x={COURT_VIEW.viewBox.split(" ")[0]}
-            y={COURT_VIEW.viewBox.split(" ")[1]}
-            width={COURT_VIEW.viewBox.split(" ")[2]}
-            height={COURT_VIEW.viewBox.split(" ")[3]}
-            fill="#0c0e12"
-          />
-          <rect x="0" y="0" width={COURT_VIEW.width} height={COURT_VIEW.height} fill="#141820" />
+          <g transform={basketballCourtImageTransform()}>
+            <image
+              href="/maps/basketball-court.png"
+              width={BASKETBALL_COURT_IMAGE.width}
+              height={BASKETBALL_COURT_IMAGE.height}
+            />
+          </g>
+          <g transform={basketballCourtFeetTransform()}>
           {showZones
             ? DRAW_ORDER.map((zoneId) => byZone.get(zoneId))
             .filter((zone): zone is NbaShotZoneLine => zone != null)
@@ -128,50 +126,27 @@ export function NbaShotChart({
               );
             })
             : null}
-          <g fill="none" stroke={LINE} strokeWidth={1.5} strokeLinejoin="round" style={{ pointerEvents: "none" }}>
-            <path d={COURT_LINES.boundary} />
-            <path d={COURT_LINES.halfCourt} />
-            <path d={COURT_LINES.paint} />
-            <path d={COURT_LINES.paintFar} />
-            <path d={COURT_LINES.freeThrowTop} />
-            <path d={COURT_LINES.freeThrowFar} />
-            <path d={COURT_LINES.restricted} />
-            <path d={COURT_LINES.restrictedFar} />
-            <path d={COURT_LINES.three} />
-            <path d={COURT_LINES.threeFar} />
-            <path d={COURT_LINES.backboard} strokeWidth={2.2} />
-            <path d={COURT_LINES.backboardFar} strokeWidth={2.2} />
-            <path d={COURT_LINES.connector} strokeWidth={1.3} />
-            <path d={COURT_LINES.connectorFar} strokeWidth={1.3} />
-            <circle cx={CENTER.cx} cy={CENTER.cy} r={CENTER.r} />
-          </g>
-          <g fill="none" stroke={LINE_SOFT} strokeWidth={1.3} strokeDasharray="4 3.5" style={{ pointerEvents: "none" }}>
-            <path d={COURT_LINES.freeThrowBottom} />
-            <path d={COURT_LINES.freeThrowFarDashed} />
-          </g>
-          <g fill="none" stroke="#fb923c" strokeWidth={1.8} style={{ pointerEvents: "none" }}>
-            <circle cx={RIM.cx} cy={RIM.cy} r={RIM.r} />
-            <circle cx={RIM_FAR.cx} cy={RIM_FAR.cy} r={RIM_FAR.r} />
           </g>
           <g
             fill="#a39b8c"
             fontFamily="ui-sans-serif, system-ui, sans-serif"
-            fontSize="11"
+            fontSize="14"
             fontWeight="600"
             letterSpacing="1.6"
             style={{ pointerEvents: "none" }}
           >
-            <text x={COURT_VIEW.width / 2} y={-4} textAnchor="middle">
+            <text x={BASKETBALL_COURT_IMAGE.height / 2} y={36} textAnchor="middle">
               DEFENSE
             </text>
-            <text x={COURT_VIEW.width / 2} y={COURT_VIEW.height + 12} textAnchor="middle">
+            <text x={BASKETBALL_COURT_IMAGE.height / 2} y={BASKETBALL_COURT_IMAGE.width - 28} textAnchor="middle">
               OFFENSE
             </text>
           </g>
           <g style={{ pointerEvents: "none" }}>
             {showShots
               ? shots.map((shot, index) => {
-              const point = shotMarkerPoint(shot.x, shot.y);
+              const placed = shotMarkerPoint(shot.x, shot.y);
+              const point = basketballSvgToImage(placed.x, placed.y);
               const dim = active != null && shot.zone !== active;
               return (
                 <g key={`${shot.x}-${shot.y}-${index}`} opacity={dim ? 0.28 : 1} transform={`translate(${point.x} ${point.y})`}>
@@ -194,7 +169,8 @@ export function NbaShotChart({
           <g style={{ pointerEvents: "none" }}>
             {showDefense
               ? defense.map((play, index) => {
-              const point = defensiveMarkerPoint(play.x, play.y);
+              const placed = defensiveMarkerPoint(play.x, play.y);
+              const point = basketballSvgToImage(placed.x, placed.y);
               return (
                 <g key={`${play.kind}-${play.x}-${play.y}-${index}`} transform={`translate(${point.x} ${point.y})`}>
                   {play.kind === "steal" ? (

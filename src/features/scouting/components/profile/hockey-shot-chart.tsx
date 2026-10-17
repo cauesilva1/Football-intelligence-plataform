@@ -2,22 +2,22 @@
 
 import { useState } from "react";
 import {
-  BLUE_LINE_X,
   FACEOFF_RADIUS,
   FACEOFF_X,
   FACEOFF_Y,
-  GOAL_LINE_X,
   RINK_HALF_LENGTH,
   RINK_HALF_WIDTH,
   type HockeyRinkView,
   type HockeyShotChartModel,
   type HockeyShotZone,
 } from "@/lib/hockey/rink-geometry";
-
-const LINE = "rgba(244, 241, 234, 0.82)";
-const LINE_SOFT = "rgba(244, 241, 234, 0.45)";
-const BLUE = "rgba(125, 211, 252, 0.9)";
-const RED = "rgba(251, 113, 133, 0.9)";
+import {
+  HOCKEY_MARKER_RADIUS,
+  HOCKEY_RINK_IMAGE,
+  hockeyImagePoint,
+  hockeyRinkFeetTransform,
+  hockeyRinkViewBox,
+} from "@/lib/hockey/rink-image";
 
 function rinkY(y: number): number {
   return -y;
@@ -45,7 +45,7 @@ export function HockeyShotChart({
   const activeZone = model.zones.find((zone) => zone.zone === active) ?? null;
   const byZone = new Map(model.zones.map((zone) => [zone.zone, zone]));
   const full = view === "full";
-  const viewBox = full ? "-104 -48 208 96" : "-2 -48 104 96";
+  const viewBox = hockeyRinkViewBox(view);
   const [, , viewW, viewH] = viewBox.split(" ").map(Number);
 
   return (
@@ -61,8 +61,12 @@ export function HockeyShotChart({
           className="mx-auto block h-auto w-full"
           style={{ aspectRatio: `${viewW} / ${viewH}`, maxHeight: full ? "70vh" : undefined }}
         >
-          <rect x={full ? -104 : -2} y={-48} width={full ? 208 : 104} height={96} fill="#0c0e12" />
-          <RinkBoards full={full} />
+          <image
+            href="/maps/hockey-rink.png"
+            width={HOCKEY_RINK_IMAGE.width}
+            height={HOCKEY_RINK_IMAGE.height}
+          />
+          <g transform={hockeyRinkFeetTransform()}>
           {(["perimeter", "point", "circles", "slot"] as const).map((zoneId) => byZone.get(zoneId))
             .filter((zone): zone is HockeyShotChartModel["zones"][number] => zone != null)
             .map((zone) => {
@@ -96,30 +100,33 @@ export function HockeyShotChart({
                 />
               );
             })}
-          <RinkLines full={full} />
+          </g>
           <g style={{ pointerEvents: "none" }}>
-            {model.shots.map((shot, index) => (
+            {model.shots.map((shot, index) => {
+              const point = hockeyImagePoint(shot.x, shot.y);
+              return (
               <g
                 key={`${shot.x}-${shot.y}-${index}`}
                 data-outcome={shot.made ? "goal" : "no-goal"}
                 data-x={shot.x}
                 data-y={shot.y}
                 opacity={active != null && shot.zone !== active ? 0.28 : 1}
-                transform={`translate(${shot.x} ${rinkY(shot.y)})`}
+                transform={`translate(${point.x} ${point.y})`}
               >
                 {shot.made ? (
-                  <circle r={1.7} fill="#34d399" stroke="#042f24" strokeWidth={0.4} />
+                  <circle r={HOCKEY_MARKER_RADIUS} fill="#34d399" stroke="#042f24" strokeWidth={HOCKEY_MARKER_RADIUS * 0.24} />
                 ) : (
                   <path
-                    d="M -1.5 -1.5 L 1.5 1.5 M -1.5 1.5 L 1.5 -1.5"
+                    d={`M ${-HOCKEY_MARKER_RADIUS * 0.88} ${-HOCKEY_MARKER_RADIUS * 0.88} L ${HOCKEY_MARKER_RADIUS * 0.88} ${HOCKEY_MARKER_RADIUS * 0.88} M ${-HOCKEY_MARKER_RADIUS * 0.88} ${HOCKEY_MARKER_RADIUS * 0.88} L ${HOCKEY_MARKER_RADIUS * 0.88} ${-HOCKEY_MARKER_RADIUS * 0.88}`}
                     fill="none"
                     stroke="#fb7185"
-                    strokeWidth={0.7}
+                    strokeWidth={HOCKEY_MARKER_RADIUS * 0.41}
                     strokeLinecap="round"
                   />
                 )}
               </g>
-            ))}
+              );
+            })}
           </g>
         </svg>
       </div>
@@ -215,73 +222,4 @@ function zonePath(zone: HockeyShotZone): string {
 
 function circlePath(cx: number, cy: number, r: number): string {
   return `M ${cx - r} ${cy} a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 ${-r * 2} 0`;
-}
-
-function RinkBoards({ full }: { full: boolean }) {
-  const radius = 28;
-  const straight = RINK_HALF_LENGTH - radius;
-  const endY = RINK_HALF_WIDTH - radius;
-  const right = [
-    `M 0 ${rinkY(RINK_HALF_WIDTH)}`,
-    `H ${straight}`,
-    `A ${radius} ${radius} 0 0 1 ${RINK_HALF_LENGTH} ${rinkY(endY)}`,
-    `V ${rinkY(-endY)}`,
-    `A ${radius} ${radius} 0 0 1 ${straight} ${rinkY(-RINK_HALF_WIDTH)}`,
-    `H 0`,
-    "Z",
-  ].join(" ");
-  const d = full
-    ? [
-        `M ${-straight} ${rinkY(RINK_HALF_WIDTH)}`,
-        `H ${straight}`,
-        `A ${radius} ${radius} 0 0 1 ${RINK_HALF_LENGTH} ${rinkY(endY)}`,
-        `V ${rinkY(-endY)}`,
-        `A ${radius} ${radius} 0 0 1 ${straight} ${rinkY(-RINK_HALF_WIDTH)}`,
-        `H ${-straight}`,
-        `A ${radius} ${radius} 0 0 1 ${-RINK_HALF_LENGTH} ${rinkY(-endY)}`,
-        `V ${rinkY(endY)}`,
-        `A ${radius} ${radius} 0 0 1 ${-straight} ${rinkY(RINK_HALF_WIDTH)}`,
-        "Z",
-      ].join(" ")
-    : right;
-  return <path d={d} fill="#141820" />;
-}
-
-function RinkLines({ full }: { full: boolean }) {
-  const width = RINK_HALF_WIDTH;
-  return (
-    <g fill="none" stroke={LINE} strokeWidth={0.7} style={{ pointerEvents: "none" }}>
-      <line x1={0} y1={rinkY(width)} x2={0} y2={rinkY(-width)} stroke={RED} strokeWidth={0.9} />
-      <line x1={BLUE_LINE_X} y1={rinkY(width)} x2={BLUE_LINE_X} y2={rinkY(-width)} stroke={BLUE} strokeWidth={1.1} />
-      {full ? (
-        <line x1={-BLUE_LINE_X} y1={rinkY(width)} x2={-BLUE_LINE_X} y2={rinkY(-width)} stroke={BLUE} strokeWidth={1.1} />
-      ) : null}
-      <circle cx={0} cy={0} r={15} />
-      <circle cx={FACEOFF_X} cy={rinkY(FACEOFF_Y)} r={FACEOFF_RADIUS} />
-      <circle cx={FACEOFF_X} cy={rinkY(-FACEOFF_Y)} r={FACEOFF_RADIUS} />
-      {full ? (
-        <>
-          <circle cx={-FACEOFF_X} cy={rinkY(FACEOFF_Y)} r={FACEOFF_RADIUS} />
-          <circle cx={-FACEOFF_X} cy={rinkY(-FACEOFF_Y)} r={FACEOFF_RADIUS} />
-        </>
-      ) : null}
-      <line x1={GOAL_LINE_X} y1={rinkY(width)} x2={GOAL_LINE_X} y2={rinkY(-width)} stroke={RED} strokeWidth={0.5} />
-      <path d={creasePath(GOAL_LINE_X)} stroke={LINE_SOFT} />
-      <path d={`M ${GOAL_LINE_X} ${rinkY(3)} H ${GOAL_LINE_X + 2.2} V ${rinkY(-3)} H ${GOAL_LINE_X}`} stroke={LINE} strokeWidth={0.8} />
-      {full ? (
-        <>
-          <line x1={-GOAL_LINE_X} y1={rinkY(width)} x2={-GOAL_LINE_X} y2={rinkY(-width)} stroke={RED} strokeWidth={0.5} />
-          <path d={creasePath(-GOAL_LINE_X)} stroke={LINE_SOFT} />
-          <path d={`M ${-GOAL_LINE_X} ${rinkY(3)} H ${-GOAL_LINE_X - 2.2} V ${rinkY(-3)} H ${-GOAL_LINE_X}`} stroke={LINE} strokeWidth={0.8} />
-        </>
-      ) : null}
-    </g>
-  );
-}
-
-function creasePath(goalX: number): string {
-  const towardCenter = goalX > 0 ? -1 : 1;
-  const radius = 6;
-  const y = 4;
-  return `M ${goalX} ${rinkY(y)} A ${radius} ${radius} 0 0 ${goalX > 0 ? 1 : 0} ${goalX + towardCenter * radius} ${rinkY(0)} A ${radius} ${radius} 0 0 ${goalX > 0 ? 1 : 0} ${goalX} ${rinkY(-y)}`;
 }
