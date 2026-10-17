@@ -51,6 +51,7 @@ export interface NhlStandingRow {
   goalsFor: number;
   goalsAgainst: number;
   logoUrl?: string;
+  teamId?: string;
 }
 
 export interface NhlSkaterLine {

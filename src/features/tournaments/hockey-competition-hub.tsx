@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Radio } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -86,7 +87,16 @@ function StandingsTable({
               <tr key={row.abbrev} className="border-t">
                 <td className="px-3 py-2 font-medium">
                   <span className="inline-flex items-center gap-2">
-                    {row.name}
+                    {row.teamId ? (
+                      <Link
+                        href={`/teams/${row.teamId}`}
+                        className="rounded-md transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      >
+                        {row.name}
+                      </Link>
+                    ) : (
+                      row.name
+                    )}
                     {label ? <Badge variant="secondary">{label}</Badge> : null}
                   </span>
                 </td>
@@ -107,7 +117,7 @@ function StandingsTable({
   );
 }
 
-function DivisionStandings({ rows }: { rows: NhlStandingRow[] }) {
+export function DivisionStandings({ rows }: { rows: NhlStandingRow[] }) {
   if (!rows.length) {
     return <p className="text-sm text-muted-foreground">Standings are not available yet.</p>;
   }

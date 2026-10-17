@@ -53,6 +53,22 @@ function comparePointsPercentage(a: NhlStandingsTeam, b: NhlStandingsTeam): numb
   return b.points * a.gamesPlayed - a.points * b.gamesPlayed;
 }
 
+/** Match a standings abbrev to a stored club. Exact short name only, so a fuzzy hit cannot open the wrong club. */
+export function attachNhlClubIds<T extends { abbrev: string }>(
+  rows: T[],
+  clubs: { id: string; shortName: string | null }[]
+): Array<T & { teamId?: string }> {
+  const byAbbrev = new Map<string, string>();
+  for (const club of clubs) {
+    const key = club.shortName?.trim().toUpperCase();
+    if (key && !byAbbrev.has(key)) byAbbrev.set(key, club.id);
+  }
+  return rows.map((row) => {
+    const teamId = byAbbrev.get(row.abbrev.trim().toUpperCase());
+    return teamId ? { ...row, teamId } : row;
+  });
+}
+
 export function groupNhlStandings<T extends NhlStandingsTeam>(rows: T[]): {
   divisions: NhlDivisionGroup<T>[];
   wildCards: NhlWildCardRace<T>[];
