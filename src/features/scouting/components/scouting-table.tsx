@@ -747,9 +747,22 @@ function HockeyScoutingTable({
           return (
             <TableRow key={player.id}>
               <TableCell>
-                <Link href={`/players/${player.id}`} className="font-medium hover:underline">
-                  {playerDisplayName(player)}
-                </Link>
+                <div className="flex items-center gap-3">
+                  <PlayerAvatar
+                    name={playerDisplayName(player)}
+                    fullName={player.fullName}
+                    position={position}
+                    competitionName={player.competitionName}
+                    teamName={player.teamName}
+                    photoUrl={player.photoUrl}
+                    photoPolicy="stored-only"
+                    sport="HOCKEY"
+                    size="sm"
+                  />
+                  <Link href={`/players/${player.id}`} className="font-medium hover:underline">
+                    {playerDisplayName(player)}
+                  </Link>
+                </div>
               </TableCell>
               <TableCell>{formatClubLabel(player.teamName, player.teamShortName)}</TableCell>
               <TableCell>{position}</TableCell>

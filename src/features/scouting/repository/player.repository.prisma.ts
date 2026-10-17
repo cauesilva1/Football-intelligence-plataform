@@ -278,7 +278,7 @@ function mapPlayer(record: PrismaPlayerRow, options?: { season?: string }): Play
     summerLeague2026: record.summerLeague2026 || undefined,
     photoUrl: resolvePlayerPhotoUrl({
       photoUrl: record.photoUrl,
-      apiSportsId: record.apiSportsId,
+      apiSportsId: sport === "HOCKEY" ? null : record.apiSportsId,
     }),
     apiSportsId: record.apiSportsId ?? undefined,
     sport,
@@ -452,7 +452,7 @@ function mapPlayerRoster(record: PrismaPlayerRosterRow, season?: string): Player
     marketValue: 0,
     photoUrl: resolvePlayerPhotoUrl({
       photoUrl: record.photoUrl,
-      apiSportsId: record.apiSportsId,
+      apiSportsId: record.sport === "HOCKEY" ? null : record.apiSportsId,
     }),
     apiSportsId: record.apiSportsId ?? undefined,
     sport: (record.sport as Player["sport"]) ?? "SOCCER",

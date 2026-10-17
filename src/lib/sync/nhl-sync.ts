@@ -9,6 +9,7 @@ import {
   type NhlRosterPlayer,
   type NhlSkaterLine,
 } from "@/lib/api/nhl";
+import { refreshHockeyHeadshots } from "@/lib/hockey/espn-headshots";
 import { compactHockeySeason, hockeyRating, nhlApiSeasonId } from "@/lib/hockey/season";
 import { getPrisma } from "@/lib/prisma";
 
@@ -420,6 +421,7 @@ export async function runNhlSync(options: NhlSyncOptions = {}): Promise<NhlSyncR
     shotGameIds: [...doneShots].slice(-400),
   });
   log(`progress teamIndex=${nextIndex} players=${players} shots=${shots}`);
+  await refreshHockeyHeadshots(prisma, log);
 
   return {
     season,

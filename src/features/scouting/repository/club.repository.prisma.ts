@@ -97,6 +97,7 @@ export async function upsertPlayerHybrid(
   fbref: TransformedRecord | null
 ): Promise<void> {
   if (!canUseDatabase()) return;
+  if (applyTransfermarktEnrichment(player, tmProfile) == null && tmProfile) return;
 
   const prisma = getPrisma();
   const tmId = tmProfile ? Number(tmProfile.id) : player.transfermarktId;
@@ -187,6 +188,12 @@ export async function upsertPlayerFromTransfermarkt(
 ): Promise<void> {
   if (!canUseDatabase()) return;
 
+  const existing = await getPrisma().player.findUnique({
+    where: { id: dbPlayerId },
+    select: { sport: true },
+  });
+  if (!existing || applyTransfermarktEnrichment(existing, profile) == null) return;
+
   const tmId = Number(profile.id);
   const photoUrl = resolvePlayerPhotoUrl({
     externalPhoto: profile.imageUrl,
@@ -269,11 +276,14 @@ export async function persistSquadFromTransfermarkt(
     const existing =
       dbPlayers.find(
         (player) =>
-          player.transfermarktId === tmId ||
-          namesLikelyMatch(player.fullName, tmPlayer.name) ||
-          namesLikelyMatch(player.knownAs, tmPlayer.name)
+          player.sport === "SOCCER" &&
+          (player.transfermarktId === tmId ||
+            namesLikelyMatch(player.fullName, tmPlayer.name) ||
+            namesLikelyMatch(player.knownAs, tmPlayer.name))
       ) ??
-      (await prisma.player.findFirst({ where: { transfermarktId: tmId } }));
+      (await prisma.player.findFirst({ where: { transfermarktId: tmId, sport: "SOCCER" } }));
+
+    if (existing && applyTransfermarktEnrichment(existing, tmPlayer) == null) continue;
 
     if (existing) {
       await prisma.player.update({
@@ -404,6 +414,18 @@ export async function persistSquadFromEspn(
 /** Soccer market feeds. Hockey, basketball, and American football keep their own identity. */
 export function acceptsTransfermarktProfile(sport: string | null | undefined): boolean {
   return sport === "SOCCER";
+}
+
+/**
+ * The only gate that may turn a Transfermarkt profile into player fields.
+ * Non-soccer sports return null so a name collision cannot write nationality, fee, or photo.
+ */
+export function applyTransfermarktEnrichment<T>(
+  player: { sport?: string | null },
+  incoming: T
+): T | null {
+  if (!acceptsTransfermarktProfile(player.sport)) return null;
+  return incoming;
 }
 
 /** Ensure player has fresh Transfermarkt + FBref data; falls back to DB cache on API failure. */

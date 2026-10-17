@@ -107,7 +107,8 @@ export function PlayerProfileHeader({
             competitionName={player.competitionName}
             teamName={player.teamName}
             photoUrl={player.photoUrl}
-            apiSportsPlayerId={player.apiSportsId}
+            apiSportsPlayerId={sport === "HOCKEY" ? undefined : player.apiSportsId}
+            photoPolicy={sport === "HOCKEY" ? "stored-only" : "auto"}
             sport={sport}
             size="lg"
             className="ring-2 ring-white/20"

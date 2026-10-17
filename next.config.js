@@ -4,6 +4,7 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "a.espncdn.com" },
+      { protocol: "https", hostname: "assets.nhle.com" },
       { protocol: "https", hostname: "espncdn.com" },
       { protocol: "https", hostname: "secure.espncdn.com" },
       { protocol: "https", hostname: "media.api-sports.io" },
