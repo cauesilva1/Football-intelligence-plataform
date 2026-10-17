@@ -68,10 +68,12 @@ export async function PlayerProfileView({
   playerId,
   season,
   tab,
+  court,
 }: {
   playerId: string;
   season?: string;
   tab?: string;
+  court?: string;
 }) {
   const player = await queryPlayerById(playerId, season);
   if (!player) notFound();
@@ -143,7 +145,7 @@ export async function PlayerProfileView({
         showSoccerMap ? (
           <SoccerShotMapSection playerId={playerId} season={seasonKey} />
         ) : (
-          <NbaShotMapSection playerId={playerId} season={seasonKey} />
+          <NbaShotMapSection playerId={playerId} season={seasonKey} court={court} />
         )
       ) : (
         <>

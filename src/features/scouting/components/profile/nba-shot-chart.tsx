@@ -5,14 +5,17 @@ import {
   CENTER,
   COURT_LINES,
   COURT_VIEW,
+  DEFENSE_HALF_VIEW,
+  OFFENSE_HALF_VIEW,
   RIM,
   RIM_FAR,
   courtZonePath,
   defensiveMarkerPoint,
   shotMarkerPoint,
+  type NbaCourtView,
 } from "@/lib/basketball/court-geometry";
 import type { NbaShotChartModel, NbaShotZoneLine } from "@/features/scouting/queries/nba-shot-chart";
-import type { BasketballShotZone } from "@/lib/basketball/shot-zones";
+import { isPlausibleCourtCoordinate, type BasketballShotZone } from "@/lib/basketball/shot-zones";
 
 const DRAW_ORDER: BasketballShotZone[] = [
   "above_the_break_3",
@@ -32,25 +35,54 @@ function zoneSummary(zone: NbaShotZoneLine): string {
   return `${zone.label}: ${zone.attempts} attempts, ${zone.fgPct.toFixed(1)}% FG.`;
 }
 
-export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
+export function NbaShotChart({
+  model,
+  view = "full",
+}: {
+  model: NbaShotChartModel;
+  /** Omitted callers, including insights, keep the combined full court. */
+  view?: NbaCourtView;
+}) {
   const [active, setActive] = useState<BasketballShotZone | null>(null);
   const activeZone = model.zones.find((zone) => zone.zone === active) ?? null;
   const byZone = new Map(model.zones.map((zone) => [zone.zone, zone]));
-  const [, , viewW, viewH] = COURT_VIEW.viewBox.split(" ").map(Number);
+  const frame = view === "offense" ? OFFENSE_HALF_VIEW : view === "defense" ? DEFENSE_HALF_VIEW : COURT_VIEW;
+  const [, , viewW, viewH] = frame.viewBox.split(" ").map(Number);
+  const showZones = view !== "defense";
+  const showShots = view !== "defense";
+  const showDefense = view !== "offense";
+  const shots = model.shots.filter((shot) => isPlausibleCourtCoordinate(shot.x, shot.y));
+  const defense = model.defense.filter((play) => isPlausibleCourtCoordinate(play.x, play.y));
+  const steals = defense.filter((play) => play.kind === "steal").length;
+  const blocks = defense.filter((play) => play.kind === "block").length;
+  const ariaLabel =
+    view === "offense"
+      ? "NBA half court, offensive basket"
+      : view === "defense"
+        ? "NBA half court, defensive basket"
+        : "NBA full court, offensive basket at the bottom";
 
   return (
     <div className="grid min-w-0 items-start gap-4 overflow-x-hidden lg:grid-cols-[minmax(0,1fr)_minmax(17rem,20rem)] lg:gap-5">
       <div className="flex min-w-0 justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#10131a] p-3 shadow-panel sm:p-4">
         <svg
           data-testid="nba-shot-chart"
-          viewBox={COURT_VIEW.viewBox}
+          data-court-view={view}
+          viewBox={frame.viewBox}
           role="group"
-          aria-label="NBA full court, offensive basket at the bottom"
+          aria-label={ariaLabel}
           className="h-auto max-w-full"
-          style={{
-            aspectRatio: `${viewW} / ${viewH}`,
-            width: `min(100%, calc(70vh * ${viewW} / ${viewH}))`,
-          }}
+          style={
+            view === "full"
+              ? {
+                  aspectRatio: `${viewW} / ${viewH}`,
+                  width: `min(100%, calc(70vh * ${viewW} / ${viewH}))`,
+                }
+              : {
+                  aspectRatio: `${viewW} / ${viewH}`,
+                  width: "100%",
+                }
+          }
         >
           <rect
             x={COURT_VIEW.viewBox.split(" ")[0]}
@@ -60,7 +92,8 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
             fill="#0c0e12"
           />
           <rect x="0" y="0" width={COURT_VIEW.width} height={COURT_VIEW.height} fill="#141820" />
-          {DRAW_ORDER.map((zoneId) => byZone.get(zoneId))
+          {showZones
+            ? DRAW_ORDER.map((zoneId) => byZone.get(zoneId))
             .filter((zone): zone is NbaShotZoneLine => zone != null)
             .map((zone) => {
               const selected = active === zone.zone;
@@ -93,7 +126,8 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
                   }}
                 />
               );
-            })}
+            })
+            : null}
           <g fill="none" stroke={LINE} strokeWidth={1.5} strokeLinejoin="round" style={{ pointerEvents: "none" }}>
             <path d={COURT_LINES.boundary} />
             <path d={COURT_LINES.halfCourt} />
@@ -135,7 +169,8 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
             </text>
           </g>
           <g style={{ pointerEvents: "none" }}>
-            {model.shots.map((shot, index) => {
+            {showShots
+              ? shots.map((shot, index) => {
               const point = shotMarkerPoint(shot.x, shot.y);
               const dim = active != null && shot.zone !== active;
               return (
@@ -153,10 +188,12 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
                   )}
                 </g>
               );
-            })}
+            })
+              : null}
           </g>
           <g style={{ pointerEvents: "none" }}>
-            {model.defense.map((play, index) => {
+            {showDefense
+              ? defense.map((play, index) => {
               const point = defensiveMarkerPoint(play.x, play.y);
               return (
                 <g key={`${play.kind}-${play.x}-${play.y}-${index}`} transform={`translate(${point.x} ${point.y})`}>
@@ -167,12 +204,26 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
                   )}
                 </g>
               );
-            })}
+            })
+              : null}
           </g>
         </svg>
       </div>
 
       <div className="min-w-0 space-y-3">
+        {view === "defense" ? (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border bg-[#10131a] px-4 py-3 text-2xs uppercase tracking-wider text-[#c8c2b4]">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#38bdf8]" />
+              Steals {steals}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rotate-45 bg-[#7dd3fc]" />
+              Blocks {blocks}
+            </span>
+            <span className="text-[#8b8678]">Markers only. No zones on this view.</span>
+          </div>
+        ) : (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border bg-[#10131a] px-4 py-3 text-2xs uppercase tracking-wider text-[#c8c2b4]">
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#34d399]" />
@@ -182,6 +233,8 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
             <span className="font-mono text-[11px] leading-none text-[#fb7185]">✕</span>
             Miss
           </span>
+          {view === "full" ? (
+            <>
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#38bdf8]" />
             Steals {model.steals}
@@ -191,7 +244,19 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
             Blocks {model.blocks}
           </span>
           <span className="text-[#8b8678]">Zone color follows FG%. Under 5 attempts stay grey. Defense is markers only.</span>
+            </>
+          ) : (
+            <span className="text-[#8b8678]">Zone color follows FG%. Under 5 attempts stay grey.</span>
+          )}
         </div>
+        )}
+        {view === "defense" ? (
+          <p className="rounded-2xl border bg-[#10131a] px-4 py-3 text-sm text-[#c8c2b4]">
+            {steals + blocks === 0
+              ? "No steals or blocks with a court position for this season."
+              : "Steals and blocks use the ESPN play-by-play coordinate. Missing or sentinel positions are left off the court."}
+          </p>
+        ) : (
         <div className="rounded-2xl border bg-[#10131a] px-4 py-3 text-[#f4f1ea]">
           <p className="text-2xs font-medium uppercase tracking-wider text-[#a39b8c]">Overall FG%</p>
           <p className="mt-1 font-display text-3xl font-bold tabular-nums">
@@ -205,7 +270,9 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
             Shot chart reflects {model.trackedGames} tracked {model.trackedGames === 1 ? "game" : "games"}; profile totals cover the full season.
           </p>
         </div>
+        )}
 
+        {view === "defense" ? null : (
         <div aria-live="polite" className="rounded-2xl border bg-surface-elevated px-4 py-3">
           {activeZone ? (
             <>
@@ -226,7 +293,9 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
             <p className="text-sm text-muted-foreground">Hover or tap a zone for attempts and FG%.</p>
           )}
         </div>
+        )}
 
+        {view === "defense" ? null : (
         <ul className="divide-y rounded-2xl border bg-surface-elevated">
           {model.zones.map((zone) => {
             const selected = active === zone.zone;
@@ -252,6 +321,7 @@ export function NbaShotChart({ model }: { model: NbaShotChartModel }) {
             );
           })}
         </ul>
+        )}
       </div>
     </div>
   );

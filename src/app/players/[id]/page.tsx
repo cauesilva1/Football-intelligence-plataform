@@ -31,7 +31,7 @@ export default async function PlayerDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ season?: string; tab?: string }>;
+  searchParams: Promise<{ season?: string; tab?: string; court?: string }>;
 }) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const player = await queryPlayerById(id, query.season);
@@ -44,7 +44,7 @@ export default async function PlayerDetailPage({
     <DashboardShell subtitle={player?.knownAs ?? "Player Profile"}>
       {sport ? <SportScope sport={sport} /> : null}
       <Suspense fallback={<PlayerProfileSkeleton />}>
-        <PlayerProfileView playerId={id} season={query.season} tab={query.tab} />
+        <PlayerProfileView playerId={id} season={query.season} tab={query.tab} court={query.court} />
       </Suspense>
       {player ? (
         <div className="mt-6">

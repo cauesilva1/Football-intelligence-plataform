@@ -81,6 +81,31 @@ export const COURT_VIEW = {
   viewBox: `${-PAD} ${-PAD} ${px(COURT_WIDTH_FT) + PAD * 2} ${px(FULL_COURT_FT) + PAD * 2}`,
 };
 
+const halfLineY = courtY(HALF_COURT_FT);
+const halfSpan = px(HALF_COURT_FT) + PAD * 2;
+const courtSpanX = px(COURT_WIDTH_FT) + PAD * 2;
+
+/** Offensive half: half-court line at the top, basket at the bottom. */
+export const OFFENSE_HALF_VIEW = {
+  width: px(COURT_WIDTH_FT),
+  height: px(HALF_COURT_FT),
+  viewBox: `${-PAD} ${halfLineY - PAD} ${courtSpanX} ${halfSpan}`,
+};
+
+/** Defensive half: baseline at the top, half-court line at the bottom. */
+export const DEFENSE_HALF_VIEW = {
+  width: px(COURT_WIDTH_FT),
+  height: px(HALF_COURT_FT),
+  viewBox: `${-PAD} ${-PAD} ${courtSpanX} ${halfSpan}`,
+};
+
+export type NbaCourtView = "offense" | "defense" | "full";
+
+export function parseNbaCourtView(value: string | null | undefined): NbaCourtView {
+  if (value === "offense" || value === "defense" || value === "full") return value;
+  return "offense";
+}
+
 function arcTo(radiusFt: number, xFt: number, yFt: number, sweep: 0 | 1): string {
   const radius = px(radiusFt);
   return `A ${radius} ${radius} 0 0 ${sweep} ${courtX(xFt)} ${courtY(yFt)}`;
