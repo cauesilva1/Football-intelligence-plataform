@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   AmericanFootballIcon,
   BasketballIcon,
+  HockeyPuckIcon,
   SoccerBallIcon,
 } from "@/components/icons/sport-balls";
 
@@ -79,6 +80,27 @@ const SPORT_CARDS = [
     ],
     Icon: AmericanFootballIcon,
   },
+  {
+    id: "hockey",
+    label: "Hockey",
+    accent: "#3db7d6",
+    bg: "#0c1c24",
+    href: "/scouting?desk=hockey",
+    kicker: "04 · Hockey",
+    title: "NHL season, live",
+    body: "Standings, results, and skater or goalie lines from the official NHL feed — the same desk, without a shot map yet.",
+    points: ["2026-27 in progress", "Upcoming and results", "Honest empty lines"],
+    media: [
+      {
+        src: "/marketing/hockey.mp4",
+        alt: "Hockey loop",
+        durationMs: 4000,
+        fill: "#0c1c24",
+        fit: "cover",
+      },
+    ],
+    Icon: HockeyPuckIcon,
+  },
 ] as const;
 
 type SportMedia = (typeof SPORT_CARDS)[number]["media"][number];
@@ -106,18 +128,34 @@ function SportCardMedia({ media }: { media: readonly SportMedia[] }) {
       data-fit={current.fit}
       style={{ ["--media-fill" as string]: current.fill }}
     >
-      {/* Animated GIF peers — next/image is a poor fit for looping pixel GIFs */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        key={`${current.src}-${playId}`}
-        src={current.src}
-        alt={current.alt}
-        className="landing-sport-card-clip"
-        data-active="true"
-        width={800}
-        height={600}
-        decoding="async"
-      />
+      {current.src.endsWith(".mp4") ? (
+        <video
+          key={`${current.src}-${playId}`}
+          className="landing-sport-card-clip"
+          data-kind="video"
+          data-active="true"
+          src={current.src}
+          aria-label={current.alt}
+          muted
+          playsInline
+          loop
+          autoPlay={!reduceMotion}
+          preload="metadata"
+        />
+      ) : (
+        /* Animated GIF peers — next/image is a poor fit for looping pixel GIFs */
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          key={`${current.src}-${playId}`}
+          src={current.src}
+          alt={current.alt}
+          className="landing-sport-card-clip"
+          data-active="true"
+          width={800}
+          height={600}
+          decoding="async"
+        />
+      )}
     </div>
   );
 }

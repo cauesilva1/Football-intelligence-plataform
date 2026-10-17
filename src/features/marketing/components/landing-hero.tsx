@@ -11,7 +11,7 @@ const CLAIMS = [
   },
   {
     label: "Soccer reference",
-    body: "Soccer is the mature desk; basketball and American football follow the same workflow.",
+    body: "Soccer is the mature desk; basketball, football, and hockey follow the same workflow.",
   },
   {
     label: "Decision support",
@@ -73,7 +73,7 @@ export function LandingHero() {
             <p className="landing-eyebrow">{APP_TAGLINE}</p>
             <p className="landing-wordmark">{APP_NAME}</p>
             <h1 className="landing-headline">
-              Evidence-first scouting across three games.
+              Evidence-first scouting across four games.
             </h1>
             <p className="landing-lede">
               One sports intelligence desk — with sample limits you can defend in the room.

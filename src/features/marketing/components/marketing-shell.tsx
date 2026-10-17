@@ -47,7 +47,7 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
           <div>
             <p className="landing-footer-brand">{APP_NAME}</p>
             <p className="landing-footer-copy">
-              Multi-sport scouting intelligence for soccer, basketball, and American football.
+              Multi-sport scouting intelligence for soccer, basketball, football, and hockey.
               Honest sample limits. Not a live Opta feed.
             </p>
           </div>

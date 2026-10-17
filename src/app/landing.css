@@ -489,6 +489,12 @@
   object-position: center 40%;
 }
 
+.landing-sport-card-clip[data-kind="video"] {
+  image-rendering: auto;
+  object-fit: cover;
+  object-position: center;
+}
+
 .landing-sport-card-body {
   display: flex;
   flex-direction: column;
