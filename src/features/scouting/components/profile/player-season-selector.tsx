@@ -23,7 +23,9 @@ export function PlayerSeasonSelector({
           href={`/players/${playerId}?season=${encodeURIComponent(season)}`}
           className={cn(
             buttonVariants({
-              variant: selectedSeason === season ? "default" : "outline",
+              variant: formatSeasonLabel(selectedSeason) === formatSeasonLabel(season) || selectedSeason === season
+                ? "default"
+                : "outline",
               size: "sm",
             }),
             "h-7 px-3 text-xs"

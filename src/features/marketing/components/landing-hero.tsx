@@ -79,7 +79,7 @@ export function LandingHero() {
               One sports intelligence desk — with sample limits you can defend in the room.
             </p>
             <div className="landing-cta-row">
-              <Link href="/scouting" className="landing-btn landing-btn-primary landing-btn-lg">
+              <Link href="/scouting?desk=soccer" className="landing-btn landing-btn-primary landing-btn-lg">
                 Open the desk
               </Link>
               <a href={ACCESS_MAIL} className="landing-btn landing-btn-ghost landing-btn-lg">

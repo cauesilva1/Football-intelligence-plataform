@@ -39,6 +39,9 @@ export async function ScoutingDatabaseView({
           {result.total === 1 ? "player" : "players"}
           {route === "scouting" ? " matching filters" : " in directory"}
         </p>
+        <p className="text-2xs text-muted-foreground">
+          Rating scale: 8+ green, 7–8 blue, 6–7 amber, below 6 rose. A dash means no sample yet.
+        </p>
       </div>
       <ScoutingTable players={result.items} filters={filters} basePath={basePath} route={route} />
       <ScoutingPagination result={result} filters={filters} basePath={basePath} route={route} />

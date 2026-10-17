@@ -15,7 +15,7 @@ const STEPS = [
   {
     title: "Intelligence",
     body: "Roles, trajectory, and fit — soccer as the reference sport, with basketball and American football on the same desk.",
-    href: "/scouting",
+    href: "/scouting?desk=soccer",
     cta: "Open scouting",
   },
   {
@@ -112,7 +112,7 @@ export function LandingPage() {
             </p>
           </div>
           <div className="landing-cta-row">
-            <Link href="/scouting" className="landing-btn landing-btn-primary">
+            <Link href="/scouting?desk=soccer" className="landing-btn landing-btn-primary">
               Open the desk
             </Link>
             <a href={ACCESS_MAIL} className="landing-btn landing-btn-ghost">

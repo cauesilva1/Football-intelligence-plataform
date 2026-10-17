@@ -213,10 +213,19 @@ export function isCalendarSeasonLabel(season: string): boolean {
   return CALENDAR_SEASONS.has(season) || /^\d{4}$/.test(season) || /^\d{6}$/.test(season);
 }
 
+function seasonSortYear(label: string): number {
+  const compact = /^(\d{4})\d{2}$/.exec(label);
+  if (compact) return Number(compact[1]);
+  const slash = /^(\d{4})\//.exec(label);
+  if (slash) return Number(slash[1]);
+  const year = Number.parseInt(label, 10);
+  return Number.isFinite(year) ? year : 0;
+}
+
 export function sortSeasonLabels(seasons: string[]): string[] {
   return [...new Set(seasons)].sort((a, b) => {
-    const yearA = Number.parseInt(a.split("/")[0] ?? a, 10);
-    const yearB = Number.parseInt(b.split("/")[0] ?? b, 10);
+    const yearA = seasonSortYear(a);
+    const yearB = seasonSortYear(b);
     if (yearA !== yearB) return yearA - yearB;
     // Same start year: prefer campaign labels (2025/26) over bare calendar (2025)
     const slashA = a.includes("/") ? 1 : 0;
@@ -338,15 +347,16 @@ function basketballSeasonHasSignal(stat: PlayerStatistic): boolean {
   const points = stat.points ?? stat.perGame?.points ?? 0;
   const rebounds = stat.rebounds ?? stat.perGame?.rebounds ?? 0;
   const assists = stat.perGame?.assists ?? stat.assists ?? 0;
-  return points > 0 || rebounds > 0 || assists > 0 || (stat.rating ?? 0) > 6.05;
+  return points > 0 || rebounds > 0 || assists > 0 || (stat.appearances ?? 0) > 0;
 }
 
 function footballSeasonHasSignal(stat: PlayerStatistic): boolean {
-  const yards = stat.totalYards ?? stat.points ?? 0;
-  const tds = stat.touchdowns ?? stat.goals ?? 0;
+  const yards =
+    (stat.totalYards ?? 0) + (stat.passingYards ?? 0) + (stat.rushingYards ?? 0) + (stat.receivingYards ?? 0);
+  const tds = stat.touchdowns ?? 0;
   const tackles = stat.tacklesWon ?? 0;
   const sacks = stat.sacks ?? 0;
-  return yards > 0 || tds > 0 || tackles > 0 || sacks > 0 || (stat.rating ?? 0) > 6.05;
+  return yards > 0 || tds > 0 || tackles > 0 || sacks > 0 || (stat.appearances ?? 0) > 0;
 }
 
 /** Prefer seasons that actually have filled scouting metrics (not empty calendar stubs). */
@@ -372,11 +382,12 @@ function soccerSeasonHasSignal(stat: PlayerStatistic): boolean {
 function pickBestSeasonWithSignal(
   history: PlayerStatistic[],
   preferredSeason: string | undefined,
-  hasSignal: (stat: PlayerStatistic) => boolean
+  hasSignal: (stat: PlayerStatistic) => boolean,
+  explicit = false
 ): string | undefined {
   if (preferredSeason) {
     const preferred = history.find((row) => row.season === preferredSeason);
-    if (preferred) return preferredSeason;
+    if (preferred && (explicit || hasSignal(preferred))) return preferredSeason;
   }
 
   const withSignal = [...history]
@@ -394,11 +405,12 @@ function pickBestSeasonWithSignal(
 
 function pickBestSoccerSeason(
   history: PlayerStatistic[],
-  preferredSeason: string | undefined
+  preferredSeason: string | undefined,
+  explicit = false
 ): string | undefined {
   if (preferredSeason) {
     const preferred = history.find((row) => row.season === preferredSeason);
-    if (preferred) return preferredSeason;
+    if (preferred && (explicit || soccerSeasonHasSignal(preferred))) return preferredSeason;
   }
 
   const ranked = [...history].sort((a, b) => {
@@ -415,21 +427,33 @@ function pickBestSoccerSeason(
 export function resolveSelectedSeasonStats(
   history: PlayerStatistic[],
   preferredSeason?: string,
-  sport?: string
-): { selectedSeason: string; currentSeasonStats: PlayerStatistic } {
-  const availableSeasons = sortSeasonLabels(history.map((row) => row.season));
+  sport?: string,
+  explicit = false
+): { selectedSeason: string; currentSeasonStats: PlayerStatistic; availableSeasons: string[] } {
+  const hasSignal =
+    sport === "BASKETBALL"
+      ? basketballSeasonHasSignal
+      : sport === "AMERICAN_FOOTBALL"
+        ? footballSeasonHasSignal
+        : soccerSeasonHasSignal;
+  const labeled = sortSeasonLabels(history.map((row) => row.season));
+  const signalSeasons = sortSeasonLabels(history.filter(hasSignal).map((row) => row.season));
+  let availableSeasons = signalSeasons.length > 0 ? signalSeasons : labeled;
+  if (explicit && preferredSeason && !availableSeasons.includes(preferredSeason)) {
+    availableSeasons = sortSeasonLabels([...availableSeasons, preferredSeason]);
+  }
 
   const selectedSeason =
     sport === "BASKETBALL"
-      ? pickBestSeasonWithSignal(history, preferredSeason, basketballSeasonHasSignal) ??
+      ? pickBestSeasonWithSignal(history, preferredSeason, basketballSeasonHasSignal, explicit) ??
         preferredSeason ??
         "202526"
       : sport === "AMERICAN_FOOTBALL"
-        ? pickBestSeasonWithSignal(history, preferredSeason, footballSeasonHasSignal) ??
+        ? pickBestSeasonWithSignal(history, preferredSeason, footballSeasonHasSignal, explicit) ??
           preferredSeason ??
           "2025"
-        : pickBestSoccerSeason(history, preferredSeason) ??
-          (preferredSeason && availableSeasons.includes(preferredSeason)
+        : pickBestSoccerSeason(history, preferredSeason, explicit) ??
+          (explicit && preferredSeason && availableSeasons.includes(preferredSeason)
             ? preferredSeason
             : pickDefaultSeason(availableSeasons)) ??
           preferredSeason ??
@@ -470,5 +494,10 @@ export function resolveSelectedSeasonStats(
       },
     };
 
-  return { selectedSeason, currentSeasonStats };
+  const shownSeason = currentSeasonStats.season || selectedSeason;
+  if (!availableSeasons.includes(shownSeason)) {
+    availableSeasons = sortSeasonLabels([...availableSeasons, shownSeason]);
+  }
+
+  return { selectedSeason: shownSeason, currentSeasonStats, availableSeasons };
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useSport } from "@/context/sport-context";
+import { withSportDesk } from "@/lib/sport-from-route";
 import { SportSwitcher } from "./sport-switcher";
 import { NAV_GROUPS, SidebarLogo, navLabel, type NavItem } from "./mobile-nav";
 
@@ -13,7 +14,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
 
   return (
     <Link
-      href={item.href}
+      href={withSportDesk(item.href, currentSport)}
       className={cn(
         "flex items-center gap-3 rounded-sm px-3 py-2 text-[13px] font-medium transition-colors",
         active

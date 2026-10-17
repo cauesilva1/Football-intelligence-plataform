@@ -248,10 +248,11 @@ function mapPlayer(record: PrismaPlayerRow, options?: { season?: string }): Play
     record.sport === "SOCCER" || !record.sport
       ? collapseSoccerCampaignDuplicates(historyRaw)
       : historyRaw;
-  const { selectedSeason, currentSeasonStats } = resolveSelectedSeasonStats(
+  const { selectedSeason, currentSeasonStats, availableSeasons } = resolveSelectedSeasonStats(
     history,
     options?.season,
-    record.sport
+    record.sport,
+    Boolean(options?.season)
   );
   const dob = record.dateOfBirth.toISOString();
   const sport = (record.sport as Player["sport"]) ?? "SOCCER";
@@ -292,7 +293,7 @@ function mapPlayer(record: PrismaPlayerRow, options?: { season?: string }): Play
     strengths: localizeScoutLabels(record.strengths),
     weaknesses: localizeScoutLabels(record.weaknesses),
     currentSeasonStats,
-    availableSeasons: history.map((row) => row.season),
+    availableSeasons,
     selectedSeason,
     history,
   };
@@ -602,6 +603,23 @@ function buildBasketballSeasonStatsWhere(filters: PlayerFilters): Prisma.PlayerS
 
   return where;
 }
+
+/** Roster rows with no games and an all-zero line are not scouting profiles. */
+const AF_WITH_PRODUCTION: Prisma.PlayerWhereInput = {
+  stats: {
+    some: {
+      OR: [
+        { matchesPlayed: { gt: 0 } },
+        { passingYards: { gt: 0 } },
+        { rushingYards: { gt: 0 } },
+        { receivingYards: { gt: 0 } },
+        { totalYards: { gt: 0 } },
+        { touchdowns: { gt: 0 } },
+        { sacks: { gt: 0 } },
+      ],
+    },
+  },
+};
 
 /** NBA rows with no games and an all-zero line are roster noise, not scouting profiles. */
 const NBA_WITH_PRODUCTION: Prisma.PlayerWhereInput = {
@@ -960,6 +978,16 @@ async function applyBasketballSeasonTeams<
   });
 }
 
+function presentSoccerDirectory<T extends { items: Player[]; total: number }>(result: T): T {
+  const items = dedupeSoccerIdentities(result.items);
+  const removed = result.items.length - items.length;
+  return {
+    ...result,
+    items,
+    total: Math.max(items.length, result.total - removed),
+  };
+}
+
 export const prismaPlayerRepository: PlayerRepository & {
   mapFromRecord(record: PrismaPlayerRow, options?: { season?: string }): Player;
 } = {
@@ -986,19 +1014,19 @@ export const prismaPlayerRepository: PlayerRepository & {
     }
 
     if (sport === "AMERICAN_FOOTBALL") {
-      const where = buildPlayerWhere({ ...filters, sport: "AMERICAN_FOOTBALL" });
+      const where: Prisma.PlayerWhereInput = {
+        AND: [buildPlayerWhere({ ...filters, sport: "AMERICAN_FOOTBALL" }), AF_WITH_PRODUCTION],
+      };
       const useDbPage =
         !needsMappedPlayerFilter(filters) && !needsMappedPlayerSort(filters);
 
       if (useDbPage) {
-        return findManyPaginatedOnPlayer(where, filters, {
-          rosterOnly: filters.route === "players",
-        });
+        return findManyPaginatedOnPlayer(where, filters);
       }
 
       return findManyCappedThenPage(where, filters, {
         prismaPrefiltered: true,
-        rosterBrowse: true,
+        rosterBrowse: false,
       });
     }
 
@@ -1007,12 +1035,14 @@ export const prismaPlayerRepository: PlayerRepository & {
       const useDbPage =
         !needsMappedPlayerFilter(filters) && !needsMappedPlayerSort(filters);
       if (useDbPage) {
-        return findManyPaginatedOnPlayer(directoryWhere, filters);
+        return presentSoccerDirectory(await findManyPaginatedOnPlayer(directoryWhere, filters));
       }
-      return findManyCappedThenPage(directoryWhere, filters, {
-        prismaPrefiltered: true,
-        rosterBrowse: true,
-      });
+      return presentSoccerDirectory(
+        await findManyCappedThenPage(directoryWhere, filters, {
+          prismaPrefiltered: true,
+          rosterBrowse: true,
+        })
+      );
     }
 
     const page = Math.max(1, filters.page ?? 1);

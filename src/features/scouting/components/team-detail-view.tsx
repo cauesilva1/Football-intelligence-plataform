@@ -13,6 +13,8 @@ import {
   resolveBasketballLeagueFromCompetition,
 } from "@/lib/basketball/team-league";
 import { isAmericanFootballTeamCompetition } from "@/lib/american-football/team-league";
+import { SportScope } from "@/components/layout/sport-scope";
+import type { Sport } from "@/lib/sport";
 import { getTeamTheme } from "@/lib/team-theme";
 import { notFound } from "next/navigation";
 
@@ -100,8 +102,15 @@ export async function TeamDetailView({
     squad.length
   );
 
+  const pageSport: Sport = isAmericanFootball
+    ? "AMERICAN_FOOTBALL"
+    : isBasketball
+      ? "BASKETBALL"
+      : "SOCCER";
+
   return (
     <div className="space-y-6">
+      <SportScope sport={pageSport} />
       <TeamBackLink competitionName={team.competition?.name} />
 
       {isBrasileirao ? <BrasileiraoSeasonNotice /> : null}

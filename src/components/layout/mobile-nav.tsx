@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { APP_NAME } from "@/lib/config";
 import { useSport } from "@/context/sport-context";
+import { withSportDesk } from "@/lib/sport-from-route";
 import type { Sport } from "@/lib/sport";
 
 export type NavItem = {
@@ -108,7 +109,7 @@ export function MobileNav() {
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={withSportDesk(item.href, currentSport)}
               className={cn(
                 "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[9px] font-medium transition-colors",
                 active ? "text-primary" : "text-muted-foreground"

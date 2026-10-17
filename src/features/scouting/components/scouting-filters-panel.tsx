@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { FilterBar, FilterField } from "@/components/data/filter-bar";
 import { buildFilterUrl } from "@/features/scouting/lib/build-filter-url";
+import { withSportDesk } from "@/lib/sport-from-route";
 import { parsePlayerFilters, hasActiveFilters } from "@/features/scouting/lib/parse-filters";
 import { getFilterDefaults, type ScoutingRoute } from "@/features/scouting/lib/filter-defaults";
 import {
@@ -197,13 +198,13 @@ export function ScoutingFiltersPanel({
       if (search !== (filters.search ?? "")) {
         pushFilters({ search, page: 1 });
       }
-    }, 350);
+    }, 200);
     return () => clearTimeout(timer);
   }, [search, filters.search, pushFilters]);
 
   const clearFilters = useCallback(() => {
     clearPlayerFilterPrefs(currentSport, route);
-    startTransition(() => router.push(basePath, { scroll: false }));
+    startTransition(() => router.push(withSportDesk(basePath, currentSport), { scroll: false }));
   }, [router, basePath, currentSport, route]);
 
   const toggleArchetype = useCallback(

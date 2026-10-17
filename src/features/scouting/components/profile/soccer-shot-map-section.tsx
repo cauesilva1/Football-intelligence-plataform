@@ -39,7 +39,7 @@ export async function SoccerShotMapSection({
             {seasons.map((item) => (
               <Link
                 key={item.key}
-                href={`/players/${playerId}?tab=mapa&season=${encodeURIComponent(item.key)}`}
+                href={`/players/${playerId}?tab=maps&season=${encodeURIComponent(item.key)}`}
                 className={cn(
                   buttonVariants({
                     variant: item.key === model.selectedSeason ? "default" : "outline",

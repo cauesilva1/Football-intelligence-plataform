@@ -3,22 +3,23 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useSport } from "@/context/sport-context";
+import { deskParamForSport } from "@/lib/sport-from-route";
 import type { Sport } from "@/lib/sport";
 
 /**
  * Align shell sport with the match being viewed, and leave if the user switches away.
  */
 export function MatchSportExit({ sport }: { sport: Sport }) {
-  const { currentSport, adoptSport, sportReady } = useSport();
+  const { currentSport, adoptRouteSport, sportReady } = useSport();
   const pathname = usePathname();
   const router = useRouter();
   const previousSport = useRef<string | null>(null);
 
   // Force chrome to the match sport before paint (cookie alone can lag / mismatch).
   useLayoutEffect(() => {
-    adoptSport(sport);
+    adoptRouteSport(sport);
     previousSport.current = sport;
-  }, [sport, adoptSport]);
+  }, [sport, adoptRouteSport]);
 
   useEffect(() => {
     if (!sportReady) return;
@@ -34,7 +35,7 @@ export function MatchSportExit({ sport }: { sport: Sport }) {
     if (currentSport === sport) return;
     if (!pathname?.startsWith("/matches/")) return;
 
-    router.replace("/tournaments");
+    router.replace(`/tournaments?desk=${deskParamForSport(currentSport)}`);
   }, [sportReady, currentSport, sport, pathname, router]);
 
   return null;

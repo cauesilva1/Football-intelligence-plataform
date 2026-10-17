@@ -629,10 +629,13 @@ export function PlayerPerformanceSection({ player }: { player: Player }) {
         <PlayerSeasonSelector
           playerId={player.id}
           availableSeasons={player.availableSeasons}
-          selectedSeason={player.selectedSeason}
+          selectedSeason={player.currentSeasonStats.season || player.selectedSeason}
         />
         <p className="text-xs text-muted-foreground">
-          Showing campaign <span className="font-medium text-foreground">{formatSeasonLabel(player.selectedSeason)}</span>
+          Showing campaign{" "}
+          <span className="font-medium text-foreground">
+            {formatSeasonLabel(player.currentSeasonStats.season || player.selectedSeason)}
+          </span>
         </p>
       </div>
 

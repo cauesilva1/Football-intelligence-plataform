@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
 import { getPositionGlossaryDescription } from "@/lib/positions";
-import { formatCapHit, playerDisplayName, ratingColor } from "@/lib/utils";
+import { formatCapHit, hasRatingSample, playerDisplayName, ratingColor } from "@/lib/utils";
 import type { Player } from "@/types";
 import type { Sport } from "@/lib/sport";
 
@@ -130,8 +130,12 @@ export function TeamSquadTable({
                   </>
                 ) : isAmericanFootball ? (
                   <>
-                    <TableCell className={`text-right font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
-                      {stats.rating.toFixed(1)}
+                    <TableCell
+                      className={`text-right font-mono font-semibold tabular-nums ${
+                        hasRatingSample(stats) ? ratingColor(stats.rating) : "text-muted-foreground"
+                      }`}
+                    >
+                      {hasRatingSample(stats) ? stats.rating.toFixed(1) : "—"}
                     </TableCell>
                     <TableCell className="text-right font-mono tabular-nums">
                       {yards.toLocaleString("en-US")}
@@ -141,8 +145,12 @@ export function TeamSquadTable({
                   </>
                 ) : (
                   <>
-                    <TableCell className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
-                      {stats.rating.toFixed(1)}
+                    <TableCell
+                      className={`font-mono font-semibold tabular-nums ${
+                        hasRatingSample(stats) ? ratingColor(stats.rating) : "text-muted-foreground"
+                      }`}
+                    >
+                      {hasRatingSample(stats) ? stats.rating.toFixed(1) : "—"}
                     </TableCell>
                     <TableCell className="text-right font-mono tabular-nums">{stats.goals}</TableCell>
                     <TableCell className="text-right font-mono tabular-nums text-muted-foreground">

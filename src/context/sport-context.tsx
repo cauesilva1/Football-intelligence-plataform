@@ -10,18 +10,29 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { parseSport, SPORT_COOKIE, type Sport } from "@/lib/sport";
-import { applyNeutralDocumentTheme, applySportToDocument, isInsightsPath } from "@/lib/sport-theme";
+import {
+  isEntitySportPath,
+  sportFromLocation,
+} from "@/lib/sport-from-route";
+import {
+  applyNeutralDocumentTheme,
+  applySportToDocument,
+  isInsightsPath,
+  isMarketingPath,
+} from "@/lib/sport-theme";
 import { sportSwitchTarget } from "@/lib/sport-switch";
-import { resolveSportFromMatchId } from "@/features/matches/resolve-match-sport";
 
 interface SportContextValue {
   currentSport: Sport;
   setSport: (sport: Sport) => void;
-  /** Persist sport without routing (e.g. before a Link leaves a match page). */
+  /** Persist sport without routing (the user picked a sport). */
   adoptSport: (sport: Sport) => void;
-  /** True after cookie sport is applied on the client. */
+  /** Paint chrome for this page without writing the sport cookie. */
+  adoptRouteSport: (sport: Sport) => void;
+  /** True after the route or cookie sport is applied on the client. */
   sportReady: boolean;
 }
 
@@ -37,88 +48,99 @@ function readSportCookie(): Sport {
   return parseSport(match?.[1] ? decodeURIComponent(match[1]) : null);
 }
 
-function matchSportFromPath(path: string | null): Sport | null {
-  if (!path?.startsWith("/matches/")) return null;
-  const raw = path.slice("/matches/".length).split("/")[0] ?? "";
-  if (!raw) return null;
-  return resolveSportFromMatchId(raw);
+function neutralPath(path: string | null): boolean {
+  return isInsightsPath(path) || isMarketingPath(path);
 }
 
 /**
- * Sport for shell/nav is client-driven (cookie). Server pages that need sport-scoped
- * data still call getServerSport() — keeping cookies() out of the root layout.
+ * Chrome follows the URL (desk query, league slug, match id) or the record
+ * on screen. The cookie only fills directories that do not name a sport.
  */
 export function SportProvider({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
   const [currentSport, setCurrentSportState] = useState<Sport>("SOCCER");
   const [hydrated, setHydrated] = useState(false);
 
-  // Cookie hydrate — deps must stay a stable empty array (HMR-safe).
-  useLayoutEffect(() => {
-    const fromCookie = readSportCookie();
-    const matchSport = matchSportFromPath(window.location.pathname);
-    const initial = matchSport ?? fromCookie;
-    setCurrentSportState(initial);
-    if (isInsightsPath(window.location.pathname)) applyNeutralDocumentTheme();
-    else applySportToDocument(initial);
-    if (matchSport && matchSport !== fromCookie) {
-      persistSportCookie(matchSport);
-    }
-    setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only hydrate
-  }, []);
-
-  // Align shell sport as soon as we enter a match deep link (layout = before paint).
-  useLayoutEffect(() => {
-    if (!hydrated) return;
-    const matchSport =
-      matchSportFromPath(pathname) ??
-      matchSportFromPath(typeof window !== "undefined" ? window.location.pathname : null);
-    if (!matchSport) return;
-    setCurrentSportState((prev) => {
-      if (prev === matchSport) return prev;
-      persistSportCookie(matchSport);
-      applySportToDocument(matchSport);
-      return matchSport;
-    });
-  }, [hydrated, pathname]);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    if (isInsightsPath(pathname)) {
-      applyNeutralDocumentTheme();
-      return;
-    }
-    applySportToDocument(currentSport);
-  }, [currentSport, hydrated, pathname]);
-
-  const adoptSport = useCallback((sport: Sport) => {
-    persistSportCookie(sport);
+  const paint = useCallback((sport: Sport) => {
     applySportToDocument(sport);
     setCurrentSportState(sport);
   }, []);
 
+  const adoptRouteSport = useCallback(
+    (sport: Sport) => {
+      paint(sport);
+    },
+    [paint]
+  );
+
+  const adoptSport = useCallback(
+    (sport: Sport) => {
+      persistSportCookie(sport);
+      paint(sport);
+    },
+    [paint]
+  );
+
+  useLayoutEffect(() => {
+    const path = window.location.pathname;
+    const search = window.location.search;
+    if (neutralPath(path)) {
+      applyNeutralDocumentTheme();
+      setCurrentSportState("SOCCER");
+    } else if (!isEntitySportPath(path)) {
+      paint(sportFromLocation(path, search) ?? readSportCookie());
+    }
+    setHydrated(true);
+  }, [paint]);
+
   const setSport = useCallback(
     (sport: Sport) => {
       if (sport === currentSport) return;
-
-      const path = typeof window !== "undefined" ? window.location.pathname : pathname;
-      const search = typeof window !== "undefined" ? window.location.search : "";
       persistSportCookie(sport);
-      applySportToDocument(sport);
-      setCurrentSportState(sport);
-      // router.refresh() keeps the previous RSC payload, so the overview stays on the old sport.
-      window.location.assign(sportSwitchTarget(path ?? "/", search, sport));
+      paint(sport);
+      const path = typeof window !== "undefined" ? window.location.pathname : "/";
+      const search = typeof window !== "undefined" ? window.location.search : "";
+      window.location.assign(sportSwitchTarget(path, search, sport));
     },
-    [currentSport, pathname]
+    [currentSport, paint]
   );
 
   const value = useMemo(
-    () => ({ currentSport, setSport, adoptSport, sportReady: hydrated }),
-    [currentSport, setSport, adoptSport, hydrated]
+    () => ({ currentSport, setSport, adoptSport, adoptRouteSport, sportReady: hydrated }),
+    [currentSport, setSport, adoptSport, adoptRouteSport, hydrated]
   );
 
-  return <SportContext.Provider value={value}>{children}</SportContext.Provider>;
+  return (
+    <SportContext.Provider value={value}>
+      <Suspense fallback={null}>
+        <SportRouteSync />
+      </Suspense>
+      {children}
+    </SportContext.Provider>
+  );
+}
+
+function SportRouteSync() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { adoptRouteSport } = useSport();
+  const search = searchParams.toString();
+
+  useLayoutEffect(() => {
+    const path = pathname ?? window.location.pathname;
+    if (neutralPath(path)) {
+      applyNeutralDocumentTheme();
+      return;
+    }
+    if (isEntitySportPath(path)) return;
+    adoptRouteSport(sportFromLocation(path, search) ?? readSportCookie());
+  }, [pathname, search, adoptRouteSport]);
+
+  useEffect(() => {
+    const path = pathname ?? (typeof window !== "undefined" ? window.location.pathname : null);
+    if (neutralPath(path)) applyNeutralDocumentTheme();
+  }, [pathname]);
+
+  return null;
 }
 
 export function useSport(): SportContextValue {

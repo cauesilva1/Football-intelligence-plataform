@@ -3,11 +3,11 @@ import { APP_NAME } from "@/lib/config";
 import "@/app/landing.css";
 
 const TICKER = [
-  { href: "/scouting", label: "Soccer" },
-  { href: "/scouting", label: "Basketball" },
-  { href: "/scouting", label: "Football" },
-  { href: "/recruitment", label: "Recruitment" },
-  { href: "/compare", label: "Compare" },
+  { href: "/scouting?desk=soccer", label: "Soccer" },
+  { href: "/scouting?desk=basketball", label: "Basketball" },
+  { href: "/scouting?desk=football", label: "Football" },
+  { href: "/recruitment?desk=soccer", label: "Recruitment" },
+  { href: "/compare?desk=soccer", label: "Compare" },
   { href: "/methodology", label: "Methodology" },
   { href: "/insights", label: "Insights" },
 ] as const;
@@ -31,7 +31,7 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
           <div className="landing-header-actions">
-            <Link href="/scouting" className="landing-btn landing-btn-quiet">
+            <Link href="/scouting?desk=soccer" className="landing-btn landing-btn-quiet">
               Desk
             </Link>
             <a href={ACCESS_MAIL} className="landing-btn landing-btn-primary">
@@ -52,10 +52,10 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="landing-footer-col">
             <p>Desk</p>
-            <Link href="/scouting">Scouting</Link>
-            <Link href="/recruitment">Recruitment</Link>
-            <Link href="/compare">Compare</Link>
-            <Link href="/shortlist">Shortlist</Link>
+            <Link href="/scouting?desk=soccer">Scouting</Link>
+            <Link href="/recruitment?desk=soccer">Recruitment</Link>
+            <Link href="/compare?desk=soccer">Compare</Link>
+            <Link href="/shortlist?desk=soccer">Shortlist</Link>
             <Link href="/insights">Insights</Link>
           </div>
           <div className="landing-footer-col">

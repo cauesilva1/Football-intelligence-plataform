@@ -4,6 +4,7 @@ import { queryDashboardOverview } from "@/features/analytics/queries/dashboard";
 import { MetricCard } from "@/components/data/metric-card";
 import { GlossaryTooltip } from "@/components/common/glossary-tooltip";
 import { appConfig } from "@/lib/config";
+import { deskParamForSport } from "@/lib/sport-from-route";
 import { getServerSport } from "@/lib/sport-server";
 import { dashboardSampleFloorLabel, scoreDefinitionsFor } from "@/lib/score-definitions";
 
@@ -17,7 +18,7 @@ export async function DashboardStatsSection() {
     <div className="grid items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-6">
       {/* Anchor tile — the database itself, on the sport-themed surface */}
       <Link
-        href="/players"
+        href={`/players?desk=${deskParamForSport(sport)}`}
         className="sport-hero group flex min-h-[5.75rem] flex-col justify-between rounded-xl border border-primary/20 p-4 shadow-panel sm:col-span-2 xl:col-span-2"
       >
         <div className="flex items-start justify-between gap-3">

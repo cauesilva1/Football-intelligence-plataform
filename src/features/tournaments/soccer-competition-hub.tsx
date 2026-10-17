@@ -32,6 +32,17 @@ export function SoccerCompetitionHub({
     Object.keys(historicalRounds ?? {}).length > 0 &&
     (competition.editionIds?.length ?? 0) > 0;
 
+  const leader = standings[0]?.rows[0];
+  const scorer = leaders.goals[0];
+  const resultsLoaded = matches.filter((match) => match.status === "finished").length;
+  const hubFacts = [
+    leader
+      ? `Leader ${leader.teamName}${leader.points != null ? ` · ${leader.points} pts` : ""}`
+      : null,
+    scorer ? `Top scorer ${scorer.playerName}${scorer.displayValue ? ` · ${scorer.displayValue}` : ""}` : null,
+    resultsLoaded > 0 ? `${resultsLoaded} results loaded` : null,
+  ].filter((fact): fact is string => Boolean(fact));
+
   const hasLeaders =
     leaders.goals.length +
       leaders.assists.length +
@@ -42,9 +53,9 @@ export function SoccerCompetitionHub({
 
   return (
     <div className="space-y-6">
-      <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-5 shadow-panel md:p-8">
+      <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-5 shadow-panel md:p-6">
         <Link
-          href="/tournaments"
+          href="/tournaments?desk=soccer"
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
@@ -57,6 +68,9 @@ export function SoccerCompetitionHub({
           {competition.name}
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{competition.description}</p>
+        {hubFacts.length > 0 ? (
+          <p className="mt-3 text-sm font-medium text-foreground">{hubFacts.join(" · ")}</p>
+        ) : null}
         {notice ? (
           <p className="mt-3 inline-flex rounded-full bg-primary/10 px-3 py-1 text-2xs font-semibold text-primary">
             {notice}

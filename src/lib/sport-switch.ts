@@ -1,4 +1,5 @@
 import { resolveSportFromMatchId } from "@/features/matches/resolve-match-sport";
+import { deskParamForSport } from "@/lib/sport-from-route";
 import type { Sport } from "@/lib/sport";
 import { isAmericanFootballCompetitionSlug } from "@/lib/tournaments/american-football-competitions";
 import { isBasketballCompetitionSlug } from "@/lib/tournaments/basketball-competitions";
@@ -41,7 +42,7 @@ export function resolveSportSwitchHref(pathname: string | null, nextSport: Sport
   return "/tournaments";
 }
 
-/** Full document URL for a sport change so server components re-read the cookie. */
-export function sportSwitchTarget(pathname: string, search: string, nextSport: Sport): string {
-  return resolveSportSwitchHref(pathname, nextSport) ?? `${pathname}${search}`;
+/** Sport changes open that desk so the URL, not the cookie, is the source of truth. */
+export function sportSwitchTarget(_pathname: string, _search: string, nextSport: Sport): string {
+  return `/scouting?desk=${deskParamForSport(nextSport)}`;
 }

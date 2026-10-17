@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { SPORT_HEADER, sportFromLocation } from "@/lib/sport-from-route";
 import {
   DEVICE_COOKIE_MAX_AGE,
   DEVICE_COOKIE_NAME,
@@ -8,7 +9,11 @@ import {
 } from "@/lib/workspace/device-cookie";
 
 export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  const routeSport = sportFromLocation(request.nextUrl.pathname, request.nextUrl.searchParams);
+  if (routeSport) requestHeaders.set(SPORT_HEADER, routeSport);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
   const existing = request.cookies.get(DEVICE_COOKIE_NAME)?.value;
 
   if (!isValidDeviceId(existing)) {

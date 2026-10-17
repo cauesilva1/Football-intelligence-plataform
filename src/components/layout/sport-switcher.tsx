@@ -7,6 +7,7 @@ import { useSport } from "@/context/sport-context";
 import type { Sport } from "@/lib/sport";
 import { SPORT_THEME } from "@/lib/sport-theme";
 import { useIsMounted } from "@/hooks/use-is-mounted";
+import { deskParamForSport } from "@/lib/sport-from-route";
 import { resolveSportFromMatchId } from "@/features/matches/resolve-match-sport";
 
 const OPTIONS: Sport[] = ["SOCCER", "BASKETBALL", "AMERICAN_FOOTBALL"];
@@ -123,7 +124,7 @@ export function SportSwitcher({
             <a
               key={value}
               {...sharedProps}
-              href="/tournaments"
+              href={`/scouting?desk=${deskParamForSport(value)}`}
               onClick={() => {
                 adoptSport(value);
               }}

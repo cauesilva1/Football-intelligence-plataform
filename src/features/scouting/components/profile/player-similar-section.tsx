@@ -5,7 +5,7 @@ import { DataPanel } from "@/components/data/data-panel";
 import { querySimilarPlayers } from "@/features/scouting/queries/similar-players";
 import { formatBasketballPositionLabel } from "@/lib/positions";
 import { formatClubLabel } from "@/lib/soccer/club-label";
-import { formatCapHit, formatMarketValue, playerDisplayName, ratingColor } from "@/lib/utils";
+import { formatCapHit, formatMarketValue, hasRatingSample, playerDisplayName, ratingColor } from "@/lib/utils";
 
 export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
   const similar = await querySimilarPlayers(playerId, 4);
@@ -57,8 +57,16 @@ export async function PlayerSimilarSection({ playerId }: { playerId: string }) {
                   >
                     {comparable ? `${Math.round(score)}%` : "—"}
                   </p>
-                  <p className={`font-mono text-2xs ${ratingColor(player.currentSeasonStats.rating)}`}>
-                    {player.currentSeasonStats.rating.toFixed(1)}
+                  <p
+                    className={`font-mono text-2xs ${
+                      hasRatingSample(player.currentSeasonStats)
+                        ? ratingColor(player.currentSeasonStats.rating)
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {hasRatingSample(player.currentSeasonStats)
+                      ? player.currentSeasonStats.rating.toFixed(1)
+                      : "—"}
                   </p>
                 </div>
               </div>

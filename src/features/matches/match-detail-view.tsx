@@ -44,7 +44,7 @@ export function MatchDetailView({ data }: { data: MatchDetailPayload }) {
       <MatchSportExit sport="SOCCER" />
       <MatchScoreboardSurface sport="SOCCER">
         <Link
-          href="/tournaments"
+          href="/tournaments?desk=soccer"
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary"
         >
           <ArrowLeft className="h-3.5 w-3.5" />

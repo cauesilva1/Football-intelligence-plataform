@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useSport } from "@/context/sport-context";
+import { withSportDesk } from "@/lib/sport-from-route";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
@@ -19,6 +23,8 @@ export function ScoutWorkflowNav({
   current: ScoutWorkflowStep;
   className?: string;
 }) {
+  const { currentSport } = useSport();
+
   return (
     <nav aria-label="Scout workflow" className={cn("desk-workflow", className)}>
       {STEPS.map((step, index) => {
@@ -31,7 +37,7 @@ export function ScoutWorkflowNav({
               </span>
             ) : null}
             <Link
-              href={step.href}
+              href={withSportDesk(step.href, currentSport)}
               className={cn("desk-workflow-link", active && "is-active")}
               aria-current={active ? "step" : undefined}
             >

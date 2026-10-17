@@ -8,6 +8,7 @@ import { APP_NAME } from "@/lib/config";
 import { useSport } from "@/context/sport-context";
 import { sportTheme } from "@/lib/sport-theme";
 import { cn } from "@/lib/utils";
+import { withSportDesk } from "@/lib/sport-from-route";
 import { SportSwitcher } from "./sport-switcher";
 import { MobileNav, NAV_GROUPS, navLabel, type NavItem } from "./mobile-nav";
 import { MobileHeaderMenu } from "./mobile-header-menu";
@@ -29,7 +30,7 @@ function SidebarNavLink({
 
   return (
     <Link
-      href={item.href}
+      href={withSportDesk(item.href, currentSport)}
       data-label={label}
       title={collapsed ? label : undefined}
       className={cn("editorial-side-link", active && "is-active", collapsed && "is-collapsed")}

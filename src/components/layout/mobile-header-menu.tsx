@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, Newspaper, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSport } from "@/context/sport-context";
+import { withSportDesk } from "@/lib/sport-from-route";
 import { NAV_GROUPS, navLabel } from "./mobile-nav";
 import { SportSwitcher } from "./sport-switcher";
 
@@ -67,7 +68,7 @@ export function MobileHeaderMenu() {
                   return (
                     <Link
                       key={item.href}
-                      href={item.href}
+                      href={withSportDesk(item.href, currentSport)}
                       onClick={() => setOpen(false)}
                       className={cn(
                         "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",

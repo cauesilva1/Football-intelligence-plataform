@@ -29,6 +29,7 @@ import {
 } from "@/lib/tournaments/match-normalizer";
 import { enrichTournamentRoundsWithCrests } from "@/lib/tournaments/enrich-crests";
 import { getSportConfig } from "@/lib/sport-registry";
+import { resolveSportFromCompetitionSlug } from "@/lib/sport-from-route";
 import type { Sport } from "@/lib/sport";
 import type { TournamentRound } from "@/lib/tournaments/types";
 import type { ReactNode } from "react";
@@ -86,13 +87,7 @@ export async function resolveCompetitionTitle(
   return getSoccerCompetition(slug)?.shortName ?? null;
 }
 
-/** Sport implied by the competition slug — avoids cookies() on hub pages. */
-export function resolveSportFromCompetitionSlug(slug: string): Sport | null {
-  if (isBasketballCompetitionSlug(slug)) return "BASKETBALL";
-  if (isAmericanFootballCompetitionSlug(slug)) return "AMERICAN_FOOTBALL";
-  if (isSoccerCompetitionSlug(slug)) return "SOCCER";
-  return null;
-}
+export { resolveSportFromCompetitionSlug };
 
 export async function resolveCompetitionTitleFromSlug(slug: string): Promise<string | null> {
   const sport = resolveSportFromCompetitionSlug(slug);

@@ -51,24 +51,26 @@ export function PlayerAnalysisSection({ player }: { player: Player }) {
         </ul>
       </DataPanel>
 
-      <DataPanel
-        title="Areas to Watch"
-        description="Observed risks or limitations."
-        density="dense"
-        className="lg:col-span-1"
-      >
-        <ul className="space-y-2">
-          {weaknesses.map((item) => (
-            <li
-              key={item}
-              className="flex items-start gap-2 rounded-lg border border-border bg-surface-muted/30 px-3 py-2 text-xs text-foreground"
-            >
-              <TrendingDown className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-negative" />
-              {item}
-            </li>
-          ))}
-        </ul>
-      </DataPanel>
+      {weaknesses.length > 0 ? (
+        <DataPanel
+          title="Areas to Watch"
+          description="Observed risks or limitations."
+          density="dense"
+          className="lg:col-span-1"
+        >
+          <ul className="space-y-2">
+            {weaknesses.map((item) => (
+              <li
+                key={item}
+                className="flex items-start gap-2 rounded-lg border border-border bg-surface-muted/30 px-3 py-2 text-xs text-foreground"
+              >
+                <TrendingDown className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-negative" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </DataPanel>
+      ) : null}
 
       <DataPanel
         title="Playing Style"

@@ -55,7 +55,7 @@ function playerNeedsAfSeasonEnrich(player: Player): boolean {
 function profileSectionHref(
   playerId: string,
   season: string | undefined,
-  tab: "profile" | "mapa" | "scout"
+  tab: "profile" | "maps" | "scout"
 ) {
   const params = new URLSearchParams();
   if (tab !== "profile") params.set("tab", tab);
@@ -82,7 +82,7 @@ export async function PlayerProfileView({
   const showNbaMap = player.league?.toUpperCase() === "NBA";
   const showSoccerMap = sport === "SOCCER";
   const showShotMap = showNbaMap || showSoccerMap;
-  const mapTab = showShotMap && tab === "mapa";
+  const mapTab = showShotMap && (tab === "maps" || tab === "mapa");
   const scoutTab = showSoccerMap && tab === "scout";
   const seasonKey = season ?? player.selectedSeason;
 
@@ -110,14 +110,14 @@ export async function PlayerProfileView({
             Profile
           </Link>
           <Link
-            href={profileSectionHref(playerId, seasonKey, "mapa")}
+            href={profileSectionHref(playerId, seasonKey, "maps")}
             aria-current={mapTab ? "page" : undefined}
             className={cn(
               buttonVariants({ variant: mapTab ? "default" : "ghost", size: "sm" }),
               "h-8 px-3 text-xs"
             )}
           >
-            Mapa
+            Maps
           </Link>
           {showSoccerMap ? (
             <Link

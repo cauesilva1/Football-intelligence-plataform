@@ -74,6 +74,46 @@ export function ratingColor(rating: number): string {
   return "text-signal-rose";
 }
 
+const UNLISTED_LABELS = new Set(["UNK", "UNKNOWN", "N/A", "NA", "NULL", "NONE", "NAN", "—", "-"]);
+
+/** Honest label for a missing nationality code. */
+export function formatNationalityLabel(value?: string | null): string {
+  const token = (value ?? "").trim();
+  if (!token || UNLISTED_LABELS.has(token.toUpperCase())) return "Unlisted";
+  return token;
+}
+
+/** A stored 0.0 with no games is an empty row, not a rose-rated player. */
+export function hasRatingSample(stats: {
+  appearances?: number;
+  minutesPlayed?: number;
+  goals?: number;
+  assists?: number;
+  points?: number;
+  rebounds?: number;
+  totalYards?: number | null;
+  passingYards?: number | null;
+  rushingYards?: number | null;
+  receivingYards?: number | null;
+  touchdowns?: number | null;
+  tacklesWon?: number;
+}): boolean {
+  return (
+    (stats.appearances ?? 0) > 0 ||
+    (stats.minutesPlayed ?? 0) > 0 ||
+    (stats.goals ?? 0) > 0 ||
+    (stats.assists ?? 0) > 0 ||
+    (stats.points ?? 0) > 0 ||
+    (stats.rebounds ?? 0) > 0 ||
+    (stats.totalYards ?? 0) > 0 ||
+    (stats.passingYards ?? 0) > 0 ||
+    (stats.rushingYards ?? 0) > 0 ||
+    (stats.receivingYards ?? 0) > 0 ||
+    (stats.touchdowns ?? 0) > 0 ||
+    (stats.tacklesWon ?? 0) > 0
+  );
+}
+
 export function per90(value: number, minutes: number): number {
   if (!minutes || minutes <= 0) return 0;
   const rate = (value / minutes) * 90;

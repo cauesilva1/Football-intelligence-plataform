@@ -52,7 +52,7 @@ export function AmericanFootballCompetitionHub({
       <HubSeasonRestore slug={competition.slug} />
       <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-5 shadow-panel md:p-8">
         <Link
-          href="/tournaments"
+          href="/tournaments?desk=football"
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary"
         >
           <ArrowLeft className="h-3.5 w-3.5" />

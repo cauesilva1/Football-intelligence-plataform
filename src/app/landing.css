@@ -258,12 +258,12 @@
   background:
     linear-gradient(
       105deg,
-      rgba(8, 10, 14, 0.92) 0%,
-      rgba(8, 10, 14, 0.72) 38%,
-      rgba(8, 10, 14, 0.4) 68%,
-      rgba(8, 10, 14, 0.28) 100%
+      rgba(8, 10, 14, 1) 0%,
+      rgba(8, 10, 14, 0.98) 52%,
+      rgba(8, 10, 14, 0.94) 70%,
+      rgba(8, 10, 14, 0.82) 100%
     ),
-    linear-gradient(to top, rgba(8, 10, 14, 0.75) 0%, transparent 45%);
+    linear-gradient(to top, rgba(8, 10, 14, 0.94) 0%, rgba(8, 10, 14, 0.55) 55%);
 }
 
 .landing-hero-rule {

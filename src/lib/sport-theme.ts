@@ -52,3 +52,8 @@ export function applyNeutralDocumentTheme(): void {
 export function isInsightsPath(path: string | null | undefined): boolean {
   return path === "/insights" || Boolean(path?.startsWith("/insights/"));
 }
+
+/** Marketing pages keep the product ink. They are not a sport desk. */
+export function isMarketingPath(path: string | null | undefined): boolean {
+  return path === "/" || path === "/demo";
+}

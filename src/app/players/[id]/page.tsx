@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { SportScope } from "@/components/layout/sport-scope";
 import { PlayerScoutBriefSection } from "@/features/ai-report/components/player-scout-brief-section";
 import { queryPlayerById } from "@/features/scouting/queries/players";
 import { PlayerProfileView } from "@/features/scouting/components/player-profile-view";
@@ -35,8 +36,13 @@ export default async function PlayerDetailPage({
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const player = await queryPlayerById(id, query.season);
 
+  const sport = player?.sport === "BASKETBALL" || player?.sport === "AMERICAN_FOOTBALL" || player?.sport === "SOCCER"
+    ? player.sport
+    : null;
+
   return (
     <DashboardShell subtitle={player?.knownAs ?? "Player Profile"}>
+      {sport ? <SportScope sport={sport} /> : null}
       <Suspense fallback={<PlayerProfileSkeleton />}>
         <PlayerProfileView playerId={id} season={query.season} tab={query.tab} />
       </Suspense>

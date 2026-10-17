@@ -1,4 +1,16 @@
-const JUNK_LABELS = new Set(["NAN", "NA", "N/A", "NULL", "UNDEFINED", "NONE", "—", "-", ""]);
+const JUNK_LABELS = new Set([
+  "NAN",
+  "NA",
+  "N/A",
+  "NULL",
+  "UNDEFINED",
+  "NONE",
+  "UNK",
+  "UNKNOWN",
+  "—",
+  "-",
+  "",
+]);
 
 function normalizeToken(value: string | null | undefined): string {
   return (value ?? "").trim().toUpperCase();

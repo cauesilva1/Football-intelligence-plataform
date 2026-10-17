@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatClubLabel } from "@/lib/soccer/club-label";
-import { formatMarketValue, ratingColor, playerDisplayName } from "@/lib/utils";
+import { formatMarketValue, formatNationalityLabel, hasRatingSample, ratingColor, playerDisplayName } from "@/lib/utils";
 import type { Player } from "@/types";
 
 export function PlayersTable({ players }: { players: Player[] }) {
@@ -27,15 +27,21 @@ export function PlayersTable({ players }: { players: Player[] }) {
               <Link href={`/players/${p.id}`} className="font-medium text-foreground hover:text-primary">
                 {playerDisplayName(p)}
               </Link>
-              <p className="text-2xs text-muted-foreground">{p.nationality}</p>
+              <p className="text-2xs text-muted-foreground">{formatNationalityLabel(p.nationality)}</p>
             </TableCell>
             <TableCell><Badge variant="secondary">{p.position}</Badge></TableCell>
             <TableCell className="text-muted-foreground">{formatClubLabel(p.teamName, p.teamShortName)}</TableCell>
             <TableCell>{p.age}</TableCell>
             <TableCell className="font-mono">{p.currentSeasonStats.per90.goals.toFixed(2)}</TableCell>
             <TableCell className="font-mono">{p.currentSeasonStats.per90.assists.toFixed(2)}</TableCell>
-            <TableCell className={`font-mono font-semibold ${ratingColor(p.currentSeasonStats.rating)}`}>
-              {p.currentSeasonStats.rating.toFixed(1)}
+            <TableCell
+              className={`font-mono font-semibold ${
+                hasRatingSample(p.currentSeasonStats)
+                  ? ratingColor(p.currentSeasonStats.rating)
+                  : "text-muted-foreground"
+              }`}
+            >
+              {hasRatingSample(p.currentSeasonStats) ? p.currentSeasonStats.rating.toFixed(1) : "—"}
             </TableCell>
             <TableCell className="font-mono">{formatMarketValue(p.marketValue)}</TableCell>
           </TableRow>

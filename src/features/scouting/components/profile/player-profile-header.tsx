@@ -24,7 +24,15 @@ import { SummerLeagueBadge } from "@/components/ui/summer-league-badge";
 import { getTeamTheme } from "@/lib/team-theme";
 import { soccerProfileLeagueLabel } from "@/lib/soccer/profile-league";
 import { deriveDataDepthSnapshot } from "@/lib/intelligence/data-depth";
-import { cn, formatCapHit, formatMarketValue, formatPhysicalMetric, formatPreferredFoot } from "@/lib/utils";
+import {
+  cn,
+  formatCapHit,
+  formatMarketValue,
+  formatNationalityLabel,
+  formatPhysicalMetric,
+  formatPreferredFoot,
+  hasRatingSample,
+} from "@/lib/utils";
 import type { Player } from "@/types";
 
 export function PlayerProfileHeader({
@@ -33,6 +41,8 @@ export function PlayerProfileHeader({
   player: Player;
 }) {
   const stats = player.currentSeasonStats;
+  const nationalityLabel = formatNationalityLabel(player.nationality);
+  const rated = hasRatingSample(stats);
   const sport = player.sport ?? "SOCCER";
   const isBasketball = sport === "BASKETBALL";
   const isAmericanFootball = sport === "AMERICAN_FOOTBALL";
@@ -121,19 +131,24 @@ export function PlayerProfileHeader({
                 />
               )}
               <span className="inline-flex items-center gap-1.5 text-xs text-white/70">
-                <NationalTeamCrest name={player.nationality} size="sm" className="h-5 w-5 text-[9px]" />
-                {player.nationality} · {player.age} years old
+                {nationalityLabel !== "Unlisted" ? (
+                  <NationalTeamCrest name={player.nationality} size="sm" className="h-5 w-5 text-[9px]" />
+                ) : null}
+                {nationalityLabel} · {player.age} years old
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/70">
               <span className="inline-flex items-center gap-1">
                 <ShieldHalf className="h-3.5 w-3.5" style={{ color: theme.accent }} />
                 <span className="font-medium text-white/90">
-                  {player.teamName?.trim() && player.teamName.trim().toUpperCase() !== "NAN"
+                  {player.teamName?.trim() &&
+                  !["NAN", "UNK", "UNKNOWN", "NA", "NULL", "N/A"].includes(player.teamName.trim().toUpperCase())
                     ? player.teamName
                     : "Unknown"}
                   {player.teamShortName &&
-                  !["NAN", "NA", "NULL", "UNDEFINED"].includes(player.teamShortName.trim().toUpperCase())
+                  !["NAN", "NA", "NULL", "UNDEFINED", "UNK", "UNKNOWN"].includes(
+                    player.teamShortName.trim().toUpperCase()
+                  )
                     ? ` (${player.teamShortName})`
                     : ""}
                   {sport === "SOCCER" && player.competitionName
@@ -168,11 +183,17 @@ export function PlayerProfileHeader({
               <div
                 className={cn(
                   "font-display text-2xl font-bold tabular-nums",
-                  // ratingColor tokens are tuned for paper; on dark banners prefer accent/white.
-                  stats.rating >= 7 ? "text-emerald-300" : stats.rating >= 6 ? "text-amber-300" : "text-rose-300"
+                  !rated
+                    ? "text-white/45"
+                    : stats.rating >= 7
+                      ? "text-emerald-300"
+                      : stats.rating >= 6
+                        ? "text-amber-300"
+                        : "text-rose-300"
                 )}
+                title={rated ? undefined : "No sample yet"}
               >
-                {stats.rating.toFixed(1)}
+                {rated ? stats.rating.toFixed(1) : "—"}
               </div>
             </div>
             {usesCapHit ? (

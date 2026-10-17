@@ -19,7 +19,14 @@ import { ShortlistButton } from "@/features/shortlist/components/shortlist-butto
 import { type ScoutingRoute } from "@/features/scouting/lib/filter-defaults";
 import { formatExpectedGoalsRate } from "@/lib/metrics/expected-goals";
 import { formatClubLabel } from "@/lib/soccer/club-label";
-import { ratingColor, formatMarketValue, formatCapHit, playerDisplayName } from "@/lib/utils";
+import {
+  ratingColor,
+  formatMarketValue,
+  formatCapHit,
+  formatNationalityLabel,
+  hasRatingSample,
+  playerDisplayName,
+} from "@/lib/utils";
 import { soccerValueScore } from "@/lib/scoring/soccer-rankings";
 import { capValueScore } from "@/lib/scoring";
 import { hasReliableSoccerSample } from "@/lib/metrics/per90";
@@ -97,7 +104,7 @@ function BasketballRosterTable({
                   <Link href={`/players/${player.id}`} className="truncate font-medium text-foreground hover:text-primary">
                     {playerDisplayName(player)}
                   </Link>
-                  <p className="truncate text-2xs text-muted-foreground">{player.nationality}</p>
+                  <p className="truncate text-2xs text-muted-foreground">{formatNationalityLabel(player.nationality)}</p>
                 </div>
               </div>
             </TableCell>
@@ -226,7 +233,7 @@ function BasketballScoutingTable({
                     <Link href={`/players/${player.id}`} className="truncate font-medium text-foreground hover:text-primary">
                       {playerDisplayName(player)}
                     </Link>
-                    <p className="truncate text-2xs text-muted-foreground">{player.nationality}</p>
+                    <p className="truncate text-2xs text-muted-foreground">{formatNationalityLabel(player.nationality)}</p>
                   </div>
                 </div>
               </TableCell>
@@ -240,9 +247,15 @@ function BasketballScoutingTable({
               </TableCell>
               <TableCell>
                 <div className="flex flex-col gap-0.5">
-                  <span className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
-                    {stats.rating.toFixed(1)}
-                  </span>
+                  {hasRatingSample(stats) ? (
+                    <span className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
+                      {stats.rating.toFixed(1)}
+                    </span>
+                  ) : (
+                    <span className="font-mono tabular-nums text-muted-foreground" title="No sample yet">
+                      —
+                    </span>
+                  )}
                   {!reliable && stats.appearances > 0 ? (
                     <Badge variant="amber" className="w-fit text-2xs">
                       Small sample
@@ -406,7 +419,7 @@ function SoccerScoutingTable({
                     <Link href={`/players/${player.id}`} className="truncate font-medium text-foreground hover:text-primary">
                       {playerDisplayName(player)}
                     </Link>
-                    <p className="truncate text-2xs text-muted-foreground">{player.nationality}</p>
+                    <p className="truncate text-2xs text-muted-foreground">{formatNationalityLabel(player.nationality)}</p>
                   </div>
                 </div>
               </TableCell>
@@ -420,9 +433,15 @@ function SoccerScoutingTable({
               </TableCell>
               <TableCell>
                 <div className="flex flex-col gap-0.5">
-                  <span className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
-                    {stats.rating.toFixed(1)}
-                  </span>
+                  {hasRatingSample(stats) ? (
+                    <span className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
+                      {stats.rating.toFixed(1)}
+                    </span>
+                  ) : (
+                    <span className="font-mono tabular-nums text-muted-foreground" title="No sample yet">
+                      —
+                    </span>
+                  )}
                   {!reliable && stats.minutesPlayed > 0 ? (
                     <Badge variant="amber" className="w-fit text-2xs">
                       Small sample
@@ -601,7 +620,7 @@ function AmericanFootballScoutingTable({
                     <Link href={`/players/${player.id}`} className="truncate font-medium text-foreground hover:text-primary">
                       {playerDisplayName(player)}
                     </Link>
-                    <p className="truncate text-2xs text-muted-foreground">{player.nationality}</p>
+                    <p className="truncate text-2xs text-muted-foreground">{formatNationalityLabel(player.nationality)}</p>
                   </div>
                 </div>
               </TableCell>
@@ -615,9 +634,15 @@ function AmericanFootballScoutingTable({
               </TableCell>
               <TableCell>
                 <div className="flex flex-col gap-0.5">
-                  <span className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
-                    {stats.rating.toFixed(1)}
-                  </span>
+                  {hasRatingSample(stats) ? (
+                    <span className={`font-mono font-semibold tabular-nums ${ratingColor(stats.rating)}`}>
+                      {stats.rating.toFixed(1)}
+                    </span>
+                  ) : (
+                    <span className="font-mono tabular-nums text-muted-foreground" title="No sample yet">
+                      —
+                    </span>
+                  )}
                   {!reliable && stats.appearances > 0 ? (
                     <Badge variant="amber" className="w-fit text-2xs">
                       Small sample
