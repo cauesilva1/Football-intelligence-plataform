@@ -183,23 +183,25 @@ export function ReportView({
           </ul>
         </DataPanel>
 
-        <DataPanel
-          title="Areas to Watch"
-          description="Observed risks or limitations."
-          density="dense"
-        >
-          <ul className="space-y-2">
-            {report.weaknesses.map((item) => (
-              <li
-                key={item}
-                className="flex items-start gap-2 rounded-lg border border-border bg-surface-muted/30 px-3 py-2 text-xs text-foreground"
-              >
-                <TrendingDown className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-negative" />
-                {item}
-              </li>
-            ))}
-          </ul>
-        </DataPanel>
+        {report.weaknesses.length > 0 ? (
+          <DataPanel
+            title="Areas to Watch"
+            description="Observed risks or limitations."
+            density="dense"
+          >
+            <ul className="space-y-2">
+              {report.weaknesses.map((item) => (
+                <li
+                  key={item}
+                  className="flex items-start gap-2 rounded-lg border border-border bg-surface-muted/30 px-3 py-2 text-xs text-foreground"
+                >
+                  <TrendingDown className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-negative" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </DataPanel>
+        ) : null}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

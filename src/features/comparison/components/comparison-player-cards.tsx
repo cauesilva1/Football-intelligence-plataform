@@ -15,7 +15,8 @@ import { hasReliableBasketballSample } from "@/lib/scoring/basketball-rating";
 import { hasReliableFootballSample } from "@/lib/scoring/football-rating";
 import { AF_RATE_MIN_GAMES, SOCCER_RATE_MIN_MINUTES } from "@/lib/scoring";
 import { getTeamTheme } from "@/lib/team-theme";
-import { cn, formatCapHit, formatMarketValue, ratingColor } from "@/lib/utils";
+import { formatClubLabel } from "@/lib/soccer/club-label";
+import { cn, formatCapHit, formatMarketValue, formatNationalityLabel, ratingColor } from "@/lib/utils";
 import type { Player } from "@/types";
 
 function SoccerStatStrip({ player }: { player: Player }) {
@@ -240,9 +241,11 @@ export function ComparisonPlayerCards({ players }: { players: [Player, Player] }
                     {p.fullName}
                   </p>
                   <p className="text-xs text-white/75">
-                    {p.position} · {p.nationality} · {p.age} yrs
+                    {p.position} · {formatNationalityLabel(p.nationality)} · {p.age} yrs
                   </p>
-                  <p className="truncate text-2xs text-white/60">{p.teamName ?? "No team"}</p>
+                  <p className="truncate text-2xs text-white/60">
+                    {formatClubLabel(p.teamName, p.teamShortName)}
+                  </p>
                 </div>
               </div>
               <div className="shrink-0 text-right">
