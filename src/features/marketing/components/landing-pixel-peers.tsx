@@ -88,7 +88,7 @@ const SPORT_CARDS = [
     href: "/scouting?desk=hockey",
     kicker: "04 · Hockey",
     title: "NHL season, live",
-    body: "Standings, results, and skater or goalie lines from the official NHL feed — the same desk, without a shot map yet.",
+    body: "Standings, results, and skater or goalie lines from the official NHL feed — including a shot map on profiles that have coordinates.",
     points: ["2026-27 in progress", "Upcoming and results", "Honest empty lines"],
     media: [
       {
