@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   AmericanFootballIcon,
   BasketballIcon,
+  HockeyPuckIcon,
   SoccerBallIcon,
 } from "@/components/icons/sport-balls";
 
@@ -62,6 +63,7 @@ const SPORT_ICONS = {
   SOCCER: SoccerBallIcon,
   BASKETBALL: BasketballIcon,
   AMERICAN_FOOTBALL: AmericanFootballIcon,
+  HOCKEY: HockeyPuckIcon,
 } as const;
 
 /** Product visual for hero — multi-sport intelligence surface. */
@@ -167,10 +169,8 @@ export function LandingSportsStrip() {
   return (
     <section className="landing-sports" aria-label="Supported sports">
       <div className="landing-wrap">
-        <p className="landing-kicker">Three sports. One desk.</p>
-        <h2 className="landing-section-title">
-          Soccer first — basketball and American football as secondary desks
-        </h2>
+        <p className="landing-kicker">Four sports. One desk.</p>
+        <h2 className="landing-section-title">Soccer, basketball, football, and hockey on one desk</h2>
         <p className="landing-sports-lede">
           Same scout workflow, honesty rules, and decision layer for every sport we cover.
           Sport-native metrics and intelligence deepen in parallel — not a soccer product with
@@ -188,13 +188,19 @@ export function LandingSportsStrip() {
               id: "BASKETBALL" as const,
               title: "Basketball",
               body: "Basketball-native ratings, shortlist, compare, and reports — same desk, same decision language.",
-              status: "Secondary desk · smaller samples",
+              status: "NBA, college, and EuroLeague",
             },
             {
               id: "AMERICAN_FOOTBALL" as const,
-              title: "American Football",
+              title: "Football",
               body: "Position-aware ratings and briefs for NFL / college context inside the same product shell.",
-              status: "Secondary desk · partial coverage",
+              status: "NFL and college, partial coverage",
+            },
+            {
+              id: "HOCKEY" as const,
+              title: "Hockey",
+              body: "NHL standings, results, and season lines from the official feed.",
+              status: "2026-27 season live",
             },
           ].map((sport) => {
             const Icon = SPORT_ICONS[sport.id];

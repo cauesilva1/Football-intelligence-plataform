@@ -6,6 +6,7 @@ const TICKER = [
   { href: "/scouting?desk=soccer", label: "Soccer" },
   { href: "/scouting?desk=basketball", label: "Basketball" },
   { href: "/scouting?desk=football", label: "Football" },
+  { href: "/scouting?desk=hockey", label: "Hockey" },
   { href: "/recruitment?desk=soccer", label: "Recruitment" },
   { href: "/compare?desk=soccer", label: "Compare" },
   { href: "/methodology", label: "Methodology" },

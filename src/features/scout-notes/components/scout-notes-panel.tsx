@@ -33,6 +33,7 @@ const SCOUT_NOTE_PLACEHOLDERS: Record<Sport, string> = {
   SOCCER: 'e.g. "Good movement behind the defensive line"',
   BASKETBALL: 'e.g. "Strong off-ball cutter, needs a better catch-and-shoot release"',
   AMERICAN_FOOTBALL: 'e.g. "Clean route runner, struggles against press coverage"',
+  HOCKEY: 'e.g. "Wins the middle of the ice, needs a cleaner first pass"',
 };
 
 export function ScoutNotesPanel({

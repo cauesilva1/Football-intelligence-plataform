@@ -6,6 +6,8 @@ export const BASKETBALL_POSITIONS = ["PG", "SG", "G", "SF", "PF", "C"] as const;
 /** Desk and rankings filters. Generic ESPN "G" stays out of this list and displays as Guard. */
 export const BASKETBALL_FILTER_POSITIONS = ["PG", "SG", "SF", "PF", "C"] as const;
 
+export const HOCKEY_POSITIONS = ["C", "LW", "RW", "D", "G"] as const;
+
 export const AMERICAN_FOOTBALL_POSITIONS = [
   "QB",
   "RB",
@@ -75,6 +77,18 @@ export function getPositionGlossaryDescription(position: string, sport: Sport = 
   if (sport === "AMERICAN_FOOTBALL") {
     const key = position.trim().toUpperCase();
     return AMERICAN_FOOTBALL_POSITION_GLOSSARY[key] ?? position;
+  }
+
+  if (sport === "HOCKEY") {
+    const key = position.trim().toUpperCase();
+    const labels: Record<string, string> = {
+      C: "Center",
+      LW: "Left wing",
+      RW: "Right wing",
+      D: "Defense",
+      G: "Goalie",
+    };
+    return labels[key] ?? position;
   }
 
   return POSITION_GLOSSARY[position] ?? POSITION_GLOSSARY.MF;

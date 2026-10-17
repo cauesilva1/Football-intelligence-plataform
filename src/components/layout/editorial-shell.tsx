@@ -188,9 +188,6 @@ export function EditorialShell({ children }: { children: React.ReactNode }) {
             <p className="editorial-topbar-context">
               <span className="editorial-side-label-always md:hidden">{APP_NAME}</span>
               <span className="hidden text-[#667077] md:inline">{sportTheme(currentSport).label}</span>
-              {currentSport !== "SOCCER" ? (
-                <span className="hidden text-[#8a939c] md:inline">· secondary</span>
-              ) : null}
             </p>
             <div className="editorial-topbar-end">
               <div className="flex items-center gap-1.5 md:hidden">
@@ -218,7 +215,6 @@ export function EditorialShell({ children }: { children: React.ReactNode }) {
             </span>
             <span className="hidden sm:inline">
               {APP_NAME} · {sportTheme(currentSport).label}
-              {currentSport !== "SOCCER" ? " · secondary sport" : ""}
             </span>
           </div>
         </footer>

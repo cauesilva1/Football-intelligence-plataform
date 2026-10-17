@@ -66,10 +66,20 @@ export function BasketballIcon({ className, title = "Basketball" }: IconProps) {
   );
 }
 
+export function HockeyPuckIcon({ className, title = "Hockey" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={cn("h-4 w-4", className)} aria-hidden={title ? undefined : true} role={title ? "img" : undefined}>
+      {title ? <title>{title}</title> : null}
+      <ellipse cx="12" cy="12" rx="8" ry="4.25" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M4.2 12v2.2c0 2.2 3.5 4 7.8 4s7.8-1.8 7.8-4V12" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
 /** Lightweight American football (gridiron) mark — oval with lace stitches. */
 export function AmericanFootballIcon({
   className,
-  title = "American Football",
+  title = "Football",
 }: IconProps) {
   return (
     <svg
@@ -111,7 +121,7 @@ export function OmniScoutMark({
   sport,
   className,
 }: {
-  sport: "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL";
+  sport: "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL" | "HOCKEY";
   className?: string;
 }) {
   const Ball =
@@ -119,7 +129,9 @@ export function OmniScoutMark({
       ? BasketballIcon
       : sport === "AMERICAN_FOOTBALL"
         ? AmericanFootballIcon
-        : SoccerBallIcon;
+        : sport === "HOCKEY"
+          ? HockeyPuckIcon
+          : SoccerBallIcon;
 
   return (
     <span

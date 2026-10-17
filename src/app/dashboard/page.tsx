@@ -34,10 +34,12 @@ export default async function DashboardPage() {
           title="Overview"
           description={
             sport === "SOCCER"
-              ? "Soccer is the reference sport for the full scout workflow — basketball and American football are secondary desks."
+              ? "Soccer is the reference sport for the full scout workflow."
               : sport === "BASKETBALL"
-                ? "Basketball overview (secondary desk). Soccer remains the reference for the full scout workflow."
-                : "American football overview (secondary desk). Soccer remains the reference for the full scout workflow."
+                ? "Basketball overview. Coverage is thinner than soccer, with the same scout workflow."
+                : sport === "HOCKEY"
+                  ? "Hockey overview for the live NHL season. Standings, results, and player lines use the official feed."
+                  : "Football overview for NFL and college. Coverage is partial, with the same scout workflow."
           }
           badge={
             <span className="rounded-md border border-border bg-surface-muted/50 px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">

@@ -605,6 +605,19 @@ function buildBasketballSeasonStatsWhere(filters: PlayerFilters): Prisma.PlayerS
 }
 
 /** Roster rows with no games and an all-zero line are not scouting profiles. */
+const HOCKEY_WITH_PRODUCTION: Prisma.PlayerWhereInput = {
+  stats: {
+    some: {
+      OR: [
+        { matchesPlayed: { gt: 0 } },
+        { goals: { gt: 0 } },
+        { assists: { gt: 0 } },
+        { saves: { gt: 0 } },
+      ],
+    },
+  },
+};
+
 const AF_WITH_PRODUCTION: Prisma.PlayerWhereInput = {
   stats: {
     some: {
@@ -1013,6 +1026,15 @@ export const prismaPlayerRepository: PlayerRepository & {
       });
     }
 
+    if (sport === "HOCKEY") {
+      const where: Prisma.PlayerWhereInput = {
+        AND: [buildPlayerWhere({ ...filters, sport: "HOCKEY" }), HOCKEY_WITH_PRODUCTION],
+      };
+      const useDbPage = !needsMappedPlayerFilter(filters) && !needsMappedPlayerSort(filters);
+      if (useDbPage) return findManyPaginatedOnPlayer(where, filters);
+      return findManyCappedThenPage(where, filters, { prismaPrefiltered: true, rosterBrowse: false });
+    }
+
     if (sport === "AMERICAN_FOOTBALL") {
       const where: Prisma.PlayerWhereInput = {
         AND: [buildPlayerWhere({ ...filters, sport: "AMERICAN_FOOTBALL" }), AF_WITH_PRODUCTION],
@@ -1243,7 +1265,7 @@ export const prismaPlayerRepository: PlayerRepository & {
         // BB/AF seasons live in PlayerSeasonStats as compact ints (202627, 2025), never in the
         // legacy "2025/26" PlayerStatistic table, so the soccer season filter would match nothing.
         ...(typeof minMinutes === "number"
-          ? sport === "BASKETBALL" || sport === "AMERICAN_FOOTBALL"
+          ? sport === "BASKETBALL" || sport === "AMERICAN_FOOTBALL" || sport === "HOCKEY"
             ? { stats: { some: { minutesPlayed: { gte: minMinutes } } } }
             : {
                 statistics: {

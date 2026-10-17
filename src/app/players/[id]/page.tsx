@@ -36,9 +36,13 @@ export default async function PlayerDetailPage({
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const player = await queryPlayerById(id, query.season);
 
-  const sport = player?.sport === "BASKETBALL" || player?.sport === "AMERICAN_FOOTBALL" || player?.sport === "SOCCER"
-    ? player.sport
-    : null;
+  const sport =
+    player?.sport === "BASKETBALL" ||
+    player?.sport === "AMERICAN_FOOTBALL" ||
+    player?.sport === "HOCKEY" ||
+    player?.sport === "SOCCER"
+      ? player.sport
+      : null;
 
   return (
     <DashboardShell subtitle={player?.knownAs ?? "Player Profile"}>

@@ -37,7 +37,7 @@ export function PlayerSearchCombobox({
   excludeId?: string;
   onChange: (playerId: string, player?: PlayerLite) => void;
   disabled?: boolean;
-  sport?: "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL";
+  sport?: "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL" | "HOCKEY";
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");

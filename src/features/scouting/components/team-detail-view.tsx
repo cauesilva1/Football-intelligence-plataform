@@ -106,7 +106,9 @@ export async function TeamDetailView({
     ? "AMERICAN_FOOTBALL"
     : isBasketball
       ? "BASKETBALL"
-      : "SOCCER";
+      : team.competition?.name && /nhl|hockey/i.test(team.competition.name)
+        ? "HOCKEY"
+        : "SOCCER";
 
   return (
     <div className="space-y-6">

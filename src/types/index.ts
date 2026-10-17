@@ -86,6 +86,14 @@ export interface PlayerStatistic {
   touchdowns?: number;
   sacks?: number;
   totalYards?: number;
+  /** Hockey season line. */
+  plusMinus?: number;
+  penaltyMinutes?: number;
+  timeOnIceSeconds?: number;
+  saves?: number;
+  shotsAgainst?: number;
+  savePercentage?: number;
+  goalsAgainst?: number;
   per90: PlayerMetricPer90;
   /** Basquete: médias por jogo da temporada. */
   perGame?: PlayerMetricPerGame;

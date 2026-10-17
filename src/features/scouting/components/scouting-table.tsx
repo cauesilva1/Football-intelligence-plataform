@@ -681,6 +681,46 @@ function AmericanFootballScoutingTable({
   );
 }
 
+function HockeyScoutingTable({ players }: { players: Player[] }) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          {["Player", "Club", "Pos", "GP", "G", "A", "PTS", "+/−", "SV%"].map((label) => (
+            <TableHead key={label}>{label}</TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {players.map((player) => {
+          const stats = player.currentSeasonStats;
+          const goalie = player.position === "G";
+          const savePct = stats.savePercentage ?? 0;
+          return (
+            <TableRow key={player.id}>
+              <TableCell>
+                <Link href={`/players/${player.id}`} className="font-medium hover:underline">
+                  {playerDisplayName(player)}
+                </Link>
+              </TableCell>
+              <TableCell>{formatClubLabel(player.teamName, player.teamShortName)}</TableCell>
+              <TableCell>{player.position}</TableCell>
+              <TableCell className="tabular-nums">{stats.appearances}</TableCell>
+              <TableCell className="tabular-nums">{goalie ? "—" : stats.goals}</TableCell>
+              <TableCell className="tabular-nums">{goalie ? "—" : stats.assists}</TableCell>
+              <TableCell className="tabular-nums">{goalie ? "—" : stats.points ?? stats.goals + stats.assists}</TableCell>
+              <TableCell className="tabular-nums">{goalie ? "—" : stats.plusMinus ?? "—"}</TableCell>
+              <TableCell className="tabular-nums">
+                {goalie && savePct > 0 ? savePct.toFixed(3) : "—"}
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
+  );
+}
+
 export function ScoutingTable({
   players,
   filters,
@@ -697,6 +737,10 @@ export function ScoutingTable({
       return <BasketballRosterTable players={players} filters={filters} basePath={basePath} route={route} />;
     }
     return <BasketballScoutingTable players={players} filters={filters} basePath={basePath} route={route} />;
+  }
+
+  if (filters.sport === "HOCKEY") {
+    return <HockeyScoutingTable players={players} />;
   }
 
   if (filters.sport === "AMERICAN_FOOTBALL") {

@@ -7,6 +7,7 @@ import type { Sport } from "@/lib/sport";
 export function resolveSportFromMatchId(rawId: string): Sport | null {
   const id = decodeURIComponent(rawId);
   if (id.startsWith("euroleague:")) return "BASKETBALL";
+  if (id.startsWith("nhl:")) return "HOCKEY";
   const match = /^espn:([^:]+):/i.exec(id);
   if (!match) return null;
 

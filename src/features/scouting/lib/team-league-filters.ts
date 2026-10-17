@@ -114,9 +114,15 @@ function buildTabs(competitions: Competition[], definitions: LeagueDef[]): TeamL
   });
 }
 
+const HOCKEY_TAB_DEFINITIONS: LeagueDef[] = [
+  { key: "all", label: "All" },
+  { key: "nhl", label: "NHL", match: (name) => name === "nhl" || name.includes("national hockey") },
+];
+
 function tabDefinitionsForSport(sport: Sport): LeagueDef[] {
   if (sport === "BASKETBALL") return BASKETBALL_TAB_DEFINITIONS;
   if (sport === "AMERICAN_FOOTBALL") return AMERICAN_FOOTBALL_TAB_DEFINITIONS;
+  if (sport === "HOCKEY") return HOCKEY_TAB_DEFINITIONS;
   return SOCCER_TAB_DEFINITIONS;
 }
 

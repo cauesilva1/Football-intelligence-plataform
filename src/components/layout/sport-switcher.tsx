@@ -1,22 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useSport } from "@/context/sport-context";
 import type { Sport } from "@/lib/sport";
 import { SPORT_THEME } from "@/lib/sport-theme";
 import { useIsMounted } from "@/hooks/use-is-mounted";
 import { deskParamForSport } from "@/lib/sport-from-route";
-import { resolveSportFromMatchId } from "@/features/matches/resolve-match-sport";
 
-const OPTIONS: Sport[] = ["SOCCER", "BASKETBALL", "AMERICAN_FOOTBALL"];
-
-function matchSportFromPath(path: string | null): Sport | null {
-  if (!path?.startsWith("/matches/")) return null;
-  const raw = path.slice("/matches/".length).split("/")[0] ?? "";
-  return raw ? resolveSportFromMatchId(raw) : null;
-}
+const OPTIONS: Sport[] = ["SOCCER", "BASKETBALL", "AMERICAN_FOOTBALL", "HOCKEY"];
 
 export function SportSwitcher({
   compact = false,
@@ -26,12 +18,8 @@ export function SportSwitcher({
   /** `rail` = vertical stack for editorial sidebar (labels fade with collapse). */
   layout?: "grid" | "rail";
 }) {
-  const { currentSport, setSport, adoptSport } = useSport();
-  const pathname = usePathname();
+  const { currentSport, adoptSport } = useSport();
   const mounted = useIsMounted();
-  const path =
-    mounted && typeof window !== "undefined" ? window.location.pathname : pathname;
-  const matchSport = matchSportFromPath(path);
   const activeIndex = Math.max(0, OPTIONS.indexOf(currentSport));
   const [popSport, setPopSport] = useState<Sport | null>(null);
   const prevSport = useRef(currentSport);
@@ -67,7 +55,7 @@ export function SportSwitcher({
         "relative",
         rail && "editorial-sport-rail-list flex w-full flex-col gap-0.5",
         compact && !rail && "flex w-auto gap-0.5 rounded-sm border border-border bg-card p-1",
-        !iconsOnly && "grid w-full grid-cols-3 gap-0.5 rounded-sm border border-border bg-card p-1"
+        !iconsOnly && "grid w-full grid-cols-4 gap-0.5 rounded-sm border border-border bg-card p-1"
       )}
       role="tablist"
       aria-label="Switch sport"
@@ -75,9 +63,9 @@ export function SportSwitcher({
       {!iconsOnly && mounted ? (
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-y-1 z-0 w-[calc((100%-0.5rem-0.25rem)/3)] rounded-sm bg-[hsl(var(--sport)/0.1)] ring-1 ring-[hsl(var(--sport)/0.22)] transition-[left] duration-350 ease-out"
+          className="pointer-events-none absolute inset-y-1 z-0 w-[calc((100%-0.5rem-0.375rem)/4)] rounded-sm bg-[hsl(var(--sport)/0.1)] ring-1 ring-[hsl(var(--sport)/0.22)] transition-[left] duration-350 ease-out"
           style={{
-            left: `calc(0.25rem + ${activeIndex} * ((100% - 0.5rem - 0.25rem) / 3 + 0.125rem))`,
+            left: `calc(0.25rem + ${activeIndex} * ((100% - 0.5rem - 0.375rem) / 4 + 0.125rem))`,
           }}
         />
       ) : null}
@@ -85,9 +73,6 @@ export function SportSwitcher({
       {OPTIONS.map((value) => {
         const { label, shortLabel, icon: Icon } = SPORT_THEME[value];
         const active = currentSport === value;
-        const onMatchPage = (path ?? "").startsWith("/matches/");
-        const lockedSport = matchSport ?? currentSport;
-        const leaveMatch = onMatchPage && value !== lockedSport;
 
         const content = (
           <>
@@ -119,25 +104,17 @@ export function SportSwitcher({
           className: cn(tabClass(value, active), rail && "editorial-sport-compact"),
         };
 
-        if (leaveMatch) {
-          return (
-            <a
-              key={value}
-              {...sharedProps}
-              href={`/scouting?desk=${deskParamForSport(value)}`}
-              onClick={() => {
-                adoptSport(value);
-              }}
-            >
-              {content}
-            </a>
-          );
-        }
-
         return (
-          <button key={value} {...sharedProps} type="button" onClick={() => setSport(value)}>
+          <a
+            key={value}
+            {...sharedProps}
+            href={`/scouting?desk=${deskParamForSport(value)}`}
+            onClick={() => {
+              adoptSport(value);
+            }}
+          >
             {content}
-          </button>
+          </a>
         );
       })}
     </div>

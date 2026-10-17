@@ -40,16 +40,28 @@ export type SoccerComparisonCategory = (typeof SOCCER_COMPARISON_CATEGORIES)[num
 export type BasketballComparisonCategory = (typeof BASKETBALL_COMPARISON_CATEGORIES)[number];
 export type AmericanFootballComparisonCategory =
   (typeof AMERICAN_FOOTBALL_COMPARISON_CATEGORIES)[number];
+export const HOCKEY_COMPARISON_CATEGORIES = [
+  "Scoring",
+  "Playmaking",
+  "Shooting",
+  "Defense",
+  "Discipline",
+  "Goaltending",
+] as const;
+
+export type HockeyComparisonCategory = (typeof HOCKEY_COMPARISON_CATEGORIES)[number];
 export type ComparisonCategory =
   | SoccerComparisonCategory
   | BasketballComparisonCategory
-  | AmericanFootballComparisonCategory;
+  | AmericanFootballComparisonCategory
+  | HockeyComparisonCategory;
 
 export function comparisonCategoriesFor(
   sport: Sport | PlayerStatistic["sport"]
 ): readonly ComparisonCategory[] {
   if (sport === "BASKETBALL") return BASKETBALL_COMPARISON_CATEGORIES;
   if (sport === "AMERICAN_FOOTBALL") return AMERICAN_FOOTBALL_COMPARISON_CATEGORIES;
+  if (sport === "HOCKEY") return HOCKEY_COMPARISON_CATEGORIES;
   return SOCCER_COMPARISON_CATEGORIES;
 }
 
@@ -112,8 +124,22 @@ function toAmericanFootballProfile(
 }
 
 /** Six-dimension scouting profile for head-to-head comparison. */
+function toHockeyProfile(stat: PlayerStatistic): Record<HockeyComparisonCategory, number> {
+  const games = Math.max(stat.appearances, 1);
+  const points = stat.points ?? stat.goals + stat.assists;
+  return {
+    Scoring: clamp((stat.goals / games / 0.6) * 100),
+    Playmaking: clamp((stat.assists / games / 0.8) * 100),
+    Shooting: clamp(((stat.shots || points) / games / 4) * 100),
+    Defense: clamp((((stat.plusMinus ?? 0) + 20) / 40) * 100),
+    Discipline: clamp(100 - ((stat.penaltyMinutes ?? 0) / games / 2) * 100),
+    Goaltending: clamp((stat.savePercentage ?? 0) * 100),
+  };
+}
+
 export function toComparisonProfile(stat: PlayerStatistic): Record<string, number> {
   if (stat.sport === "BASKETBALL") return toBasketballProfile(stat);
   if (stat.sport === "AMERICAN_FOOTBALL") return toAmericanFootballProfile(stat);
+  if (stat.sport === "HOCKEY") return toHockeyProfile(stat);
   return toSoccerProfile(stat);
 }

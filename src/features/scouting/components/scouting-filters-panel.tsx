@@ -37,7 +37,7 @@ import {
   MIN_XG_PER90_OPTIONS,
   POSITIONS,
 } from "@/features/scouting/lib/constants";
-import { AMERICAN_FOOTBALL_POSITIONS, BASKETBALL_FILTER_POSITIONS } from "@/lib/positions";
+import { AMERICAN_FOOTBALL_POSITIONS, BASKETBALL_FILTER_POSITIONS, HOCKEY_POSITIONS } from "@/lib/positions";
 import { formatSeasonLabel } from "@/lib/format/season-label";
 import { useSport } from "@/context/sport-context";
 import { formatCapHit } from "@/lib/utils";
@@ -146,6 +146,7 @@ export function ScoutingFiltersPanel({
   const { currentSport } = useSport();
   const isBasketball = currentSport === "BASKETBALL";
   const isAmericanFootball = currentSport === "AMERICAN_FOOTBALL";
+  const isHockey = currentSport === "HOCKEY";
   const isFranchiseSport = isBasketball || isAmericanFootball;
   const defaults = getFilterDefaults(route, currentSport);
   const didRestorePrefs = useRef(false);
@@ -552,7 +553,9 @@ export function ScoutingFiltersPanel({
     ? BASKETBALL_FILTER_POSITIONS
     : isAmericanFootball
       ? AMERICAN_FOOTBALL_POSITIONS
-      : POSITIONS;
+      : isHockey
+        ? HOCKEY_POSITIONS
+        : POSITIONS;
 
   const archetypeBar = showBasketballScoutingTools ? (
     <div className="mb-3 flex flex-wrap gap-2">

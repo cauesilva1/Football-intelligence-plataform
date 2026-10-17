@@ -34,8 +34,8 @@ export interface SportConfig {
   runBootstrap: () => Promise<void>;
   ui: SportUiMaps;
   /** Hub / match detail kind for route dispatchers. */
-  hubKind: "soccer" | "basketball" | "american-football";
-  matchKind: "soccer" | "basketball" | "american-football";
+  hubKind: "soccer" | "basketball" | "american-football" | "hockey";
+  matchKind: "soccer" | "basketball" | "american-football" | "hockey";
 }
 
 function isBasketballCompetitionName(name: string): boolean {
@@ -64,10 +64,16 @@ function isAmericanFootballCompetitionName(name: string): boolean {
   );
 }
 
+function isHockeyCompetitionName(name: string): boolean {
+  const lower = name.trim().toLowerCase();
+  return lower === "nhl" || lower.includes("national hockey");
+}
+
 function isSoccerCompetitionName(name: string): boolean {
   if (!name.trim()) return false;
   if (isBasketballCompetitionName(name)) return false;
   if (isAmericanFootballCompetitionName(name)) return false;
+  if (isHockeyCompetitionName(name)) return false;
   return true;
 }
 
@@ -103,7 +109,7 @@ export const SPORT_REGISTRY: Record<Sport, SportConfig> = {
   BASKETBALL: {
     id: "BASKETBALL",
     label: "Basketball",
-    shortLabel: "Hoops",
+    shortLabel: "Basketball",
     tagline: "Court Intelligence",
     isCompetition: isBasketballCompetitionName,
     runBootstrap: async () => {
@@ -134,8 +140,8 @@ export const SPORT_REGISTRY: Record<Sport, SportConfig> = {
   },
   AMERICAN_FOOTBALL: {
     id: "AMERICAN_FOOTBALL",
-    label: "American Football",
-    shortLabel: "NFL",
+    label: "Football",
+    shortLabel: "Football",
     tagline: "Gridiron Intelligence",
     isCompetition: isAmericanFootballCompetitionName,
     runBootstrap: async () => {
@@ -158,6 +164,29 @@ export const SPORT_REGISTRY: Record<Sport, SportConfig> = {
       directoryTitle: "Franchises & Programs",
       entityLabel: "franchises / programs",
       rankingPresetSport: "AMERICAN_FOOTBALL",
+    },
+  },
+  HOCKEY: {
+    id: "HOCKEY",
+    label: "Hockey",
+    shortLabel: "Hockey",
+    tagline: "Rink Intelligence",
+    isCompetition: isHockeyCompetitionName,
+    runBootstrap: async () => {
+      const { ensureNhlCompetition } = await import("@/lib/sync/nhl-sync");
+      const { getPrisma } = await import("@/lib/prisma");
+      await ensureNhlCompetition(getPrisma());
+    },
+    hubKind: "hockey",
+    matchKind: "hockey",
+    ui: {
+      radarMetrics: ["Scoring", "Playmaking", "Shooting", "Defense", "Discipline", "Goaltending"],
+      compareCategories: ["Scoring", "Playmaking", "Shooting", "Defense", "Discipline", "Goaltending"],
+      teamsSubtitle: "Clubs",
+      tournamentsSubtitle: "Leagues",
+      directoryTitle: "NHL clubs",
+      entityLabel: "clubs",
+      rankingPresetSport: "HOCKEY",
     },
   },
 };

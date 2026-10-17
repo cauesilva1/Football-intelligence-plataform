@@ -4,10 +4,12 @@ import type { Sport } from "@/lib/sport";
 import { isAmericanFootballCompetitionSlug } from "@/lib/tournaments/american-football-competitions";
 import { isBasketballCompetitionSlug } from "@/lib/tournaments/basketball-competitions";
 import { isSoccerCompetitionSlug } from "@/lib/tournaments/soccer-competitions";
+import { isHockeyCompetitionSlug } from "@/lib/tournaments/hockey-competitions";
 
 function competitionSlugBelongsToSport(slug: string, sport: Sport): boolean {
   if (sport === "BASKETBALL") return isBasketballCompetitionSlug(slug);
   if (sport === "AMERICAN_FOOTBALL") return isAmericanFootballCompetitionSlug(slug);
+  if (sport === "HOCKEY") return isHockeyCompetitionSlug(slug);
   return isSoccerCompetitionSlug(slug);
 }
 

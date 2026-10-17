@@ -46,7 +46,7 @@ export async function searchPlayersLiteAction(input: {
   search?: string;
   take?: number;
   ensureIds?: string[];
-  sport?: "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL";
+  sport?: "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL" | "HOCKEY";
 }): Promise<PlayerLite[]> {
   const take = Math.min(Math.max(input.take ?? 30, 1), 50);
   return searchPlayersLite({

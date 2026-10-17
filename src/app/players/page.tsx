@@ -30,10 +30,10 @@ export default async function PlayersPage({
   return (
     <DashboardShell
       subtitle={
-        sport === "BASKETBALL"
+        sport === "BASKETBALL" || sport === "AMERICAN_FOOTBALL"
           ? "Roster & Prospects"
-          : sport === "AMERICAN_FOOTBALL"
-            ? "Roster & Prospects"
+          : sport === "HOCKEY"
+            ? "NHL players"
             : "Players"
       }
     >
@@ -53,6 +53,14 @@ export default async function PlayersPage({
             </h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               Players load on demand when opening an NFL franchise or elite CFB program.
+            </p>
+          </div>
+        ) : null}
+        {sport === "HOCKEY" ? (
+          <div className="sport-hero overflow-hidden rounded-2xl border border-primary/20 p-4 shadow-panel md:p-6">
+            <h1 className="font-display text-xl font-bold text-foreground md:text-2xl">NHL players</h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Skaters and goalies with a game this season. Empty lines stay off the directory.
             </p>
           </div>
         ) : null}

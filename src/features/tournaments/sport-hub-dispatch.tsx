@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SoccerCompetitionHub } from "@/features/tournaments/soccer-competition-hub";
 import { BasketballCompetitionHub } from "@/features/tournaments/basketball-competition-hub";
 import { AmericanFootballCompetitionHub } from "@/features/tournaments/american-football-competition-hub";
+import { HockeyCompetitionHub } from "@/features/tournaments/hockey-competition-hub";
 import { BasketballTournamentsIndex } from "@/features/tournaments/basketball-tournaments-index";
 import { AmericanFootballTournamentsIndex } from "@/features/tournaments/american-football-tournaments-index";
 import { SoccerTournamentsIndex } from "@/features/tournaments/soccer-tournaments-index";
@@ -20,6 +22,8 @@ import {
 import { loadCompetitionHubData } from "@/lib/tournaments/competition-hub-data";
 import { loadBasketballCompetitionHub } from "@/lib/tournaments/basketball-hub-data";
 import { loadAmericanFootballCompetitionHub } from "@/lib/tournaments/american-football-hub-data";
+import { getHockeyCompetition, isHockeyCompetitionSlug } from "@/lib/tournaments/hockey-competitions";
+import { loadNhlHub } from "@/lib/hockey/hub";
 import { fetchStatsBombMatches } from "@/lib/statsbomb/fetch-matches";
 import { TOURNAMENTS } from "@/lib/statsbomb/constants";
 import { loadWorldCup2026Matches } from "@/lib/tournaments/world-cup-2026";
@@ -70,6 +74,13 @@ export function renderTournamentsIndex(sport: Sport): ReactNode {
   const { hubKind } = getSportConfig(sport);
   if (hubKind === "basketball") return <BasketballTournamentsIndex />;
   if (hubKind === "american-football") return <AmericanFootballTournamentsIndex />;
+  if (hubKind === "hockey") {
+    return (
+      <Link href="/tournaments/nhl" className="text-sm font-medium text-foreground underline-offset-4 hover:underline">
+        NHL — standings, results, and upcoming games
+      </Link>
+    );
+  }
   return <SoccerTournamentsIndex />;
 }
 
@@ -84,6 +95,7 @@ export async function resolveCompetitionTitle(
   if (hubKind === "american-football") {
     return getAmericanFootballCompetition(slug)?.shortName ?? null;
   }
+  if (hubKind === "hockey") return getHockeyCompetition(slug)?.shortName ?? null;
   return getSoccerCompetition(slug)?.shortName ?? null;
 }
 
@@ -123,6 +135,23 @@ export async function renderCompetitionHub(options: {
     return {
       subtitle: competition.shortName,
       node: <AmericanFootballCompetitionHub competition={competition} data={data} />,
+    };
+  }
+
+  if (hubKind === "hockey") {
+    if (!isHockeyCompetitionSlug(options.slug)) redirect("/tournaments");
+    const competition = getHockeyCompetition(options.slug)!;
+    const data = await loadNhlHub();
+    return {
+      subtitle: competition.shortName,
+      node: (
+        <HockeyCompetitionHub
+          competition={competition}
+          games={data.games}
+          standings={data.standings}
+          error={data.error}
+        />
+      ),
     };
   }
 

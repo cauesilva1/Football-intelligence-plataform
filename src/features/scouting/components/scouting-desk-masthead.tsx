@@ -12,11 +12,15 @@ const COPY: Record<Sport, { title: string; lede: string }> = {
   },
   BASKETBALL: {
     title: "Basketball scouting",
-    lede: "Secondary desk — thinner coverage than soccer. Filter by metrics, then open a profile with season evidence.",
+    lede: "Thinner coverage than soccer. Filter by metrics, then open a profile with season evidence.",
   },
   AMERICAN_FOOTBALL: {
-    title: "American football scouting",
-    lede: "Secondary desk — NFL/CFB coverage is partial. Filter by position; production on the profile, not a vanity overall.",
+    title: "Football scouting",
+    lede: "NFL and college coverage is partial. Filter by position; production on the profile, not a vanity overall.",
+  },
+  HOCKEY: {
+    title: "Hockey scouting",
+    lede: "NHL season lines from the official feed. Profiles show games played, not empty zeros.",
   },
 };
 
@@ -43,7 +47,6 @@ export function ScoutingDeskMasthead({
         <div>
           <p className="desk-kicker">
             {theme.label}
-            {sport !== "SOCCER" ? " · secondary" : ""}
           </p>
           <h1 className="editorial-pagehead-title">{copy.title}</h1>
           <p className="editorial-pagehead-lede">{copy.lede}</p>

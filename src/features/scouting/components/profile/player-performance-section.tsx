@@ -617,6 +617,39 @@ function AmericanFootballPerformanceSection({
   );
 }
 
+function HockeyPerformanceSection({ s }: { s: Player["currentSeasonStats"] }) {
+  const goalie = (s.savePercentage ?? 0) > 0 || (s.saves ?? 0) > 0;
+  const items = goalie
+    ? [
+        ["GP", s.appearances],
+        ["Saves", s.saves ?? 0],
+        ["Shots against", s.shotsAgainst ?? 0],
+        ["SV%", (s.savePercentage ?? 0) > 0 ? (s.savePercentage ?? 0).toFixed(3) : "—"],
+        ["GA", s.goalsAgainst ?? 0],
+        ["PIM", s.penaltyMinutes ?? 0],
+      ]
+    : [
+        ["GP", s.appearances],
+        ["G", s.goals],
+        ["A", s.assists],
+        ["PTS", s.points ?? s.goals + s.assists],
+        ["+/−", s.plusMinus ?? 0],
+        ["PIM", s.penaltyMinutes ?? 0],
+        ["TOI", s.timeOnIceSeconds ? `${Math.floor((s.timeOnIceSeconds ?? 0) / 60)}:${String((s.timeOnIceSeconds ?? 0) % 60).padStart(2, "0")}` : "—"],
+      ];
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      {items.map(([label, value]) => (
+        <div key={String(label)} className="rounded-2xl border bg-surface-elevated px-4 py-3">
+          <p className="text-2xs uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="mt-1 font-display text-2xl font-bold tabular-nums">{value}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function PlayerPerformanceSection({ player }: { player: Player }) {
   const s = player.currentSeasonStats;
   const timeline = aggregateSeasonTimeline(player.history, player.sport ?? s.sport);
@@ -643,6 +676,8 @@ export function PlayerPerformanceSection({ player }: { player: Player }) {
         <BasketballPerformanceSection player={player} s={s} timeline={timeline} theme={theme} />
       ) : sport === "AMERICAN_FOOTBALL" ? (
         <AmericanFootballPerformanceSection player={player} s={s} timeline={timeline} theme={theme} />
+      ) : sport === "HOCKEY" ? (
+        <HockeyPerformanceSection s={s} />
       ) : (
         <SoccerPerformanceSection player={player} s={s} timeline={timeline} theme={theme} />
       )}

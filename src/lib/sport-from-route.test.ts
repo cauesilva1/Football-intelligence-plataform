@@ -11,6 +11,8 @@ describe("sportFromLocation", () => {
   it("reads the desk query on scouting and directory routes", () => {
     assert.equal(sportFromLocation("/scouting", "?desk=basketball"), "BASKETBALL");
     assert.equal(sportFromLocation("/players", "desk=football"), "AMERICAN_FOOTBALL");
+    assert.equal(sportFromLocation("/scouting", "?desk=hockey"), "HOCKEY");
+    assert.equal(sportFromLocation("/tournaments/nhl", ""), "HOCKEY");
     assert.equal(sportFromLocation("/dashboard", "?desk=soccer"), "SOCCER");
   });
 
@@ -36,6 +38,8 @@ describe("desk links", () => {
     assert.equal(deskParamForSport("SOCCER"), "soccer");
     assert.equal(deskParamForSport("BASKETBALL"), "basketball");
     assert.equal(deskParamForSport("AMERICAN_FOOTBALL"), "football");
+    assert.equal(deskParamForSport("HOCKEY"), "hockey");
+    assert.equal(sportFromDeskParam("hockey"), "HOCKEY");
     assert.equal(sportFromDeskParam("football"), "AMERICAN_FOOTBALL");
   });
 

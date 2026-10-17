@@ -42,7 +42,7 @@ export async function searchPlayersLite(options?: {
   search?: string;
   take?: number;
   ensureIds?: string[];
-  sport?: "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL";
+  sport?: "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL" | "HOCKEY";
 }) {
   await ensureRuntimeDataSource();
   const sport = options?.sport ?? (await getServerSport());

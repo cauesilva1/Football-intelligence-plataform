@@ -99,9 +99,9 @@ Return ONLY valid JSON matching this schema:
 
 Use football analytics language (yards, TDs, sacks, tackles, completion rate when relevant, Cap Hit). Do not invent overall rating — it is computed server-side.`;
 
-function playerSport(player: Player): "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL" {
+function playerSport(player: Player): "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL" | "HOCKEY" {
   const sport = player.sport ?? "SOCCER";
-  if (sport === "BASKETBALL" || sport === "AMERICAN_FOOTBALL") return sport;
+  if (sport === "BASKETBALL" || sport === "AMERICAN_FOOTBALL" || sport === "HOCKEY") return sport;
   return "SOCCER";
 }
 
@@ -109,6 +109,13 @@ function resolveTacticalFit(player: Player): TacticalFit {
   const sport = playerSport(player);
   if (sport === "BASKETBALL") return buildBasketballTacticalFit(player);
   if (sport === "AMERICAN_FOOTBALL") return buildFootballTacticalFit(player);
+  if (sport === "HOCKEY") {
+    return {
+      systems: ["NHL even strength"],
+      roles: [player.position === "G" ? "Starting goalie" : player.position],
+      narrative: `${player.knownAs} is evaluated on the official NHL season line, not a soccer template.`,
+    };
+  }
   return buildTacticalFit(player);
 }
 
@@ -116,6 +123,9 @@ function resolveSystemPrompt(player: Player): string {
   const sport = playerSport(player);
   if (sport === "BASKETBALL") return SYSTEM_PROMPT_BASKETBALL;
   if (sport === "AMERICAN_FOOTBALL") return SYSTEM_PROMPT_FOOTBALL;
+  if (sport === "HOCKEY") {
+    return `${SYSTEM_PROMPT_SOCCER}\nThis player is an NHL hockey player. Use goals, assists, points, plus-minus, penalty minutes, shots, and save percentage. Do not invent soccer metrics.`;
+  }
   return SYSTEM_PROMPT_SOCCER;
 }
 
@@ -361,6 +371,7 @@ function computeOverallRating(player: Player): number {
     });
   }
 
+  if (sport === "HOCKEY") return player.currentSeasonStats.rating || 6;
   if (sport === "AMERICAN_FOOTBALL") {
     const passingYards = s.passingYards ?? 0;
     const rushingYards = s.rushingYards ?? 0;
@@ -390,6 +401,13 @@ function buildMockSummary(player: Player): string {
   const sport = playerSport(player);
   if (sport === "BASKETBALL") return buildBasketballSummary(player);
   if (sport === "AMERICAN_FOOTBALL") return buildFootballSummary(player);
+  if (sport === "HOCKEY") {
+    const line = player.currentSeasonStats;
+    const goalie = player.position === "G" || (line.savePercentage ?? 0) > 0;
+    return goalie
+      ? `${player.knownAs} has appeared in ${line.appearances} games with ${line.saves ?? 0} saves and a ${(line.savePercentage ?? 0).toFixed(3)} save percentage.`
+      : `${player.knownAs} has ${line.goals} goals and ${line.assists} assists in ${line.appearances} games (${line.points ?? line.goals + line.assists} points).`;
+  }
   return buildSummary(player);
 }
 

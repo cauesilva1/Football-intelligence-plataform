@@ -159,7 +159,7 @@ export const queryTeamsDirectory = cache(
       };
     }
 
-    if (sport === "AMERICAN_FOOTBALL") {
+    if (sport === "HOCKEY" || sport === "AMERICAN_FOOTBALL") {
       return {
         total,
         page,
@@ -204,7 +204,7 @@ export const queryTeamById = cache(async (id: string) => {
   const [enriched] =
     sport === "BASKETBALL"
       ? await attachBasketballTeamLiveStats([team])
-      : sport === "AMERICAN_FOOTBALL"
+      : sport === "AMERICAN_FOOTBALL" || sport === "HOCKEY"
         ? [team]
         : await attachTeamLiveStats([team]);
   if (!enriched) return null;

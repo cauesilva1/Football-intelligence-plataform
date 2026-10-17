@@ -1,4 +1,4 @@
-export type Sport = "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL";
+export type Sport = "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL" | "HOCKEY";
 
 export const SPORT_COOKIE = "fip-sport";
 

@@ -60,11 +60,11 @@ const SPORT_CARDS = [
   },
   {
     id: "football",
-    label: "American football",
+    label: "Football",
     accent: "#2f6fed",
     bg: "#121a2a",
     href: "/scouting?desk=football",
-    kicker: "03 · American football",
+    kicker: "03 · Football",
     title: "NFL and college football",
     body: "Position-first scouting with season production on the profile — decision support, not vanity overalls.",
     points: ["NFL + CFB filters", "Position-native views", "Production on profile"],
@@ -128,9 +128,9 @@ export function LandingPixelPeers() {
     <section className="landing-sport-cards" aria-label="Sports">
       <div className="landing-wrap landing-sport-cards-head">
         <p className="landing-kicker">Sports desk</p>
-        <h2 className="landing-sport-cards-title">Three games. One scout workflow.</h2>
+        <h2 className="landing-sport-cards-title">Four games. One scout workflow.</h2>
         <p className="landing-sport-cards-lede">
-          Soccer as the reference desk — basketball and American football follow the same workflow.
+          Soccer, basketball, football, and hockey follow the same scout workflow.
         </p>
       </div>
 

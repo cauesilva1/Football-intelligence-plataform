@@ -4,6 +4,7 @@ import { getSportConfig } from "@/lib/sport-registry";
 import {
   AmericanFootballIcon,
   BasketballIcon,
+  HockeyPuckIcon,
   SoccerBallIcon,
 } from "@/components/icons/sport-balls";
 
@@ -13,6 +14,7 @@ const SPORT_ICONS: Record<Sport, SportIcon> = {
   SOCCER: SoccerBallIcon,
   BASKETBALL: BasketballIcon,
   AMERICAN_FOOTBALL: AmericanFootballIcon,
+  HOCKEY: HockeyPuckIcon,
 };
 
 export function sportTheme(sport: Sport) {
@@ -32,6 +34,7 @@ export const SPORT_THEME = {
   SOCCER: sportTheme("SOCCER"),
   BASKETBALL: sportTheme("BASKETBALL"),
   AMERICAN_FOOTBALL: sportTheme("AMERICAN_FOOTBALL"),
+  HOCKEY: sportTheme("HOCKEY"),
 } as const;
 
 export function applySportToDocument(sport: Sport): void {

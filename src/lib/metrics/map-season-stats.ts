@@ -205,8 +205,71 @@ export function mapSeasonStatsRow(
   if (sport === "AMERICAN_FOOTBALL") {
     return mapAmericanFootballSeasonStatsRow(stat, team, position ?? "WR");
   }
+  if (sport === "HOCKEY") {
+    return mapHockeySeasonStatsRow(stat, team);
+  }
 
   return mapSoccerSeasonStatsRow(stat, team);
+}
+
+function mapHockeySeasonStatsRow(
+  stat: PlayerSeasonStats,
+  team?: { id: string; name: string; shortName: string }
+): PlayerStatistic {
+  const games = stat.matchesPlayed;
+  const points = stat.points;
+  const perGame = games > 0 ? points / games : 0;
+  const savePercentage = stat.savePercentage ?? 0;
+  const rating =
+    games <= 0
+      ? 0
+      : savePercentage > 0
+        ? Number(Math.min(9.4, Math.max(5, 6 + (savePercentage - 0.9) * 40)).toFixed(2))
+        : Number(Math.min(9.4, 5.6 + perGame * 1.2).toFixed(2));
+  return {
+    id: stat.id,
+    playerId: stat.playerId,
+    teamId: team?.id ?? "",
+    teamName: team?.name,
+    teamShortName: team?.shortName,
+    season: String(stat.season),
+    sport: "HOCKEY",
+    appearances: games,
+    minutesPlayed: stat.minutesPlayed,
+    goals: stat.goals,
+    assists: stat.assists,
+    xG: 0,
+    xA: 0,
+    shots: 0,
+    shotsOnTarget: 0,
+    passes: 0,
+    passAccuracy: 0,
+    keyPasses: 0,
+    dribblesCompleted: 0,
+    tacklesWon: 0,
+    interceptions: 0,
+    duelsWonPct: 0,
+    yellowCards: stat.penaltyMinutes ?? 0,
+    redCards: 0,
+    rating,
+    points,
+    plusMinus: stat.plusMinus ?? 0,
+    penaltyMinutes: stat.penaltyMinutes ?? 0,
+    timeOnIceSeconds: stat.timeOnIceSeconds ?? 0,
+    saves: stat.saves ?? 0,
+    shotsAgainst: stat.shotsAgainst ?? 0,
+    savePercentage,
+    goalsAgainst: stat.goalsAgainst ?? 0,
+    per90: {
+      goals: stat.goals,
+      assists: stat.assists,
+      shots: stat.saves ?? 0,
+      keyPasses: points,
+      dribbles: stat.plusMinus ?? 0,
+      tackles: 0,
+      interceptions: 0,
+    },
+  };
 }
 
 export function isCalendarSeasonLabel(season: string): boolean {
@@ -350,6 +413,16 @@ function basketballSeasonHasSignal(stat: PlayerStatistic): boolean {
   return points > 0 || rebounds > 0 || assists > 0 || (stat.appearances ?? 0) > 0;
 }
 
+function hockeySeasonHasSignal(stat: PlayerStatistic): boolean {
+  return (
+    (stat.appearances ?? 0) > 0 ||
+    (stat.goals ?? 0) > 0 ||
+    (stat.assists ?? 0) > 0 ||
+    (stat.saves ?? 0) > 0 ||
+    (stat.points ?? 0) > 0
+  );
+}
+
 function footballSeasonHasSignal(stat: PlayerStatistic): boolean {
   const yards =
     (stat.totalYards ?? 0) + (stat.passingYards ?? 0) + (stat.rushingYards ?? 0) + (stat.receivingYards ?? 0);
@@ -433,8 +506,10 @@ export function resolveSelectedSeasonStats(
   const hasSignal =
     sport === "BASKETBALL"
       ? basketballSeasonHasSignal
-      : sport === "AMERICAN_FOOTBALL"
-        ? footballSeasonHasSignal
+      :     sport === "AMERICAN_FOOTBALL"
+      ? footballSeasonHasSignal
+      : sport === "HOCKEY"
+        ? hockeySeasonHasSignal
         : soccerSeasonHasSignal;
   const labeled = sortSeasonLabels(history.map((row) => row.season));
   const signalSeasons = sortSeasonLabels(history.filter(hasSignal).map((row) => row.season));
@@ -452,6 +527,10 @@ export function resolveSelectedSeasonStats(
         ? pickBestSeasonWithSignal(history, preferredSeason, footballSeasonHasSignal, explicit) ??
           preferredSeason ??
           "2025"
+        : sport === "HOCKEY"
+          ? pickBestSeasonWithSignal(history, preferredSeason, hockeySeasonHasSignal, explicit) ??
+            preferredSeason ??
+            "202627"
         : pickBestSoccerSeason(history, preferredSeason, explicit) ??
           (explicit && preferredSeason && availableSeasons.includes(preferredSeason)
             ? preferredSeason

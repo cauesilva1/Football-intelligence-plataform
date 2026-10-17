@@ -112,6 +112,7 @@ model Player {
   shots             BasketballShot[]
   defensivePlays    BasketballDefensivePlay[]
   soccerShots       SoccerShot[]
+  hockeyShots       HockeyShot[]
   scoutMetrics      ScoutMetric[]
   strengths         String[]
   weaknesses        String[]
@@ -214,6 +215,14 @@ model PlayerSeasonStats {
   touchdowns         Int?
   sacks              Float?
   totalYards         Int?
+  /// Hockey native season lines (nullable so other sports stay valid).
+  plusMinus          Int?
+  penaltyMinutes     Int?
+  timeOnIceSeconds   Int?
+  saves              Int?
+  shotsAgainst       Int?
+  savePercentage     Float?
+  goalsAgainst       Int?
 
   @@unique([playerId, season])
   @@index([playerId])
@@ -431,6 +440,29 @@ model ScoutMetric {
   @@unique([playerId, season, metric, provider])
   @@index([leagueKey, season, metric, provider])
   @@map("scout_metrics")
+}
+
+/// One NHL shot from official play-by-play. Coordinates are the provider's rink frame
+/// (x along the length, y across the width). No row is written without both coordinates.
+model HockeyShot {
+  id             String   @id @default(cuid())
+  playerId       String
+  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  /// NHL game id, matching Match.externalKey `nhl:{gameId}`.
+  gameId         String
+  externalPlayId String
+  x              Float
+  y              Float
+  made           Boolean
+  shotType       String
+  /// Compact campaign int (2026-27 → 202627), same as PlayerSeasonStats.
+  season         Int
+  createdAt      DateTime @default(now())
+
+  @@unique([gameId, externalPlayId])
+  @@index([playerId, season])
+  @@index([gameId])
+  @@map("hockey_shots")
 }
 
 /// Steal or block. Coordinates stay in the opponent's attacking frame (rim at y=0).

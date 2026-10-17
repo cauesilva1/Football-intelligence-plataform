@@ -146,9 +146,9 @@ function buildAmericanFootballInsights(a: Player, b: Player): string[] {
   return insights;
 }
 
-function resolveCompareSport(a: Player, b: Player): "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL" {
+function resolveCompareSport(a: Player, b: Player): "SOCCER" | "BASKETBALL" | "AMERICAN_FOOTBALL" | "HOCKEY" {
   const sport = a.sport ?? a.currentSeasonStats.sport ?? "SOCCER";
-  if (sport === "BASKETBALL" || sport === "AMERICAN_FOOTBALL") return sport;
+  if (sport === "BASKETBALL" || sport === "AMERICAN_FOOTBALL" || sport === "HOCKEY") return sport;
   return "SOCCER";
 }
 

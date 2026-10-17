@@ -99,7 +99,12 @@ export const queryRecruitmentCandidates = cache(
       brief.sport !== "BASKETBALL" &&
       brief.sport !== "AMERICAN_FOOTBALL"
     ) {
-      throw new Error(`Recruitment engine does not support sport: ${brief.sport}`);
+      return {
+        disclaimer: "Hockey recruitment fit is not scored yet. Use the player directory and compare.",
+        brief,
+        totalEvaluated: 0,
+        candidates: [],
+      };
     }
 
     const season = brief.season ?? CURRENT_SEASON;

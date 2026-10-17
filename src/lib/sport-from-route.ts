@@ -3,6 +3,7 @@ import type { Sport } from "@/lib/sport";
 import { isAmericanFootballCompetitionSlug } from "@/lib/tournaments/american-football-competitions";
 import { isBasketballCompetitionSlug } from "@/lib/tournaments/basketball-competitions";
 import { isSoccerCompetitionSlug } from "@/lib/tournaments/soccer-competitions";
+import { isHockeyCompetitionSlug } from "@/lib/tournaments/hockey-competitions";
 
 /** Request header set by middleware when the URL already names a sport. */
 export const SPORT_HEADER = "x-omni-sport";
@@ -11,13 +12,15 @@ export const SPORT_HEADER = "x-omni-sport";
 export function resolveSportFromCompetitionSlug(slug: string): Sport | null {
   if (isBasketballCompetitionSlug(slug)) return "BASKETBALL";
   if (isAmericanFootballCompetitionSlug(slug)) return "AMERICAN_FOOTBALL";
+  if (isHockeyCompetitionSlug(slug)) return "HOCKEY";
   if (isSoccerCompetitionSlug(slug)) return "SOCCER";
   return null;
 }
 
-export function deskParamForSport(sport: Sport): "soccer" | "basketball" | "football" {
+export function deskParamForSport(sport: Sport): "soccer" | "basketball" | "football" | "hockey" {
   if (sport === "BASKETBALL") return "basketball";
   if (sport === "AMERICAN_FOOTBALL") return "football";
+  if (sport === "HOCKEY") return "hockey";
   return "soccer";
 }
 
@@ -28,6 +31,7 @@ export function sportFromDeskParam(value: string | null | undefined): Sport | nu
   if (token === "football" || token === "american-football" || token === "american_football") {
     return "AMERICAN_FOOTBALL";
   }
+  if (token === "hockey" || token === "nhl") return "HOCKEY";
   return null;
 }
 
@@ -92,6 +96,7 @@ export function sportFromLocation(
       return "AMERICAN_FOOTBALL";
     }
     if (league === "nba" || league === "ncaa" || league === "euroleague") return "BASKETBALL";
+    if (league === "nhl" || league === "hockey") return "HOCKEY";
   }
 
   return null;

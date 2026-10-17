@@ -25,6 +25,11 @@ const SPORT_SCORE_DEFINITIONS: Record<Sport, ScoreDefinitions> = {
     marketOpportunities:
       "Strong rating, age ≤ 25, reliable sample, NBA Cap Hit ≤ $5M (no Cap Hit feed for NCAA or EuroLeague).",
   },
+  HOCKEY: {
+    ...SCORE_DEFINITIONS,
+    topProspects: "NHL players with a reliable games sample and a season line from the official feed.",
+    marketOpportunities: "Hockey has no cap-hit feed in this desk yet. Value uses the season line only.",
+  },
   AMERICAN_FOOTBALL: {
     ...SCORE_DEFINITIONS,
     topProspects:

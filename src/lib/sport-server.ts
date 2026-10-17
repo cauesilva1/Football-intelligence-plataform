@@ -5,7 +5,12 @@ import { SPORT_HEADER } from "@/lib/sport-from-route";
 export async function getServerSport(): Promise<Sport> {
   const headerStore = await headers();
   const fromRoute = headerStore.get(SPORT_HEADER);
-  if (fromRoute === "SOCCER" || fromRoute === "BASKETBALL" || fromRoute === "AMERICAN_FOOTBALL") {
+  if (
+    fromRoute === "SOCCER" ||
+    fromRoute === "BASKETBALL" ||
+    fromRoute === "AMERICAN_FOOTBALL" ||
+    fromRoute === "HOCKEY"
+  ) {
     return fromRoute;
   }
   const cookieStore = await cookies();
