@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense, type ReactNode } from "react";
 import { headers } from "next/headers";
 import { Barlow_Condensed, Source_Sans_3, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
@@ -46,11 +47,13 @@ function sportFromRequestHeader(value: string | null): Sport {
   return "SOCCER";
 }
 
-/** Route sport is on the request header. Pages that do not name a sport stay Soccer until the client reads the cookie. */
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const headerStore = await headers();
-  const initialSport = sportFromRequestHeader(headerStore.get(SPORT_HEADER));
-
+function DocumentShell({
+  initialSport,
+  children,
+}: {
+  initialSport: Sport;
+  children: ReactNode;
+}) {
   return (
     <html lang="en" data-sport={initialSport} suppressHydrationWarning>
       <body
@@ -61,5 +64,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Analytics />
       </body>
     </html>
+  );
+}
+
+/** Reads the route sport header. The rest of the document does not. */
+async function RequestSportDocument({ children }: { children: ReactNode }) {
+  const headerStore = await headers();
+  const initialSport = sportFromRequestHeader(headerStore.get(SPORT_HEADER));
+  return <DocumentShell initialSport={initialSport}>{children}</DocumentShell>;
+}
+
+/** Route sport is on the request header. Pages that do not name a sport stay Soccer until the client reads the cookie. */
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<DocumentShell initialSport="SOCCER">{children}</DocumentShell>}>
+      <RequestSportDocument>{children}</RequestSportDocument>
+    </Suspense>
   );
 }
