@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { APP_NAME } from "@/lib/config";
 import "@/app/landing.css";
 
@@ -14,6 +16,11 @@ const TICKER = [
 ] as const;
 
 const ACCESS_MAIL = "mailto:access@omniscout.app?subject=OmniScout%20access%20request";
+
+async function CopyrightYear() {
+  await connection();
+  return new Date().getFullYear();
+}
 
 export function MarketingShell({ children }: { children: React.ReactNode }) {
   return (
@@ -67,7 +74,7 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
         </div>
         <div className="landing-wrap landing-footer-bottom">
           <span>
-            © {new Date().getFullYear()} {APP_NAME}
+            © <Suspense fallback={null}><CopyrightYear /></Suspense> {APP_NAME}
           </span>
           <span>Sports intelligence</span>
         </div>
