@@ -7,8 +7,6 @@ import { resolveSportFromMatchId } from "@/features/matches/resolve-match-sport"
 import { getServerSport } from "@/lib/sport-server";
 import { APP_NAME } from "@/lib/config";
 
-export const revalidate = 120;
-
 type PageProps = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: PageProps) {

@@ -18,7 +18,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const metadata = { title: `Teams · ${APP_NAME}` };
 
-export const revalidate = 180;
 export const maxDuration = 60;
 
 function FilterSkeleton() {

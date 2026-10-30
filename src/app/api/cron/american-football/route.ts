@@ -6,7 +6,6 @@ import {
 } from "@/lib/cron/authorize-request";
 import { runFootballDailySync } from "@/lib/cron/football-daily-sync";
 
-export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 export async function GET(request: Request) {

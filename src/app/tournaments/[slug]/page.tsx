@@ -7,9 +7,6 @@ import {
 import { APP_NAME } from "@/lib/config";
 import { redirect } from "next/navigation";
 
-// Must be a numeric literal — Next cannot statically analyze imported revalidate values.
-export const revalidate = 180;
-
 type PageProps = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;

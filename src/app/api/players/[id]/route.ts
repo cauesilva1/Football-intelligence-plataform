@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { getPlayerRepository } from "@/features/scouting/repository";
 import { ensureRuntimeDataSource } from "@/lib/ensure-runtime-data-source";
 
-export const dynamic = "force-dynamic";
-
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

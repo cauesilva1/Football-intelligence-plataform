@@ -10,7 +10,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const metadata = { title: `Players · ${APP_NAME}` };
 
-export const revalidate = 300;
 export const maxDuration = 60;
 
 function FiltersSkeleton() {

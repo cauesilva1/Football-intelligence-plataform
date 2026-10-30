@@ -7,9 +7,6 @@ import { canonicalBasketballSeasonKey } from "@/lib/basketball/season-team";
 import { getServerSport } from "@/lib/sport-server";
 import { notFound } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 180;
-
 export async function generateStaticParams() {
   return allRankingSlugs().map((slug) => ({ slug }));
 }

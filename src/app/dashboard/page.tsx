@@ -20,7 +20,6 @@ import {
 export const metadata = { title: `Overview · ${APP_NAME}` };
 
 /** Sport still comes from cookie — HTML stays dynamic; data layer uses unstable_cache (180s). */
-export const revalidate = 180;
 export const maxDuration = 60;
 
 export default async function DashboardPage() {

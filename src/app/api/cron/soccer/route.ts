@@ -13,7 +13,6 @@ import { endCronRun, errorMessage, logCron, startCronRun } from "@/lib/cron/cron
 import { SOCCER_CRON_STAGE_BUDGET, deadlineFrom } from "@/lib/cron/soccer-stage-plan";
 import { backfillSoccerShotCharts } from "@/lib/soccer/soccer-shot-sync";
 
-export const dynamic = "force-dynamic";
 /** Cover all configured leagues × last few days of finals + light defense enrich. */
 export const maxDuration = 300;
 

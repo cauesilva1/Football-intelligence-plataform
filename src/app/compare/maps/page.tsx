@@ -11,7 +11,6 @@ import {
 import { APP_NAME } from "@/lib/config";
 
 export const metadata = { title: `Map compare · ${APP_NAME}` };
-export const revalidate = 300;
 
 function param(value: string | string[] | undefined): string {
   const raw = Array.isArray(value) ? value[0] : value;

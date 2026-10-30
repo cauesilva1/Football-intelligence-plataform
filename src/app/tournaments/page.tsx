@@ -7,8 +7,6 @@ import { APP_NAME } from "@/lib/config";
 
 export const metadata = { title: `Tournaments · ${APP_NAME}` };
 
-export const revalidate = 300;
-
 export default async function TournamentsPage() {
   const sport = await getServerSport();
   const { ui, hubKind } = getSportConfig(sport);

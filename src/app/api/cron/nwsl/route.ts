@@ -8,7 +8,6 @@ import { endCronRun, errorMessage, logCron, startCronRun } from "@/lib/cron/cron
 import { NWSL_SYNC_BUDGET_MS } from "@/lib/sync/nwsl-plan";
 import { runNwslBackfill } from "@/lib/sync/nwsl-sync";
 
-export const dynamic = "force-dynamic";
 /** Literal required by Next. Keep equal to NWSL_CRON_MAX_DURATION_SEC. Teams + rosters only. */
 export const maxDuration = 60;
 

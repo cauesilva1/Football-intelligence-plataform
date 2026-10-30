@@ -3,8 +3,6 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { TeamDetailView } from "@/features/scouting/components/team-detail-view";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const revalidate = 300;
-
 export default async function TeamDetailPage({
   params,
   searchParams,

@@ -10,7 +10,6 @@ import { endCronRun, errorMessage, logCron, startCronRun } from "@/lib/cron/cron
 import { CPL_SYNC_BUDGET_MS } from "@/lib/sync/cpl-plan";
 import { runCplBackfill } from "@/lib/sync/cpl-sync";
 
-export const dynamic = "force-dynamic";
 /** Literal required by Next. Keep equal to CPL_CRON_MAX_DURATION_SEC. Teams + players only. */
 export const maxDuration = 60;
 
